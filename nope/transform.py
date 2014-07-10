@@ -41,6 +41,12 @@ def str_literal(node):
     return nodes.str(node.s)
 
 
+def num_literal(node):
+    value = node.n
+    if isinstance(value, int):
+        return nodes.int(value)
+
+
 def name(node):
     return nodes.ref(node.id)
 
@@ -65,6 +71,7 @@ _converters = {
     ast.arg: arg,
     
     ast.Str: str_literal,
+    ast.Num: num_literal,
     ast.Name: name,
     ast.Call: call,
 }
