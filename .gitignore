@@ -1,2 +1,3 @@
 /_virtualenv
 /*.egg-info
+*.pyc
