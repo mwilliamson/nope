@@ -1,7 +1,13 @@
 from nose.tools import istest, assert_equal
 
 from nope import types, nodes, inference
-from nope.inference import infer, Context, module_context, new_module_context, update_context
+from nope.inference import infer as _infer, Context, module_context, new_module_context, update_context
+
+
+def infer(node, context=None):
+    if context is None:
+        context = Context({})
+    return _infer(node, context)
 
 
 @istest

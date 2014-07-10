@@ -1,13 +1,16 @@
 from . import types, nodes
 
 
-def infer(expression, context=None):
-    if context is None:
-        context = Context({})
+def infer(expression, context):
     return _inferers[type(expression)](expression, context)
 
 def update_context(statement, context):
     return _checkers[type(statement)](statement, context)
+
+def check(module):
+    context = new_module_context()
+    for statement in module.body:
+        update_context(statement, context)
 
 class Context(object):
     def __init__(self, bindings, return_type=None):
@@ -19,6 +22,7 @@ class Context(object):
         self._vars[name] = binding
     
     def lookup(self, name):
+        print(self._vars)
         return self._vars[name]
     
     def enter_func(self, return_type):
@@ -96,26 +100,35 @@ _inferers = {
 }
 
 
+def _check_expression_statement(node, context):
+    infer(node.value, context)
+
+
 def _check_return(node, context):
     expected = context.return_type
-    actual = infer(node.value)
+    actual = infer(node.value, context)
     if not types.is_sub_type(expected, actual):
         raise TypeMismatchError(expected, actual)
     
 
 _checkers = {
+    nodes.ExpressionStatement: _check_expression_statement,
     nodes.ReturnStatement: _check_return,
     nodes.FunctionDef: _check_function_def,
 }
 
 
-class ArgumentsLengthError(Exception):
+class TypeCheckError(Exception):
+    pass
+
+
+class ArgumentsLengthError(TypeCheckError):
     def __init__(self, expected, actual):
         self.expected = expected
         self.actual = actual
 
 
-class TypeMismatchError(Exception):
+class TypeMismatchError(TypeCheckError):
     def __init__(self, expected, actual):
         self.expected = expected
         self.actual = actual

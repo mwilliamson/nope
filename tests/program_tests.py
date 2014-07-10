@@ -15,8 +15,7 @@ def invalid_syntax_is_invalid_program():
     assert not nope.check(path=_program_path("invalid/invalid_syntax.py")).is_valid
 
 
-# TODO:
-#~ @istest
+@istest
 def calling_function_with_wrong_type_is_invalid():
     assert not nope.check(path=_program_path("invalid/wrong_arg_type.py")).is_valid
 
