@@ -22,6 +22,22 @@ def can_infer_type_of_str_literal():
 @istest
 def can_infer_type_of_variable_reference():
     assert_equal(types.int, infer(nodes.ref("x"), Context({"x": types.int})))
+
+
+@istest
+def can_infer_type_of_call():
+    context = Context({"f": types.func([types.str], types.int)})
+    assert_equal(types.int, infer(nodes.call(nodes.ref("f"), [nodes.str("")]), context))
+
+
+@istest
+def call_arguments_must_match():
+    context = Context({"f": types.func([types.str], types.int)})
+    _assert_type_mismatch(
+        lambda: infer(nodes.call(nodes.ref("f"), [nodes.int(4)]), context),
+        expected=types.str,
+        actual=types.int,
+    )
     
 
 @istest

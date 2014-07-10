@@ -7,6 +7,8 @@ IntExpression = collections.namedtuple("IntExpression", ["value"])
 StringExpression = collections.namedtuple("StringExpression", ["value"])
 VariableReference = collections.namedtuple("VariableReference", ["name"])
 
+Call = collections.namedtuple("Call", ["func", "args"])
+
 ReturnStatement = collections.namedtuple("ReturnStatement", ["value"])
 
 FunctionDef = collections.namedtuple("FunctionDef", ["name", "args", "return_annotation", "body"])
@@ -23,8 +25,14 @@ def int(value):
     return IntExpression(value)
 
 str = StringExpression
+ref = VariableReference
+
+call = Call
+
+ret = ReturnStatement
+
 func = FunctionDef
 arguments = Arguments
 argument = Argument
-ref = VariableReference
-ret = ReturnStatement
+
+

@@ -49,6 +49,16 @@ def _infer_str(node, context):
 def _infer_ref(node, context):
     return context.lookup(node.name)
 
+def _infer_call(node, context):
+    # TODO: assert length
+    func_type = infer(node.func, context)
+    for actual_arg, formal_arg_type in zip(node.args, func_type.params[:-1]):
+        actual_arg_type = infer(actual_arg, context)
+        if not types.is_sub_type(formal_arg_type, actual_arg_type):
+            raise TypeMismatchError(expected=formal_arg_type, actual=actual_arg_type)
+    
+    return infer(node.func, context).params[-1]
+
 def _infer_function_def(node, context):
     def read_annotation(annotation):
         if annotation is None:
@@ -79,6 +89,7 @@ _inferers = {
     nodes.IntExpression: _infer_int,
     nodes.StringExpression: _infer_str,
     nodes.VariableReference: _infer_ref,
+    nodes.Call: _infer_call,
 }
 
 
@@ -93,6 +104,10 @@ _checkers = {
     nodes.ReturnStatement: _check_return,
     nodes.FunctionDef: _check_function_def,
 }
+
+
+class ArgumentsLengthError(Exception):
+    pass
 
 
 class TypeMismatchError(Exception):
