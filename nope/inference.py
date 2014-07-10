@@ -50,8 +50,11 @@ def _infer_ref(node, context):
     return context.lookup(node.name)
 
 def _infer_call(node, context):
-    # TODO: assert length
     func_type = infer(node.func, context)
+    
+    if len(func_type.params) - 1 != len(node.args):
+        raise ArgumentsLengthError(expected=len(func_type.params) - 1, actual=len(node.args))
+    
     for actual_arg, formal_arg_type in zip(node.args, func_type.params[:-1]):
         actual_arg_type = infer(actual_arg, context)
         if not types.is_sub_type(formal_arg_type, actual_arg_type):
@@ -107,7 +110,9 @@ _checkers = {
 
 
 class ArgumentsLengthError(Exception):
-    pass
+    def __init__(self, expected, actual):
+        self.expected = expected
+        self.actual = actual
 
 
 class TypeMismatchError(Exception):

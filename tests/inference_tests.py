@@ -38,6 +38,17 @@ def call_arguments_must_match():
         expected=types.str,
         actual=types.int,
     )
+
+
+@istest
+def call_arguments_length_must_match():
+    context = Context({"f": types.func([types.str], types.int)})
+    try:
+        infer(nodes.call(nodes.ref("f"), []), context)
+        assert False, "Expected error"
+    except inference.ArgumentsLengthError as error:
+        assert_equal(1, error.expected)
+        assert_equal(0, error.actual)
     
 
 @istest
