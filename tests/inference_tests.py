@@ -1,7 +1,7 @@
 from nose.tools import istest, assert_equal
 
 from nope import types, nodes, inference
-from nope.inference import infer, Context, module_context
+from nope.inference import infer, Context, module_context, new_module_context, update_context
 
 
 @istest
@@ -26,8 +26,8 @@ def can_infer_type_of_variable_reference():
 
 @istest
 def can_infer_type_of_function_with_no_args_and_no_return():
-    node = nodes.func(args=nodes.Arguments([]), return_annotation=None, body=[])
-    assert_equal(types.func([], types.none_type), infer(node))
+    node = nodes.func("f", args=nodes.Arguments([]), return_annotation=None, body=[])
+    assert_equal(types.func([], types.none_type), _infer_func_type(node))
 
 
 @istest
@@ -36,32 +36,40 @@ def can_infer_type_of_function_with_args_and_no_return():
         nodes.argument("x", nodes.ref("int")),
         nodes.argument("y", nodes.ref("str")),
     ])
-    node = nodes.func(args=args, return_annotation=None, body=[])
-    assert_equal(types.func([types.int, types.str], types.none_type), infer(node, module_context))
+    node = nodes.func("f", args=args, return_annotation=None, body=[])
+    assert_equal(types.func([types.int, types.str], types.none_type), _infer_func_type(node))
 
 
 @istest
 def can_infer_type_of_function_with_no_args_and_return_annotation():
     node = nodes.func(
+        "f",
         args=nodes.Arguments([]),
         return_annotation=nodes.ref("int"),
         body=[
             nodes.ret(nodes.int(4))
         ]
     )
-    assert_equal(types.func([], types.int), infer(node, module_context))
+    assert_equal(types.func([], types.int), _infer_func_type(node))
 
 
 @istest
 def type_mismatch_if_return_type_is_incorrect():
     node = nodes.func(
+        "f",
         args=nodes.arguments([]),
         return_annotation=nodes.ref("int"),
         body=[
             nodes.ret(nodes.str("!")),
         ],
     )
-    _assert_type_mismatch(lambda: infer(node, module_context), expected=types.int, actual=types.str)
+    _assert_type_mismatch(lambda: _infer_func_type(node), expected=types.int, actual=types.str)
+
+
+def _infer_func_type(func_node):
+    context = new_module_context()
+    update_context(func_node, context)
+    return context.lookup(func_node.name)
 
 
 def _assert_type_mismatch(func, expected, actual):

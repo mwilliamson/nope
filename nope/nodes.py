@@ -9,7 +9,7 @@ VariableReference = collections.namedtuple("VariableReference", ["name"])
 
 ReturnStatement = collections.namedtuple("ReturnStatement", ["value"])
 
-FunctionDef = collections.namedtuple("FunctionDef", ["args", "return_annotation", "body"])
+FunctionDef = collections.namedtuple("FunctionDef", ["name", "args", "return_annotation", "body"])
 Arguments = collections.namedtuple("Arguments", ["args"])
 Argument = collections.namedtuple("Argument", ["name", "annotation"])
 

@@ -2,7 +2,7 @@ import collections
 
 ScalarType = collections.namedtuple("ScalarType", ["name"])
 GenericType = collections.namedtuple("GenericType", ["name"])
-InstantiatedType = collections.namedtuple("InstantiatedType", ["generic_type", "type_params"])
+InstantiatedType = collections.namedtuple("InstantiatedType", ["generic_type", "params"])
 TypeType = collections.namedtuple("TypeType", ["type"])
 
 none_type = ScalarType("NoneType")
