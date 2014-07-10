@@ -19,3 +19,7 @@ def generic_type(name):
         return InstantiatedType("function", params)
     
     return instantiate
+
+
+def is_sub_type(super_type, sub_type):
+    return super_type == sub_type

@@ -1,18 +1,26 @@
 from . import types, nodes
 
 
-def infer(node, context=None):
+def infer(expression, context=None):
     if context is None:
         context = Context({})
-    return _inferers[type(node)](node, context)
+    return _inferers[type(expression)](expression, context)
 
+
+def check(statement, context):
+    return _checkers[type(statement)](statement, context)
+    
 
 class Context(object):
-    def __init__(self, bindings):
+    def __init__(self, bindings, return_type=None):
         self._vars = bindings
+        self.return_type = return_type
     
     def lookup(self, name):
         return self._vars[name]
+    
+    def enter_func(self, return_type):
+        return Context(self._vars, return_type)
 
 
 module_context = Context({
@@ -39,10 +47,15 @@ def _infer_function_def(node, context):
         else:
             result = infer(annotation, context)
             return result.type
+    
+    return_type = read_annotation(node.return_annotation)
+    body_context = context.enter_func(return_type)
+    for statement in node.body:
+        check(statement, body_context)
         
     return types.func(
         [read_annotation(arg.annotation) for arg in node.args.args],
-        read_annotation(node.return_annotation)
+        return_type
     )
 
 _inferers = {
@@ -53,3 +66,21 @@ _inferers = {
     
     nodes.FunctionDef: _infer_function_def,
 }
+
+
+def _check_return(node, context):
+    expected = context.return_type
+    actual = infer(node.value)
+    if not types.is_sub_type(expected, actual):
+        raise TypeMismatchError(expected, actual)
+    
+
+_checkers = {
+    nodes.ReturnStatement: _check_return
+}
+
+
+class TypeMismatchError(Exception):
+    def __init__(self, expected, actual):
+        self.expected = expected
+        self.actual = actual
