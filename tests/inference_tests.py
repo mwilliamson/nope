@@ -53,7 +53,7 @@ def can_infer_type_of_function_with_no_args_and_return_annotation():
 
 
 @istest
-def can_infer_type_of_function_with_args_and_no_return():
+def type_mismatch_if_return_type_is_incorrect():
     node = nodes.func(
         args=nodes.arguments([]),
         return_annotation=nodes.ref("int"),
