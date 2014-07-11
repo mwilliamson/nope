@@ -99,6 +99,14 @@ def type_mismatch_if_return_type_is_incorrect():
     _assert_type_mismatch(lambda: _infer_func_type(node), expected=types.int, actual=types.str)
 
 
+@istest
+def assignment_adds_variable_to_context():
+    node = nodes.assign("x", nodes.int(1))
+    context = Context({})
+    update_context(node, context)
+    assert_equal(types.int, context.lookup("x"))
+
+
 def _infer_func_type(func_node):
     context = new_module_context()
     update_context(func_node, context)

@@ -22,7 +22,6 @@ class Context(object):
         self._vars[name] = binding
     
     def lookup(self, name):
-        print(self._vars)
         return self._vars[name]
     
     def enter_func(self, return_type):
@@ -110,11 +109,16 @@ def _check_return(node, context):
     actual = infer(node.value, context)
     if not types.is_sub_type(expected, actual):
         raise TypeMismatchError(expected, actual)
-    
+
+
+def _check_assignment(node, context):
+    context.add(node.name, infer(node.value, context))
+
 
 _checkers = {
     nodes.ExpressionStatement: _check_expression_statement,
     nodes.ReturnStatement: _check_return,
+    nodes.Assignment: _check_assignment,
     nodes.FunctionDef: _check_function_def,
 }
 

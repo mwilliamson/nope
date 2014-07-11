@@ -11,6 +11,7 @@ Call = collections.namedtuple("Call", ["func", "args"])
 
 ReturnStatement = collections.namedtuple("ReturnStatement", ["value"])
 ExpressionStatement = collections.namedtuple("ExpressionStatement", ["value"])
+Assignment = collections.namedtuple("Assignment", ["name", "value"])
 
 FunctionDef = collections.namedtuple("FunctionDef", ["name", "args", "return_annotation", "body"])
 Arguments = collections.namedtuple("Arguments", ["args"])
@@ -33,6 +34,7 @@ call = Call
 
 ret = ReturnStatement
 expression_statement = ExpressionStatement
+assign = Assignment
 
 func = FunctionDef
 arguments = Arguments
