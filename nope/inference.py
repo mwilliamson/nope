@@ -35,6 +35,7 @@ class Context(object):
 module_context = Context({
     "int": types.type(types.int),
     "str": types.type(types.str),
+    "print": types.func([types.object], types.none_type),
 })
 
 def new_module_context():

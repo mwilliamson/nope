@@ -9,6 +9,7 @@ none_type = ScalarType("NoneType")
 int = ScalarType("int")
 str = ScalarType("str")
 type = TypeType
+object = ScalarType("object")
 
 def func(args, return_type):
     return generic_type("func")(list(args) + [return_type])
@@ -22,4 +23,7 @@ def generic_type(name):
 
 
 def is_sub_type(super_type, sub_type):
+    if super_type == object:
+        return True
+    
     return super_type == sub_type
