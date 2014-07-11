@@ -61,5 +61,14 @@ class Python3ExecutionTests(ExecutionTests):
             return _local.run(["python3", program], cwd=output_dir)
 
 
+@istest
+class Python2ExecutionTests(ExecutionTests):
+    def run_program(self, path, program):
+        with tempman.create_temp_dir() as temp_dir:
+            output_dir = temp_dir.path
+            nope.compile(path, output_dir, "python3")
+            return _local.run(["python2", program], cwd=output_dir)
+
+
 def _program_path(path):
     return os.path.join(os.path.dirname(__file__), "programs", path)
