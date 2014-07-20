@@ -34,6 +34,7 @@ class Context(object):
 module_context = Context({
     "int": types.type(types.int),
     "str": types.type(types.str),
+    "none": types.type(types.none_type),
     "print": types.func([types.object], types.none_type),
 })
 
