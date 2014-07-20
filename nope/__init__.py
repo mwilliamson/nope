@@ -1,19 +1,17 @@
 import collections
-import ast
 import shutil
 
-from . import inference, transform
+from . import inference, parser
 
 
 def check(path):
     with open(path) as source_file:
         source = source_file.read()
         try:
-            python_ast = ast.parse(source)
+            nope_ast = parser.parse(source)
         except SyntaxError:
             return Result(is_valid=False)
     
-    nope_ast = transform.python_to_nope(python_ast)
     try:
         inference.check(nope_ast)
     except inference.TypeCheckError:

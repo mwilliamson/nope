@@ -37,8 +37,8 @@ expression_statement = ExpressionStatement
 assign = Assignment
 
 func = FunctionDef
-arguments = Arguments
-argument = Argument
+args = arguments = Arguments
+arg = argument = Argument
 
 module = Module
 
