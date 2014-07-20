@@ -44,7 +44,7 @@ def f():
 def can_parse_signature_comment_with_no_args_for_function_after_indent():
     source = """
 #:: -> str
-def g():
+def f():
     #:: -> int
     def g():
         pass
@@ -59,7 +59,7 @@ def g():
 def can_parse_signature_comment_with_no_args_for_function_after_dedent():
     source = """
 #:: -> str
-def g():
+def f():
     pass
     
 #:: -> int
