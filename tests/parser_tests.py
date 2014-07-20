@@ -28,6 +28,19 @@ def f(x: int) -> str:
 
 
 @istest
+def can_parse_signature_comment_with_no_args():
+    source = """
+#:: -> str
+def f():
+    pass
+"""
+    
+    module_node = parser.parse(source)
+    expected = nodes.func("f", nodes.args([]), nodes.ref("str"), [])
+    assert_equal(expected, module_node.body[0])
+
+
+@istest
 def can_parse_signature_comment_with_one_arg():
     source = """
 #:: int -> str

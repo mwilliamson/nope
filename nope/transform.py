@@ -45,7 +45,7 @@ class Converter(object):
             else:
                 return_annotation = self.convert(node.returns)
         else:
-            result = re.match("^([a-zA-Z0-9_]+)\s+->\s+([a-zA-Z0-9_]+)$", signature)
+            result = re.match("^([a-zA-Z0-9_]+)?\s*->\s*([a-zA-Z0-9_]+)$", signature)
             arg_annotations = [nodes.ref(result.group(1))]
             return_annotation = nodes.ref(result.group(2))
         
