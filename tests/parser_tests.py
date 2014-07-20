@@ -17,11 +17,25 @@ def f():
 @istest
 def can_parse_argument_and_return_annotations():
     source = """
-def f(x: int) -> none:
+def f(x: int) -> str:
     pass
 """
     
     module_node = parser.parse(source)
     arg = nodes.arg("x", nodes.ref("int"))
-    expected = nodes.func("f", nodes.args([arg]), nodes.ref("none"), [])
+    expected = nodes.func("f", nodes.args([arg]), nodes.ref("str"), [])
+    assert_equal(expected, module_node.body[0])
+
+
+@istest
+def can_parse_signature_comment_with_one_arg():
+    source = """
+#:: int -> str
+def f(x):
+    pass
+"""
+    
+    module_node = parser.parse(source)
+    arg = nodes.arg("x", nodes.ref("int"))
+    expected = nodes.func("f", nodes.args([arg]), nodes.ref("str"), [])
     assert_equal(expected, module_node.body[0])
