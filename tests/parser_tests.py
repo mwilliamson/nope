@@ -41,6 +41,38 @@ def f():
 
 
 @istest
+def can_parse_signature_comment_with_no_args_for_function_after_indent():
+    source = """
+#:: -> str
+def g():
+    #:: -> int
+    def g():
+        pass
+"""
+    
+    module_node = parser.parse(source)
+    expected = nodes.func("g", nodes.args([]), nodes.ref("int"), [])
+    assert_equal(expected, module_node.body[0].body[0])
+
+
+@istest
+def can_parse_signature_comment_with_no_args_for_function_after_dedent():
+    source = """
+#:: -> str
+def g():
+    pass
+    
+#:: -> int
+def g():
+    pass
+"""
+    
+    module_node = parser.parse(source)
+    expected = nodes.func("g", nodes.args([]), nodes.ref("int"), [])
+    assert_equal(expected, module_node.body[1])
+
+
+@istest
 def can_parse_signature_comment_with_one_arg():
     source = """
 #:: int -> str

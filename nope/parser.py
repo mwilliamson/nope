@@ -1,5 +1,6 @@
 import ast
 import tokenize
+import token
 import io
 import collections
 
@@ -29,7 +30,9 @@ class CommentSeeker(object):
         try:
             while self._position != (lineno, col_offset):
                 token_type, token_str, self._position, end_position, _ = next(self._tokens)
-                self._previous_tokens.append((token_type, token_str))
+                
+                if token_type != token.INDENT:
+                    self._previous_tokens.append((token_type, token_str))
             
             if self._has_signature_comment():
                 return _parse_signature(self._previous_tokens[0][1][len(self._comment_prefix):].strip())
