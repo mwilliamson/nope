@@ -52,3 +52,21 @@ def f(x):
     arg = nodes.arg("x", nodes.ref("int"))
     expected = nodes.func("f", nodes.args([arg]), nodes.ref("str"), [])
     assert_equal(expected, module_node.body[0])
+
+
+
+@istest
+def can_parse_signature_comment_with_multiple_args():
+    source = """
+#:: int, str -> str
+def f(x, y):
+    pass
+"""
+    
+    module_node = parser.parse(source)
+    args = nodes.args([
+        nodes.arg("x", nodes.ref("int")),
+        nodes.arg("y", nodes.ref("str")),
+    ])
+    expected = nodes.func("f", args, nodes.ref("str"), [])
+    assert_equal(expected, module_node.body[0])

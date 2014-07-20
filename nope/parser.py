@@ -2,7 +2,9 @@ import ast
 import tokenize
 import io
 import collections
-import re
+
+from funcparserlib.lexer import make_tokenizer
+from funcparserlib.parser import (some, a, many, maybe, finished)
 
 from . import transform, nodes
 
@@ -45,8 +47,42 @@ class CommentSeeker(object):
         )
 
 
+def _token_type(token_type):
+    return some(lambda token: token.type == token_type)
+
+
+def _make_type(result):
+    return nodes.ref(result.value)
+
+
+def _make_args(result):
+    if result is None:
+        return []
+    else:
+        return [result[0]] + [extra_arg[1] for extra_arg in result[1]]
+
+
+def _make_signature(result):
+    return result[0], result[2]
+
+
+_type = _token_type("name") >> _make_type
+_args = maybe(_type + many(_token_type("comma") + _type)) >> _make_args
+_signature = (_args + _token_type("arrow") + _type + finished) >> _make_signature
+
+
 def _parse_signature(sig_str):
-    result = re.match("^([a-zA-Z0-9_]+)?\s*->\s*([a-zA-Z0-9_]+)$", sig_str)
-    arg_annotations = [nodes.ref(result.group(1))]
-    return_annotation = nodes.ref(result.group(2))
-    return (arg_annotations, return_annotation)
+    tokens = _tokenize_signature(sig_str)
+    return _signature.parse(tokens)
+    
+    
+def _tokenize_signature(sig_str):
+    specs = [
+        ('space', (r'[ \t]+', )),
+        ('name', (r'[A-Za-z_][A-Za-z_0-9]*', )),
+        ('arrow', (r'->', )),
+        ('comma', (r',', )),
+    ]
+    ignore = ['space']
+    tokenizer = make_tokenizer(specs)
+    return [token for token in tokenizer(sig_str) if token.type not in ignore]
