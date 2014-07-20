@@ -15,6 +15,7 @@ class Converter(object):
             ast.Module: self._module,
             ast.FunctionDef: self._func,
             ast.Expr: self._expr,
+            ast.Return: self._return,
             
             ast.Str: self._str_literal,
             ast.Num: self._num_literal,
@@ -63,6 +64,10 @@ class Converter(object):
     def _expr(self, node):
         return nodes.expression_statement(self.convert(node.value))
 
+    
+    def _return(self, node):
+        return nodes.ret(self.convert(node.value))
+    
 
     def _str_literal(self, node):
         return nodes.str(node.s)
