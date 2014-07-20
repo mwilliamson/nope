@@ -2,8 +2,9 @@ import ast
 import tokenize
 import io
 import collections
+import re
 
-from . import transform
+from . import transform, nodes
 
 
 def parse(source):
@@ -29,7 +30,7 @@ class CommentSeeker(object):
                 self._previous_tokens.append((token_type, token_str))
             
             if self._has_signature_comment():
-                return self._previous_tokens[0][1][len(self._comment_prefix):].strip()
+                return _parse_signature(self._previous_tokens[0][1][len(self._comment_prefix):].strip())
             else:
                 return None
         except StopIteration:
@@ -42,3 +43,10 @@ class CommentSeeker(object):
             self._previous_tokens[1][0] == tokenize.NL and
             self._previous_tokens[0][1].startswith(self._comment_prefix)
         )
+
+
+def _parse_signature(sig_str):
+    result = re.match("^([a-zA-Z0-9_]+)?\s*->\s*([a-zA-Z0-9_]+)$", sig_str)
+    arg_annotations = [nodes.ref(result.group(1))]
+    return_annotation = nodes.ref(result.group(2))
+    return (arg_annotations, return_annotation)
