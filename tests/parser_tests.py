@@ -105,7 +105,7 @@ def f(x, y):
 
 
 @istest
-def can_parse_signature_comment_with_generics():
+def can_parse_signature_comment_with_one_generic_parameter():
     source = """
 #:: -> list[str]
 def f():
@@ -114,5 +114,20 @@ def f():
     
     module_node = parser.parse(source)
     return_node = nodes.type_apply(nodes.ref("list"), [nodes.ref("str")])
+    expected = nodes.func("f", nodes.args([]), return_node, [])
+    assert_equal(expected, module_node.body[0])
+
+
+
+@istest
+def can_parse_signature_comment_with_many_generic_parameters():
+    source = """
+#:: -> dict[str, int]
+def f():
+    pass
+"""
+    
+    module_node = parser.parse(source)
+    return_node = nodes.type_apply(nodes.ref("dict"), [nodes.ref("str"), nodes.ref("int")])
     expected = nodes.func("f", nodes.args([]), return_node, [])
     assert_equal(expected, module_node.body[0])

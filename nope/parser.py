@@ -59,7 +59,8 @@ def _make_type(result):
 
 
 def _make_apply(result):
-    return nodes.type_apply(result[0], [result[2]])
+    extra_params = [param[1] for param in result[3]]
+    return nodes.type_apply(result[0], [result[2]] + extra_params)
 
 
 def _make_args(result):
@@ -73,12 +74,18 @@ def _make_signature(result):
     return result[0], result[2]
 
 
-_type = forward_decl()
-_type_name = _token_type("name") >> _make_type
-_applied_type = (_type_name + _token_type("open") + _type + _token_type("close")) >> _make_apply
-_type.define(_applied_type | _type_name)
-_args = maybe(_type + many(_token_type("comma") + _type)) >> _make_args
-_signature = (_args + _token_type("arrow") + _type + finished) >> _make_signature
+def _create_signature_rule():
+    comma = _token_type("comma")
+
+    type_ = forward_decl()
+    type_name = _token_type("name") >> _make_type
+    applied_type = (type_name + _token_type("open") + type_ + many(comma + type_) + _token_type("close")) >> _make_apply
+    type_.define(applied_type | type_name)
+    args = maybe(type_ + many(comma + type_)) >> _make_args
+    return (args + _token_type("arrow") + type_ + finished) >> _make_signature
+
+
+_signature = _create_signature_rule()
 
 
 def _parse_signature(sig_str):
