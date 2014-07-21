@@ -24,14 +24,14 @@ class Context(object):
     def lookup(self, name):
         return self._vars[name]
     
-    def enter_func(self, return_type):
-        return self._new_context(return_type=return_type)
+    def enter_func(self, return_type, local_names):
+        func_vars = self._vars.copy()
+        for local_name in local_names:
+            func_vars[local_name] = None
+        return Context(func_vars, return_type=return_type)
     
     def enter_module(self):
-        return self._new_context(return_type=None)
-    
-    def _new_context(self, *args, **kwargs):
-        return Context(self._vars.copy(), *args, **kwargs)
+        return Context(self._vars.copy(), return_type=None)
 
 
 module_context = Context({
@@ -55,7 +55,11 @@ def _infer_str(node, context):
     return types.str
 
 def _infer_ref(node, context):
-    return context.lookup(node.name)
+    ref_type = context.lookup(node.name)
+    if ref_type is None:
+        raise UnboundLocalError(node.name)
+    else:
+        return ref_type
 
 def _infer_call(node, context):
     func_type = infer(node.func, context)
@@ -89,11 +93,22 @@ def _check_function_def(node, context):
     func_type = _infer_function_def(node, context)
     return_type = func_type.params[-1]
     
-    body_context = context.enter_func(return_type)
+    local_names = [
+        child.name
+        for child in node.body
+        if _is_variable_binder(child)
+    ]
+    
+    body_context = context.enter_func(return_type, local_names=local_names)
     for statement in node.body:
         update_context(statement, body_context)
         
     context.add(node.name, func_type)
+
+
+def _is_variable_binder(node):
+    return isinstance(node, (nodes.FunctionDef, nodes.Assignment))
+    
 
 _inferers = {
     nodes.NoneExpression: _infer_none,
@@ -144,3 +159,11 @@ class TypeMismatchError(TypeCheckError):
         
     def __str__(self):
         return "Expected {0} but was {1}".format(self.expected, self.actual)
+
+
+class UnboundLocalError(TypeCheckError):
+    def __init__(self, name):
+        self.name = name
+    
+    def __str__(self):
+        return "local variable {0} referenced before assignment".format(self.name)

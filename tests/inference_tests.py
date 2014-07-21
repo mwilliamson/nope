@@ -123,6 +123,24 @@ def variables_are_shadowed_in_defs():
     assert_equal(types.int, context.lookup("x"))
 
 
+@istest
+def local_variables_cannot_be_used_before_assigned():
+    node = nodes.func("g", nodes.args([]), None, [
+        nodes.expression_statement(nodes.call(nodes.ref("f"), [nodes.ref("x")])),
+        nodes.assign("x", nodes.str("Hello")),
+    ])
+    
+    context = Context({
+        "f": types.func([types.str], types.none_type),
+        "x": types.int,
+    })
+    try:
+        update_context(node, context)
+        assert False, "Expected UnboundLocalError"
+    except inference.UnboundLocalError as error:
+        assert_equal("local variable x referenced before assignment", str(error))
+
+
 def _infer_func_type(func_node):
     context = new_module_context()
     update_context(func_node, context)
