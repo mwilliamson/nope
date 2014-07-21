@@ -102,3 +102,17 @@ def f(x, y):
     ])
     expected = nodes.func("f", args, nodes.ref("str"), [])
     assert_equal(expected, module_node.body[0])
+
+
+@istest
+def can_parse_signature_comment_with_generics():
+    source = """
+#:: -> list[str]
+def f():
+    pass
+"""
+    
+    module_node = parser.parse(source)
+    return_node = nodes.type_apply(nodes.ref("list"), [nodes.ref("str")])
+    expected = nodes.func("f", nodes.args([]), return_node, [])
+    assert_equal(expected, module_node.body[0])

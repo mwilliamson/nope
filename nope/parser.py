@@ -5,7 +5,7 @@ import io
 import collections
 
 from funcparserlib.lexer import make_tokenizer
-from funcparserlib.parser import (some, a, many, maybe, finished)
+from funcparserlib.parser import (some, a, many, maybe, finished, forward_decl)
 
 from . import transform, nodes
 
@@ -58,6 +58,10 @@ def _make_type(result):
     return nodes.ref(result.value)
 
 
+def _make_apply(result):
+    return nodes.type_apply(result[0], [result[2]])
+
+
 def _make_args(result):
     if result is None:
         return []
@@ -69,7 +73,10 @@ def _make_signature(result):
     return result[0], result[2]
 
 
-_type = _token_type("name") >> _make_type
+_type = forward_decl()
+_type_name = _token_type("name") >> _make_type
+_applied_type = (_type_name + _token_type("open") + _type + _token_type("close")) >> _make_apply
+_type.define(_applied_type | _type_name)
 _args = maybe(_type + many(_token_type("comma") + _type)) >> _make_args
 _signature = (_args + _token_type("arrow") + _type + finished) >> _make_signature
 
@@ -85,6 +92,8 @@ def _tokenize_signature(sig_str):
         ('name', (r'[A-Za-z_][A-Za-z_0-9]*', )),
         ('arrow', (r'->', )),
         ('comma', (r',', )),
+        ('open', (r'\[', )),
+        ('close', (r'\]', )),
     ]
     ignore = ['space']
     tokenizer = make_tokenizer(specs)
