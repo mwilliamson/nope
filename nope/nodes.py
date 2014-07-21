@@ -14,7 +14,7 @@ ReturnStatement = collections.namedtuple("ReturnStatement", ["value"])
 ExpressionStatement = collections.namedtuple("ExpressionStatement", ["value"])
 Assignment = collections.namedtuple("Assignment", ["name", "value"])
 
-FunctionDef = collections.namedtuple("FunctionDef", ["name", "args", "return_annotation", "body"])
+FunctionDef = collections.namedtuple("FunctionDef", ["name", "args", "return_annotation", "body", "type_params"])
 Arguments = collections.namedtuple("Arguments", ["args"])
 Argument = collections.namedtuple("Argument", ["name", "annotation"])
 
@@ -38,7 +38,13 @@ ret = ReturnStatement
 expression_statement = ExpressionStatement
 assign = Assignment
 
-func = FunctionDef
+def func(name, args, return_annotation, body, type_params=None):
+    if type_params is None:
+        type_params = []
+    
+    return FunctionDef(name, args, return_annotation, body, type_params)
+
+    
 args = arguments = Arguments
 arg = argument = Argument
 

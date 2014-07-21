@@ -35,6 +35,8 @@ class Converter(object):
     def _func(self, node):
         signature = self._comment_seeker.seek_signature(node.lineno, node.col_offset)
         if signature is None:
+            type_params = []
+            
             arg_annotations = [
                 self.convert(arg.annotation)
                 for arg in node.args.args
@@ -45,7 +47,7 @@ class Converter(object):
             else:
                 return_annotation = self.convert(node.returns)
         else:
-            arg_annotations, return_annotation = signature
+            type_params, arg_annotations, return_annotation = signature
         
         def _arg(node, annotation):
             return nodes.argument(node.arg, annotation)
@@ -58,6 +60,7 @@ class Converter(object):
             args=args,
             return_annotation=return_annotation,
             body=self._mapped(node.body),
+            type_params=type_params,
         )
 
 
