@@ -134,7 +134,7 @@ def f():
 
 
 @istest
-def can_parse_signature_comment_with_def_with_one_generic_parameter():
+def can_parse_signature_comment_with_one_formal_type_parameter():
     source = """
 #:: T => T -> T
 def f(x):
