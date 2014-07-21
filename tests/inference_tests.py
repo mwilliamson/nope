@@ -107,6 +107,22 @@ def assignment_adds_variable_to_context():
     assert_equal(types.int, context.lookup("x"))
 
 
+@istest
+def variables_are_shadowed_in_defs():
+    node = nodes.func("g", nodes.args([]), None, [
+        nodes.assign("x", nodes.str("Hello")),
+        nodes.expression_statement(nodes.call(nodes.ref("f"), [nodes.ref("x")])),
+    ])
+    
+    context = Context({
+        "f": types.func([types.str], types.none_type),
+        "x": types.int,
+    })
+    update_context(node, context)
+    
+    assert_equal(types.int, context.lookup("x"))
+
+
 def _infer_func_type(func_node):
     context = new_module_context()
     update_context(func_node, context)

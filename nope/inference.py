@@ -25,10 +25,13 @@ class Context(object):
         return self._vars[name]
     
     def enter_func(self, return_type):
-        return Context(self._vars, return_type)
+        return self._new_context(return_type=return_type)
     
     def enter_module(self):
-        return Context(self._vars, return_type=None)
+        return self._new_context(return_type=None)
+    
+    def _new_context(self, *args, **kwargs):
+        return Context(self._vars.copy(), *args, **kwargs)
 
 
 module_context = Context({
@@ -138,3 +141,6 @@ class TypeMismatchError(TypeCheckError):
     def __init__(self, expected, actual):
         self.expected = expected
         self.actual = actual
+        
+    def __str__(self):
+        return "Expected {0} but was {1}".format(self.expected, self.actual)
