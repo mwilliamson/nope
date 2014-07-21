@@ -52,6 +52,10 @@ class Converter(object):
         def _arg(node, annotation):
             return nodes.argument(node.arg, annotation)
         
+        if len(node.args.args) != len(arg_annotations):
+            raise SyntaxError("args length mismatch: def has {0}, signature has {1}".format(
+                len(node.args.args), len(arg_annotations)))
+        
         args = nodes.arguments(list(map(_arg, node.args.args, arg_annotations)))
         
         

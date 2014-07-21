@@ -150,3 +150,18 @@ def f(x):
         ["T"],
     )
     assert_equal(expected, module_node.body[0])
+
+
+@istest
+def error_if_type_signature_has_different_number_of_args_from_def():
+    source = """
+#:: int, str -> int
+def f(x):
+    return x
+"""
+    
+    try:
+        parser.parse(source)
+        assert False, "Expected SyntaxError"
+    except SyntaxError as error:
+        assert_equal("args length mismatch: def has 1, signature has 2", str(error))
