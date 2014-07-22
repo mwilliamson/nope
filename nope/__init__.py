@@ -8,20 +8,24 @@ def check(path):
         source = source_file.read()
         try:
             nope_ast = parser.parse(source)
-        except SyntaxError:
-            return Result(is_valid=False)
+        except SyntaxError as error:
+            return Result(is_valid=False, error=error, value=None)
     
     try:
         inference.check(nope_ast)
-    except inference.TypeCheckError:
-        return Result(is_valid=False)
+    except inference.TypeCheckError as error:
+        return Result(is_valid=False, error=error, value=None)
     
-    return Result(is_valid=True)
+    return Result(is_valid=True, error=None, value=nope_ast)
 
 
 def compile(source, destination_dir, platform):
-    check(source)
-    compilers.compile(source, destination_dir, platform)
+    nope_ast = check(source)
+    
+    if not nope_ast.is_valid:
+        raise nope_ast.error
+    
+    compilers.compile(source, nope_ast.value, destination_dir, platform)
 
 
-Result = collections.namedtuple("Result", ["is_valid"])
+Result = collections.namedtuple("Result", ["is_valid", "error", "value"])

@@ -46,35 +46,45 @@ def calling_function_with_correct_type_is_valid():
 class ExecutionTests(object):
     @istest
     def empty_program_runs_without_output(self):
-        result = self.run_program(path=_program_path("valid/empty.py"), program="empty.py")
+        result = self._run_program(path=_program_path("valid/empty.py"), program="empty")
         assert_equal(0, result.return_code)
         assert_equal(b"", result.output)
         assert_equal(b"", result.stderr_output)
     
     @istest
     def print_program_prints_to_stdout(self):
-        result = self.run_program(path=_program_path("valid/print.py"), program="print.py")
+        result = self._run_program(path=_program_path("valid/print.py"), program="print")
         assert_equal(0, result.return_code)
         assert_equal(b"42\n", result.output)
         assert_equal(b"", result.stderr_output)
+    
+    def _run_program(self, path, program):
+        with tempman.create_temp_dir() as temp_dir:
+            output_dir = temp_dir.path
+            nope.compile(path, output_dir, self.platform)
+            output_path = "{}.{}".format(program, self.extension)
+            return _local.run([self.binary, output_path], cwd=output_dir)
 
 
 @istest
 class Python3ExecutionTests(ExecutionTests):
-    def run_program(self, path, program):
-        with tempman.create_temp_dir() as temp_dir:
-            output_dir = temp_dir.path
-            nope.compile(path, output_dir, "python3")
-            return _local.run(["python3", program], cwd=output_dir)
+    platform = "python3"
+    binary = "python3"
+    extension = "py"
 
 
 @istest
 class Python2ExecutionTests(ExecutionTests):
-    def run_program(self, path, program):
-        with tempman.create_temp_dir() as temp_dir:
-            output_dir = temp_dir.path
-            nope.compile(path, output_dir, "python2")
-            return _local.run(["python2", program], cwd=output_dir)
+    platform = "python2"
+    binary = "python2"
+    extension = "py"
+
+
+@istest
+class NodeExecutionTests(ExecutionTests):
+    platform = "node"
+    binary = "node"
+    extension = "js"
 
 
 def _program_path(path):
