@@ -100,6 +100,16 @@ def type_mismatch_if_return_type_is_incorrect():
 
 
 @istest
+def function_adds_arguments_to_context():
+    args = nodes.arguments([
+        nodes.argument("x", nodes.ref("int")),
+    ])
+    body = [nodes.ret(nodes.ref("x"))]
+    node = nodes.func("f", args=args, return_annotation=nodes.ref("int"), body=body)
+    assert_equal(types.func([types.int], types.int), _infer_func_type(node))
+
+
+@istest
 def assignment_adds_variable_to_context():
     node = nodes.assign("x", nodes.int(1))
     context = Context({})

@@ -93,13 +93,19 @@ def _check_function_def(node, context):
     func_type = _infer_function_def(node, context)
     return_type = func_type.params[-1]
     
-    local_names = [
+    arg_names = [arg.name for arg in node.args.args]
+    
+    local_names = arg_names + [
         child.name
         for child in node.body
         if _is_variable_binder(child)
     ]
     
     body_context = context.enter_func(return_type, local_names=local_names)
+    
+    for arg, arg_type in zip(node.args.args, func_type.params):
+        body_context.add(arg.name, arg_type)
+        
     for statement in node.body:
         update_context(statement, body_context)
         
