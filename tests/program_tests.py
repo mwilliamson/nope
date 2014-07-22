@@ -73,7 +73,7 @@ class Python2ExecutionTests(ExecutionTests):
     def run_program(self, path, program):
         with tempman.create_temp_dir() as temp_dir:
             output_dir = temp_dir.path
-            nope.compile(path, output_dir, "python3")
+            nope.compile(path, output_dir, "python2")
             return _local.run(["python2", program], cwd=output_dir)
 
 

@@ -1,7 +1,6 @@
 import collections
-import shutil
 
-from . import inference, parser
+from . import inference, parser, compilers
 
 
 def check(path):
@@ -21,8 +20,8 @@ def check(path):
 
 
 def compile(source, destination_dir, platform):
-    if platform == "python3":
-        shutil.copy(source, destination_dir)
+    check(source)
+    compilers.compile(source, destination_dir, platform)
 
 
 Result = collections.namedtuple("Result", ["is_valid"])
