@@ -17,7 +17,7 @@ def func(args, return_type):
 def generic_type(name):
     generic_type = GenericType(name)
     def instantiate(params):
-        return InstantiatedType("function", params)
+        return InstantiatedType(generic_type, params)
     
     return instantiate
 
