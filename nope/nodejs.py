@@ -31,6 +31,18 @@ def _expression_statement(statement):
     return js.expression_statement(_transform(statement.value))
 
 
+def _function_def(func):
+    return js.function_declaration(
+        name=func.name,
+        args=[arg.name for arg in func.args.args],
+        body=_transform_all(func.body),
+    )
+
+
+def _return_statement(statement):
+    return js.ret(_transform(statement.value))
+
+
 def _call(call):
     return js.call(_transform(call.func), _transform_all(call.args))
 
@@ -49,7 +61,11 @@ def _transform_all(nodes):
 
 _transformers = {
     nodes.Module: _module,
+    
     nodes.ExpressionStatement: _expression_statement,
+    nodes.FunctionDef: _function_def,
+    nodes.ReturnStatement: _return_statement,
+    
     nodes.Call: _call,
     nodes.VariableReference: _ref,
     nodes.IntExpression: _int,
