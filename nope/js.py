@@ -1,8 +1,15 @@
 import collections
+import io
 
 
 def dump(obj, fileobj):
     _serializers[type(obj)](obj, fileobj)
+
+
+def dumps(obj):
+    output = io.StringIO()
+    dump(obj, output)
+    return output.getvalue()
 
 
 def _serialize_statements(obj, fileobj):
