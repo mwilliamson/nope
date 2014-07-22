@@ -25,8 +25,12 @@ def _serialize_expression_statement(obj, fileobj):
 def _serialize_call(obj, fileobj):
     dump(obj.func, fileobj)
     fileobj.write("(")
-    arg, = obj.args
-    dump(arg, fileobj)
+    
+    for index, arg in enumerate(obj.args):
+        if index > 0:
+            fileobj.write(", ");
+        dump(arg, fileobj)
+    
     fileobj.write(")")
     
 

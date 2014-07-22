@@ -14,8 +14,18 @@ def test_serialize_variable_reference():
 
 
 @istest
+def test_serialize_call_with_no_args():
+    assert_equal("f(x)", js.dumps(js.call(js.ref("f"), [])))
+    
+
+@istest
 def test_serialize_call_with_one_arg():
     assert_equal("f(x)", js.dumps(js.call(js.ref("f"), [js.ref("x")])))
+
+
+@istest
+def test_serialize_call_with_no_args():
+    assert_equal("f(x, y)", js.dumps(js.call(js.ref("f"), [js.ref("x"), js.ref("y")])))
 
 
 @istest
