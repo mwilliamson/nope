@@ -66,15 +66,21 @@ def _serialize_number(obj, fileobj):
     fileobj.write(str(obj.value))
 
 
+def _serialize_null(obj, fileobj):
+    fileobj.write("null")
+    
+
 statements = Statements = collections.namedtuple("Statements", ["statements"])
 
 expression_statement = ExpressionStatement = collections.namedtuple("ExpressionStatement", ["value"])
 function_declaration = FunctionDeclaration = collections.namedtuple("FunctionDeclaration", ["name", "args", "body"])
+ret = ReturnStatement = collections.namedtuple("ReturnStatement", ["value"])
 
 call = Call = collections.namedtuple("Call", ["func", "args"])
 ref = VariableReference = collections.namedtuple("VariableReference", ["name"])
 number = Number = collections.namedtuple("Number", ["value"])
-ret = ReturnStatement = collections.namedtuple("ReturnStatement", ["value"])
+NullLiteral = collections.namedtuple("NullLiteral", [])
+null = NullLiteral()
 
 _serializers = {
     Statements: _serialize_statements,
@@ -86,4 +92,5 @@ _serializers = {
     Call: _serialize_call,
     VariableReference: _serialize_ref,
     Number: _serialize_number,
+    NullLiteral: _serialize_null,
 }

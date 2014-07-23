@@ -4,6 +4,11 @@ from nope import js
 
 
 @istest
+def test_serialize_null():
+    assert_equal("null", js.dumps(js.null))
+    
+
+@istest
 def test_serialize_number():
     assert_equal("42", js.dumps(js.number(42)))
 

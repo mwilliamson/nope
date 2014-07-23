@@ -61,6 +61,14 @@ def test_transform_variable_reference():
 
 
 @istest
+def test_transform_none_expression():
+    _assert_transform(
+        nodes.none(),
+        js.null
+    )
+
+
+@istest
 def test_transform_int_expression():
     _assert_transform(
         nodes.int(42),

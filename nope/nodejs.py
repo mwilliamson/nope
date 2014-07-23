@@ -51,6 +51,10 @@ def _ref(ref):
     return js.ref(ref.name)
 
 
+def _none(none):
+    return js.null
+
+
 def _int(node):
     return js.number(node.value)
 
@@ -68,5 +72,6 @@ _transformers = {
     
     nodes.Call: _call,
     nodes.VariableReference: _ref,
+    nodes.NoneExpression: _none,
     nodes.IntExpression: _int,
 }
