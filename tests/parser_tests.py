@@ -183,6 +183,11 @@ def test_parse_string():
     _assert_expression_parse(nodes.str("hello"), "'hello'")
 
 
+@istest
+def test_parse_variable_reference():
+    _assert_expression_parse(nodes.ref("x"), "x")
+
+
 
 def _assert_expression_parse(expected, source):
     module = parser.parse(source)
