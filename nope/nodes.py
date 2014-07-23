@@ -12,7 +12,7 @@ TypeApplication = collections.namedtuple("TypeApplication", ["generic_type", "pa
 
 ReturnStatement = collections.namedtuple("ReturnStatement", ["value"])
 ExpressionStatement = collections.namedtuple("ExpressionStatement", ["value"])
-Assignment = collections.namedtuple("Assignment", ["name", "value"])
+Assignment = collections.namedtuple("Assignment", ["targets", "value"])
 
 FunctionDef = collections.namedtuple("FunctionDef", ["name", "args", "return_annotation", "body", "type_params"])
 Arguments = collections.namedtuple("Arguments", ["args"])

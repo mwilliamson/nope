@@ -78,9 +78,13 @@ class Converter(object):
     
     
     def _assign(self, node):
-        ref, = node.targets
-        assert isinstance(ref, ast.Name)
-        return nodes.assign(ref.id, self.convert(node.value))
+        def extract_id(name):
+            assert isinstance(name, ast.Name)
+            return name.id
+        
+        names = [extract_id(target) for target in node.targets]
+        
+        return nodes.assign(names, self.convert(node.value))
     
 
     def _str_literal(self, node):

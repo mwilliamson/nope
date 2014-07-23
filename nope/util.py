@@ -2,12 +2,17 @@ from . import nodes
 
 
 def declared_locals(func_def):
-    return [
-        child.name
-        for child in func_def.body
-        if _is_variable_binder(child)
-    ]
+    names = []
+    for child in func_def.body:
+        names += _declared_names(child)
+    
+    return names
 
 
-def _is_variable_binder(node):
-    return isinstance(node, (nodes.FunctionDef, nodes.Assignment))
+def _declared_names(node):
+    if isinstance(node, nodes.FunctionDef):
+        return [node.name]
+    elif isinstance(node, nodes.Assignment):
+        return node.targets
+    else:
+        return []

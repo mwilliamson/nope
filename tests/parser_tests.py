@@ -211,8 +211,14 @@ def test_parse_return_statement():
 
 @istest
 def test_parse_single_assignment():
-    expected = nodes.assign("x", nodes.ref("y"))
+    expected = nodes.assign(["x"], nodes.ref("y"))
     _assert_statement_parse(expected, "x = y")
+
+
+@istest
+def test_parse_multiple_assignments():
+    expected = nodes.assign(["x", "y"], nodes.ref("z"))
+    _assert_statement_parse(expected, "x = y = z")
 
 
 

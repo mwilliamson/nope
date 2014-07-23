@@ -43,7 +43,7 @@ def test_transform_function_declaration_declares_variables_at_top_of_function():
             name="f",
             args=nodes.args([]),
             return_annotation=None,
-            body=[nodes.assign("x", nodes.ref("y"))],
+            body=[nodes.assign(["x"], nodes.ref("y"))],
         ),
         js.function_declaration(
             name="f",

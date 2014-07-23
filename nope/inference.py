@@ -129,7 +129,9 @@ def _check_return(node, context):
 
 
 def _check_assignment(node, context):
-    context.add(node.name, infer(node.value, context))
+    value_type = infer(node.value, context)
+    for name in node.targets:
+        context.add(name, value_type)
 
 
 _checkers = {

@@ -111,7 +111,7 @@ def function_adds_arguments_to_context():
 
 @istest
 def assignment_adds_variable_to_context():
-    node = nodes.assign("x", nodes.int(1))
+    node = nodes.assign(["x"], nodes.int(1))
     context = Context({})
     update_context(node, context)
     assert_equal(types.int, context.lookup("x"))
@@ -120,7 +120,7 @@ def assignment_adds_variable_to_context():
 @istest
 def variables_are_shadowed_in_defs():
     node = nodes.func("g", nodes.args([]), None, [
-        nodes.assign("x", nodes.str("Hello")),
+        nodes.assign(["x"], nodes.str("Hello")),
         nodes.expression_statement(nodes.call(nodes.ref("f"), [nodes.ref("x")])),
     ])
     
