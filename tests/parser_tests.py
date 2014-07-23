@@ -203,6 +203,12 @@ def test_parse_expression_statement():
     _assert_statement_parse(expected, "x")
 
 
+@istest
+def test_parse_return_statement():
+    expected = nodes.ret(nodes.ref("x"))
+    _assert_statement_parse(expected, "return x")
+
+
 
 def _assert_expression_parse(expected, source):
     module = parser.parse(source)
