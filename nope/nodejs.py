@@ -59,6 +59,10 @@ def _int(node):
     return js.number(node.value)
 
 
+def _str(node):
+    return js.string(node.value)
+
+
 def _transform_all(nodes):
     return list(map(transform, nodes))
 
@@ -74,4 +78,5 @@ _transformers = {
     nodes.VariableReference: _ref,
     nodes.NoneExpression: _none,
     nodes.IntExpression: _int,
+    nodes.StringExpression: _str,
 }

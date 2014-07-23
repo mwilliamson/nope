@@ -1,5 +1,6 @@
 import collections
 import io
+import json
 
 
 def dump(obj, fileobj):
@@ -68,7 +69,11 @@ def _serialize_number(obj, fileobj):
 
 def _serialize_null(obj, fileobj):
     fileobj.write("null")
-    
+
+
+def _serialize_string(obj, fileobj):
+    json.dump(obj.value, fileobj)
+
 
 statements = Statements = collections.namedtuple("Statements", ["statements"])
 
@@ -81,6 +86,7 @@ ref = VariableReference = collections.namedtuple("VariableReference", ["name"])
 number = Number = collections.namedtuple("Number", ["value"])
 NullLiteral = collections.namedtuple("NullLiteral", [])
 null = NullLiteral()
+string = String = collections.namedtuple("String", ["value"])
 
 _serializers = {
     Statements: _serialize_statements,
@@ -93,4 +99,5 @@ _serializers = {
     VariableReference: _serialize_ref,
     Number: _serialize_number,
     NullLiteral: _serialize_null,
+    String: _serialize_string,
 }

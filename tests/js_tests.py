@@ -14,6 +14,11 @@ def test_serialize_number():
 
 
 @istest
+def test_serialize_string():
+    assert_equal('"hello"', js.dumps(js.string("hello")))
+
+
+@istest
 def test_serialize_variable_reference():
     assert_equal("flynn", js.dumps(js.ref("flynn")))
 
