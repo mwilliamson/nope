@@ -16,6 +16,7 @@ class Converter(object):
             ast.FunctionDef: self._func,
             ast.Expr: self._expr,
             ast.Return: self._return,
+            ast.Assign: self._assign,
             
             ast.Str: self._str_literal,
             ast.Num: self._num_literal,
@@ -74,6 +75,12 @@ class Converter(object):
     
     def _return(self, node):
         return nodes.ret(self.convert(node.value))
+    
+    
+    def _assign(self, node):
+        ref, = node.targets
+        assert isinstance(ref, ast.Name)
+        return nodes.assign(ref.id, self.convert(node.value))
     
 
     def _str_literal(self, node):
