@@ -197,6 +197,12 @@ def test_parse_call():
     _assert_expression_parse(expected, "f(x, y)")
 
 
+@istest
+def test_parse_expression_statement():
+    expected = nodes.expression_statement(nodes.ref("x"))
+    _assert_statement_parse(expected, "x")
+
+
 
 def _assert_expression_parse(expected, source):
     module = parser.parse(source)
@@ -206,3 +212,10 @@ def _assert_expression_parse(expected, source):
     assert isinstance(expression_statement, nodes.ExpressionStatement)
     
     assert_equal(expected, expression_statement.value)
+
+
+def _assert_statement_parse(expected, source):
+    module = parser.parse(source)
+    assert isinstance(module, nodes.Module)
+    
+    assert_equal(expected, module.body[0])
