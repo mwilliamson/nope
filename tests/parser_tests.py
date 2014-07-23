@@ -178,6 +178,11 @@ def test_parse_int():
     _assert_expression_parse(nodes.int(42), "42")
 
 
+@istest
+def test_parse_string():
+    _assert_expression_parse(nodes.str("hello"), "'hello'")
+
+
 
 def _assert_expression_parse(expected, source):
     module = parser.parse(source)
