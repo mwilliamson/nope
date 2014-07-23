@@ -32,9 +32,10 @@ def _expression_statement(statement):
 
 
 def _assign(assignment):
-    # TODO: multiple assignment
-    name, = assignment.targets
-    return js.expression_statement(js.assign(name, transform(assignment.value)))
+    value = transform(assignment.value)
+    for name in reversed(assignment.targets):
+        value = js.assign(name, value)
+    return js.expression_statement(value)
     
 
 def _function_def(func):

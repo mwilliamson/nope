@@ -57,6 +57,14 @@ def test_transform_function_declaration_declares_variables_at_top_of_function():
 
 
 @istest
+def test_transform_compound_assignments():
+    _assert_transform(
+        nodes.assign(["x", "y"], nodes.ref("z")),
+        js.expression_statement(js.assign("x", js.assign("y", js.ref("z")))),
+    )
+
+
+@istest
 def test_transform_return():
     _assert_transform(
         nodes.ret(nodes.ref("x")),
