@@ -188,6 +188,15 @@ def test_parse_variable_reference():
     _assert_expression_parse(nodes.ref("x"), "x")
 
 
+@istest
+def test_parse_call():
+    expected = nodes.call(
+        nodes.ref("f"),
+        [nodes.ref("x"), nodes.ref("y")],
+    )
+    _assert_expression_parse(expected, "f(x, y)")
+
+
 
 def _assert_expression_parse(expected, source):
     module = parser.parse(source)
