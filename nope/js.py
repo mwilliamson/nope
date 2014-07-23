@@ -47,6 +47,18 @@ def _serialize_return_statement(obj, fileobj):
     fileobj.write(";")
 
 
+def _serialize_variable_declaration(obj, fileobj):
+    fileobj.write("var ")
+    fileobj.write(obj.name)
+    fileobj.write(";")
+
+
+def _serialize_assignment(obj, fileobj):
+    fileobj.write(obj.name)
+    fileobj.write(" = ")
+    dump(obj.value, fileobj)
+
+
 def _serialize_call(obj, fileobj):
     dump(obj.func, fileobj)
     fileobj.write("(")
@@ -96,7 +108,9 @@ _serializers = {
     ExpressionStatement: _serialize_expression_statement,
     FunctionDeclaration: _serialize_function_declaration,
     ReturnStatement: _serialize_return_statement,
+    VariableDeclaration: _serialize_variable_declaration,
     
+    Assignment: _serialize_assignment,
     Call: _serialize_call,
     VariableReference: _serialize_ref,
     Number: _serialize_number,

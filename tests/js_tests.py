@@ -39,6 +39,12 @@ def test_serialize_call_with_no_args():
 
 
 @istest
+def test_serialize_assignment():
+    assignment = js.assign("x", js.ref("y"))
+    assert_equal("x = y", js.dumps(assignment))
+
+
+@istest
 def test_serialize_expression_statement():
     assert_equal("x;", js.dumps(js.expression_statement(js.ref("x"))))
 
@@ -58,8 +64,14 @@ def test_serialize_function_declaration():
 
 @istest
 def test_serialize_return_statement():
-    func = js.ret(js.ref("x"))
-    assert_equal("return x;", js.dumps(func))
+    statement = js.ret(js.ref("x"))
+    assert_equal("return x;", js.dumps(statement))
+
+
+@istest
+def test_serialize_var_declaration():
+    statement = js.var("x")
+    assert_equal("var x;", js.dumps(statement))
 
 
 @istest
