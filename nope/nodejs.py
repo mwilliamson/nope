@@ -32,7 +32,7 @@ def _expression_statement(statement):
 
 
 def _assign(assignment):
-    return js.assign(assignment.name, transform(assignment.value))
+    return js.expression_statement(js.assign(assignment.name, transform(assignment.value)))
     
 
 def _function_def(func):

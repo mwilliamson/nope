@@ -50,7 +50,7 @@ def test_transform_function_declaration_declares_variables_at_top_of_function():
             args=[],
             body=[
                 js.var("x"),
-                js.assign("x", js.ref("y")),
+                js.expression_statement(js.assign("x", js.ref("y"))),
             ],
         )
     )
