@@ -9,7 +9,7 @@ def nope_to_nodejs(source_path, nope_ast, destination_dir):
     dest_path = os.path.join(destination_dir, dest_filename)
     with open(dest_path, "w") as dest_file:
         dest_file.write(_prelude)
-        js.dump(_transform(nope_ast), dest_file)
+        js.dump(transform(nope_ast), dest_file)
 
 
 _prelude = """
@@ -19,7 +19,7 @@ function print(value) {
 """
 
 
-def _transform(nope_node):
+def transform(nope_node):
     return _transformers[type(nope_node)](nope_node)
 
 
@@ -28,7 +28,7 @@ def _module(module):
 
 
 def _expression_statement(statement):
-    return js.expression_statement(_transform(statement.value))
+    return js.expression_statement(transform(statement.value))
 
 
 def _function_def(func):
@@ -40,11 +40,11 @@ def _function_def(func):
 
 
 def _return_statement(statement):
-    return js.ret(_transform(statement.value))
+    return js.ret(transform(statement.value))
 
 
 def _call(call):
-    return js.call(_transform(call.func), _transform_all(call.args))
+    return js.call(transform(call.func), _transform_all(call.args))
 
 
 def _ref(ref):
@@ -56,7 +56,7 @@ def _int(node):
 
 
 def _transform_all(nodes):
-    return list(map(_transform, nodes))
+    return list(map(transform, nodes))
 
 
 _transformers = {
