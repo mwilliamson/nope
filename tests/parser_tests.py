@@ -165,3 +165,20 @@ def f(x):
         assert False, "Expected SyntaxError"
     except SyntaxError as error:
         assert_equal("args length mismatch: def has 1, signature has 2", str(error))
+
+
+
+@istest
+def test_parse_none():
+    _assert_expression_parse(nodes.none(), "None")
+
+
+
+def _assert_expression_parse(expected, source):
+    module = parser.parse(source)
+    assert isinstance(module, nodes.Module)
+    
+    expression_statement = module.body[0]
+    assert isinstance(expression_statement, nodes.ExpressionStatement)
+    
+    assert_equal(expected, expression_statement.value)

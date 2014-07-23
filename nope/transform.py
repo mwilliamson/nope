@@ -87,7 +87,10 @@ class Converter(object):
 
 
     def _name(self, node):
-        return nodes.ref(node.id)
+        if node.id == "None":
+            return nodes.none()
+        else:
+            return nodes.ref(node.id)
 
 
     def _call(self, node):
