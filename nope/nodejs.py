@@ -1,6 +1,6 @@
 import os
 
-from . import nodes, js
+from . import nodes, js, util
 
 
 def nope_to_nodejs(source_path, nope_ast, destination_dir):
@@ -31,11 +31,22 @@ def _expression_statement(statement):
     return js.expression_statement(transform(statement.value))
 
 
+def _assign(assignment):
+    return js.assign(assignment.name, transform(assignment.value))
+    
+
 def _function_def(func):
+    var_declarations = [
+        js.var(name)
+        for name in util.declared_locals(func)
+    ]
+    
+    body = var_declarations + _transform_all(func.body)
+    
     return js.function_declaration(
         name=func.name,
         args=[arg.name for arg in func.args.args],
-        body=_transform_all(func.body),
+        body=body,
     )
 
 
@@ -71,6 +82,7 @@ _transformers = {
     nodes.Module: _module,
     
     nodes.ExpressionStatement: _expression_statement,
+    nodes.Assignment: _assign,
     nodes.FunctionDef: _function_def,
     nodes.ReturnStatement: _return_statement,
     

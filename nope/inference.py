@@ -1,4 +1,4 @@
-from . import types, nodes
+from . import types, nodes, util
 
 
 def infer(expression, context):
@@ -95,11 +95,7 @@ def _check_function_def(node, context):
     
     arg_names = [arg.name for arg in node.args.args]
     
-    local_names = arg_names + [
-        child.name
-        for child in node.body
-        if _is_variable_binder(child)
-    ]
+    local_names = arg_names + util.declared_locals(node)
     
     body_context = context.enter_func(return_type, local_names=local_names)
     
@@ -110,10 +106,6 @@ def _check_function_def(node, context):
         update_context(statement, body_context)
         
     context.add(node.name, func_type)
-
-
-def _is_variable_binder(node):
-    return isinstance(node, (nodes.FunctionDef, nodes.Assignment))
     
 
 _inferers = {

@@ -37,6 +37,26 @@ def test_transform_function_declaration():
 
 
 @istest
+def test_transform_function_declaration_declares_variables_at_top_of_function():
+    _assert_transform(
+        nodes.func(
+            name="f",
+            args=nodes.args([]),
+            return_annotation=None,
+            body=[nodes.assign("x", nodes.ref("y"))],
+        ),
+        js.function_declaration(
+            name="f",
+            args=[],
+            body=[
+                js.var("x"),
+                js.assign("x", js.ref("y")),
+            ],
+        )
+    )
+
+
+@istest
 def test_transform_return():
     _assert_transform(
         nodes.ret(nodes.ref("x")),
