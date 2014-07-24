@@ -77,7 +77,10 @@ def _infer_call(node, context):
 
 def _infer_attr(node, context):
     value_type = infer(node.value, context)
-    return value_type.attrs[node.attr]
+    if node.attr in value_type.attrs:
+        return value_type.attrs[node.attr]
+    else:
+        raise AttributeError(value_type.name, node.attr)
 
 
 def _infer_function_def(node, context):
@@ -174,3 +177,12 @@ class UnboundLocalError(TypeCheckError):
     
     def __str__(self):
         return "local variable {0} referenced before assignment".format(self.name)
+
+
+class AttributeError(TypeCheckError):
+    def __init__(self, obj_type, attr_name):
+        self._obj_type = obj_type
+        self._attr_name = attr_name
+    
+    def __str__(self):
+        return "{} object has no attribute {}".format(self._obj_type, self._attr_name)
