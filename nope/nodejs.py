@@ -16,6 +16,25 @@ _prelude = """
 function print(value) {
     console.log(value);
 }
+(function() {
+    function propertyAccess(value, propertyName) {
+        if (isString(value) && propertyName === "find") {
+            // TODO: perform this rewriting at compile-time
+            return value.indexOf.bind(value);
+        } else {
+            // TODO: bind this if the property is a function
+            return value[propertyName];
+        }
+    }
+    
+    function isString(value) {
+        return Object.prototype.toString.call(value) === "[object String]";
+    }
+
+    $nope = {
+        propertyAccess: propertyAccess
+    };
+})();
 """
 
 
@@ -62,7 +81,10 @@ def _call(call):
 
 
 def _attr(attr):
-    return js.property_access(transform(attr.value), attr.attr)
+    return js.call(
+        js.ref("$nope.propertyAccess"),
+        [transform(attr.value), js.string(attr.attr)],
+    )
 
 
 def _ref(ref):

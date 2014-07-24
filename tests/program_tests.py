@@ -65,6 +65,13 @@ class ExecutionTests(object):
         assert_equal(b"42\n", result.output)
         assert_equal(b"", result.stderr_output)
     
+    @istest
+    def can_read_attributes_of_builtins(self):
+        result = self._run_program(path=_program_path("valid/attribute_read.py"), program="attribute_read")
+        assert_equal(0, result.return_code)
+        assert_equal(b"1\n", result.output)
+        assert_equal(b"", result.stderr_output)
+    
     def _run_program(self, path, program):
         with tempman.create_temp_dir() as temp_dir:
             output_dir = temp_dir.path
