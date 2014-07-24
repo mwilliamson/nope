@@ -59,6 +59,13 @@ def _serialize_assignment(obj, fileobj):
     dump(obj.value, fileobj)
 
 
+def _serialize_property_access(obj, fileobj):
+    fileobj.write("(")
+    dump(obj.value, fileobj)
+    fileobj.write(").")
+    fileobj.write(obj.property)
+
+
 def _serialize_call(obj, fileobj):
     dump(obj.func, fileobj)
     fileobj.write("(")
@@ -95,6 +102,7 @@ ret = ReturnStatement = collections.namedtuple("ReturnStatement", ["value"])
 var = VariableDeclaration = collections.namedtuple("VariableDeclaration", ["name"])
 
 assign = Assignment = collections.namedtuple("Assignment", ["name", "value"])
+property_access = PropertyAccess = collections.namedtuple("PropertyAccess", ["value", "property"])
 call = Call = collections.namedtuple("Call", ["func", "args"])
 ref = VariableReference = collections.namedtuple("VariableReference", ["name"])
 number = Number = collections.namedtuple("Number", ["value"])
@@ -111,6 +119,7 @@ _serializers = {
     VariableDeclaration: _serialize_variable_declaration,
     
     Assignment: _serialize_assignment,
+    PropertyAccess: _serialize_property_access,
     Call: _serialize_call,
     VariableReference: _serialize_ref,
     Number: _serialize_number,

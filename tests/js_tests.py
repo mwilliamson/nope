@@ -39,6 +39,11 @@ def test_serialize_call_with_no_args():
 
 
 @istest
+def test_serialize_property_access():
+    assert_equal("(x).y", js.dumps(js.property_access(js.ref("x"), "y")))
+
+
+@istest
 def test_serialize_assignment():
     assignment = js.assign("x", js.ref("y"))
     assert_equal("x = y", js.dumps(assignment))
