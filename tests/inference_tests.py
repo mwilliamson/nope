@@ -69,11 +69,13 @@ def can_infer_type_of_attribute():
 @istest
 def type_error_if_attribute_does_not_exist():
     context = Context({"x": types.str})
+    node = nodes.attr(nodes.ref("x"), "swizzlify")
     try:
-        infer(nodes.attr(nodes.ref("x"), "swizzlify"), context)
+        infer(node, context)
         assert False, "Expected error"
     except inference.AttributeError as error:
         assert_equal("str object has no attribute swizzlify", str(error))
+        assert error.node is node
     
 
 @istest

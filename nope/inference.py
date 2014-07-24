@@ -1,3 +1,5 @@
+import abc
+
 from . import types, nodes, util
 
 
@@ -80,7 +82,7 @@ def _infer_attr(node, context):
     if node.attr in value_type.attrs:
         return value_type.attrs[node.attr]
     else:
-        raise AttributeError(value_type.name, node.attr)
+        raise AttributeError(node, value_type.name, node.attr)
 
 
 def _infer_function_def(node, context):
@@ -180,7 +182,8 @@ class UnboundLocalError(TypeCheckError):
 
 
 class AttributeError(TypeCheckError):
-    def __init__(self, obj_type, attr_name):
+    def __init__(self, node, obj_type, attr_name):
+        self.node = node
         self._obj_type = obj_type
         self._attr_name = attr_name
     
