@@ -55,6 +55,15 @@ def call_arguments_length_must_match():
     except inference.ArgumentsLengthError as error:
         assert_equal(1, error.expected)
         assert_equal(0, error.actual)
+
+
+@istest
+def can_infer_type_of_attribute():
+    context = Context({"x": types.str})
+    assert_equal(
+        types.func([types.str], types.int),
+        infer(nodes.attr(nodes.ref("x"), "find"), context)
+    )
     
 
 @istest

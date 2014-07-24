@@ -74,6 +74,12 @@ def _infer_call(node, context):
     
     return infer(node.func, context).params[-1]
 
+
+def _infer_attr(node, context):
+    value_type = infer(node.value, context)
+    return value_type.attrs[node.attr]
+
+
 def _infer_function_def(node, context):
     def read_annotation(annotation):
         if annotation is None:
@@ -114,6 +120,7 @@ _inferers = {
     nodes.StringExpression: _infer_str,
     nodes.VariableReference: _infer_ref,
     nodes.Call: _infer_call,
+    nodes.AttributeAccess: _infer_attr,
 }
 
 
