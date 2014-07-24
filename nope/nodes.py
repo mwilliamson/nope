@@ -8,6 +8,7 @@ StringExpression = collections.namedtuple("StringExpression", ["value"])
 VariableReference = collections.namedtuple("VariableReference", ["name"])
 
 Call = collections.namedtuple("Call", ["func", "args"])
+AttributeAccess = collections.namedtuple("AttributeAccess", ["value", "attr"])
 TypeApplication = collections.namedtuple("TypeApplication", ["generic_type", "params"])
 
 ReturnStatement = collections.namedtuple("ReturnStatement", ["value"])
@@ -32,6 +33,7 @@ str = StringExpression
 ref = VariableReference
 
 call = Call
+attr = AttributeAccess
 type_apply = TypeApplication
 
 ret = ReturnStatement

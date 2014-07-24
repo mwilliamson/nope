@@ -198,6 +198,12 @@ def test_parse_call():
 
 
 @istest
+def test_attribute_access():
+    expected = nodes.attr(nodes.ref("x"), "y")
+    _assert_expression_parse(expected, "x.y")
+
+
+@istest
 def test_parse_expression_statement():
     expected = nodes.expression_statement(nodes.ref("x"))
     _assert_statement_parse(expected, "x")

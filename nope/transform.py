@@ -22,6 +22,7 @@ class Converter(object):
             ast.Num: self._num_literal,
             ast.Name: self._name,
             ast.Call: self._call,
+            ast.Attribute: self._attr,
         }
 
 
@@ -106,7 +107,11 @@ class Converter(object):
 
     def _call(self, node):
         return nodes.call(self.convert(node.func), self._mapped(node.args))
-
+    
+    
+    def _attr(self, node):
+        return nodes.attr(self.convert(node.value), node.attr)
+    
 
     def _mapped(self, nodes):
         return [
