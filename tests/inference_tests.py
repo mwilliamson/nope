@@ -39,10 +39,13 @@ def can_infer_type_of_call():
 @istest
 def call_arguments_must_match():
     context = Context({"f": types.func([types.str], types.int)})
+    arg_node = nodes.int(4)
+    node = nodes.call(nodes.ref("f"), [arg_node])
     _assert_type_mismatch(
-        lambda: infer(nodes.call(nodes.ref("f"), [nodes.int(4)]), context),
+        lambda: infer(node, context),
         expected=types.str,
         actual=types.int,
+        node=arg_node,
     )
 
 
@@ -111,15 +114,14 @@ def can_infer_type_of_function_with_no_args_and_return_annotation():
 
 @istest
 def type_mismatch_if_return_type_is_incorrect():
+    return_node = nodes.ret(nodes.str("!"))
     node = nodes.func(
         "f",
         args=nodes.arguments([]),
         return_annotation=nodes.ref("int"),
-        body=[
-            nodes.ret(nodes.str("!")),
-        ],
+        body=[return_node],
     )
-    _assert_type_mismatch(lambda: _infer_func_type(node), expected=types.int, actual=types.str)
+    _assert_type_mismatch(lambda: _infer_func_type(node), expected=types.int, actual=types.str, node=return_node)
 
 
 @istest
@@ -180,10 +182,11 @@ def _infer_func_type(func_node):
     return context.lookup(func_node.name)
 
 
-def _assert_type_mismatch(func, expected, actual):
+def _assert_type_mismatch(func, expected, actual, node):
     try:
         func()
         assert False, "Expected type mismatch"
     except inference.TypeMismatchError as mismatch:
         assert_equal(expected, mismatch.expected)
         assert_equal(actual, mismatch.actual)
+        assert mismatch.node is node

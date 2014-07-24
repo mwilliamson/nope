@@ -72,7 +72,7 @@ def _infer_call(node, context):
     for actual_arg, formal_arg_type in zip(node.args, func_type.params[:-1]):
         actual_arg_type = infer(actual_arg, context)
         if not types.is_sub_type(formal_arg_type, actual_arg_type):
-            raise TypeMismatchError(expected=formal_arg_type, actual=actual_arg_type)
+            raise TypeMismatchError(actual_arg, expected=formal_arg_type, actual=actual_arg_type)
     
     return infer(node.func, context).params[-1]
 
@@ -137,7 +137,7 @@ def _check_return(node, context):
     expected = context.return_type
     actual = infer(node.value, context)
     if not types.is_sub_type(expected, actual):
-        raise TypeMismatchError(expected, actual)
+        raise TypeMismatchError(node, expected, actual)
 
 
 def _check_assignment(node, context):
@@ -166,9 +166,10 @@ class ArgumentsLengthError(TypeCheckError):
 
 
 class TypeMismatchError(TypeCheckError):
-    def __init__(self, expected, actual):
+    def __init__(self, node, expected, actual):
         self.expected = expected
         self.actual = actual
+        self.node = node
         
     def __str__(self):
         return "Expected {0} but was {1}".format(self.expected, self.actual)
