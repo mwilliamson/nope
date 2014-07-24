@@ -61,6 +61,10 @@ def _call(call):
     return js.call(transform(call.func), _transform_all(call.args))
 
 
+def _attr(attr):
+    return js.property_access(transform(attr.value), attr.attr)
+
+
 def _ref(ref):
     return js.ref(ref.name)
 
@@ -90,6 +94,7 @@ _transformers = {
     nodes.ReturnStatement: _return_statement,
     
     nodes.Call: _call,
+    nodes.AttributeAccess: _attr,
     nodes.VariableReference: _ref,
     nodes.NoneExpression: _none,
     nodes.IntExpression: _int,

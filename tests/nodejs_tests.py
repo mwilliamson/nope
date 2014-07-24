@@ -81,6 +81,14 @@ def test_transform_call():
 
 
 @istest
+def test_transform_property_access():
+    _assert_transform(
+        nodes.attr(nodes.ref("x"), "y"),
+        js.property_access(js.ref("x"), "y")
+    )
+
+
+@istest
 def test_transform_variable_reference():
     _assert_transform(
         nodes.ref("x"),
