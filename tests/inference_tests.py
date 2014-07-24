@@ -160,8 +160,9 @@ def variables_are_shadowed_in_defs():
 
 @istest
 def local_variables_cannot_be_used_before_assigned():
+    usage_node = nodes.ref("x")
     node = nodes.func("g", nodes.args([]), None, [
-        nodes.expression_statement(nodes.call(nodes.ref("f"), [nodes.ref("x")])),
+        nodes.expression_statement(nodes.call(nodes.ref("f"), [usage_node])),
         nodes.assign("x", nodes.str("Hello")),
     ])
     
@@ -174,6 +175,7 @@ def local_variables_cannot_be_used_before_assigned():
         assert False, "Expected UnboundLocalError"
     except inference.UnboundLocalError as error:
         assert_equal("local variable x referenced before assignment", str(error))
+        assert error.node is usage_node
 
 
 def _infer_func_type(func_node):

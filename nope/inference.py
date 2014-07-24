@@ -59,7 +59,7 @@ def _infer_str(node, context):
 def _infer_ref(node, context):
     ref_type = context.lookup(node.name)
     if ref_type is None:
-        raise UnboundLocalError(node.name)
+        raise UnboundLocalError(node, node.name)
     else:
         return ref_type
 
@@ -176,7 +176,8 @@ class TypeMismatchError(TypeCheckError):
 
 
 class UnboundLocalError(TypeCheckError):
-    def __init__(self, name):
+    def __init__(self, node, name):
+        self.node = node
         self.name = name
     
     def __str__(self):
