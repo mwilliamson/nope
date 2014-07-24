@@ -67,7 +67,7 @@ def _infer_call(node, context):
     func_type = infer(node.func, context)
     
     if len(func_type.params) - 1 != len(node.args):
-        raise ArgumentsLengthError(expected=len(func_type.params) - 1, actual=len(node.args))
+        raise ArgumentsLengthError(node, expected=len(func_type.params) - 1, actual=len(node.args))
     
     for actual_arg, formal_arg_type in zip(node.args, func_type.params[:-1]):
         actual_arg_type = infer(actual_arg, context)
@@ -159,7 +159,8 @@ class TypeCheckError(Exception):
 
 
 class ArgumentsLengthError(TypeCheckError):
-    def __init__(self, expected, actual):
+    def __init__(self, node, expected, actual):
+        self.node = node
         self.expected = expected
         self.actual = actual
 

@@ -49,12 +49,14 @@ def call_arguments_must_match():
 @istest
 def call_arguments_length_must_match():
     context = Context({"f": types.func([types.str], types.int)})
+    node = nodes.call(nodes.ref("f"), [])
     try:
-        infer(nodes.call(nodes.ref("f"), []), context)
+        infer(node, context)
         assert False, "Expected error"
     except inference.ArgumentsLengthError as error:
         assert_equal(1, error.expected)
         assert_equal(0, error.actual)
+        assert error.node is node
 
 
 @istest
