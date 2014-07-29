@@ -4,6 +4,81 @@ from nope import parser, nodes
 
 
 @istest
+def can_parse_import_from_in_current_package_and_one_name():
+    source = """
+from . import message
+"""
+    
+    module_node = parser.parse(source)
+    expected_node = nodes.import_from(["."], [nodes.import_alias("message", None)])
+    assert_equal(expected_node, module_node.body[0])
+
+
+@istest
+def can_parse_import_alias():
+    source = """
+from . import message as m
+"""
+    
+    module_node = parser.parse(source)
+    expected_node = nodes.import_from(["."], [nodes.import_alias("message", "m")])
+    assert_equal(expected_node, module_node.body[0])
+
+
+@istest
+def can_parse_import_from_in_current_package_and_many_names():
+    source = """
+from . import message, go
+"""
+    
+    module_node = parser.parse(source)
+    expected_node = nodes.import_from(["."], [
+        nodes.import_alias("message", None),
+        nodes.import_alias("go", None),
+    ])
+    assert_equal(expected_node, module_node.body[0])
+
+
+@istest
+def can_parse_import_from_with_relative_import_of_child_module():
+    source = """
+from .x.y import message
+"""
+    
+    module_node = parser.parse(source)
+    expected_node = nodes.import_from([".", "x", "y"], [
+        nodes.import_alias("message", None),
+    ])
+    assert_equal(expected_node, module_node.body[0])
+
+
+@istest
+def can_parse_import_from_with_relative_import_of_parent():
+    source = """
+from ...x.y import message
+"""
+    
+    module_node = parser.parse(source)
+    expected_node = nodes.import_from(["..", "..", "x", "y"], [
+        nodes.import_alias("message", None),
+    ])
+    assert_equal(expected_node, module_node.body[0])
+
+
+@istest
+def can_parse_absolute_import_from():
+    source = """
+from x.y import message
+"""
+    
+    module_node = parser.parse(source)
+    expected_node = nodes.import_from(["x", "y"], [
+        nodes.import_alias("message", None),
+    ])
+    assert_equal(expected_node, module_node.body[0])
+
+
+@istest
 def can_parse_function_definition():
     source = """
 def f():

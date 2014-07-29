@@ -19,6 +19,9 @@ FunctionDef = collections.namedtuple("FunctionDef", ["name", "args", "return_ann
 Arguments = collections.namedtuple("Arguments", ["args"])
 Argument = collections.namedtuple("Argument", ["name", "annotation"])
 
+ImportFrom = collections.namedtuple("ImportFrom", ["module", "names"])
+ImportAlias = collections.namedtuple("ImportAlias", ["name", "asname"])
+
 Module = collections.namedtuple("Module", ["body"])
 
 
@@ -49,6 +52,9 @@ def func(name, args, return_annotation, body, type_params=None):
     
 args = arguments = Arguments
 arg = argument = Argument
+
+import_from = ImportFrom
+import_alias = ImportAlias
 
 module = Module
 

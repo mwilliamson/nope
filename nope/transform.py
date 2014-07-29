@@ -13,6 +13,10 @@ class Converter(object):
 
         self._converters = {
             ast.Module: self._module,
+            
+            ast.ImportFrom: self._import_from,
+            ast.alias: self._import_alias,
+            
             ast.FunctionDef: self._func,
             ast.Expr: self._expr,
             ast.Return: self._return,
@@ -32,6 +36,23 @@ class Converter(object):
     
     def _module(self, node):
         return nodes.module(self._mapped(node.body))
+
+
+    def _import_from(self, node):
+        if node.level == 1:
+            module_path = ["."]
+        else:
+            module_path = [".."] * (node.level - 1)
+        
+        
+        if node.module:
+            module_path += node.module.split(".")
+        
+        return nodes.import_from(module_path, self._mapped(node.names))
+    
+    
+    def _import_alias(self, node):
+        return nodes.import_alias(node.name, node.asname)
 
 
     def _func(self, node):
