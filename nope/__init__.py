@@ -1,7 +1,7 @@
 import collections
 import os
 
-from . import inference, parser, compilers
+from . import inference, parser, compilers, errors
 
 
 def check(path):
@@ -17,7 +17,7 @@ def _check_dir(path):
     try:
         for path in source_tree.paths():
             source_tree.check(path)
-    except inference.TypeCheckError as error:
+    except errors.TypeCheckError as error:
         return Result(is_valid=False, error=error, value=None)
     
     return Result(is_valid=True, error=None, value=source_tree)
@@ -53,7 +53,7 @@ def _check_file(path, source_tree=None):
     
     try:
         inference.check(nope_ast)
-    except inference.TypeCheckError as error:
+    except errors.TypeCheckError as error:
         return Result(is_valid=False, error=error, value=None)
     
     return Result(is_valid=True, error=None, value=nope_ast)

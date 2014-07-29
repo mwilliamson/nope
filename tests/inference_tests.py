@@ -1,6 +1,6 @@
 from nose.tools import istest, assert_equal
 
-from nope import types, nodes, inference
+from nope import types, nodes, inference, errors
 from nope.inference import infer as _infer, update_context
 from nope.context import Context, new_module_context
 
@@ -62,7 +62,7 @@ def call_arguments_length_must_match():
     try:
         infer(node, context)
         assert False, "Expected error"
-    except inference.ArgumentsLengthError as error:
+    except errors.ArgumentsLengthError as error:
         assert_equal(1, error.expected)
         assert_equal(0, error.actual)
         assert error.node is node
@@ -84,7 +84,7 @@ def type_error_if_attribute_does_not_exist():
     try:
         infer(node, context)
         assert False, "Expected error"
-    except inference.AttributeError as error:
+    except errors.AttributeError as error:
         assert_equal("str object has no attribute swizzlify", str(error))
         assert error.node is node
     
@@ -179,7 +179,7 @@ def local_variables_cannot_be_used_before_assigned():
     try:
         update_context(node, context)
         assert False, "Expected UnboundLocalError"
-    except inference.UnboundLocalError as error:
+    except errors.UnboundLocalError as error:
         assert_equal("local variable x referenced before assignment", str(error))
         assert error.node is usage_node
 
@@ -209,7 +209,7 @@ def _assert_type_mismatch(func, expected, actual, node):
     try:
         func()
         assert False, "Expected type mismatch"
-    except inference.TypeMismatchError as mismatch:
+    except errors.TypeMismatchError as mismatch:
         assert_equal(expected, mismatch.expected)
         assert_equal(actual, mismatch.actual)
         assert mismatch.node is node

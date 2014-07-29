@@ -1,6 +1,6 @@
 import os
 
-from . import types, nodes, util
+from . import types, nodes, util, errors
 from .context import new_module_context
 
 
@@ -55,7 +55,7 @@ class TypeChecker(object):
     def _infer_ref(self, node, context):
         ref_type = context.lookup(node.name)
         if ref_type is None:
-            raise UnboundLocalError(node, node.name)
+            raise errors.UnboundLocalError(node, node.name)
         else:
             return ref_type
 
@@ -63,12 +63,20 @@ class TypeChecker(object):
         func_type = self.infer(node.func, context)
         
         if len(func_type.params) - 1 != len(node.args):
-            raise ArgumentsLengthError(node, expected=len(func_type.params) - 1, actual=len(node.args))
+            raise errors.ArgumentsLengthError(
+                node,
+                expected=len(func_type.params) - 1,
+                actual=len(node.args)
+            )
         
         for actual_arg, formal_arg_type in zip(node.args, func_type.params[:-1]):
             actual_arg_type = self.infer(actual_arg, context)
             if not types.is_sub_type(formal_arg_type, actual_arg_type):
-                raise TypeMismatchError(actual_arg, expected=formal_arg_type, actual=actual_arg_type)
+                raise errors.TypeMismatchError(
+                    actual_arg,
+                    expected=formal_arg_type,
+                    actual=actual_arg_type
+                )
         
         return self.infer(node.func, context).params[-1]
 
@@ -78,7 +86,7 @@ class TypeChecker(object):
         if node.attr in value_type.attrs:
             return value_type.attrs[node.attr]
         else:
-            raise AttributeError(node, value_type.name, node.attr)
+            raise errors.AttributeError(node, value_type.name, node.attr)
 
 
     def _infer_function_def(self, node, context):
@@ -134,7 +142,7 @@ class TypeChecker(object):
         expected = context.return_type
         actual = self.infer(node.value, context)
         if not types.is_sub_type(expected, actual):
-            raise TypeMismatchError(node, expected, actual)
+            raise errors.TypeMismatchError(node, expected, actual)
 
 
     def _check_assignment(self, node, context):
@@ -152,7 +160,7 @@ class TypeChecker(object):
         try:
             module = self._source_tree.check(os.path.abspath(import_path))
         except KeyError:
-            raise ImportError()
+            raise errors.ImportError()
         
         # TODO: handle aliases
         for alias in node.names:
@@ -172,47 +180,3 @@ class TypeChecker(object):
 class Module(object):
     def __init__(self, exports):
         self.exports = exports
-
-
-class TypeCheckError(Exception):
-    pass
-
-
-class ArgumentsLengthError(TypeCheckError):
-    def __init__(self, node, expected, actual):
-        self.node = node
-        self.expected = expected
-        self.actual = actual
-
-
-class TypeMismatchError(TypeCheckError):
-    def __init__(self, node, expected, actual):
-        self.expected = expected
-        self.actual = actual
-        self.node = node
-        
-    def __str__(self):
-        return "Expected {0} but was {1}".format(self.expected, self.actual)
-
-
-class UnboundLocalError(TypeCheckError):
-    def __init__(self, node, name):
-        self.node = node
-        self.name = name
-    
-    def __str__(self):
-        return "local variable {0} referenced before assignment".format(self.name)
-
-
-class AttributeError(TypeCheckError):
-    def __init__(self, node, obj_type, attr_name):
-        self.node = node
-        self._obj_type = obj_type
-        self._attr_name = attr_name
-    
-    def __str__(self):
-        return "{} object has no attribute {}".format(self._obj_type, self._attr_name)
-
-
-class ImportError(TypeCheckError):
-    pass
