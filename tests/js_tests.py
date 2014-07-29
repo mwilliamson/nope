@@ -24,6 +24,11 @@ def test_serialize_variable_reference():
 
 
 @istest
+def test_serialize_list():
+    assert_equal("[1, null]", js.dumps(js.List([js.number(1), js.null])))
+
+
+@istest
 def test_serialize_call_with_no_args():
     assert_equal("f(x)", js.dumps(js.call(js.ref("f"), [])))
     
