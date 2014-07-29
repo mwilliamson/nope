@@ -102,7 +102,7 @@ class TypeChecker(object):
         
         arg_names = [arg.name for arg in node.args.args]
         
-        local_names = arg_names + util.declared_locals(node)
+        local_names = arg_names + util.declared_locals(node.body)
         
         body_context = context.enter_func(return_type, local_names=local_names)
         

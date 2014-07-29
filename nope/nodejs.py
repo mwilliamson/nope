@@ -127,18 +127,21 @@ def _assign(assignment):
     
 
 def _function_def(func):
-    var_declarations = [
-        js.var(name)
-        for name in util.declared_locals(func)
-    ]
-    
-    body = var_declarations + _transform_all(func.body)
+    body = _generate_vars(func.body) + _transform_all(func.body)
     
     return js.function_declaration(
         name=func.name,
         args=[arg.name for arg in func.args.args],
         body=body,
     )
+
+
+def _generate_vars(statements):
+    return [
+        js.var(name)
+        for name in util.declared_locals(statements)
+    ]
+    
 
 
 def _return_statement(statement):

@@ -1,9 +1,9 @@
 from . import nodes
 
 
-def declared_locals(func_def):
+def declared_locals(statements):
     names = []
-    for child in func_def.body:
+    for child in statements:
         names += _declared_names(child)
     
     return names
