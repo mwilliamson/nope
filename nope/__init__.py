@@ -85,6 +85,9 @@ class SourceTree(object):
     def paths(self):
         return self._asts.keys()
     
+    def ast(self, path):
+        return self._asts[path]
+    
     def check(self, path):
         checker = self._module_checkers[path]
         self._module_checkers[path] = self._circular_import

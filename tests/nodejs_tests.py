@@ -12,6 +12,81 @@ def test_transform_module():
 
 
 @istest
+def test_transform_module_with_exports():
+    _assert_transform(
+        nodes.module([
+            nodes.assign(["__all__"], nodes.list([nodes.str("x")]))
+        ]),
+        js.statements([
+            js.expression_statement(
+                js.assign(
+                    "__all__",
+                    js.array([js.string("x")])
+                )
+            ),
+            js.expression_statement(
+                js.assign(
+                    js.property_access(js.ref("$nope.exports"), "x"),
+                    js.ref("x"),
+                )
+            ),
+        ])
+    )
+
+
+@istest
+def test_transform_import_from_current_package():
+    _assert_transform(
+        nodes.import_from(["."], [nodes.import_alias("x", None)]),
+        js.statements([
+            js.var("$import0"),
+            js.var("x"),
+            js.expression_statement(
+                js.assign("$import0", js.call(js.ref("$nope.require"), [js.string("./")]))
+            ),
+            js.expression_statement(
+                js.assign("x", js.property_access(js.ref("$import0"), "x"))
+            )
+        ])
+    )
+
+
+@istest
+def test_transform_import_from_child_package():
+    _assert_transform(
+        nodes.import_from([".", "x"], [nodes.import_alias("y", None)]),
+        js.statements([
+            js.var("$import0"),
+            js.var("y"),
+            js.expression_statement(
+                js.assign("$import0", js.call(js.ref("$nope.require"), [js.string("./x")]))
+            ),
+            js.expression_statement(
+                js.assign("y", js.property_access(js.ref("$import0"), "y"))
+            )
+        ])
+    )
+
+
+@istest
+def test_transform_import_from_package_relative_to_executing_script():
+    # TODO: this is only a valid transformation if we're in the script being executed
+    _assert_transform(
+        nodes.import_from(["x"], [nodes.import_alias("y", None)]),
+        js.statements([
+            js.var("$import0"),
+            js.var("y"),
+            js.expression_statement(
+                js.assign("$import0", js.call(js.ref("$nope.require"), [js.string("./x")]))
+            ),
+            js.expression_statement(
+                js.assign("y", js.property_access(js.ref("$import0"), "y"))
+            )
+        ])
+    )
+
+
+@istest
 def test_transform_expression_statement():
     _assert_transform(
         nodes.expression_statement(nodes.ref("x")),

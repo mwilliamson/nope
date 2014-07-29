@@ -54,7 +54,7 @@ def _serialize_variable_declaration(obj, fileobj):
 
 
 def _serialize_assignment(obj, fileobj):
-    fileobj.write(obj.name)
+    dump(obj.target, fileobj)
     fileobj.write(" = ")
     dump(obj.value, fileobj)
 
@@ -111,7 +111,14 @@ function_declaration = FunctionDeclaration = collections.namedtuple("FunctionDec
 ret = ReturnStatement = collections.namedtuple("ReturnStatement", ["value"])
 var = VariableDeclaration = collections.namedtuple("VariableDeclaration", ["name"])
 
-assign = Assignment = collections.namedtuple("Assignment", ["name", "value"])
+Assignment = collections.namedtuple("Assignment", ["target", "value"])
+
+def assign(target, value):
+    if isinstance(target, str):
+        target = ref(target)
+    
+    return Assignment(target, value)
+
 property_access = PropertyAccess = collections.namedtuple("PropertyAccess", ["value", "property"])
 call = Call = collections.namedtuple("Call", ["func", "args"])
 ref = VariableReference = collections.namedtuple("VariableReference", ["name"])

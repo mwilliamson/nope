@@ -48,8 +48,8 @@ def cannot_import_from_non_existent_package():
 
 
 @istest
-def can_import_from_package():
-    assert nope.check(path=_program_path("valid/relative_import_value")).is_valid
+def can_import_from_local_package():
+    assert nope.check(path=_program_path("valid/import_value_from_local_package")).is_valid
 
 
 @nottest
@@ -82,9 +82,9 @@ class ExecutionTests(object):
         assert_equal(b"1\n", result.output)
         assert_equal(b"", result.stderr_output)
     
-    #~ @istest
-    def can_import_relative_values(self):
-        result = self._run_program(path=_program_path("valid/relative_import_value"), program="main")
+    @istest
+    def can_import_value_from_local_package(self):
+        result = self._run_program(path=_program_path("valid/import_value_from_local_package"), program="main")
         assert_equal(0, result.return_code)
         assert_equal(b"Hello\n", result.output)
         assert_equal(b"", result.stderr_output)
