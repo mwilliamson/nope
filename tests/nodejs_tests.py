@@ -77,6 +77,25 @@ def test_transform_import_from_with_multiple_names():
 
 
 @istest
+def test_transform_import_from_with_alias():
+    _assert_transform(
+        nodes.import_from(["."], [
+            nodes.import_alias("x", "y"),
+        ]),
+        js.statements([
+            js.var("$import0"),
+            js.expression_statement(
+                js.assign("$import0", js.call(js.ref("$nope.require"), [js.string("./")]))
+            ),
+            js.var("y"),
+            js.expression_statement(
+                js.assign("y", js.property_access(js.ref("$import0"), "x"))
+            ),
+        ])
+    )
+
+
+@istest
 def test_transform_import_from_child_package():
     _assert_transform(
         nodes.import_from([".", "x"], [nodes.import_alias("y", None)]),

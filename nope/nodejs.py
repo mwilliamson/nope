@@ -106,9 +106,12 @@ def _import_from(import_from):
     ]
     
     for alias in import_from.names:
-        assert alias.asname is None
-        import_name = alias.name
-        import_value = js.property_access(js.ref(module_import_name), import_name)
+        if alias.asname is None:
+            import_name = alias.name
+        else:
+            import_name = alias.asname
+        
+        import_value = js.property_access(js.ref(module_import_name), alias.name)
         statements.append(js.var(import_name))
         statements.append(js.expression_statement(
             js.assign(import_name, import_value)
