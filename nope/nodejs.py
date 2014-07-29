@@ -99,10 +99,10 @@ def _import_from(import_from):
         module_path = "./" + module_path
     
     statements = [
-        js.var(module_import_name),
-        js.expression_statement(
-            js.assign(module_import_name, js.call(js.ref("$nope.require"), [js.string(module_path)]))
-        ),
+        js.var(
+            module_import_name,
+            js.call(js.ref("$nope.require"), [js.string(module_path)])
+        )
     ]
     
     for alias in import_from.names:
@@ -112,11 +112,7 @@ def _import_from(import_from):
             import_name = alias.asname
         
         import_value = js.property_access(js.ref(module_import_name), alias.name)
-        statements.append(js.var(import_name))
-        statements.append(js.expression_statement(
-            js.assign(import_name, import_value)
-        ))
-    
+        statements.append(js.var(import_name, import_value))
     
     return js.statements(statements)
 

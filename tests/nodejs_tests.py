@@ -40,14 +40,8 @@ def test_transform_import_from_current_package():
     _assert_transform(
         nodes.import_from(["."], [nodes.import_alias("x", None)]),
         js.statements([
-            js.var("$import0"),
-            js.expression_statement(
-                js.assign("$import0", js.call(js.ref("$nope.require"), [js.string("./")]))
-            ),
-            js.var("x"),
-            js.expression_statement(
-                js.assign("x", js.property_access(js.ref("$import0"), "x"))
-            )
+            js.var("$import0", js.call(js.ref("$nope.require"), [js.string("./")])),
+            js.var("x", js.property_access(js.ref("$import0"), "x")),
         ])
     )
 
@@ -60,18 +54,9 @@ def test_transform_import_from_with_multiple_names():
             nodes.import_alias("y", None),
         ]),
         js.statements([
-            js.var("$import0"),
-            js.expression_statement(
-                js.assign("$import0", js.call(js.ref("$nope.require"), [js.string("./")]))
-            ),
-            js.var("x"),
-            js.expression_statement(
-                js.assign("x", js.property_access(js.ref("$import0"), "x"))
-            ),
-            js.var("y"),
-            js.expression_statement(
-                js.assign("y", js.property_access(js.ref("$import0"), "y"))
-            ),
+            js.var("$import0", js.call(js.ref("$nope.require"), [js.string("./")])),
+            js.var("x", js.property_access(js.ref("$import0"), "x")),
+            js.var("y", js.property_access(js.ref("$import0"), "y")),
         ])
     )
 
@@ -83,14 +68,8 @@ def test_transform_import_from_with_alias():
             nodes.import_alias("x", "y"),
         ]),
         js.statements([
-            js.var("$import0"),
-            js.expression_statement(
-                js.assign("$import0", js.call(js.ref("$nope.require"), [js.string("./")]))
-            ),
-            js.var("y"),
-            js.expression_statement(
-                js.assign("y", js.property_access(js.ref("$import0"), "x"))
-            ),
+            js.var("$import0", js.call(js.ref("$nope.require"), [js.string("./")])),
+            js.var("y", js.property_access(js.ref("$import0"), "x")),
         ])
     )
 
@@ -100,14 +79,8 @@ def test_transform_import_from_child_package():
     _assert_transform(
         nodes.import_from([".", "x"], [nodes.import_alias("y", None)]),
         js.statements([
-            js.var("$import0"),
-            js.expression_statement(
-                js.assign("$import0", js.call(js.ref("$nope.require"), [js.string("./x")]))
-            ),
-            js.var("y"),
-            js.expression_statement(
-                js.assign("y", js.property_access(js.ref("$import0"), "y"))
-            )
+            js.var("$import0", js.call(js.ref("$nope.require"), [js.string("./x")])),
+            js.var("y", js.property_access(js.ref("$import0"), "y")),
         ])
     )
 
@@ -118,14 +91,8 @@ def test_transform_import_from_package_relative_to_executing_script():
     _assert_transform(
         nodes.import_from(["x"], [nodes.import_alias("y", None)]),
         js.statements([
-            js.var("$import0"),
-            js.expression_statement(
-                js.assign("$import0", js.call(js.ref("$nope.require"), [js.string("./x")]))
-            ),
-            js.var("y"),
-            js.expression_statement(
-                js.assign("y", js.property_access(js.ref("$import0"), "y"))
-            )
+            js.var("$import0", js.call(js.ref("$nope.require"), [js.string("./x")])),
+            js.var("y", js.property_access(js.ref("$import0"), "y")),
         ])
     )
 
