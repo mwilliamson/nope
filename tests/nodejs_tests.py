@@ -41,13 +41,37 @@ def test_transform_import_from_current_package():
         nodes.import_from(["."], [nodes.import_alias("x", None)]),
         js.statements([
             js.var("$import0"),
-            js.var("x"),
             js.expression_statement(
                 js.assign("$import0", js.call(js.ref("$nope.require"), [js.string("./")]))
             ),
+            js.var("x"),
             js.expression_statement(
                 js.assign("x", js.property_access(js.ref("$import0"), "x"))
             )
+        ])
+    )
+
+
+@istest
+def test_transform_import_from_with_multiple_names():
+    _assert_transform(
+        nodes.import_from(["."], [
+            nodes.import_alias("x", None),
+            nodes.import_alias("y", None),
+        ]),
+        js.statements([
+            js.var("$import0"),
+            js.expression_statement(
+                js.assign("$import0", js.call(js.ref("$nope.require"), [js.string("./")]))
+            ),
+            js.var("x"),
+            js.expression_statement(
+                js.assign("x", js.property_access(js.ref("$import0"), "x"))
+            ),
+            js.var("y"),
+            js.expression_statement(
+                js.assign("y", js.property_access(js.ref("$import0"), "y"))
+            ),
         ])
     )
 
@@ -58,10 +82,10 @@ def test_transform_import_from_child_package():
         nodes.import_from([".", "x"], [nodes.import_alias("y", None)]),
         js.statements([
             js.var("$import0"),
-            js.var("y"),
             js.expression_statement(
                 js.assign("$import0", js.call(js.ref("$nope.require"), [js.string("./x")]))
             ),
+            js.var("y"),
             js.expression_statement(
                 js.assign("y", js.property_access(js.ref("$import0"), "y"))
             )
@@ -76,10 +100,10 @@ def test_transform_import_from_package_relative_to_executing_script():
         nodes.import_from(["x"], [nodes.import_alias("y", None)]),
         js.statements([
             js.var("$import0"),
-            js.var("y"),
             js.expression_statement(
                 js.assign("$import0", js.call(js.ref("$nope.require"), [js.string("./x")]))
             ),
+            js.var("y"),
             js.expression_statement(
                 js.assign("y", js.property_access(js.ref("$import0"), "y"))
             )

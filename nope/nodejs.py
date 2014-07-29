@@ -98,20 +98,24 @@ def _import_from(import_from):
     if not module_path.startswith("."):
         module_path = "./" + module_path
     
-    import_name_alias, = import_from.names
-    import_name = import_name_alias.name
-    assert import_name_alias.asname is None
-    
-    return js.statements([
+    statements = [
         js.var(module_import_name),
-        js.var(import_name),
         js.expression_statement(
             js.assign(module_import_name, js.call(js.ref("$nope.require"), [js.string(module_path)]))
         ),
-        js.expression_statement(
-            js.assign(import_name, js.property_access(js.ref(module_import_name), import_name))
-        ),
-    ])
+    ]
+    
+    for alias in import_from.names:
+        assert alias.asname is None
+        import_name = alias.name
+        import_value = js.property_access(js.ref(module_import_name), import_name)
+        statements.append(js.var(import_name))
+        statements.append(js.expression_statement(
+            js.assign(import_name, import_value)
+        ))
+    
+    
+    return js.statements(statements)
 
 
 def _expression_statement(statement):
