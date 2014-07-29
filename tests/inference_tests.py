@@ -1,7 +1,8 @@
 from nose.tools import istest, assert_equal
 
 from nope import types, nodes, inference
-from nope.inference import infer as _infer, Context, module_context, new_module_context, update_context
+from nope.inference import infer as _infer, update_context
+from nope.context import Context, new_module_context
 
 
 def infer(node, context=None):
@@ -176,6 +177,22 @@ def local_variables_cannot_be_used_before_assigned():
     except inference.UnboundLocalError as error:
         assert_equal("local variable x referenced before assignment", str(error))
         assert error.node is usage_node
+
+
+@istest
+def module_exports_are_specified_using_all():
+    module_node = nodes.module([
+        # TODO: temporary hack, use lists to implement __all__ properly
+        nodes.assign(["__all__"], nodes.str("x,z")),
+        nodes.assign(["x"], nodes.str("one")),
+        nodes.assign(["y"], nodes.str("two")),
+        nodes.assign(["z"], nodes.int(3)),
+    ])
+    
+    context = Context({})
+    module = inference.check(module_node)
+    assert_equal(types.str, module.exports["x"])
+    assert_equal(types.int, module.exports["z"])
 
 
 def _infer_func_type(func_node):
