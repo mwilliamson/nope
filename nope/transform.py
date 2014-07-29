@@ -24,6 +24,7 @@ class Converter(object):
             
             ast.Str: self._str_literal,
             ast.Num: self._num_literal,
+            ast.List: self._list_literal,
             ast.Name: self._name,
             ast.Call: self._call,
             ast.Attribute: self._attr,
@@ -117,6 +118,10 @@ class Converter(object):
         value = node.n
         if isinstance(value, int):
             return nodes.int(value)
+    
+    
+    def _list_literal(self, node):
+        return nodes.list(self._mapped(node.elts))
 
 
     def _name(self, node):

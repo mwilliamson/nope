@@ -259,6 +259,11 @@ def test_parse_string():
 
 
 @istest
+def test_parse_list():
+    _assert_expression_parse(nodes.list([nodes.str("hello"), nodes.int(4)]), "['hello', 4]")
+
+
+@istest
 def test_parse_variable_reference():
     _assert_expression_parse(nodes.ref("x"), "x")
 

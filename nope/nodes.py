@@ -5,6 +5,7 @@ import collections
 NoneExpression = collections.namedtuple("NoneExpression", [])
 IntExpression = collections.namedtuple("IntExpression", ["value"])
 StringExpression = collections.namedtuple("StringExpression", ["value"])
+ListExpression = collections.namedtuple("ListExpression", ["elements"])
 VariableReference = collections.namedtuple("VariableReference", ["name"])
 
 Call = collections.namedtuple("Call", ["func", "args"])
@@ -33,6 +34,7 @@ def int(value):
     return IntExpression(value)
 
 str = StringExpression
+list = ListExpression
 ref = VariableReference
 
 call = Call
