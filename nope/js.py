@@ -50,6 +50,11 @@ def _serialize_return_statement(obj, fileobj):
 def _serialize_variable_declaration(obj, fileobj):
     fileobj.write("var ")
     fileobj.write(obj.name)
+    
+    if obj.value is not None:
+        fileobj.write(" = ")
+        dump(obj.value, fileobj)
+    
     fileobj.write(";")
 
 
@@ -109,7 +114,11 @@ statements = Statements = collections.namedtuple("Statements", ["statements"])
 expression_statement = ExpressionStatement = collections.namedtuple("ExpressionStatement", ["value"])
 function_declaration = FunctionDeclaration = collections.namedtuple("FunctionDeclaration", ["name", "args", "body"])
 ret = ReturnStatement = collections.namedtuple("ReturnStatement", ["value"])
-var = VariableDeclaration = collections.namedtuple("VariableDeclaration", ["name"])
+
+VariableDeclaration = collections.namedtuple("VariableDeclaration", ["name", "value"])
+
+def var(name, value=None):
+    return VariableDeclaration(name, value)
 
 Assignment = collections.namedtuple("Assignment", ["target", "value"])
 

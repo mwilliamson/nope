@@ -85,6 +85,12 @@ def test_serialize_var_declaration():
 
 
 @istest
+def test_serialize_var_declaration_with_immediate_assignment():
+    statement = js.var("x", js.ref("y"))
+    assert_equal("var x = y;", js.dumps(statement))
+
+
+@istest
 def test_serialize_statements():
     assert_equal("x;y;", js.dumps(js.statements([
         js.expression_statement(js.ref("x")),
