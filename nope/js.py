@@ -94,7 +94,7 @@ def _serialize_string(obj, fileobj):
     json.dump(obj.value, fileobj)
 
 
-def _serialize_list(obj, fileobj):
+def _serialize_array(obj, fileobj):
     fileobj.write("[")
     
     for index, arg in enumerate(obj.elements):
@@ -119,7 +119,7 @@ number = Number = collections.namedtuple("Number", ["value"])
 NullLiteral = collections.namedtuple("NullLiteral", [])
 null = NullLiteral()
 string = String = collections.namedtuple("String", ["value"])
-List = collections.namedtuple("List", ["elements"])
+array = Array = collections.namedtuple("Array", ["elements"])
 
 _serializers = {
     Statements: _serialize_statements,
@@ -136,5 +136,5 @@ _serializers = {
     Number: _serialize_number,
     NullLiteral: _serialize_null,
     String: _serialize_string,
-    List: _serialize_list,
+    Array: _serialize_array,
 }
