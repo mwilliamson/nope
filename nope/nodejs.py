@@ -71,8 +71,7 @@ def transform(nope_node):
 
 
 def _module(module):
-    # TODO: declare vars
-    body_statements = _transform_all(module.body)
+    body_statements = _generate_vars(module.body) + _transform_all(module.body)
     export_names = util.exported_names(module)
             
     export_statements = [

@@ -18,6 +18,7 @@ def test_transform_module_with_exports():
             nodes.assign(["__all__"], nodes.list([nodes.str("x")]))
         ]),
         js.statements([
+            js.var("__all__"),
             js.expression_statement(
                 js.assign(
                     "__all__",
