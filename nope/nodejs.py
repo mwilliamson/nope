@@ -73,11 +73,7 @@ def transform(nope_node):
 def _module(module):
     # TODO: declare vars
     body_statements = _transform_all(module.body)
-    # TODO: reuse logic for finding __all__
-    export_names = []
-    for statement in module.body:
-        if isinstance(statement, nodes.Assignment) and "__all__" in statement.targets:
-            export_names = [element.value for element in statement.value.elements]
+    export_names = util.exported_names(module)
             
     export_statements = [
         js.expression_statement(

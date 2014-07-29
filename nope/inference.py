@@ -29,28 +29,13 @@ class TypeChecker(object):
         return self._checkers[type(statement)](self, statement, context)
 
     def check(self, module):
-        export_names = []
-        
         context = new_module_context()
         for statement in module.body:
             self.update_context(statement, context)
-            if isinstance(statement, nodes.Assignment):
-                if "__all__" in statement.targets:
-                    assert isinstance(statement.value, nodes.ListExpression)
-                    
-                    def extract_string_value(node):
-                        # TODO: raise more appropriate error (and add test)
-                        assert isinstance(node, nodes.StringExpression)
-                        return node.value
-                    
-                    export_names = [
-                        extract_string_value(element)
-                        for element in statement.value.elements
-                    ]
         
         return Module(dict(
             (name, context.lookup(name))
-            for name in export_names
+            for name in util.exported_names(module)
         ))
 
 
