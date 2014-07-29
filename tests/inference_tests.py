@@ -187,8 +187,7 @@ def local_variables_cannot_be_used_before_assigned():
 @istest
 def module_exports_are_specified_using_all():
     module_node = nodes.module([
-        # TODO: temporary hack, use lists to implement __all__ properly
-        nodes.assign(["__all__"], nodes.str("x,z")),
+        nodes.assign(["__all__"], nodes.list([nodes.str("x"), nodes.str("z")])),
         nodes.assign(["x"], nodes.str("one")),
         nodes.assign(["y"], nodes.str("two")),
         nodes.assign(["z"], nodes.int(3)),

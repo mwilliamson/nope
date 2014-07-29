@@ -36,8 +36,17 @@ class TypeChecker(object):
             self.update_context(statement, context)
             if isinstance(statement, nodes.Assignment):
                 if "__all__" in statement.targets:
-                    assert isinstance(statement.value, nodes.StringExpression)
-                    export_names = statement.value.value.split(",")
+                    assert isinstance(statement.value, nodes.ListExpression)
+                    
+                    def extract_string_value(node):
+                        # TODO: raise more appropriate error (and add test)
+                        assert isinstance(node, nodes.StringExpression)
+                        return node.value
+                    
+                    export_names = [
+                        extract_string_value(element)
+                        for element in statement.value.elements
+                    ]
         
         return Module(dict(
             (name, context.lookup(name))

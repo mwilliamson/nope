@@ -1,4 +1,4 @@
-__all__ = "message"
+__all__ = ["message"]
 
 
 message = "Hello"
