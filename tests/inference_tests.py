@@ -32,6 +32,11 @@ def can_infer_type_of_variable_reference():
 
 
 @istest
+def can_infer_type_of_list_of_ints():
+    assert_equal(types.list_type(types.int), infer(nodes.list([nodes.int(1), nodes.int(42)])))
+
+
+@istest
 def can_infer_type_of_call():
     context = Context({"f": types.func([types.str], types.int)})
     assert_equal(types.int, infer(nodes.call(nodes.ref("f"), [nodes.str("")]), context))

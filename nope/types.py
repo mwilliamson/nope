@@ -1,7 +1,12 @@
 import collections
 
 ScalarType = collections.namedtuple("ScalarType", ["name", "attrs"])
-GenericType = collections.namedtuple("GenericType", ["name"])
+
+# TODO: number of type params
+class GenericType(collections.namedtuple("GenericType", ["name"])):
+    def __call__(self, *args):
+        return InstantiatedType(self, list(args))
+
 InstantiatedType = collections.namedtuple("InstantiatedType", ["generic_type", "params"])
 TypeType = collections.namedtuple("TypeType", ["type"])
 
@@ -30,6 +35,17 @@ int = ScalarType("int", {})
 str = ScalarType("str", {})
 str.attrs["find"] = func([str], int)
 
+list_type = GenericType("list")
+
 type = TypeType
 
 object = ScalarType("object", {})
+
+
+def unify(types):
+    for type_ in types:
+        if not is_sub_type(types[0], type_):
+            # TODO: raise more appropriate exception
+            raise Exception("Could not unify types")
+    
+    return types[0]

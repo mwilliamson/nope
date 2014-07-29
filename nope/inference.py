@@ -54,6 +54,10 @@ class TypeChecker(object):
     def _infer_str(self, node, context):
         return types.str
 
+    def _infer_list(self, node, context):
+        element_types = [self.infer(element, context) for element in node.elements]
+        return types.list_type(types.unify(element_types))
+
     def _infer_ref(self, node, context):
         ref_type = context.lookup(node.name)
         if ref_type is None:
@@ -121,6 +125,7 @@ class TypeChecker(object):
         nodes.NoneExpression: _infer_none,
         nodes.IntExpression: _infer_int,
         nodes.StringExpression: _infer_str,
+        nodes.ListExpression: _infer_list,
         nodes.VariableReference: _infer_ref,
         nodes.Call: _infer_call,
         nodes.AttributeAccess: _infer_attr,
