@@ -14,6 +14,7 @@ class Converter(object):
         self._converters = {
             ast.Module: self._module,
             
+            ast.Import: self._import,
             ast.ImportFrom: self._import_from,
             ast.alias: self._import_alias,
             
@@ -37,6 +38,10 @@ class Converter(object):
     
     def _module(self, node):
         return nodes.module(self._mapped(node.body))
+
+
+    def _import(self, node):
+        return nodes.Import(self._mapped(node.names))
 
 
     def _import_from(self, node):

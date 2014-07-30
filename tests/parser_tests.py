@@ -79,6 +79,17 @@ from x.y import message
 
 
 @istest
+def can_parse_import_package():
+    source = """
+import messages
+"""
+    
+    module_node = parser.parse(source)
+    expected_node = nodes.Import([nodes.import_alias("messages", None)])
+    assert_equal(expected_node, module_node.body[0])
+
+
+@istest
 def can_parse_function_definition():
     source = """
 def f():

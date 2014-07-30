@@ -20,6 +20,7 @@ FunctionDef = collections.namedtuple("FunctionDef", ["name", "args", "return_ann
 Arguments = collections.namedtuple("Arguments", ["args"])
 Argument = collections.namedtuple("Argument", ["name", "annotation"])
 
+Import = collections.namedtuple("Import", ["names"])
 ImportFrom = collections.namedtuple("ImportFrom", ["module", "names"])
 ImportAlias = collections.namedtuple("ImportAlias", ["name", "asname"])
 
