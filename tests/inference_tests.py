@@ -196,6 +196,22 @@ def module_exports_are_specified_using_all():
     context = Context({})
     module = inference.check(module_node)
     assert_equal(types.str_type, module.attrs["x"])
+    assert_raises(KeyError, lambda: module.attrs["y"])
+    assert_equal(types.int_type, module.attrs["z"])
+
+
+@istest
+def module_exports_default_to_values_without_leading_underscore_if_all_is_not_specified():
+    module_node = nodes.module([
+        nodes.assign(["x"], nodes.str("one")),
+        nodes.assign(["_y"], nodes.str("two")),
+        nodes.assign(["z"], nodes.int(3)),
+    ])
+    
+    context = Context({})
+    module = inference.check(module_node)
+    assert_equal(types.str_type, module.attrs["x"])
+    assert_raises(KeyError, lambda: module.attrs["_y"])
     assert_equal(types.int_type, module.attrs["z"])
 
 

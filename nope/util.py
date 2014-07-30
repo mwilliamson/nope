@@ -19,7 +19,10 @@ def _declared_names(node):
 
 
 def exported_names(module):
-    export_names = []
+    export_names = [
+        name for name in declared_locals(module.body)
+        if not name.startswith("_")
+    ]
     
     for statement in module.body:
         if isinstance(statement, nodes.Assignment) and "__all__" in statement.targets:
