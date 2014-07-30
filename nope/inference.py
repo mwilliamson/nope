@@ -175,8 +175,8 @@ class TypeChecker(object):
         package_path = os.path.join(import_path, "__init__.py")
         module_path = import_path + ".py"
         
-        package_value = self._source_tree.check(package_path)
-        module_value = self._source_tree.check(module_path)
+        package_value = self._source_tree.import_module(package_path)
+        module_value = self._source_tree.import_module(module_path)
         
         if package_value is not None and module_value is not None:
             raise errors.ImportError(node,

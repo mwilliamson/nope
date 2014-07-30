@@ -89,6 +89,9 @@ class SourceTree(object):
         return self._asts[path]
     
     def check(self, path):
+        self.import_module(path)
+    
+    def import_module(self, path):
         if path not in self._module_checkers:
             return None
         checker = self._module_checkers[path]
@@ -96,6 +99,7 @@ class SourceTree(object):
         result = checker()
         self._module_checkers[path] = lambda: result
         return result
+        
     
     def _circular_import(self):
         # TODO: test circular import detection

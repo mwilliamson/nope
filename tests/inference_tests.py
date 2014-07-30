@@ -333,7 +333,7 @@ class FakeSourceTree(object):
     def __init__(self, modules):
         self._modules = modules
     
-    def check(self, path):
+    def import_module(self, path):
         return self._modules.get(path)
 
 
