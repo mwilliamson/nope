@@ -43,10 +43,10 @@ class TypeChecker(object):
         return types.none_type
 
     def _infer_int(self, node, context):
-        return types.int
+        return types.int_type
 
     def _infer_str(self, node, context):
-        return types.str
+        return types.str_type
 
     def _infer_list(self, node, context):
         element_types = [self.infer(element, context) for element in node.elements]

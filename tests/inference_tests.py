@@ -18,46 +18,46 @@ def can_infer_type_of_none():
 
 @istest
 def can_infer_type_of_int_literal():
-    assert_equal(types.int, infer(nodes.int("4")))
+    assert_equal(types.int_type, infer(nodes.int("4")))
 
 
 @istest
 def can_infer_type_of_str_literal():
-    assert_equal(types.str, infer(nodes.str("!")))
+    assert_equal(types.str_type, infer(nodes.str("!")))
 
 
 @istest
 def can_infer_type_of_variable_reference():
-    assert_equal(types.int, infer(nodes.ref("x"), Context({"x": types.int})))
+    assert_equal(types.int_type, infer(nodes.ref("x"), Context({"x": types.int_type})))
 
 
 @istest
 def can_infer_type_of_list_of_ints():
-    assert_equal(types.list_type(types.int), infer(nodes.list([nodes.int(1), nodes.int(42)])))
+    assert_equal(types.list_type(types.int_type), infer(nodes.list([nodes.int(1), nodes.int(42)])))
 
 
 @istest
 def can_infer_type_of_call():
-    context = Context({"f": types.func([types.str], types.int)})
-    assert_equal(types.int, infer(nodes.call(nodes.ref("f"), [nodes.str("")]), context))
+    context = Context({"f": types.func([types.str_type], types.int_type)})
+    assert_equal(types.int_type, infer(nodes.call(nodes.ref("f"), [nodes.str("")]), context))
 
 
 @istest
 def call_arguments_must_match():
-    context = Context({"f": types.func([types.str], types.int)})
+    context = Context({"f": types.func([types.str_type], types.int_type)})
     arg_node = nodes.int(4)
     node = nodes.call(nodes.ref("f"), [arg_node])
     _assert_type_mismatch(
         lambda: infer(node, context),
-        expected=types.str,
-        actual=types.int,
+        expected=types.str_type,
+        actual=types.int_type,
         node=arg_node,
     )
 
 
 @istest
 def call_arguments_length_must_match():
-    context = Context({"f": types.func([types.str], types.int)})
+    context = Context({"f": types.func([types.str_type], types.int_type)})
     node = nodes.call(nodes.ref("f"), [])
     try:
         infer(node, context)
@@ -70,16 +70,16 @@ def call_arguments_length_must_match():
 
 @istest
 def can_infer_type_of_attribute():
-    context = Context({"x": types.str})
+    context = Context({"x": types.str_type})
     assert_equal(
-        types.func([types.str], types.int),
+        types.func([types.str_type], types.int_type),
         infer(nodes.attr(nodes.ref("x"), "find"), context)
     )
 
 
 @istest
 def type_error_if_attribute_does_not_exist():
-    context = Context({"x": types.str})
+    context = Context({"x": types.str_type})
     node = nodes.attr(nodes.ref("x"), "swizzlify")
     try:
         infer(node, context)
@@ -102,7 +102,7 @@ def can_infer_type_of_function_with_args_and_no_return():
         nodes.argument("y", nodes.ref("str")),
     ])
     node = nodes.func("f", args=args, return_annotation=None, body=[])
-    assert_equal(types.func([types.int, types.str], types.none_type), _infer_func_type(node))
+    assert_equal(types.func([types.int_type, types.str_type], types.none_type), _infer_func_type(node))
 
 
 @istest
@@ -115,7 +115,7 @@ def can_infer_type_of_function_with_no_args_and_return_annotation():
             nodes.ret(nodes.int(4))
         ]
     )
-    assert_equal(types.func([], types.int), _infer_func_type(node))
+    assert_equal(types.func([], types.int_type), _infer_func_type(node))
 
 
 @istest
@@ -127,7 +127,7 @@ def type_mismatch_if_return_type_is_incorrect():
         return_annotation=nodes.ref("int"),
         body=[return_node],
     )
-    _assert_type_mismatch(lambda: _infer_func_type(node), expected=types.int, actual=types.str, node=return_node)
+    _assert_type_mismatch(lambda: _infer_func_type(node), expected=types.int_type, actual=types.str_type, node=return_node)
 
 
 @istest
@@ -137,7 +137,7 @@ def function_adds_arguments_to_context():
     ])
     body = [nodes.ret(nodes.ref("x"))]
     node = nodes.func("f", args=args, return_annotation=nodes.ref("int"), body=body)
-    assert_equal(types.func([types.int], types.int), _infer_func_type(node))
+    assert_equal(types.func([types.int_type], types.int_type), _infer_func_type(node))
 
 
 @istest
@@ -145,7 +145,7 @@ def assignment_adds_variable_to_context():
     node = nodes.assign(["x"], nodes.int(1))
     context = Context({})
     update_context(node, context)
-    assert_equal(types.int, context.lookup("x"))
+    assert_equal(types.int_type, context.lookup("x"))
 
 
 @istest
@@ -156,12 +156,12 @@ def variables_are_shadowed_in_defs():
     ])
     
     context = Context({
-        "f": types.func([types.str], types.none_type),
-        "x": types.int,
+        "f": types.func([types.str_type], types.none_type),
+        "x": types.int_type,
     })
     update_context(node, context)
     
-    assert_equal(types.int, context.lookup("x"))
+    assert_equal(types.int_type, context.lookup("x"))
 
 
 @istest
@@ -173,8 +173,8 @@ def local_variables_cannot_be_used_before_assigned():
     ])
     
     context = Context({
-        "f": types.func([types.str], types.none_type),
-        "x": types.int,
+        "f": types.func([types.str_type], types.none_type),
+        "x": types.int_type,
     })
     try:
         update_context(node, context)
@@ -195,8 +195,8 @@ def module_exports_are_specified_using_all():
     
     context = Context({})
     module = inference.check(module_node)
-    assert_equal(types.str, module.exports["x"])
-    assert_equal(types.int, module.exports["z"])
+    assert_equal(types.str_type, module.exports["x"])
+    assert_equal(types.int_type, module.exports["z"])
 
 
 def _infer_func_type(func_node):

@@ -22,7 +22,7 @@ def generic_type(name):
 
 
 def is_sub_type(super_type, sub_type):
-    if super_type == object:
+    if super_type == object_type:
         return True
     
     return super_type == sub_type
@@ -30,16 +30,16 @@ def is_sub_type(super_type, sub_type):
 
 none_type = ScalarType("NoneType", {})
 
-int = ScalarType("int", {})
+int_type = ScalarType("int", {})
 
-str = ScalarType("str", {})
-str.attrs["find"] = func([str], int)
+str_type = ScalarType("str", {})
+str_type.attrs["find"] = func([str_type], int_type)
 
 list_type = GenericType("list")
 
-type = TypeType
+type_type = TypeType
 
-object = ScalarType("object", {})
+object_type = ScalarType("object", {})
 
 
 def unify(types):

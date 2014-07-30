@@ -24,10 +24,10 @@ class Context(object):
 
 
 module_context = Context({
-    "int": types.type(types.int),
-    "str": types.type(types.str),
-    "none": types.type(types.none_type),
-    "print": types.func([types.object], types.none_type),
+    "int": types.type_type(types.int_type),
+    "str": types.type_type(types.str_type),
+    "none": types.type_type(types.none_type),
+    "print": types.func([types.object_type], types.none_type),
 })
 
 def new_module_context():
