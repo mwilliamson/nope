@@ -89,9 +89,16 @@ class SourceTree(object):
         return self._asts[path]
     
     def check(self, path):
-        self.import_module(path)
+        self._type_check_module(path)
     
     def import_module(self, path):
+        if path not in self._asts:
+            return None
+        if self._asts[path].is_executable:
+            raise errors.ImportError(None, "Cannot import executable modules")
+        return self._type_check_module(path)
+        
+    def _type_check_module(self, path):
         if path not in self._module_checkers:
             return None
         checker = self._module_checkers[path]
@@ -99,6 +106,7 @@ class SourceTree(object):
         result = checker()
         self._module_checkers[path] = lambda: result
         return result
+        
         
     
     def _circular_import(self):

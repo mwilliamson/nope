@@ -48,6 +48,11 @@ def cannot_import_from_non_existent_package():
 
 
 @istest
+def cannot_import_from_executable_module():
+    assert not nope.check(path=_program_path("invalid/import_executable")).is_valid
+
+
+@istest
 def can_import_from_local_package():
     assert nope.check(path=_program_path("valid/import_value_from_local_package")).is_valid
 
