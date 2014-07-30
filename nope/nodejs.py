@@ -104,6 +104,7 @@ class Transformer(object):
     def __init__(self):
         self._transformers = {
             nodes.Module: self._module,
+            nodes.Import: self._import,
             nodes.ImportFrom: self._import_from,
             
             nodes.ExpressionStatement:self. _expression_statement,
@@ -144,18 +145,31 @@ class Transformer(object):
         return js.statements(body_statements + export_statements)
 
 
+    def _import(self, import_node):
+        statements = []
+        
+        for alias in import_node.names:
+            # TODO: remove duplication in inference._check_import
+            parts = alias.name.split(".")
+            
+            if alias.asname is None:
+                asname = parts[0]
+            else:
+                asname = alias.asname
+            
+            statements.append(js.var(asname, self._import_module_expr(parts)))
+        
+        return js.statements(statements)
+
+
     def _import_from(self, import_from):
         module_import_name = "$import{}".format(self._import_index)
         self._import_index += 1
         
-        module_path = "/".join(import_from.module)
-        if module_path.endswith("."):
-            module_path += "/"
-        
         statements = [
             js.var(
                 module_import_name,
-                js.call(js.ref("$nope.require"), [js.string(module_path)])
+                self._import_module_expr(import_from.module)
             )
         ]
         
@@ -169,6 +183,14 @@ class Transformer(object):
             statements.append(js.var(import_name, import_value))
         
         return js.statements(statements)
+    
+    
+    def _import_module_expr(self, module_name):
+        module_path = "/".join(module_name)
+        if module_path.endswith("."):
+            module_path += "/"
+        
+        return js.call(js.ref("$nope.require"), [js.string(module_path)])
 
 
     def _expression_statement(self, statement):

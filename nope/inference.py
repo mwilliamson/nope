@@ -151,32 +151,53 @@ class TypeChecker(object):
             context.add(name, value_type)
 
 
+    def _check_import(self, node, context):
+        for alias in node.names:
+            # TODO: test sub-modules (i.e. modules with dots in)
+            parts = alias.name.split(".")
+            module = self._find_module(parts)
+            
+            if alias.asname is None:
+                asname = parts[0]
+            else:
+                asname = alias.asname
+            
+            context.add(asname, module)
+
+
     def _check_import_from(self, node, context):
+        module = self._find_module(node.module)
+        for alias in node.names:
+            if alias.asname is None:
+                asname = alias.name
+            else:
+                asname = alias.asname
+            context.add(asname, module.exports[alias.name])
+    
+    def _find_module(self, names):
         # TODO: handle absolute imports
         # TODO: handle failures properly (ImportError.message and .node)
-        import_path = os.path.join(os.path.dirname(self._module_path), *node.module)
+        import_path = os.path.join(os.path.dirname(self._module_path), *names)
         import_path = os.path.join(import_path, "__init__.py")
         
         try:
-            module = self._source_tree.check(os.path.abspath(import_path))
+            return self._source_tree.check(os.path.abspath(import_path))
         except KeyError:
             raise errors.ImportError()
-        
-        # TODO: handle aliases
-        for alias in node.names:
-            name = alias.name
-            context.add(name, module.exports[name])
-
+    
 
     _checkers = {
         nodes.ExpressionStatement: _check_expression_statement,
         nodes.ReturnStatement: _check_return,
         nodes.Assignment: _check_assignment,
         nodes.FunctionDef: _check_function_def,
+        nodes.Import: _check_import,
         nodes.ImportFrom: _check_import_from,
     }
 
 
 class Module(object):
     def __init__(self, exports):
+        # TODO: remove exports attribute
         self.exports = exports
+        self.attrs = exports
