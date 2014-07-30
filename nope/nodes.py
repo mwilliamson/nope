@@ -34,7 +34,7 @@ class ImportAlias(collections.namedtuple("ImportAlias", ["name", "asname"])):
     def name_parts(self):
         return self.name.split(".")
 
-Module = collections.namedtuple("Module", ["body"])
+Module = collections.namedtuple("Module", ["body", "is_executable"])
 
 
 def none():
@@ -69,5 +69,6 @@ arg = argument = Argument
 import_from = ImportFrom
 import_alias = ImportAlias
 
-module = Module
+def module(body, is_executable=False):
+    return Module(body, is_executable)
 

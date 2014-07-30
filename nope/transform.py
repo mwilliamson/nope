@@ -37,7 +37,7 @@ class Converter(object):
         return self._converters[type(node)](node)
     
     def _module(self, node):
-        return nodes.module(self._mapped(node.body))
+        return nodes.module(self._mapped(node.body), is_executable=False)
 
 
     def _import(self, node):

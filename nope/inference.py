@@ -5,22 +5,23 @@ from .context import new_module_context
 
 
 def check(module, source_tree=None, module_path=None):
-    checker = TypeChecker(source_tree, module_path)
+    checker = TypeChecker(source_tree, module_path, module.is_executable)
     return checker.check(module)
 
 def infer(expression, context, source_tree=None, module_path=None):
-    checker = TypeChecker(source_tree, module_path)
+    checker = TypeChecker(source_tree, module_path, False)
     return checker.infer(expression, context)
 
 def update_context(statement, context, source_tree=None, module_path=None):
-    checker = TypeChecker(source_tree, module_path)
+    checker = TypeChecker(source_tree, module_path, False)
     return checker.update_context(statement, context)
 
 
 class TypeChecker(object):
-    def __init__(self, source_tree, module_path):
+    def __init__(self, source_tree, module_path, is_executable):
         self._source_tree = source_tree
         self._module_path = module_path
+        self._is_executable = is_executable
 
     def infer(self, expression, context):
         return self._inferers[type(expression)](self, expression, context)
