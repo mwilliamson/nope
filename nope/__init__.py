@@ -80,7 +80,7 @@ class SourceTree(object):
         )
     
     def _checker(self, ast, path):
-        return lambda: inference.check(ast, self, path)
+        return lambda: inference.check(ast, self, os.path.abspath(path))
     
     def paths(self):
         return self._asts.keys()

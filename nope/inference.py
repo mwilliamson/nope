@@ -168,12 +168,20 @@ class TypeChecker(object):
         # TODO: handle absolute imports
         # TODO: handle failures properly (ImportError.message and .node)
         import_path = os.path.join(os.path.dirname(self._module_path), *names)
-        import_path = os.path.join(import_path, "__init__.py")
         
-        try:
-            return self._source_tree.check(os.path.abspath(import_path))
-        except KeyError:
-            raise errors.ImportError()
+        full_paths = [
+            os.path.join(import_path, "__init__.py"), 
+            import_path + ".py",
+        ]
+        
+        for full_path in full_paths:
+            try:
+                return self._source_tree.check(full_path)
+            except KeyError:
+                # Resolution failed, try the next possible path
+                pass
+                
+        raise errors.ImportError()
     
 
     _checkers = {
