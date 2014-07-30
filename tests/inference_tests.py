@@ -225,12 +225,28 @@ def can_import_package_using_plain_import_syntax():
     assert_equal(types.str_type, context.lookup("message").attrs["value"])
 
 
+@istest
+def error_is_raised_if_import_is_ambiguous():
+    node = nodes.Import([nodes.import_alias("message", None)])
+    
+    source_tree = FakeSourceTree({
+        "message/__init__.py": types.Module({"value": types.str_type}),
+        "message.py": types.Module({"value": types.str_type})
+    })
+    
+    try:
+        _update_blank_context(node, source_tree, module_path="root")
+        assert False
+    except errors.ImportError as error:
+        assert_equal("Import is ambiguous: the module 'message.py' and the package 'message/__init__.py' both exist", str(error))
+
+
 class FakeSourceTree(object):
     def __init__(self, modules):
         self._modules = modules
     
     def check(self, path):
-        return self._modules[path]
+        return self._modules.get(path)
 
 
 def _infer_func_type(func_node):

@@ -89,6 +89,8 @@ class SourceTree(object):
         return self._asts[path]
     
     def check(self, path):
+        if path not in self._module_checkers:
+            return None
         checker = self._module_checkers[path]
         self._module_checkers[path] = self._circular_import
         result = checker()

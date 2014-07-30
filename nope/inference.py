@@ -169,20 +169,21 @@ class TypeChecker(object):
         # TODO: handle failures properly (ImportError.message and .node)
         import_path = os.path.join(os.path.dirname(self._module_path), *names)
         
-        full_paths = [
-            os.path.join(import_path, "__init__.py"), 
-            import_path + ".py",
-        ]
+        package_path = os.path.join(import_path, "__init__.py")
+        module_path = import_path + ".py"
         
-        for full_path in full_paths:
-            try:
-                return self._source_tree.check(full_path)
-            except KeyError:
-                # Resolution failed, try the next possible path
-                pass
-                
-        raise errors.ImportError()
-    
+        package_value = self._source_tree.check(package_path)
+        module_value = self._source_tree.check(module_path)
+        
+        if package_value is not None and module_value is not None:
+            raise errors.ImportError(
+                "Import is ambiguous: the module '{0}.py' and the package '{0}/__init__.py' both exist".format(
+                    names[-1])
+            )
+        elif package_value is None and module_value is None:
+            raise errors.ImportError()
+        else:
+            return package_value or module_value
 
     _checkers = {
         nodes.ExpressionStatement: _check_expression_statement,
