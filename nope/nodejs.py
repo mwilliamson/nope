@@ -96,73 +96,124 @@ function print(value) {
 
 
 def transform(nope_node):
-    return _transformers[type(nope_node)](nope_node)
+    transformer = Transformer()
+    return transformer.transform(nope_node)
 
 
-def _module(module):
-    body_statements = _generate_vars(module.body) + _transform_all(module.body)
-    export_names = util.exported_names(module)
+class Transformer(object):
+    def __init__(self):
+        self._transformers = {
+            nodes.Module: self._module,
+            nodes.ImportFrom: self._import_from,
             
-    export_statements = [
-        js.expression_statement(
-            js.assign(
-                js.property_access(
-                    js.ref("$nope.exports"),
-                    export_name
-                ),
-                js.ref(export_name)
-            )
-        )
-        for export_name in export_names
-    ]
-    return js.statements(body_statements + export_statements)
-
-
-def _import_from(import_from):
-    # TODO: generate import names to avoid clashes
-    module_import_name = "$import0"
-    module_path = "/".join(import_from.module)
-    if module_path == ".":
-        module_path = "./"
-    
-    statements = [
-        js.var(
-            module_import_name,
-            js.call(js.ref("$nope.require"), [js.string(module_path)])
-        )
-    ]
-    
-    for alias in import_from.names:
-        if alias.asname is None:
-            import_name = alias.name
-        else:
-            import_name = alias.asname
+            nodes.ExpressionStatement:self. _expression_statement,
+            nodes.Assignment: self._assign,
+            nodes.FunctionDef: self._function_def,
+            nodes.ReturnStatement: self._return_statement,
+            
+            nodes.Call: self._call,
+            nodes.AttributeAccess: self._attr,
+            nodes.VariableReference: _ref,
+            nodes.NoneExpression: _none,
+            nodes.IntExpression: _int,
+            nodes.StringExpression: _str,
+            nodes.ListExpression: self._list,
+        }
         
-        import_value = js.property_access(js.ref(module_import_name), alias.name)
-        statements.append(js.var(import_name, import_value))
+        self._import_index = 0
     
-    return js.statements(statements)
-
-
-def _expression_statement(statement):
-    return js.expression_statement(transform(statement.value))
-
-
-def _assign(assignment):
-    value = transform(assignment.value)
-    for name in reversed(assignment.targets):
-        value = js.assign(name, value)
-    return js.expression_statement(value)
+    def transform(self, nope_node):
+        return self._transformers[type(nope_node)](nope_node)
     
+    def _module(self, module):
+        body_statements = _generate_vars(module.body) + self._transform_all(module.body)
+        export_names = util.exported_names(module)
+                
+        export_statements = [
+            js.expression_statement(
+                js.assign(
+                    js.property_access(
+                        js.ref("$nope.exports"),
+                        export_name
+                    ),
+                    js.ref(export_name)
+                )
+            )
+            for export_name in export_names
+        ]
+        return js.statements(body_statements + export_statements)
 
-def _function_def(func):
-    body = _generate_vars(func.body) + _transform_all(func.body)
-    
-    return js.function_declaration(
-        name=func.name,
-        args=[arg.name for arg in func.args.args],
-        body=body,
-    )
+
+    def _import_from(self, import_from):
+        module_import_name = "$import{}".format(self._import_index)
+        self._import_index += 1
+        
+        module_path = "/".join(import_from.module)
+        if module_path == ".":
+            module_path = "./"
+        
+        statements = [
+            js.var(
+                module_import_name,
+                js.call(js.ref("$nope.require"), [js.string(module_path)])
+            )
+        ]
+        
+        for alias in import_from.names:
+            if alias.asname is None:
+                import_name = alias.name
+            else:
+                import_name = alias.asname
+            
+            import_value = js.property_access(js.ref(module_import_name), alias.name)
+            statements.append(js.var(import_name, import_value))
+        
+        return js.statements(statements)
+
+
+    def _expression_statement(self, statement):
+        return js.expression_statement(transform(statement.value))
+
+
+    def _assign(self, assignment):
+        value = transform(assignment.value)
+        for name in reversed(assignment.targets):
+            value = js.assign(name, value)
+        return js.expression_statement(value)
+        
+
+    def _function_def(self, func):
+        body = _generate_vars(func.body) + self._transform_all(func.body)
+        
+        return js.function_declaration(
+            name=func.name,
+            args=[arg.name for arg in func.args.args],
+            body=body,
+        )
+        
+
+
+    def _return_statement(self, statement):
+        return js.ret(transform(statement.value))
+
+
+    def _call(self, call):
+        return js.call(transform(call.func), self._transform_all(call.args))
+
+
+    def _attr(self, attr):
+        return js.call(
+            js.ref("$nope.propertyAccess"),
+            [transform(attr.value), js.string(attr.attr)],
+        )
+
+
+    def _list(self, node):
+        return js.array(self._transform_all(node.elements))
+
+
+    def _transform_all(self, nodes):
+        return list(map(self.transform, nodes))
 
 
 def _generate_vars(statements):
@@ -170,22 +221,6 @@ def _generate_vars(statements):
         js.var(name)
         for name in util.declared_locals(statements)
     ]
-    
-
-
-def _return_statement(statement):
-    return js.ret(transform(statement.value))
-
-
-def _call(call):
-    return js.call(transform(call.func), _transform_all(call.args))
-
-
-def _attr(attr):
-    return js.call(
-        js.ref("$nope.propertyAccess"),
-        [transform(attr.value), js.string(attr.attr)],
-    )
 
 
 def _ref(ref):
@@ -202,30 +237,3 @@ def _int(node):
 
 def _str(node):
     return js.string(node.value)
-
-
-def _list(node):
-    return js.array(_transform_all(node.elements))
-
-
-def _transform_all(nodes):
-    return list(map(transform, nodes))
-
-
-_transformers = {
-    nodes.Module: _module,
-    nodes.ImportFrom: _import_from,
-    
-    nodes.ExpressionStatement: _expression_statement,
-    nodes.Assignment: _assign,
-    nodes.FunctionDef: _function_def,
-    nodes.ReturnStatement: _return_statement,
-    
-    nodes.Call: _call,
-    nodes.AttributeAccess: _attr,
-    nodes.VariableReference: _ref,
-    nodes.NoneExpression: _none,
-    nodes.IntExpression: _int,
-    nodes.StringExpression: _str,
-    nodes.ListExpression: _list,
-}

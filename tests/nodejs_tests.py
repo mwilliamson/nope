@@ -97,6 +97,26 @@ def test_transform_import_from_absolute_package():
 
 
 @istest
+def test_multiple_imports_use_different_names():
+    _assert_transform(
+        nodes.module([
+            nodes.import_from([".", "x1"], [nodes.import_alias("y1", None)]),
+            nodes.import_from([".", "x2"], [nodes.import_alias("y2", None)]),
+        ]),
+        js.statements([
+            js.statements([
+                js.var("$import0", js.call(js.ref("$nope.require"), [js.string("./x1")])),
+                js.var("y1", js.property_access(js.ref("$import0"), "y1")),
+            ]),
+            js.statements([
+                js.var("$import1", js.call(js.ref("$nope.require"), [js.string("./x2")])),
+                js.var("y2", js.property_access(js.ref("$import1"), "y2")),
+            ]),
+        ])
+    )
+
+
+@istest
 def test_transform_expression_statement():
     _assert_transform(
         nodes.expression_statement(nodes.ref("x")),
