@@ -1,4 +1,4 @@
-from nose.tools import istest, assert_equal
+from nose.tools import istest, assert_equal, assert_raises
 
 from nope import types, nodes, inference, errors
 from nope.inference import infer as _infer, update_context
@@ -223,6 +223,20 @@ def can_import_package_using_plain_import_syntax():
     context = _update_blank_context(node, source_tree, module_path="root/main.py")
     
     assert_equal(types.str_type, context.lookup("message").attrs["value"])
+
+
+@istest
+def can_use_aliases_with_plain_import_syntax():
+    node = nodes.Import([nodes.import_alias("message", "m")])
+    
+    source_tree = FakeSourceTree({
+        "root/message.py": types.Module({"value": types.str_type})
+    })
+    
+    context = _update_blank_context(node, source_tree, module_path="root/main.py")
+    
+    assert_equal(types.str_type, context.lookup("m").attrs["value"])
+    assert_raises(KeyError, lambda: context.lookup("message"))
 
 
 @istest
