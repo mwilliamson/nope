@@ -3,13 +3,14 @@ import ast
 from . import nodes
 
 
-def python_to_nope(python_ast, comment_seeker):
-    converter = Converter(comment_seeker)
+def python_to_nope(python_ast, comment_seeker, is_executable):
+    converter = Converter(comment_seeker, is_executable)
     return converter.convert(python_ast)
 
 class Converter(object):
-    def __init__(self, comment_seeker):
+    def __init__(self, comment_seeker, is_executable):
         self._comment_seeker = comment_seeker
+        self._is_executable = is_executable
 
         self._converters = {
             ast.Module: self._module,
@@ -37,7 +38,7 @@ class Converter(object):
         return self._converters[type(node)](node)
     
     def _module(self, node):
-        return nodes.module(self._mapped(node.body), is_executable=False)
+        return nodes.module(self._mapped(node.body), is_executable=self._is_executable)
 
 
     def _import(self, node):

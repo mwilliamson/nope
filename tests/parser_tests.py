@@ -2,6 +2,24 @@ from nose.tools import istest, assert_equal
 
 from nope import parser, nodes
 
+@istest
+def module_is_executable_if_it_has_shebang():
+    source = """#!/usr/bin/env python
+print(1)
+"""
+    
+    module_node = parser.parse(source)
+    assert module_node.is_executable
+
+
+@istest
+def module_is_not_executable_if_it_is_missing_shebang():
+    source = """print(1)
+"""
+    
+    module_node = parser.parse(source)
+    assert not module_node.is_executable
+
 
 @istest
 def can_parse_import_from_in_current_package_and_one_name():

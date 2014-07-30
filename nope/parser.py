@@ -14,8 +14,8 @@ def parse(source):
     tokens = tokenize.generate_tokens(io.StringIO(source).readline)
     comment_seeker = CommentSeeker(tokens)
     python_ast = ast.parse(source)
-    
-    return transform.python_to_nope(python_ast, comment_seeker)
+    is_executable = source.startswith("#!/")
+    return transform.python_to_nope(python_ast, comment_seeker, is_executable=is_executable)
 
 
 class CommentSeeker(object):
