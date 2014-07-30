@@ -52,7 +52,5 @@ def unify(types):
 
 
 class Module(object):
-    def __init__(self, exports):
-        # TODO: remove exports attribute
-        self.exports = exports
-        self.attrs = exports
+    def __init__(self, attrs):
+        self.attrs = attrs

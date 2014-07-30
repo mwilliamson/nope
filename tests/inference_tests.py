@@ -195,8 +195,8 @@ def module_exports_are_specified_using_all():
     
     context = Context({})
     module = inference.check(module_node)
-    assert_equal(types.str_type, module.exports["x"])
-    assert_equal(types.int_type, module.exports["z"])
+    assert_equal(types.str_type, module.attrs["x"])
+    assert_equal(types.int_type, module.attrs["z"])
 
 
 @istest
