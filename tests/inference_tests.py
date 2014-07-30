@@ -199,6 +199,42 @@ def module_exports_are_specified_using_all():
     assert_equal(types.int_type, module.exports["z"])
 
 
+@istest
+def can_import_module_using_plain_import_syntax():
+    node = nodes.Import([nodes.import_alias("message", None)])
+    context = Context({})
+    
+    source_tree = FakeSourceTree({
+        "message.py": types.Module({"value": types.str_type})
+    })
+    
+    inference.update_context(node, context, source_tree, module_path="root")
+    
+    assert_equal(types.str_type, context.lookup("message").attrs["value"])
+
+
+@istest
+def can_import_package_using_plain_import_syntax():
+    node = nodes.Import([nodes.import_alias("message", None)])
+    context = Context({})
+    
+    source_tree = FakeSourceTree({
+        "message/__init__.py": types.Module({"value": types.str_type})
+    })
+    
+    inference.update_context(node, context, source_tree, module_path="root")
+    
+    assert_equal(types.str_type, context.lookup("message").attrs["value"])
+
+
+class FakeSourceTree(object):
+    def __init__(self, modules):
+        self._modules = modules
+    
+    def check(self, path):
+        return self._modules[path]
+
+
 def _infer_func_type(func_node):
     context = new_module_context()
     update_context(func_node, context)
