@@ -1,3 +1,3 @@
-from . import message
+#!/usr/bin/env python
 
-print(message)
+import messages

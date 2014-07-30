@@ -216,27 +216,27 @@ def module_exports_default_to_values_without_leading_underscore_if_all_is_not_sp
 
 
 @istest
-def can_import_module_using_plain_import_syntax():
+def can_import_local_module_using_plain_import_syntax():
     node = nodes.Import([nodes.import_alias("message", None)])
     
     source_tree = FakeSourceTree({
         "root/message.py": types.Module({"value": types.str_type})
     })
     
-    context = _update_blank_context(node, source_tree, module_path="root/main.py")
+    context = _update_blank_context(node, source_tree, module_path="root/main.py", is_executable=True)
     
     assert_equal(types.str_type, context.lookup("message").attrs["value"])
 
 
 @istest
-def can_import_package_using_plain_import_syntax():
+def can_import_local_package_using_plain_import_syntax():
     node = nodes.Import([nodes.import_alias("message", None)])
     
     source_tree = FakeSourceTree({
         "root/message/__init__.py": types.Module({"value": types.str_type})
     })
     
-    context = _update_blank_context(node, source_tree, module_path="root/main.py")
+    context = _update_blank_context(node, source_tree, module_path="root/main.py", is_executable=True)
     
     assert_equal(types.str_type, context.lookup("message").attrs["value"])
 
@@ -249,10 +249,25 @@ def can_use_aliases_with_plain_import_syntax():
         "root/message.py": types.Module({"value": types.str_type})
     })
     
-    context = _update_blank_context(node, source_tree, module_path="root/main.py")
+    context = _update_blank_context(node, source_tree, module_path="root/main.py", is_executable=True)
     
     assert_equal(types.str_type, context.lookup("m").attrs["value"])
     assert_raises(KeyError, lambda: context.lookup("message"))
+
+
+@istest
+def cannot_import_local_packages_if_not_in_executable():
+    node = nodes.Import([nodes.import_alias("message", None)])
+    
+    source_tree = FakeSourceTree({
+        "root/message/__init__.py": types.Module({"value": types.str_type})
+    })
+    
+    try:
+        _update_blank_context(node, source_tree, module_path="root/main.py", is_executable=False)
+        assert False, "Expected error"
+    except errors.ImportError as error:
+        assert_equal(node, error.node)
 
 
 @istest
@@ -265,7 +280,7 @@ def error_is_raised_if_import_is_ambiguous():
     })
     
     try:
-        _update_blank_context(node, source_tree, module_path="root/main.py")
+        _update_blank_context(node, source_tree, module_path="root/main.py", is_executable=True)
         assert False
     except errors.ImportError as error:
         assert_equal("Import is ambiguous: the module 'message.py' and the package 'message/__init__.py' both exist", str(error))
@@ -278,7 +293,7 @@ def error_is_raised_if_import_cannot_be_resolved():
     source_tree = FakeSourceTree({})
     
     try:
-        _update_blank_context(node, source_tree, module_path="root/main.py")
+        _update_blank_context(node, source_tree, module_path="root/main.py", is_executable=True)
         assert False
     except errors.ImportError as error:
         assert_equal("Could not find module 'message.value'", str(error))

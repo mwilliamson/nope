@@ -12,8 +12,8 @@ def infer(expression, context, source_tree=None, module_path=None):
     checker = TypeChecker(source_tree, module_path, False)
     return checker.infer(expression, context)
 
-def update_context(statement, context, source_tree=None, module_path=None):
-    checker = TypeChecker(source_tree, module_path, False)
+def update_context(statement, context, source_tree=None, module_path=None, is_executable=False):
+    checker = TypeChecker(source_tree, module_path, is_executable)
     return checker.update_context(statement, context)
 
 
@@ -167,6 +167,9 @@ class TypeChecker(object):
     
     def _find_module(self, node, names):
         # TODO: handle absolute imports
+        if names[0] not in [".", ".."] and not self._is_executable:
+            raise errors.ImportError(node, "Absolute imports not yet implemented")
+            
         import_path = os.path.normpath(os.path.join(os.path.dirname(self._module_path), *names))
         
         package_path = os.path.join(import_path, "__init__.py")

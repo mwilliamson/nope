@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 #:: int -> none
 def f(x):
     #:: -> int

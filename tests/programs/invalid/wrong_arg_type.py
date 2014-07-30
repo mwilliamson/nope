@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 def f(x: int):
     pass
     
