@@ -23,6 +23,7 @@ Argument = collections.namedtuple("Argument", ["name", "annotation"])
 Import = collections.namedtuple("Import", ["names"])
 ImportFrom = collections.namedtuple("ImportFrom", ["module", "names"])
 class ImportAlias(collections.namedtuple("ImportAlias", ["name", "asname"])):
+    @property
     def value_name(self):
         parts = self.name.split(".")
         
