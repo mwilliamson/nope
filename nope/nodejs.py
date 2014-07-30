@@ -57,10 +57,11 @@ function print(value) {
         return Object.prototype.toString.call(value) === "[object String]";
     }
     
-    var $require = require;
-    var nopeRequire;
     if (require.main === module) {
-        nopeRequire = function(name) {
+        // TODO: is there a way to resolve this at compile-time?
+        //       This would require the user to specify which modules are going to be executed directly
+        var $require = require;
+        global.$nopeRequire = function(name) {
             if (isAbsoluteImport(name)) {
                 var relativeImportName = "./" + name;
                 if (isValidModulePath(relativeImportName)) {
@@ -70,8 +71,6 @@ function print(value) {
             
             return $require(name);
         };
-    } else {
-        nopeRequire = require;
     }
     
     function isAbsoluteImport(name) {
@@ -89,7 +88,7 @@ function print(value) {
     
     $nope = {
         propertyAccess: propertyAccess,
-        require: nopeRequire,
+        require: global.$nopeRequire || require,
         exports: exports
     };
 })();
