@@ -242,7 +242,7 @@ def error_is_raised_if_import_is_ambiguous():
 
 
 @istest
-def error_is_raised_if_import_is_ambiguous():
+def error_is_raised_if_import_cannot_be_resolved():
     node = nodes.Import([nodes.import_alias("message.value", None)])
     source_tree = FakeSourceTree({})
     
