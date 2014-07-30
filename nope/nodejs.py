@@ -56,10 +56,40 @@ function print(value) {
     function isString(value) {
         return Object.prototype.toString.call(value) === "[object String]";
     }
-
+    
+    var $require = require;
+    var nopeRequire;
+    if (require.main === module) {
+        nopeRequire = function(name) {
+            if (isAbsoluteImport(name)) {
+                var relativeImportName = "./" + name;
+                if (isValidModulePath(relativeImportName)) {
+                    return $require(relativeImportName);
+                }
+            }
+            
+            return $require(name);
+        };
+    } else {
+        nopeRequire = require;
+    }
+    
+    function isAbsoluteImport(name) {
+        return name.indexOf(".") !== 0;
+    }
+    
+    function isValidModulePath(name) {
+        try {
+            $require.resolve(name);
+            return true;
+        } catch(error) {
+            return false;
+        }
+    }
+    
     $nope = {
         propertyAccess: propertyAccess,
-        require: require,
+        require: nopeRequire,
         exports: exports
     };
 })();
@@ -95,8 +125,6 @@ def _import_from(import_from):
     module_path = "/".join(import_from.module)
     if module_path == ".":
         module_path = "./"
-    if not module_path.startswith("."):
-        module_path = "./" + module_path
     
     statements = [
         js.var(

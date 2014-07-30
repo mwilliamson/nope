@@ -86,12 +86,11 @@ def test_transform_import_from_child_package():
 
 
 @istest
-def test_transform_import_from_package_relative_to_executing_script():
-    # TODO: this is only a valid transformation if we're in the script being executed
+def test_transform_import_from_absolute_package():
     _assert_transform(
         nodes.import_from(["x"], [nodes.import_alias("y", None)]),
         js.statements([
-            js.var("$import0", js.call(js.ref("$nope.require"), [js.string("./x")])),
+            js.var("$import0", js.call(js.ref("$nope.require"), [js.string("x")])),
             js.var("y", js.property_access(js.ref("$import0"), "y")),
         ])
     )
