@@ -154,17 +154,17 @@ class TypeChecker(object):
     def _check_import(self, node, context):
         for alias in node.names:
             # TODO: test sub-modules (i.e. modules with dots in)
-            module = self._find_module(alias.name_parts)
+            module = self._find_module(node, alias.name_parts)
             
             context.add(alias.value_name, module)
 
 
     def _check_import_from(self, node, context):
-        module = self._find_module(node.module)
+        module = self._find_module(node, node.module)
         for alias in node.names:
             context.add(alias.value_name, module.exports[alias.name])
     
-    def _find_module(self, names):
+    def _find_module(self, node, names):
         # TODO: handle absolute imports
         # TODO: handle failures properly (ImportError.message and .node)
         import_path = os.path.join(os.path.dirname(self._module_path), *names)
@@ -176,12 +176,12 @@ class TypeChecker(object):
         module_value = self._source_tree.check(module_path)
         
         if package_value is not None and module_value is not None:
-            raise errors.ImportError(
+            raise errors.ImportError(node,
                 "Import is ambiguous: the module '{0}.py' and the package '{0}/__init__.py' both exist".format(
                     names[-1])
             )
         elif package_value is None and module_value is None:
-            raise errors.ImportError("Could not find module '{}'".format(".".join(names)))
+            raise errors.ImportError(node, "Could not find module '{}'".format(".".join(names)))
         else:
             return package_value or module_value
 

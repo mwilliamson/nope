@@ -39,4 +39,9 @@ class AttributeError(TypeCheckError):
 
 
 class ImportError(TypeCheckError):
-    pass
+    def __init__(self, node, message):
+        self.node = node
+        self._message = message
+    
+    def __str__(self):
+        return self._message
