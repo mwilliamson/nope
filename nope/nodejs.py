@@ -149,8 +149,8 @@ class Transformer(object):
         self._import_index += 1
         
         module_path = "/".join(import_from.module)
-        if module_path == ".":
-            module_path = "./"
+        if module_path.endswith("."):
+            module_path += "/"
         
         statements = [
             js.var(

@@ -47,6 +47,17 @@ def test_transform_import_from_current_package():
 
 
 @istest
+def test_transform_import_from_parent_package():
+    _assert_transform(
+        nodes.import_from([".."], [nodes.import_alias("x", None)]),
+        js.statements([
+            js.var("$import0", js.call(js.ref("$nope.require"), [js.string("../")])),
+            js.var("x", js.property_access(js.ref("$import0"), "x")),
+        ])
+    )
+
+
+@istest
 def test_transform_import_from_with_multiple_names():
     _assert_transform(
         nodes.import_from(["."], [
