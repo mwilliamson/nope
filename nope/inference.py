@@ -166,7 +166,7 @@ class TypeChecker(object):
     
     def _find_module(self, node, names):
         # TODO: handle absolute imports
-        import_path = os.path.join(os.path.dirname(self._module_path), *names)
+        import_path = os.path.normpath(os.path.join(os.path.dirname(self._module_path), *names))
         
         package_path = os.path.join(import_path, "__init__.py")
         module_path = import_path + ".py"
