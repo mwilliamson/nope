@@ -241,6 +241,18 @@ def error_is_raised_if_import_is_ambiguous():
         assert_equal("Import is ambiguous: the module 'message.py' and the package 'message/__init__.py' both exist", str(error))
 
 
+@istest
+def error_is_raised_if_import_is_ambiguous():
+    node = nodes.Import([nodes.import_alias("message.value", None)])
+    source_tree = FakeSourceTree({})
+    
+    try:
+        _update_blank_context(node, source_tree, module_path="root")
+        assert False
+    except errors.ImportError as error:
+        assert_equal("Could not find module 'message.value'", str(error))
+
+
 class FakeSourceTree(object):
     def __init__(self, modules):
         self._modules = modules

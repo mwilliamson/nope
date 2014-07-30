@@ -181,7 +181,7 @@ class TypeChecker(object):
                     names[-1])
             )
         elif package_value is None and module_value is None:
-            raise errors.ImportError()
+            raise errors.ImportError("Could not find module '{}'".format(".".join(names)))
         else:
             return package_value or module_value
 
