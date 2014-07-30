@@ -49,3 +49,10 @@ def unify(types):
             raise Exception("Could not unify types")
     
     return types[0]
+
+
+class Module(object):
+    def __init__(self, exports):
+        # TODO: remove exports attribute
+        self.exports = exports
+        self.attrs = exports

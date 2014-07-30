@@ -33,7 +33,7 @@ class TypeChecker(object):
         for statement in module.body:
             self.update_context(statement, context)
         
-        return Module(dict(
+        return types.Module(dict(
             (name, context.lookup(name))
             for name in util.exported_names(module)
         ))
@@ -192,10 +192,3 @@ class TypeChecker(object):
         nodes.Import: _check_import,
         nodes.ImportFrom: _check_import_from,
     }
-
-
-class Module(object):
-    def __init__(self, exports):
-        # TODO: remove exports attribute
-        self.exports = exports
-        self.attrs = exports
