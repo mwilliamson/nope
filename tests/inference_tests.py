@@ -202,13 +202,12 @@ def module_exports_are_specified_using_all():
 @istest
 def can_import_module_using_plain_import_syntax():
     node = nodes.Import([nodes.import_alias("message", None)])
-    context = Context({})
     
     source_tree = FakeSourceTree({
         "message.py": types.Module({"value": types.str_type})
     })
     
-    inference.update_context(node, context, source_tree, module_path="root")
+    context = _update_blank_context(node, source_tree, module_path="root")
     
     assert_equal(types.str_type, context.lookup("message").attrs["value"])
 
@@ -216,13 +215,12 @@ def can_import_module_using_plain_import_syntax():
 @istest
 def can_import_package_using_plain_import_syntax():
     node = nodes.Import([nodes.import_alias("message", None)])
-    context = Context({})
     
     source_tree = FakeSourceTree({
         "message/__init__.py": types.Module({"value": types.str_type})
     })
     
-    inference.update_context(node, context, source_tree, module_path="root")
+    context = _update_blank_context(node, source_tree, module_path="root")
     
     assert_equal(types.str_type, context.lookup("message").attrs["value"])
 
@@ -239,6 +237,12 @@ def _infer_func_type(func_node):
     context = new_module_context()
     update_context(func_node, context)
     return context.lookup(func_node.name)
+
+
+def _update_blank_context(node, *args, **kwargs):
+    context = Context({})
+    update_context(node, context, *args, **kwargs)
+    return context
 
 
 def _assert_type_mismatch(func, expected, actual, node):
