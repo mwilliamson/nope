@@ -157,22 +157,13 @@ class TypeChecker(object):
             parts = alias.name.split(".")
             module = self._find_module(parts)
             
-            if alias.asname is None:
-                asname = parts[0]
-            else:
-                asname = alias.asname
-            
-            context.add(asname, module)
+            context.add(alias.value_name(), module)
 
 
     def _check_import_from(self, node, context):
         module = self._find_module(node.module)
         for alias in node.names:
-            if alias.asname is None:
-                asname = alias.name
-            else:
-                asname = alias.asname
-            context.add(asname, module.exports[alias.name])
+            context.add(alias.value_name(), module.exports[alias.name])
     
     def _find_module(self, names):
         # TODO: handle absolute imports

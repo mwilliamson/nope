@@ -152,12 +152,7 @@ class Transformer(object):
             # TODO: remove duplication in inference._check_import
             parts = alias.name.split(".")
             
-            if alias.asname is None:
-                asname = parts[0]
-            else:
-                asname = alias.asname
-            
-            statements.append(js.var(asname, self._import_module_expr(parts)))
+            statements.append(js.var(alias.value_name(), self._import_module_expr(parts)))
         
         return js.statements(statements)
 
@@ -174,13 +169,8 @@ class Transformer(object):
         ]
         
         for alias in import_from.names:
-            if alias.asname is None:
-                import_name = alias.name
-            else:
-                import_name = alias.asname
-            
             import_value = js.property_access(js.ref(module_import_name), alias.name)
-            statements.append(js.var(import_name, import_value))
+            statements.append(js.var(alias.value_name(), import_value))
         
         return js.statements(statements)
     
