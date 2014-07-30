@@ -25,12 +25,14 @@ ImportFrom = collections.namedtuple("ImportFrom", ["module", "names"])
 class ImportAlias(collections.namedtuple("ImportAlias", ["name", "asname"])):
     @property
     def value_name(self):
-        parts = self.name.split(".")
-        
         if self.asname is None:
-            return parts[0]
+            return self.name_parts[0]
         else:
             return self.asname
+    
+    @property
+    def name_parts(self):
+        return self.name.split(".")
 
 Module = collections.namedtuple("Module", ["body"])
 

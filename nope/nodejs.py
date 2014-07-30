@@ -149,10 +149,7 @@ class Transformer(object):
         statements = []
         
         for alias in import_node.names:
-            # TODO: remove duplication in inference._check_import
-            parts = alias.name.split(".")
-            
-            statements.append(js.var(alias.value_name, self._import_module_expr(parts)))
+            statements.append(js.var(alias.value_name, self._import_module_expr(alias.name_parts)))
         
         return js.statements(statements)
 

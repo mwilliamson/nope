@@ -154,8 +154,7 @@ class TypeChecker(object):
     def _check_import(self, node, context):
         for alias in node.names:
             # TODO: test sub-modules (i.e. modules with dots in)
-            parts = alias.name.split(".")
-            module = self._find_module(parts)
+            module = self._find_module(alias.name_parts)
             
             context.add(alias.value_name, module)
 
