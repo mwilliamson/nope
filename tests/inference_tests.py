@@ -204,10 +204,10 @@ def can_import_module_using_plain_import_syntax():
     node = nodes.Import([nodes.import_alias("message", None)])
     
     source_tree = FakeSourceTree({
-        "message.py": types.Module({"value": types.str_type})
+        "root/message.py": types.Module({"value": types.str_type})
     })
     
-    context = _update_blank_context(node, source_tree, module_path="root")
+    context = _update_blank_context(node, source_tree, module_path="root/main.py")
     
     assert_equal(types.str_type, context.lookup("message").attrs["value"])
 
@@ -217,10 +217,10 @@ def can_import_package_using_plain_import_syntax():
     node = nodes.Import([nodes.import_alias("message", None)])
     
     source_tree = FakeSourceTree({
-        "message/__init__.py": types.Module({"value": types.str_type})
+        "root/message/__init__.py": types.Module({"value": types.str_type})
     })
     
-    context = _update_blank_context(node, source_tree, module_path="root")
+    context = _update_blank_context(node, source_tree, module_path="root/main.py")
     
     assert_equal(types.str_type, context.lookup("message").attrs["value"])
 
@@ -230,12 +230,12 @@ def error_is_raised_if_import_is_ambiguous():
     node = nodes.Import([nodes.import_alias("message", None)])
     
     source_tree = FakeSourceTree({
-        "message/__init__.py": types.Module({"value": types.str_type}),
-        "message.py": types.Module({"value": types.str_type})
+        "root/message/__init__.py": types.Module({"value": types.str_type}),
+        "root/message.py": types.Module({"value": types.str_type})
     })
     
     try:
-        _update_blank_context(node, source_tree, module_path="root")
+        _update_blank_context(node, source_tree, module_path="root/main.py")
         assert False
     except errors.ImportError as error:
         assert_equal("Import is ambiguous: the module 'message.py' and the package 'message/__init__.py' both exist", str(error))
@@ -247,7 +247,7 @@ def error_is_raised_if_import_cannot_be_resolved():
     source_tree = FakeSourceTree({})
     
     try:
-        _update_blank_context(node, source_tree, module_path="root")
+        _update_blank_context(node, source_tree, module_path="root/main.py")
         assert False
     except errors.ImportError as error:
         assert_equal("Could not find module 'message.value'", str(error))
