@@ -36,6 +36,16 @@ def test_transform_module_with_exports():
 
 
 @istest
+def test_transform_basic_import_of_top_level_module():
+    _assert_transform(
+        nodes.Import([nodes.import_alias("x", None)]),
+        js.statements([
+            js.var("x", js.call(js.ref("$nope.require"), [js.string("x")])),
+        ])
+    )
+
+
+@istest
 def test_transform_import_from_current_package():
     _assert_transform(
         nodes.import_from(["."], [nodes.import_alias("x", None)]),
