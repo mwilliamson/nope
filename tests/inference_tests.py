@@ -334,6 +334,17 @@ def error_is_raised_if_module_value_in_package_has_same_name_as_module():
 
 
 @istest
+def module_can_have_value_with_same_name_as_sibling_module():
+    value_node = nodes.assign("x", nodes.int(1))
+    node = nodes.Module([value_node], is_executable=False)
+    source_tree = FakeSourceTree({
+        "root/x.py": _module({}),
+    })
+    
+    inference.check(node, source_tree, module_path="root/y.py")
+
+
+@istest
 def can_import_relative_module_using_import_from_syntax():
     node = nodes.import_from([".", "message"], [nodes.import_alias("value", None)])
     
