@@ -183,7 +183,14 @@ class TypeChecker(object):
     def _check_import_from(self, node, context):
         module = self._find_module(node, node.module)
         for alias in node.names:
-            context.add(alias.value_name, module.attrs[alias.name])
+            module_value = module.attrs.get(alias.name)
+            if module_value is not None:
+                context.add(alias.value_name, module_value)
+            else:
+                submodule = self._find_module(node, node.module + [alias.name])
+                module.attrs[alias.value_name] = submodule
+                context.add(alias.value_name, submodule)
+
     
     def _find_module(self, node, names):
         # TODO: handle absolute imports
@@ -201,7 +208,7 @@ class TypeChecker(object):
                     names[-1])
             )
         elif package_value is None and module_value is None:
-            raise errors.ImportError(node, "Could not find module '{}'".format(".".join(names)))
+            raise errors.ModuleNotFoundError(node, "Could not find module '{}'".format(".".join(names)))
         else:
             return package_value or module_value
 

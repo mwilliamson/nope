@@ -47,6 +47,10 @@ class ImportError(TypeCheckError):
         return self._message
 
 
+class ModuleNotFoundError(ImportError):
+    pass
+
+
 class ImportedValueRedeclaration(TypeCheckError):
     def __init__(self, node):
         # TODO: __str__

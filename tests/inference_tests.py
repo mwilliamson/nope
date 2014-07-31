@@ -345,7 +345,7 @@ def module_can_have_value_with_same_name_as_sibling_module():
 
 
 @istest
-def can_import_relative_module_using_import_from_syntax():
+def can_import_value_from_relative_module_using_import_from_syntax():
     node = nodes.import_from([".", "message"], [nodes.import_alias("value", None)])
     
     source_tree = FakeSourceTree({
@@ -356,6 +356,23 @@ def can_import_relative_module_using_import_from_syntax():
     
     assert_equal(types.str_type, context.lookup("value"))
     assert_raises(KeyError, lambda: context.lookup("message"))
+
+
+@istest
+def can_import_relative_module_using_import_from_syntax():
+    node = nodes.import_from(["."], [nodes.import_alias("message", None)])
+    root_module = _module({})
+    message_module = _module({"value": types.str_type})
+    
+    source_tree = FakeSourceTree({
+        "root/__init__.py": root_module,
+        "root/message.py": message_module,
+    })
+    
+    context = _update_blank_context(node, source_tree, module_path="root/main.py")
+    
+    assert_equal(types.str_type, context.lookup("message").attrs["value"])
+    assert_equal(message_module, root_module.attrs["message"])
 
 
 @istest
