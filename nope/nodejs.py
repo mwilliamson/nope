@@ -149,7 +149,25 @@ class Transformer(object):
         statements = []
         
         for alias in import_node.names:
-            statements.append(js.var(alias.value_name, self._import_module_expr(alias.name_parts)))
+            if alias.asname is None:
+                parts = alias.name_parts
+                
+                for index, part in enumerate(parts):
+                    this_module_require = self._import_module_expr(parts[:index + 1])
+                    
+                    if index == 0:
+                        this_module_ref = js.ref(part)
+                        statements.append(js.var(part, this_module_require))
+                    else:
+                        this_module_ref = js.property_access(last_module_ref, part)
+                        statements.append(js.expression_statement(js.assign(
+                            this_module_ref,
+                            this_module_require
+                        )))
+                        
+                    last_module_ref = this_module_ref
+            else:
+                statements.append(js.var(alias.value_name, self._import_module_expr(alias.name_parts)))
         
         return js.statements(statements)
 
