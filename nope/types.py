@@ -52,5 +52,6 @@ def unify(types):
 
 
 class Module(object):
-    def __init__(self, attrs):
+    def __init__(self, name, attrs):
+        self.name = name
         self.attrs = attrs

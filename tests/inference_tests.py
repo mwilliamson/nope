@@ -220,7 +220,7 @@ def can_import_local_module_using_plain_import_syntax():
     node = nodes.Import([nodes.import_alias("message", None)])
     
     source_tree = FakeSourceTree({
-        "root/message.py": types.Module({"value": types.str_type})
+        "root/message.py": _module({"value": types.str_type})
     })
     
     context = _update_blank_context(node, source_tree, module_path="root/main.py", is_executable=True)
@@ -233,7 +233,7 @@ def can_import_local_package_using_plain_import_syntax():
     node = nodes.Import([nodes.import_alias("message", None)])
     
     source_tree = FakeSourceTree({
-        "root/message/__init__.py": types.Module({"value": types.str_type})
+        "root/message/__init__.py": _module({"value": types.str_type})
     })
     
     context = _update_blank_context(node, source_tree, module_path="root/main.py", is_executable=True)
@@ -246,7 +246,7 @@ def can_use_aliases_with_plain_import_syntax():
     node = nodes.Import([nodes.import_alias("message", "m")])
     
     source_tree = FakeSourceTree({
-        "root/message.py": types.Module({"value": types.str_type})
+        "root/message.py": _module({"value": types.str_type})
     })
     
     context = _update_blank_context(node, source_tree, module_path="root/main.py", is_executable=True)
@@ -260,7 +260,7 @@ def cannot_import_local_packages_if_not_in_executable():
     node = nodes.Import([nodes.import_alias("message", None)])
     
     source_tree = FakeSourceTree({
-        "root/message/__init__.py": types.Module({"value": types.str_type})
+        "root/message/__init__.py": _module({"value": types.str_type})
     })
     
     try:
@@ -275,8 +275,8 @@ def error_is_raised_if_import_is_ambiguous():
     node = nodes.Import([nodes.import_alias("message", None)])
     
     source_tree = FakeSourceTree({
-        "root/message/__init__.py": types.Module({"value": types.str_type}),
-        "root/message.py": types.Module({"value": types.str_type})
+        "root/message/__init__.py": _module({"value": types.str_type}),
+        "root/message.py": _module({"value": types.str_type})
     })
     
     try:
@@ -305,7 +305,7 @@ def can_import_relative_module_using_import_from_syntax():
     node = nodes.import_from([".", "message"], [nodes.import_alias("value", None)])
     
     source_tree = FakeSourceTree({
-        "root/message.py": types.Module({"value": types.str_type})
+        "root/message.py": _module({"value": types.str_type})
     })
     
     context = _update_blank_context(node, source_tree, module_path="root/main.py")
@@ -319,7 +319,7 @@ def can_import_relative_module_using_import_from_syntax_with_alias():
     node = nodes.import_from([".", "message"], [nodes.import_alias("value", "v")])
     
     source_tree = FakeSourceTree({
-        "root/message.py": types.Module({"value": types.str_type})
+        "root/message.py": _module({"value": types.str_type})
     })
     
     context = _update_blank_context(node, source_tree, module_path="root/main.py")
@@ -347,6 +347,10 @@ def _update_blank_context(node, *args, **kwargs):
     context = Context({})
     update_context(node, context, *args, **kwargs)
     return context
+
+
+def _module(attrs):
+    return types.Module("generic_module_name", attrs)
 
 
 def _assert_type_mismatch(func, expected, actual, node):

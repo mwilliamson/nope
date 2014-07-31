@@ -34,7 +34,7 @@ class TypeChecker(object):
         for statement in module.body:
             self.update_context(statement, context)
         
-        return types.Module(dict(
+        return types.Module(self._module_path, dict(
             (name, context.lookup(name))
             for name in util.exported_names(module)
         ))
