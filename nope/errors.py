@@ -45,3 +45,9 @@ class ImportError(TypeCheckError):
     
     def __str__(self):
         return self._message
+
+
+class ImportedValueRedeclaration(TypeCheckError):
+    def __init__(self, node):
+        # TODO: __str__
+        self.node = node

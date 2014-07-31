@@ -318,8 +318,7 @@ def error_is_raised_if_import_cannot_be_resolved():
         assert_equal(node, error.node)
 
 
-# TODO:
-#~ @istest
+@istest
 def error_is_raised_if_module_value_in_package_has_same_name_as_module():
     value_node = nodes.assign("x", nodes.int(1))
     node = nodes.Module([value_node], is_executable=False)
@@ -369,6 +368,9 @@ class FakeSourceTree(object):
     
     def import_module(self, path):
         return self._modules.get(path)
+    
+    def __contains__(self, value):
+        return value in self._modules
 
 
 def _infer_func_type(func_node):

@@ -27,7 +27,15 @@ class TypeChecker(object):
         return self._inferers[type(expression)](self, expression, context)
 
     def update_context(self, statement, context, source_tree=None):
+        for declared_name in util.declared_names(statement):
+            if self._is_package():
+                if any(path in self._source_tree for path in self._possible_module_paths([".", declared_name])):
+                    raise errors.ImportedValueRedeclaration(statement)
+        
         return self._checkers[type(statement)](self, statement, context)
+
+    def _is_package(self):
+        return self._module_path and os.path.basename(self._module_path) == "__init__.py"
 
     def check(self, module):
         context = new_module_context()
@@ -182,10 +190,7 @@ class TypeChecker(object):
         if names[0] not in [".", ".."] and not self._is_executable:
             raise errors.ImportError(node, "Absolute imports not yet implemented")
             
-        import_path = os.path.normpath(os.path.join(os.path.dirname(self._module_path), *names))
-        
-        package_path = os.path.join(import_path, "__init__.py")
-        module_path = import_path + ".py"
+        package_path, module_path = self._possible_module_paths(names)
         
         package_value = self._source_tree.import_module(package_path)
         module_value = self._source_tree.import_module(module_path)
@@ -199,6 +204,15 @@ class TypeChecker(object):
             raise errors.ImportError(node, "Could not find module '{}'".format(".".join(names)))
         else:
             return package_value or module_value
+
+    def _possible_module_paths(self, names):
+        import_path = os.path.normpath(os.path.join(os.path.dirname(self._module_path), *names))
+        
+        return (
+            os.path.join(import_path, "__init__.py"),
+            import_path + ".py"
+        )
+        
 
     _checkers = {
         nodes.ExpressionStatement: _check_expression_statement,

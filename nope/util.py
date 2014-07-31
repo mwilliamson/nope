@@ -4,12 +4,12 @@ from . import nodes
 def declared_locals(statements):
     names = []
     for child in statements:
-        names += _declared_names(child)
+        names += declared_names(child)
     
     return names
 
 
-def _declared_names(node):
+def declared_names(node):
     if isinstance(node, nodes.FunctionDef):
         return [node.name]
     elif isinstance(node, nodes.Assignment):
