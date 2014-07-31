@@ -157,17 +157,17 @@ class Transformer(object):
                     
                     if index == 0:
                         this_module_ref = js.ref(part)
-                        statements.append(js.var(part, this_module_require))
+                        statements.append(js.assign_statement(part, this_module_require))
                     else:
                         this_module_ref = js.property_access(last_module_ref, part)
-                        statements.append(js.expression_statement(js.assign(
+                        statements.append(js.assign_statement(
                             this_module_ref,
                             this_module_require
-                        )))
+                        ))
                         
                     last_module_ref = this_module_ref
             else:
-                statements.append(js.var(alias.value_name, self._import_module_expr(alias.name_parts)))
+                statements.append(js.assign_statement(alias.value_name, self._import_module_expr(alias.name_parts)))
         
         return js.statements(statements)
 
@@ -185,7 +185,7 @@ class Transformer(object):
         
         for alias in import_from.names:
             import_value = js.property_access(js.ref(module_import_name), alias.name)
-            statements.append(js.var(alias.value_name, import_value))
+            statements.append(js.assign_statement(alias.value_name, import_value))
         
         return js.statements(statements)
     

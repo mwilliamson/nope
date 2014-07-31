@@ -319,7 +319,7 @@ def error_is_raised_if_import_cannot_be_resolved():
 
 
 @istest
-def error_is_raised_if_module_value_in_package_has_same_name_as_module():
+def error_is_raised_if_value_in_package_has_same_name_as_module():
     value_node = nodes.assign("x", nodes.int(1))
     node = nodes.Module([value_node], is_executable=False)
     source_tree = FakeSourceTree({
@@ -331,6 +331,18 @@ def error_is_raised_if_module_value_in_package_has_same_name_as_module():
         assert False, "Expected error"
     except errors.ImportedValueRedeclaration as error:
         assert_equal(value_node, error.node)
+
+
+@istest
+def value_in_package_can_have_same_name_as_module_if_it_is_that_module():
+    value_node = nodes.import_from(["."], [nodes.import_alias("x", None)])
+    node = nodes.Module([value_node], is_executable=False)
+    source_tree = FakeSourceTree({
+        "root/__init__.py": _module({}),
+        "root/x.py": _module({}),
+    })
+    
+    inference.check(node, source_tree, module_path="root/__init__.py")
 
 
 @istest

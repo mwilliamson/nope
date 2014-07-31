@@ -27,15 +27,22 @@ class TypeChecker(object):
         return self._inferers[type(expression)](self, expression, context)
 
     def update_context(self, statement, context, source_tree=None):
-        for declared_name in util.declared_names(statement):
-            if self._is_package():
-                if any(path in self._source_tree for path in self._possible_module_paths([".", declared_name])):
-                    raise errors.ImportedValueRedeclaration(statement)
+        self._checkers[type(statement)](self, statement, context)
         
-        return self._checkers[type(statement)](self, statement, context)
+        if self._is_package():
+            self._check_for_package_value_and_module_name_clashes(statement, context)
 
     def _is_package(self):
         return self._module_path and os.path.basename(self._module_path) == "__init__.py"
+
+    def _check_for_package_value_and_module_name_clashes(self, statement, context):
+        for declared_name in util.declared_names(statement):
+            for path in self._possible_module_paths([".", declared_name]):
+                if path in self._source_tree:
+                    submodule = self._source_tree.import_module(path)
+                    if context.lookup(declared_name) is not submodule:
+                        raise errors.ImportedValueRedeclaration(statement)
+        
 
     def check(self, module):
         context = new_module_context()

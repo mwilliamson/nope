@@ -128,6 +128,9 @@ def assign(target, value):
     
     return Assignment(target, value)
 
+def assign_statement(target, value):
+    return expression_statement(assign(target, value))
+
 property_access = PropertyAccess = collections.namedtuple("PropertyAccess", ["value", "property"])
 call = Call = collections.namedtuple("Call", ["func", "args"])
 ref = VariableReference = collections.namedtuple("VariableReference", ["name"])

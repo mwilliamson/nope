@@ -14,8 +14,11 @@ def declared_names(node):
         return [node.name]
     elif isinstance(node, nodes.Assignment):
         return node.targets
+    elif isinstance(node, (nodes.ImportFrom, nodes.Import)):
+        return [alias.value_name for alias in node.names]
     else:
         return []
+
 
 
 def exported_names(module):
