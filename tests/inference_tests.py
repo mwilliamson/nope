@@ -242,6 +242,22 @@ def can_import_local_package_using_plain_import_syntax():
 
 
 @istest
+def importing_module_in_package_mutates_that_package():
+    node = nodes.Import([nodes.import_alias("messages.hello", None)])
+    messages_module = _module({})
+    hello_module = _module({"value": types.str_type})
+    
+    source_tree = FakeSourceTree({
+        "root/messages/__init__.py": messages_module,
+        "root/messages/hello.py": hello_module,
+    })
+    
+    context = _update_blank_context(node, source_tree, module_path="root/main.py", is_executable=True)
+    
+    assert_equal(hello_module, context.lookup("messages").attrs["hello"])
+
+
+@istest
 def can_use_aliases_with_plain_import_syntax():
     node = nodes.Import([nodes.import_alias("message", "m")])
     
@@ -290,7 +306,9 @@ def error_is_raised_if_import_is_ambiguous():
 @istest
 def error_is_raised_if_import_cannot_be_resolved():
     node = nodes.Import([nodes.import_alias("message.value", None)])
-    source_tree = FakeSourceTree({})
+    source_tree = FakeSourceTree({
+        "root/message/__init__.py": _module({}),
+    })
     
     try:
         _update_blank_context(node, source_tree, module_path="root/main.py", is_executable=True)

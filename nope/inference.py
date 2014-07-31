@@ -154,10 +154,22 @@ class TypeChecker(object):
 
     def _check_import(self, node, context):
         for alias in node.names:
-            # TODO: test sub-modules (i.e. modules with dots in)
-            module = self._find_module(node, alias.name_parts)
-            
-            context.add(alias.value_name, module)
+            if alias.asname is None:
+                parts = alias.name_parts
+                
+                for index, part in enumerate(parts):
+                    this_module = self._find_module(node, parts[:index + 1])
+                    
+                    if index == 0:
+                        context.add(part, this_module)
+                    else:
+                        last_module.attrs[part] = this_module
+                        
+                    last_module = this_module
+                
+            else:
+                module = self._find_module(node, alias.name_parts)
+                context.add(alias.value_name, module)
 
 
     def _check_import_from(self, node, context):
