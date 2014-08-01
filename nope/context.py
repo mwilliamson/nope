@@ -8,7 +8,8 @@ class Context(object):
         self.is_module_scope = is_module_scope
     
     def add(self, node, name, binding):
-        # TODO: raise error if name not in self._vars
+        # All names should be declared on entering a scope, so if `name` isn't
+        # in `self._vars` it's a programming error i.e. a bug in the type checker
         var_type = self._vars[name]
         if var_type is None or types.is_sub_type(var_type, binding):
             self._vars[name] = binding
