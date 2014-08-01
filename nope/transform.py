@@ -28,11 +28,13 @@ class Converter(object):
             ast.Num: self._num_literal,
             ast.List: self._list_literal,
             ast.Name: self._name,
-            ast.NameConstant: self._name_constant,
             ast.Call: self._call,
             ast.Attribute: self._attr,
         }
-
+        
+        # Python >= 3.4 has ast.NameConstant instead of reusing ast.Name
+        if hasattr(ast, "NameConstant"):
+            self._converters[ast.NameConstant] = self._name_constant
 
     
     def convert(self, node):
@@ -134,6 +136,10 @@ class Converter(object):
     def _name(self, node):
         if node.id == "None":
             return nodes.none()
+        elif node.id == "True":
+            return nodes.boolean(True)
+        elif node.id == "False":
+            return nodes.boolean(False)
         else:
             return nodes.ref(node.id)
     
