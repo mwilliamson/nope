@@ -165,6 +165,14 @@ def variables_cannot_change_type():
 
 
 @istest
+def variables_can_be_reassigned_if_type_is_consistent():
+    node = nodes.assign(["x"], nodes.int(1))
+    context = Context({"x": types.object_type})
+    update_context(node, context)
+    assert_equal(types.int_type, context.lookup("x"))
+
+
+@istest
 def variables_are_shadowed_in_defs():
     node = nodes.func("g", nodes.args([]), None, [
         nodes.assign(["x"], nodes.str("Hello")),
