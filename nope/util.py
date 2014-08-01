@@ -30,12 +30,13 @@ def exported_names(module):
     for statement in module.body:
         if isinstance(statement, nodes.Assignment) and "__all__" in statement.targets:
             if not isinstance(statement.value, nodes.ListExpression):
-                raise errors.AllAssignmentError(statement, "__all__ must be a list of string literals")
+                raise _all_wrong_type_error(statement)
             
             def extract_string_value(node):
-                # TODO: raise more appropriate error (and add test)
-                assert isinstance(node, nodes.StringExpression)
-                return node.value
+                if isinstance(node, nodes.StringExpression):
+                    return node.value
+                else:
+                    raise _all_wrong_type_error(statement)
             
             # TODO: raise error if already defined
             export_names = [
@@ -45,3 +46,7 @@ def exported_names(module):
             
     
     return export_names
+
+
+def _all_wrong_type_error(node):
+    return errors.AllAssignmentError(node, "__all__ must be a list of string literals")
