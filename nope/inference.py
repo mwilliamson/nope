@@ -29,7 +29,7 @@ class TypeChecker(object):
     def update_context(self, statement, context, source_tree=None):
         self._checkers[type(statement)](self, statement, context)
         
-        if self._is_package():
+        if self._is_package() and context.is_module_scope:
             self._check_for_package_value_and_module_name_clashes(statement, context)
 
     def _is_package(self):

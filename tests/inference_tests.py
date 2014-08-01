@@ -340,6 +340,19 @@ def error_is_raised_if_value_in_package_has_same_name_as_module():
 
 
 @istest
+def values_can_have_same_name_as_child_module_if_they_are_not_in_module_scope():
+    value_node = nodes.assign("x", nodes.int(1))
+    node = nodes.Module([
+        nodes.func("f", nodes.args([]), None, [value_node])
+    ], is_executable=False)
+    source_tree = FakeSourceTree({
+        "root/x.py": _module({}),
+    })
+    
+    inference.check(node, source_tree, module_path="root/__init__.py")
+
+
+@istest
 def value_in_package_can_have_same_name_as_module_if_it_is_that_module():
     value_node = nodes.import_from(["."], [nodes.import_alias("x", None)])
     node = nodes.Module([value_node], is_executable=False)

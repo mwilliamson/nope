@@ -2,9 +2,10 @@ from . import types
 
 
 class Context(object):
-    def __init__(self, bindings, return_type=None):
+    def __init__(self, bindings, return_type=None, is_module_scope=False):
         self._vars = bindings
         self.return_type = return_type
+        self.is_module_scope = is_module_scope
     
     def add(self, name, binding):
         # TODO: prohibit overrides
@@ -17,10 +18,10 @@ class Context(object):
         func_vars = self._vars.copy()
         for local_name in local_names:
             func_vars[local_name] = None
-        return Context(func_vars, return_type=return_type)
+        return Context(func_vars, return_type=return_type, is_module_scope=False)
     
     def enter_module(self):
-        return Context(self._vars.copy(), return_type=None)
+        return Context(self._vars.copy(), return_type=None, is_module_scope=True)
 
 
 module_context = Context({
