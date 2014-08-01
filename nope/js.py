@@ -95,6 +95,11 @@ def _serialize_null(obj, fileobj):
     fileobj.write("null")
 
 
+def _serialize_boolean(obj, fileobj):
+    serialized_value = "true" if obj.value else "false"
+    fileobj.write(serialized_value)
+
+
 def _serialize_string(obj, fileobj):
     json.dump(obj.value, fileobj)
 
@@ -137,6 +142,7 @@ ref = VariableReference = collections.namedtuple("VariableReference", ["name"])
 number = Number = collections.namedtuple("Number", ["value"])
 NullLiteral = collections.namedtuple("NullLiteral", [])
 null = NullLiteral()
+boolean = Boolean = collections.namedtuple("Boolean", ["value"])
 string = String = collections.namedtuple("String", ["value"])
 array = Array = collections.namedtuple("Array", ["elements"])
 
@@ -154,6 +160,7 @@ _serializers = {
     VariableReference: _serialize_ref,
     Number: _serialize_number,
     NullLiteral: _serialize_null,
+    Boolean: _serialize_boolean,
     String: _serialize_string,
     Array: _serialize_array,
 }

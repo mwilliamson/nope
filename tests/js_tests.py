@@ -6,6 +6,12 @@ from nope import js
 @istest
 def test_serialize_null():
     assert_equal("null", js.dumps(js.null))
+
+
+@istest
+def test_serialize_booleans():
+    assert_equal("true", js.dumps(js.boolean(True)))
+    assert_equal("false", js.dumps(js.boolean(False)))
     
 
 @istest
