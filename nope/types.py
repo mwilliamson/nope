@@ -30,6 +30,8 @@ def is_sub_type(super_type, sub_type):
 
 none_type = ScalarType("NoneType", {})
 
+boolean_type = ScalarType("BooleanType", {})
+
 int_type = ScalarType("int", {})
 
 str_type = ScalarType("str", {})

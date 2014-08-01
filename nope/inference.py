@@ -57,7 +57,10 @@ class TypeChecker(object):
 
     def _infer_none(self, node, context):
         return types.none_type
-
+    
+    def _infer_bool(self, node, context):
+        return types.boolean_type
+    
     def _infer_int(self, node, context):
         return types.int_type
 
@@ -141,6 +144,7 @@ class TypeChecker(object):
 
     _inferers = {
         nodes.NoneExpression: _infer_none,
+        nodes.BooleanExpression: _infer_bool,
         nodes.IntExpression: _infer_int,
         nodes.StringExpression: _infer_str,
         nodes.ListExpression: _infer_list,

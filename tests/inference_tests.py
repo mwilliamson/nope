@@ -17,6 +17,11 @@ def can_infer_type_of_none():
 
 
 @istest
+def can_infer_type_of_boolean_literal():
+    assert_equal(types.boolean_type, infer(nodes.boolean(True)))
+
+
+@istest
 def can_infer_type_of_int_literal():
     assert_equal(types.int_type, infer(nodes.int("4")))
 
