@@ -1,4 +1,4 @@
-from . import nodes
+from . import nodes, errors, types
 
 
 def declared_locals(statements):
@@ -29,8 +29,8 @@ def exported_names(module):
     
     for statement in module.body:
         if isinstance(statement, nodes.Assignment) and "__all__" in statement.targets:
-            # TODO: raise more appropriate error (and add test)
-            assert isinstance(statement.value, nodes.ListExpression)
+            if not isinstance(statement.value, nodes.ListExpression):
+                raise errors.AllAssignmentError(statement, "__all__ must be a list of string literals")
             
             def extract_string_value(node):
                 # TODO: raise more appropriate error (and add test)

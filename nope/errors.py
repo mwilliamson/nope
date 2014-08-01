@@ -58,3 +58,12 @@ class ImportedValueRedeclaration(TypeCheckError):
         
     def __str__(self):
         return "Cannot declare value '{}' in module scope due to child module with the same name".format(self._name)
+
+
+class AllAssignmentError(TypeCheckError):
+    def __init__(self, node, message):
+        self.node = node
+        self._message = message
+    
+    def __str__(self):
+        return self._message
