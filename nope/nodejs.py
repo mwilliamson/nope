@@ -116,6 +116,7 @@ class Transformer(object):
             nodes.AttributeAccess: self._attr,
             nodes.VariableReference: _ref,
             nodes.NoneExpression: _none,
+            nodes.BooleanExpression: _bool,
             nodes.IntExpression: _int,
             nodes.StringExpression: _str,
             nodes.ListExpression: self._list,
@@ -256,6 +257,10 @@ def _ref(ref):
 
 def _none(none):
     return js.null
+
+
+def _bool(boolean):
+    return js.boolean(boolean.value)
 
 
 def _int(node):

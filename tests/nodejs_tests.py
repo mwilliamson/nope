@@ -244,6 +244,18 @@ def test_transform_none_expression():
 
 
 @istest
+def test_transform_boolean_expression():
+    _assert_transform(
+        nodes.boolean(True),
+        js.boolean(True)
+    )
+    _assert_transform(
+        nodes.boolean(False),
+        js.boolean(False)
+    )
+
+
+@istest
 def test_transform_string_expression():
     _assert_transform(
         nodes.str("hello"),
