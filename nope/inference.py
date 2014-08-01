@@ -41,7 +41,7 @@ class TypeChecker(object):
                 if path in self._source_tree:
                     submodule = self._source_tree.import_module(path)
                     if context.lookup(declared_name) is not submodule:
-                        raise errors.ImportedValueRedeclaration(statement)
+                        raise errors.ImportedValueRedeclaration(statement, declared_name)
         
 
     def check(self, module):

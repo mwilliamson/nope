@@ -52,6 +52,9 @@ class ModuleNotFoundError(ImportError):
 
 
 class ImportedValueRedeclaration(TypeCheckError):
-    def __init__(self, node):
-        # TODO: __str__
+    def __init__(self, node, name):
         self.node = node
+        self._name = name
+        
+    def __str__(self):
+        return "Cannot declare value '{}' in module scope due to child module with the same name".format(self._name)

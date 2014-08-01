@@ -336,6 +336,7 @@ def error_is_raised_if_value_in_package_has_same_name_as_module():
         assert False, "Expected error"
     except errors.ImportedValueRedeclaration as error:
         assert_equal(value_node, error.node)
+        assert_equal("Cannot declare value 'x' in module scope due to child module with the same name", str(error))
 
 
 @istest
