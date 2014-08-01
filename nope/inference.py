@@ -37,12 +37,18 @@ class TypeChecker(object):
 
     def _check_for_package_value_and_module_name_clashes(self, statement, context):
         for declared_name in util.declared_names(statement):
-            for path in self._possible_module_paths([".", declared_name]):
-                if path in self._source_tree:
-                    submodule = self._source_tree.import_module(path)
-                    if context.lookup(declared_name) is not submodule:
-                        raise errors.ImportedValueRedeclaration(statement, declared_name)
+            submodule = self._find_submodule(declared_name)
+            if submodule is not None:
+                if context.lookup(declared_name) is not submodule:
+                    raise errors.ImportedValueRedeclaration(statement, declared_name)
+    
+    def _find_submodule(self, name):
+        for path in self._possible_module_paths([".", name]):
+            if path in self._source_tree:
+                return self._source_tree.import_module(path)
         
+        return None
+    
 
     def check(self, module):
         context = new_module_context()
