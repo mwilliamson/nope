@@ -28,6 +28,7 @@ class Converter(object):
             ast.Num: self._num_literal,
             ast.List: self._list_literal,
             ast.Name: self._name,
+            ast.NameConstant: self._name_constant,
             ast.Call: self._call,
             ast.Attribute: self._attr,
         }
@@ -135,7 +136,14 @@ class Converter(object):
             return nodes.none()
         else:
             return nodes.ref(node.id)
-
+    
+    
+    def _name_constant(self, node):
+        if node.value is None:
+            return nodes.none()
+        else:
+            raise ValueError("Unrecognised constant: {}".format(node.value))
+    
 
     def _call(self, node):
         return nodes.call(self.convert(node.func), self._mapped(node.args))
