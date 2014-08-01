@@ -47,8 +47,7 @@ object_type = ScalarType("object", {})
 def unify(types):
     for type_ in types:
         if not is_sub_type(types[0], type_):
-            # TODO: raise more appropriate exception
-            raise Exception("Could not unify types")
+            return object_type
     
     return types[0]
 
