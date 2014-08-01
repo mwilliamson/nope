@@ -7,6 +7,7 @@ import spur
 
 import nope
 from nope import compilers
+from . import testing
 
 
 _local = spur.LocalShell()
@@ -118,32 +119,10 @@ class ExecutionTests(object):
         assert_equal(b"", result.stderr_output)
     
     def _run_program(self, path, program):
-        with tempman.create_temp_dir() as temp_dir:
-            output_dir = temp_dir.path
-            nope.compile(path, output_dir, self.platform)
-            output_path = "{}.{}".format(program, self.extension)
-            return _local.run([self.binary, output_path], cwd=output_dir)
+        return testing.compile_and_run(self.compiler, path, program)
 
 
-def _create_test_class(compiler):
-    @istest
-    class PlatformExecutionTests(ExecutionTests):
-        platform = compiler.name
-        binary = compiler.binary
-        extension = compiler.extension
-    
-    PlatformExecutionTests.__name__ = "{}ExecutionTests".format(type(compiler).__name__)
-    return PlatformExecutionTests
-
-
-def _create_test_classes():
-    module = sys.modules[__name__]
-    for compiler in compilers.compilers.values():
-        test_class = _create_test_class(compiler)
-        setattr(module, test_class.__name__, test_class)
-
-
-_create_test_classes()
+testing.create_platform_test_classes(__name__, ExecutionTests)
 
 
 def _program_path(path):
