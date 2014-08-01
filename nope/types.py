@@ -5,20 +5,21 @@ ScalarType = collections.namedtuple("ScalarType", ["name", "attrs"])
 # TODO: number of type params
 class GenericType(collections.namedtuple("GenericType", ["name"])):
     def __call__(self, *args):
-        return InstantiatedType(self, list(args))
+        return self.instantiate(list(args))
+    
+    def instantiate(self, params):
+        return InstantiatedType(self, params)
+
+generic_type = GenericType
 
 InstantiatedType = collections.namedtuple("InstantiatedType", ["generic_type", "params"])
 TypeType = collections.namedtuple("TypeType", ["type"])
 
-def func(args, return_type):
-    return generic_type("func")(list(args) + [return_type])
+func_type = generic_type("func")
 
-def generic_type(name):
-    generic_type = GenericType(name)
-    def instantiate(params):
-        return InstantiatedType(generic_type, params)
-    
-    return instantiate
+def func(args, return_type):
+    return func_type.instantiate(list(args) + [return_type])
+
 
 
 def is_sub_type(super_type, sub_type):
