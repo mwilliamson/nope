@@ -3,6 +3,7 @@ import collections
 
 
 NoneExpression = collections.namedtuple("NoneExpression", [])
+BooleanExpression = collections.namedtuple("BooleanExpression", ["value"])
 IntExpression = collections.namedtuple("IntExpression", ["value"])
 StringExpression = collections.namedtuple("StringExpression", ["value"])
 ListExpression = collections.namedtuple("ListExpression", ["elements"])
@@ -44,6 +45,7 @@ def none():
 def int(value):
     return IntExpression(value)
 
+boolean = BooleanExpression
 str = StringExpression
 list = ListExpression
 ref = VariableReference

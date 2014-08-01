@@ -141,6 +141,8 @@ class Converter(object):
     def _name_constant(self, node):
         if node.value is None:
             return nodes.none()
+        elif isinstance(node.value, bool):
+            return nodes.boolean(node.value)
         else:
             raise ValueError("Unrecognised constant: {}".format(node.value))
     

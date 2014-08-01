@@ -278,6 +278,15 @@ def test_parse_none():
 
 
 @istest
+def test_parse_booleans():
+    _assert_expression_parse(nodes.boolean(True), "True")
+
+@istest
+def test_parse_booleans():
+    _assert_expression_parse(nodes.boolean(False), "False")
+
+
+@istest
 def test_parse_int():
     _assert_expression_parse(nodes.int(42), "42")
 
