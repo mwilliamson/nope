@@ -22,10 +22,7 @@ def declared_names(node):
 
 
 def exported_names(module):
-    export_names = [
-        name for name in declared_locals(module.body)
-        if not name.startswith("_")
-    ]
+    export_names = None
     
     for statement in module.body:
         if isinstance(statement, nodes.Assignment) and "__all__" in statement.targets:
@@ -38,14 +35,21 @@ def exported_names(module):
                 else:
                     raise _all_wrong_type_error(statement)
             
-            # TODO: raise error if already defined
-            export_names = [
-                extract_string_value(element)
-                for element in statement.value.elements
-            ]
-            
+            if export_names is None:
+                export_names = [
+                    extract_string_value(element)
+                    for element in statement.value.elements
+                ]
+            else:
+                raise errors.AllAssignmentError(statement, "__all__ cannot be redeclared")
     
-    return export_names
+    if export_names is None:
+        return [
+            name for name in declared_locals(module.body)
+            if not name.startswith("_")
+        ]
+    else:
+        return export_names
 
 
 def _all_wrong_type_error(node):
