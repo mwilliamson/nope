@@ -1,10 +1,12 @@
 import os
+import sys
 
 from nose.tools import istest, nottest, assert_equal
 import tempman
 import spur
 
 import nope
+from nope import compilers
 
 
 _local = spur.LocalShell()
@@ -123,25 +125,25 @@ class ExecutionTests(object):
             return _local.run([self.binary, output_path], cwd=output_dir)
 
 
-@istest
-class Python3ExecutionTests(ExecutionTests):
-    platform = "python3"
-    binary = "python3"
-    extension = "py"
+def _create_test_class(compiler):
+    @istest
+    class PlatformExecutionTests(ExecutionTests):
+        platform = compiler.name
+        binary = compiler.binary
+        extension = compiler.extension
+    
+    PlatformExecutionTests.__name__ = "{}ExecutionTests".format(type(compiler).__name__)
+    return PlatformExecutionTests
 
 
-@istest
-class Python2ExecutionTests(ExecutionTests):
-    platform = "python2"
-    binary = "python2"
-    extension = "py"
+def _create_test_classes():
+    module = sys.modules[__name__]
+    for compiler in compilers.compilers.values():
+        test_class = _create_test_class(compiler)
+        setattr(module, test_class.__name__, test_class)
 
 
-@istest
-class NodeExecutionTests(ExecutionTests):
-    platform = "node"
-    binary = "node"
-    extension = "js"
+_create_test_classes()
 
 
 def _program_path(path):

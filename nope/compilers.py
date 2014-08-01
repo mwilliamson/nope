@@ -5,15 +5,34 @@ from . import nodejs
 
 
 def compile(source, nope_ast, destination_dir, platform):
-    _compilers[platform](source, nope_ast, destination_dir)
+    compilers[platform].compile(source, nope_ast, destination_dir)
 
 
-def python2(source, nope_ast, destination_dir):
-    _copy_recursive(source, destination_dir)
+class Python2(object):
+    name = "python2"
+    binary = "python2"
+    extension = "py"
+    
+    def compile(self, source, nope_ast, destination_dir):
+        _copy_recursive(source, destination_dir)
 
 
-def python3(source, nope_ast, destination_dir):
-    _copy_recursive(source, destination_dir)
+class Python3(object):
+    name = "python3"
+    binary = "python3"
+    extension = "py"
+    
+    def compile(self, source, nope_ast, destination_dir):
+        _copy_recursive(source, destination_dir)
+    
+
+class NodeJs(object):
+    name = "node"
+    binary = "node"
+    extension = "js"
+    
+    def compile(self, source_path, nope_ast, destination_dir):
+        nodejs.nope_to_nodejs(source_path, nope_ast, destination_dir)
 
 
 def _copy_recursive(source_path, dest_path):
@@ -35,12 +54,11 @@ def _copy_recursive(source_path, dest_path):
     
 
 
-def node(source_path, nope_ast, destination_dir):
-    nodejs.nope_to_nodejs(source_path, nope_ast, destination_dir)
+_all = [
+    Python2(),
+    Python3(),
+    NodeJs(),
+]
 
 
-_compilers = {
-    "python2": python2,
-    "python3": python3,
-    "node": node,
-}
+compilers = dict((compiler.name, compiler) for compiler in _all)
