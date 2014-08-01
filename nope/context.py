@@ -1,4 +1,4 @@
-from . import types
+from . import types, errors
 
 
 class Context(object):
@@ -7,9 +7,13 @@ class Context(object):
         self.return_type = return_type
         self.is_module_scope = is_module_scope
     
-    def add(self, name, binding):
-        # TODO: prohibit overrides
-        self._vars[name] = binding
+    def add(self, node, name, binding):
+        # TODO: raise error if name not in self._vars
+        var_type = self._vars[name]
+        if var_type is None or types.is_sub_type(var_type, binding):
+            self._vars[name] = binding
+        else:
+            raise errors.TypeMismatchError(node, expected=var_type, actual=binding)
     
     def lookup(self, name):
         return self._vars[name]
@@ -20,8 +24,11 @@ class Context(object):
             func_vars[local_name] = None
         return Context(func_vars, return_type=return_type, is_module_scope=False)
     
-    def enter_module(self):
-        return Context(self._vars.copy(), return_type=None, is_module_scope=True)
+    def enter_module(self, declared_names):
+        module_vars = self._vars.copy()
+        for name in declared_names:
+            module_vars[name] = None
+        return Context(module_vars, return_type=None, is_module_scope=True)
 
 
 module_context = Context({
@@ -31,5 +38,5 @@ module_context = Context({
     "print": types.func([types.object_type], types.none_type),
 })
 
-def new_module_context():
-    return module_context.enter_module()
+def new_module_context(declared_names):
+    return module_context.enter_module(declared_names)

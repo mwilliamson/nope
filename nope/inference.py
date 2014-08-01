@@ -51,7 +51,7 @@ class TypeChecker(object):
     
 
     def check(self, module):
-        context = new_module_context()
+        context = new_module_context(util.declared_locals(module.body))
         for statement in module.body:
             self.update_context(statement, context)
         
@@ -140,12 +140,12 @@ class TypeChecker(object):
         body_context = context.enter_func(return_type, local_names=local_names)
         
         for arg, arg_type in zip(node.args.args, func_type.params):
-            body_context.add(arg.name, arg_type)
+            body_context.add(arg, arg.name, arg_type)
             
         for statement in node.body:
             self.update_context(statement, body_context)
             
-        context.add(node.name, func_type)
+        context.add(node, node.name, func_type)
         
 
     _inferers = {
@@ -174,7 +174,7 @@ class TypeChecker(object):
     def _check_assignment(self, node, context):
         value_type = self.infer(node.value, context)
         for name in node.targets:
-            context.add(name, value_type)
+            context.add(node, name, value_type)
 
 
     def _check_import(self, node, context):
@@ -186,7 +186,7 @@ class TypeChecker(object):
                     this_module = self._find_module(node, parts[:index + 1])
                     
                     if index == 0:
-                        context.add(part, this_module)
+                        context.add(node, part, this_module)
                     else:
                         last_module.attrs[part] = this_module
                         
@@ -194,7 +194,7 @@ class TypeChecker(object):
                 
             else:
                 module = self._find_module(node, alias.name_parts)
-                context.add(alias.value_name, module)
+                context.add(node, alias.value_name, module)
 
 
     def _check_import_from(self, node, context):
@@ -202,11 +202,11 @@ class TypeChecker(object):
         for alias in node.names:
             module_value = module.attrs.get(alias.name)
             if module_value is not None:
-                context.add(alias.value_name, module_value)
+                context.add(node, alias.value_name, module_value)
             else:
                 submodule = self._find_module(node, node.module + [alias.name])
                 module.attrs[alias.value_name] = submodule
-                context.add(alias.value_name, submodule)
+                context.add(node, alias.value_name, submodule)
 
     
     def _find_module(self, node, names):

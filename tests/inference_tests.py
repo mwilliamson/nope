@@ -148,9 +148,20 @@ def function_adds_arguments_to_context():
 @istest
 def assignment_adds_variable_to_context():
     node = nodes.assign(["x"], nodes.int(1))
-    context = Context({})
+    context = Context({"x": None})
     update_context(node, context)
     assert_equal(types.int_type, context.lookup("x"))
+
+
+@istest
+def variables_cannot_change_type():
+    node = nodes.assign(["x"], nodes.int(1))
+    context = Context({"x": types.none_type})
+    try:
+        update_context(node, context)
+        assert False, "Expected error"
+    except errors.TypeMismatchError as error:
+        assert_equal(node, error.node)
 
 
 @istest
@@ -161,6 +172,7 @@ def variables_are_shadowed_in_defs():
     ])
     
     context = Context({
+        "g": None,
         "f": types.func([types.str_type], types.none_type),
         "x": types.int_type,
     })
@@ -228,7 +240,10 @@ def can_import_local_module_using_plain_import_syntax():
         "root/message.py": _module({"value": types.str_type})
     })
     
-    context = _update_blank_context(node, source_tree, module_path="root/main.py", is_executable=True)
+    context = _update_blank_context(node, source_tree,
+        module_path="root/main.py",
+        is_executable=True,
+        declared_names=["message"])
     
     assert_equal(types.str_type, context.lookup("message").attrs["value"])
 
@@ -241,7 +256,10 @@ def can_import_local_package_using_plain_import_syntax():
         "root/message/__init__.py": _module({"value": types.str_type})
     })
     
-    context = _update_blank_context(node, source_tree, module_path="root/main.py", is_executable=True)
+    context = _update_blank_context(node, source_tree,
+        module_path="root/main.py",
+        is_executable=True,
+        declared_names=["message"])
     
     assert_equal(types.str_type, context.lookup("message").attrs["value"])
 
@@ -257,7 +275,10 @@ def importing_module_in_package_mutates_that_package():
         "root/messages/hello.py": hello_module,
     })
     
-    context = _update_blank_context(node, source_tree, module_path="root/main.py", is_executable=True)
+    context = _update_blank_context(node, source_tree,
+        module_path="root/main.py",
+        is_executable=True,
+        declared_names=["messages"])
     
     assert_equal(hello_module, context.lookup("messages").attrs["hello"])
 
@@ -270,7 +291,10 @@ def can_use_aliases_with_plain_import_syntax():
         "root/message.py": _module({"value": types.str_type})
     })
     
-    context = _update_blank_context(node, source_tree, module_path="root/main.py", is_executable=True)
+    context = _update_blank_context(node, source_tree,
+        module_path="root/main.py",
+        is_executable=True,
+        declared_names=["m"])
     
     assert_equal(types.str_type, context.lookup("m").attrs["value"])
     assert_raises(KeyError, lambda: context.lookup("message"))
@@ -285,7 +309,10 @@ def cannot_import_local_packages_if_not_in_executable():
     })
     
     try:
-        _update_blank_context(node, source_tree, module_path="root/main.py", is_executable=False)
+        _update_blank_context(node, source_tree,
+            module_path="root/main.py",
+            is_executable=False,
+            declared_names=["message"])
         assert False, "Expected error"
     except errors.ImportError as error:
         assert_equal(node, error.node)
@@ -301,7 +328,10 @@ def error_is_raised_if_import_is_ambiguous():
     })
     
     try:
-        _update_blank_context(node, source_tree, module_path="root/main.py", is_executable=True)
+        _update_blank_context(node, source_tree,
+            module_path="root/main.py",
+            is_executable=True,
+            declared_names=["message"])
         assert False
     except errors.ImportError as error:
         assert_equal("Import is ambiguous: the module 'message.py' and the package 'message/__init__.py' both exist", str(error))
@@ -316,7 +346,10 @@ def error_is_raised_if_import_cannot_be_resolved():
     })
     
     try:
-        _update_blank_context(node, source_tree, module_path="root/main.py", is_executable=True)
+        _update_blank_context(node, source_tree,
+            module_path="root/main.py",
+            is_executable=True,
+            declared_names=["message"])
         assert False
     except errors.ImportError as error:
         assert_equal("Could not find module 'message.value'", str(error))
@@ -383,7 +416,9 @@ def can_import_value_from_relative_module_using_import_from_syntax():
         "root/message.py": _module({"value": types.str_type})
     })
     
-    context = _update_blank_context(node, source_tree, module_path="root/main.py")
+    context = _update_blank_context(node, source_tree,
+        module_path="root/main.py",
+        declared_names=["value"])
     
     assert_equal(types.str_type, context.lookup("value"))
     assert_raises(KeyError, lambda: context.lookup("message"))
@@ -400,7 +435,9 @@ def can_import_relative_module_using_import_from_syntax():
         "root/message.py": message_module,
     })
     
-    context = _update_blank_context(node, source_tree, module_path="root/main.py")
+    context = _update_blank_context(node, source_tree,
+        module_path="root/main.py",
+        declared_names=["message"])
     
     assert_equal(types.str_type, context.lookup("message").attrs["value"])
     assert_equal(message_module, root_module.attrs["message"])
@@ -414,7 +451,9 @@ def can_import_relative_module_using_import_from_syntax_with_alias():
         "root/message.py": _module({"value": types.str_type})
     })
     
-    context = _update_blank_context(node, source_tree, module_path="root/main.py")
+    context = _update_blank_context(node, source_tree,
+        module_path="root/main.py",
+        declared_names=["v"])
     
     assert_equal(types.str_type, context.lookup("v"))
     assert_raises(KeyError, lambda: context.lookup("value"))
@@ -433,13 +472,13 @@ class FakeSourceTree(object):
 
 
 def _infer_func_type(func_node):
-    context = new_module_context()
+    context = new_module_context({func_node.name: None})
     update_context(func_node, context)
     return context.lookup(func_node.name)
 
 
-def _update_blank_context(node, *args, **kwargs):
-    context = Context({})
+def _update_blank_context(node, *args, declared_names=[], **kwargs):
+    context = Context(dict((name, None) for name in declared_names))
     update_context(node, context, *args, **kwargs)
     return context
 
