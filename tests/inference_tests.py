@@ -50,6 +50,11 @@ def type_error_if_ref_to_undefined_variable():
 @istest
 def can_infer_type_of_list_of_ints():
     assert_equal(types.list_type(types.int_type), infer(nodes.list([nodes.int(1), nodes.int(42)])))
+    
+
+@istest
+def empty_list_has_elements_of_type_bottom():
+    assert_equal(types.list_type(types.bottom_type), infer(nodes.list([])))
 
 
 @istest

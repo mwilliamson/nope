@@ -46,8 +46,12 @@ type_type = TypeType
 
 object_type = ScalarType("object", {})
 
+bottom_type = ScalarType("bottom", {})
 
 def unify(types):
+    if len(types) == 0:
+        return bottom_type
+        
     for type_ in types:
         if not is_sub_type(types[0], type_):
             return object_type
