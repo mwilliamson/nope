@@ -37,6 +37,17 @@ def can_infer_type_of_variable_reference():
 
 
 @istest
+def type_error_if_ref_to_undefined_variable():
+    node = nodes.ref("x")
+    try:
+        infer(node, Context({}))
+        assert False, "Expected error"
+    except errors.UndefinedNameError as error:
+        assert_equal(node, error.node)
+        assert_equal("name 'x' is not defined", str(error))
+
+
+@istest
 def can_infer_type_of_list_of_ints():
     assert_equal(types.list_type(types.int_type), infer(nodes.list([nodes.int(1), nodes.int(42)])))
 

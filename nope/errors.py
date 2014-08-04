@@ -2,6 +2,15 @@ class TypeCheckError(Exception):
     pass
 
 
+class UndefinedNameError(Exception):
+    def __init__(self, node, name):
+        self.node = node
+        self.name = name
+    
+    def __str__(self):
+        return "name '{0}' is not defined".format(self.name)
+
+
 class ArgumentsLengthError(TypeCheckError):
     def __init__(self, node, expected, actual):
         self.node = node

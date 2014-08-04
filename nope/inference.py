@@ -78,7 +78,10 @@ class TypeChecker(object):
         return types.list_type(types.unify(element_types))
 
     def _infer_ref(self, node, context):
-        ref_type = context.lookup(node.name)
+        try:
+            ref_type = context.lookup(node.name)
+        except KeyError:
+            raise errors.UndefinedNameError(node, node.name)
         if ref_type is None:
             raise errors.UnboundLocalError(node, node.name)
         else:
