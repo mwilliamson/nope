@@ -1,6 +1,6 @@
 import os
 
-from . import types, nodes, util, errors
+from . import types, nodes, util, errors, returns
 from .context import new_module_context
 
 
@@ -148,17 +148,10 @@ class TypeChecker(object):
         for statement in node.body:
             self.update_context(statement, body_context)
         
-        if return_type != types.none_type and not self._has_unconditional_return(node.body):
+        if return_type != types.none_type and not returns.has_unconditional_return(node.body):
             raise errors.MissingReturnError(node, return_type)
         
         context.add(node, node.name, func_type)
-    
-    def _has_unconditional_return(self, statements):
-        for statement in statements:
-            if isinstance(statement, nodes.ReturnStatement):
-                return True
-        
-        return False
     
 
     _inferers = {
