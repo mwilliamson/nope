@@ -183,11 +183,15 @@ class TypeChecker(object):
     def _check_if_else(self, node, context):
         self.infer(node.condition, context)
         
+        true_context = context.enter_block()
         for statement in node.true_body:
-            self.update_context(statement, context)
+            self.update_context(statement, true_context)
         
+        false_context = context.enter_block()
         for statement in node.false_body:
-            self.update_context(statement, context)
+            self.update_context(statement, false_context)
+        
+        context.unify([true_context, false_context])
     
 
     def _check_import(self, node, context):

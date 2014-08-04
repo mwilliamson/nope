@@ -31,6 +31,40 @@ class Context(object):
             module_vars[name] = None
         return Context(module_vars, return_type=None, is_module_scope=True)
 
+    def enter_block(self):
+        return Context(
+            BlockVars(self._vars),
+            return_type=self.return_type,
+            is_module_scope=self.is_module_scope,
+        )
+    
+    def unify(self, contexts):
+        new_bindings = [
+            context._vars._new_vars
+            for context in contexts
+        ]
+        new_keys = set(
+            key
+            for bindings in new_bindings
+            for key in bindings
+        )
+        
+        for key in new_keys:
+            unified_type = types.unify([bindings[key] for bindings in new_bindings])
+            self.add(None, key, unified_type)
+
+
+class BlockVars(object):
+    def __init__(self, bindings):
+        self._original_vars = bindings
+        self._new_vars = {}
+    
+    def __getitem__(self, key):
+        return self._original_vars[key]
+    
+    def __setitem__(self, key, value):
+        self._new_vars[key] = value
+
 
 module_context = Context({
     "int": types.type_type(types.int_type),
