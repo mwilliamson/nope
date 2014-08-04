@@ -1,4 +1,4 @@
-from . import nodes, errors, types
+from . import nodes, errors
 
 
 def declared_locals(statements):

@@ -5,7 +5,7 @@ import io
 import collections
 
 from funcparserlib.lexer import make_tokenizer
-from funcparserlib.parser import (some, a, many, maybe, finished, forward_decl)
+from funcparserlib.parser import (some, many, maybe, finished, forward_decl)
 
 from . import transform, nodes
 
