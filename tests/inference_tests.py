@@ -265,6 +265,18 @@ def if_statement_has_false_body_type_checked():
 
 
 @istest
+def assignment_in_both_branches_of_if_statement_is_added_to_context():
+    node = nodes.if_else(
+        nodes.int(1),
+        [nodes.assign("x", nodes.int(1))],
+        [nodes.assign("x", nodes.int(2))],
+    )
+    context = Context({"x": None})
+    update_context(node, context)
+    assert_equal(types.int_type, context.lookup("x"))
+
+
+@istest
 def module_exports_are_specified_using_all():
     module_node = nodes.module([
         nodes.assign(["__all__"], nodes.list([nodes.str("x"), nodes.str("z")])),
