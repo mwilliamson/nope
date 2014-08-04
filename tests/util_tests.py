@@ -4,13 +4,32 @@ from nope import util, nodes, errors
 
 
 @istest
+def declared_locals_removes_duplicate_names():
+    statements = [
+        nodes.assign("x", nodes.int(1)),
+        nodes.assign("x", nodes.int(2)),
+    ]
+    assert_equal(["x"], list(util.declared_locals(statements)))
+
+
+@istest
 def declared_names_includes_names_from_both_branches_of_if_else_statement():
     if_else = nodes.if_else(
         nodes.int(1),
         [nodes.assign("x", nodes.int(2)), nodes.assign("y", nodes.int(4))],
         [nodes.assign("z", nodes.ref("a"))],
     )
-    assert_equal(["x", "y", "z"], util.declared_names(if_else))
+    assert_equal(["x", "y", "z"], list(util.declared_names(if_else)))
+
+
+@istest
+def declared_names_removes_duplicates():
+    if_else = nodes.if_else(
+        nodes.int(1),
+        [nodes.assign("x", nodes.int(2))],
+        [nodes.assign("x", nodes.ref("a"))],
+    )
+    assert_equal(["x"], list(util.declared_names(if_else)))
 
 
 @istest

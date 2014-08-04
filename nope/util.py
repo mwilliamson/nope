@@ -1,25 +1,47 @@
+import collections
+
 from . import nodes, errors
 
 
 def declared_locals(statements):
-    names = []
+    names = OrderedSet([])
     for child in statements:
-        names += declared_names(child)
+        names |= declared_names(child)
     
     return names
 
 
 def declared_names(node):
     if isinstance(node, nodes.FunctionDef):
-        return [node.name]
+        return OrderedSet([node.name])
     elif isinstance(node, nodes.Assignment):
-        return node.targets
+        return OrderedSet(node.targets)
     elif isinstance(node, (nodes.ImportFrom, nodes.Import)):
-        return [alias.value_name for alias in node.names]
+        return OrderedSet([alias.value_name for alias in node.names])
     elif isinstance(node, nodes.IfElse):
-        return declared_locals(node.true_body) + declared_locals(node.false_body)
+        return declared_locals(node.true_body) | declared_locals(node.false_body)
     else:
-        return []
+        return OrderedSet([])
+
+
+class OrderedSet(object):
+    def __init__(self, values):
+        self._values = collections.OrderedDict.fromkeys(values)
+    
+    def copy(self):
+        return OrderedSet(self._values.keys())
+    
+    def __or__(self, other):
+        values = self.copy()
+        values |= other
+        return values
+    
+    def __ior__(self, other):
+        self._values.update(other._values)
+        return self
+    
+    def __iter__(self):
+        return iter(self._values)
 
 
 
