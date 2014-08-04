@@ -4,6 +4,16 @@ from nope import util, nodes, errors,types
 
 
 @istest
+def declared_names_includes_names_from_both_branches_of_if_else_statement():
+    if_else = nodes.if_else(
+        nodes.int(1),
+        [nodes.assign("x", nodes.int(2)), nodes.assign("y", nodes.int(4))],
+        [nodes.assign("z", nodes.ref("a"))],
+    )
+    assert_equal(["x", "y", "z"], util.declared_names(if_else))
+
+
+@istest
 def error_is_raised_if_all_is_not_a_list():
     try:
         all_node = nodes.assign(["__all__"], nodes.none())
