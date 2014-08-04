@@ -111,6 +111,7 @@ class Transformer(object):
             nodes.Assignment: self._assign,
             nodes.FunctionDef: self._function_def,
             nodes.ReturnStatement: self._return_statement,
+            nodes.IfElse: self._if_else,
             
             nodes.Call: self._call,
             nodes.AttributeAccess: self._attr,
@@ -200,11 +201,11 @@ class Transformer(object):
 
 
     def _expression_statement(self, statement):
-        return js.expression_statement(transform(statement.value))
+        return js.expression_statement(self.transform(statement.value))
 
 
     def _assign(self, assignment):
-        value = transform(assignment.value)
+        value = self.transform(assignment.value)
         for name in reversed(assignment.targets):
             value = js.assign(name, value)
         return js.expression_statement(value)
@@ -222,17 +223,25 @@ class Transformer(object):
 
 
     def _return_statement(self, statement):
-        return js.ret(transform(statement.value))
+        return js.ret(self.transform(statement.value))
+
+
+    def _if_else(self, statement):
+        return js.if_else(
+            self.transform(statement.condition),
+            self._transform_all(statement.true_body),
+            self._transform_all(statement.false_body),
+        )
 
 
     def _call(self, call):
-        return js.call(transform(call.func), self._transform_all(call.args))
+        return js.call(self.transform(call.func), self._transform_all(call.args))
 
 
     def _attr(self, attr):
         return js.call(
             js.ref("$nope.propertyAccess"),
-            [transform(attr.value), js.string(attr.attr)],
+            [self.transform(attr.value), js.string(attr.attr)],
         )
 
 

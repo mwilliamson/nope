@@ -212,6 +212,22 @@ def test_transform_return():
 
 
 @istest
+def test_transform_if_else():
+    _assert_transform(
+        nodes.if_else(
+            nodes.ref("x"),
+            [nodes.ret(nodes.ref("y"))],
+            [nodes.ret(nodes.ref("z"))],
+        ),
+        js.if_else(
+            js.ref("x"),
+            [js.ret(js.ref("y"))],
+            [js.ret(js.ref("z"))],
+        )
+    )
+
+
+@istest
 def test_transform_call():
     _assert_transform(
         nodes.call(nodes.ref("f"), [nodes.ref("x"), nodes.ref("y")]),
