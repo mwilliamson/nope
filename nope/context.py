@@ -50,8 +50,10 @@ class Context(object):
         )
         
         for key in new_keys:
-            unified_type = types.unify([bindings[key] for bindings in new_bindings])
-            self.add(None, key, unified_type)
+            var_types = [bindings.get(key) for bindings in new_bindings]
+            if not any(var_type is None for var_type in var_types):
+                unified_type = types.unify(var_types)
+                self.add(None, key, unified_type)
 
 
 class BlockVars(object):

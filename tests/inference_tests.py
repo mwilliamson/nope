@@ -289,6 +289,18 @@ def type_of_variable_is_unified_if_branches_of_if_else_use_different_types():
 
 
 @istest
+def type_of_variable_remains_undefined_if_only_set_in_one_branch_of_if_else():
+    node = nodes.if_else(
+        nodes.int(1),
+        [nodes.assign("x", nodes.int(1))],
+        [],
+    )
+    context = Context({"x": None})
+    update_context(node, context)
+    assert_equal(None, context.lookup("x"))
+
+
+@istest
 def module_exports_are_specified_using_all():
     module_node = nodes.module([
         nodes.assign(["__all__"], nodes.list([nodes.str("x"), nodes.str("z")])),
