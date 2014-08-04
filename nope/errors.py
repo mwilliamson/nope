@@ -2,7 +2,7 @@ class TypeCheckError(Exception):
     pass
 
 
-class UndefinedNameError(Exception):
+class UndefinedNameError(TypeCheckError):
     def __init__(self, node, name):
         self.node = node
         self.name = name
