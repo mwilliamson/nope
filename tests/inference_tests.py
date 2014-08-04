@@ -147,6 +147,22 @@ def type_mismatch_if_return_type_is_incorrect():
 
 
 @istest
+def type_error_if_return_is_missing():
+    node = nodes.func(
+        "f",
+        args=nodes.arguments([]),
+        return_annotation=nodes.ref("int"),
+        body=[],
+    )
+    try:
+        _infer_func_type(node)
+        assert False, "Expected error"
+    except errors.MissingReturnError as error:
+        assert_equal(node, error.node)
+        assert_equal("Function must return value of type 'int'", str(error))
+
+
+@istest
 def function_adds_arguments_to_context():
     args = nodes.arguments([
         nodes.argument("x", nodes.ref("int")),

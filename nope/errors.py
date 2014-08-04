@@ -76,3 +76,12 @@ class AllAssignmentError(TypeCheckError):
     
     def __str__(self):
         return self._message
+
+
+class MissingReturnError(TypeCheckError):
+    def __init__(self, node, return_type):
+        self.node = node
+        self._return_type = return_type
+    
+    def __str__(self):
+        return "Function must return value of type '{}'".format(self._return_type)
