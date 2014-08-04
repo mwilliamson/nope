@@ -23,6 +23,7 @@ class Converter(object):
             ast.Expr: self._expr,
             ast.Return: self._return,
             ast.Assign: self._assign,
+            ast.If: self._if,
             
             ast.Str: self._str_literal,
             ast.Num: self._num_literal,
@@ -117,6 +118,10 @@ class Converter(object):
         names = [extract_id(target) for target in node.targets]
         
         return nodes.assign(names, self.convert(node.value))
+    
+    
+    def _if(self, node):
+        return nodes.if_else(self.convert(node.test), self._mapped(node.body), [])
     
 
     def _str_literal(self, node):

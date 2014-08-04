@@ -345,6 +345,16 @@ def test_parse_multiple_assignments():
     _assert_statement_parse(expected, "x = y = z")
 
 
+@istest
+def test_parse_if_statement():
+    expected = nodes.if_else(
+        nodes.ref("b"),
+        [nodes.ret(nodes.ref("x"))],
+        [],
+    )
+    _assert_statement_parse(expected, "if b:\n  return x")
+
+
 
 def _assert_expression_parse(expected, source):
     module = parser.parse(source)
