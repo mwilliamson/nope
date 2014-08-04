@@ -97,6 +97,16 @@ def test_serialize_var_declaration_with_immediate_assignment():
 
 
 @istest
+def test_serialize_if_else():
+    if_else = js.if_else(
+        js.ref("x"),
+        [js.ret(js.ref("y"))],
+        [js.ret(js.ref("z"))],
+    )
+    assert_equal("if (x) { return y; } else { return z; }", js.dumps(if_else))
+
+
+@istest
 def test_serialize_statements():
     assert_equal("x;y;", js.dumps(js.statements([
         js.expression_statement(js.ref("x")),

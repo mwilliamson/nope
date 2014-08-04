@@ -58,6 +58,18 @@ def _serialize_variable_declaration(obj, fileobj):
     fileobj.write(";")
 
 
+def _serialize_if_else(obj, fileobj):
+    fileobj.write("if (")
+    dump(obj.condition, fileobj)
+    fileobj.write(") { ");
+    for statement in obj.true_body:
+        dump(statement, fileobj)
+    fileobj.write(" } else { ")
+    for statement in obj.false_body:
+        dump(statement, fileobj)
+    fileobj.write(" }")
+
+
 def _serialize_assignment(obj, fileobj):
     dump(obj.target, fileobj)
     fileobj.write(" = ")
@@ -125,6 +137,8 @@ VariableDeclaration = collections.namedtuple("VariableDeclaration", ["name", "va
 def var(name, value=None):
     return VariableDeclaration(name, value)
 
+if_else = IfElse = collections.namedtuple("IfElse", ["condition", "true_body", "false_body"])
+
 Assignment = collections.namedtuple("Assignment", ["target", "value"])
 
 def assign(target, value):
@@ -153,6 +167,7 @@ _serializers = {
     FunctionDeclaration: _serialize_function_declaration,
     ReturnStatement: _serialize_return_statement,
     VariableDeclaration: _serialize_variable_declaration,
+    IfElse: _serialize_if_else,
     
     Assignment: _serialize_assignment,
     PropertyAccess: _serialize_property_access,
