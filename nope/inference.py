@@ -178,7 +178,12 @@ class TypeChecker(object):
         value_type = self.infer(node.value, context)
         for name in node.targets:
             context.add(node, name, value_type)
-
+    
+    
+    def _check_if_else(self, node, context):
+        for statement in node.true_body:
+            self.update_context(statement, context)
+    
 
     def _check_import(self, node, context):
         for alias in node.names:
@@ -245,6 +250,7 @@ class TypeChecker(object):
         nodes.ExpressionStatement: _check_expression_statement,
         nodes.ReturnStatement: _check_return,
         nodes.Assignment: _check_assignment,
+        nodes.IfElse: _check_if_else,
         nodes.FunctionDef: _check_function_def,
         nodes.Import: _check_import,
         nodes.ImportFrom: _check_import_from,

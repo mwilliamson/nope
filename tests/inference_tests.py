@@ -221,6 +221,22 @@ def local_variables_cannot_be_used_before_assigned():
 
 
 @istest
+def if_statement_has_true_body_type_checked():
+    ref_node = nodes.ref("y")
+    node = nodes.if_else(
+        nodes.int(1),
+        [nodes.expression_statement(ref_node)],
+        [],
+    )
+    
+    try:
+        update_context(node, Context({}))
+        assert False, "Expected error"
+    except errors.TypeCheckError as error:
+        assert_equal(ref_node, error.node)
+
+
+@istest
 def module_exports_are_specified_using_all():
     module_node = nodes.module([
         nodes.assign(["__all__"], nodes.list([nodes.str("x"), nodes.str("z")])),
