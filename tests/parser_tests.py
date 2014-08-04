@@ -355,6 +355,16 @@ def test_parse_if_statement():
     _assert_statement_parse(expected, "if b:\n  return x")
 
 
+@istest
+def test_parse_if_else_statement():
+    expected = nodes.if_else(
+        nodes.ref("b"),
+        [nodes.ret(nodes.ref("x"))],
+        [nodes.ret(nodes.ref("y"))],
+    )
+    _assert_statement_parse(expected, "if b:\n  return x\nelse:\n  return y")
+
+
 
 def _assert_expression_parse(expected, source):
     module = parser.parse(source)

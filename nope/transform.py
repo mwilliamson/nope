@@ -121,7 +121,11 @@ class Converter(object):
     
     
     def _if(self, node):
-        return nodes.if_else(self.convert(node.test), self._mapped(node.body), [])
+        return nodes.if_else(
+            self.convert(node.test),
+            self._mapped(node.body),
+            self._mapped(node.orelse),
+        )
     
 
     def _str_literal(self, node):
