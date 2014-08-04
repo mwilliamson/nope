@@ -69,10 +69,13 @@ class BlockVars(object):
 
 
 module_context = Context({
+    "object": types.type_type(types.object_type),
     "int": types.type_type(types.int_type),
     "str": types.type_type(types.str_type),
     "none": types.type_type(types.none_type),
+    
     "print": types.func([types.object_type], types.none_type),
+    "bool": types.func([types.object_type], types.boolean_type),
 })
 
 def new_module_context(declared_names):

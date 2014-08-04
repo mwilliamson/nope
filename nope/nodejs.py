@@ -86,12 +86,20 @@ function print(value) {
         }
     }
     
+    function bool(value) {
+        return !!value;
+    }
+    
     $nope = {
         propertyAccess: propertyAccess,
         require: global.$nopeRequire || require,
-        exports: exports
+        exports: exports,
+        
+        bool: bool
     };
 })();
+
+bool = $nope.bool;
 """
 
 

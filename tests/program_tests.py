@@ -115,6 +115,20 @@ class ExecutionTests(object):
         assert_equal(b"Hello\n", result.output)
         assert_equal(b"", result.stderr_output)
     
+    @istest
+    def test_output_of_bool(self):
+        result = self._run_program(path=_program_path("valid/bool.py"), program="bool")
+        assert_equal(0, result.return_code)
+        expected_output = b"""False
+True
+False
+True
+False
+True
+"""
+        assert_equal(expected_output, result.output)
+        assert_equal(b"", result.stderr_output)
+    
     def _run_program(self, path, program):
         return testing.compile_and_run(self.compiler, path, program)
 
