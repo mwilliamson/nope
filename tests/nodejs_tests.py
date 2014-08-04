@@ -220,7 +220,7 @@ def test_transform_if_else():
             [nodes.ret(nodes.ref("z"))],
         ),
         js.if_else(
-            js.ref("x"),
+            js.call(js.ref("$nope.bool"), [js.ref("x")]),
             [js.ret(js.ref("y"))],
             [js.ret(js.ref("z"))],
         )

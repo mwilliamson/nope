@@ -228,7 +228,7 @@ class Transformer(object):
 
     def _if_else(self, statement):
         return js.if_else(
-            self.transform(statement.condition),
+            js.call(js.ref("$nope.bool"), [self.transform(statement.condition)]),
             self._transform_all(statement.true_body),
             self._transform_all(statement.false_body),
         )
