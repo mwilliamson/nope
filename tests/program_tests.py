@@ -125,6 +125,8 @@ False
 True
 False
 True
+False
+True
 """
         assert_equal(expected_output, result.output)
         assert_equal(b"", result.stderr_output)

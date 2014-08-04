@@ -57,6 +57,10 @@ function print(value) {
         return Object.prototype.toString.call(value) === "[object String]";
     }
     
+    function isArray(value) {
+        return Object.prototype.toString.call(value) === "[object Array]";
+    }
+    
     if (require.main === module) {
         // TODO: is there a way to resolve this at compile-time?
         //       This would require the user to specify which modules are going to be executed directly
@@ -87,6 +91,11 @@ function print(value) {
     }
     
     function bool(value) {
+        // TODO: add support for __len__ and __iszero__
+        if (isArray(value)) {
+            return value.length > 0;
+        }
+        
         return !!value;
     }
     
