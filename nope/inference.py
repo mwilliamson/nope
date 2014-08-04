@@ -183,6 +183,9 @@ class TypeChecker(object):
     def _check_if_else(self, node, context):
         for statement in node.true_body:
             self.update_context(statement, context)
+        
+        for statement in node.false_body:
+            self.update_context(statement, context)
     
 
     def _check_import(self, node, context):
