@@ -1,12 +1,9 @@
 import os
-import sys
 
 from nose.tools import istest, nottest, assert_equal
-import tempman
 import spur
 
 import nope
-from nope import compilers
 from . import testing
 
 

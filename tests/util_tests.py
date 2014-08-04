@@ -1,6 +1,6 @@
 from nose.tools import istest, assert_equal
 
-from nope import util, nodes, errors,types
+from nope import util, nodes, errors
 
 
 @istest

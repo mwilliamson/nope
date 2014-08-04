@@ -36,7 +36,7 @@ def test_serialize_array():
 
 @istest
 def test_serialize_call_with_no_args():
-    assert_equal("f(x)", js.dumps(js.call(js.ref("f"), [])))
+    assert_equal("f()", js.dumps(js.call(js.ref("f"), [])))
     
 
 @istest
@@ -45,7 +45,7 @@ def test_serialize_call_with_one_arg():
 
 
 @istest
-def test_serialize_call_with_no_args():
+def test_serialize_call_with_multiple_args():
     assert_equal("f(x, y)", js.dumps(js.call(js.ref("f"), [js.ref("x"), js.ref("y")])))
 
 
