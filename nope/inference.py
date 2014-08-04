@@ -181,6 +181,8 @@ class TypeChecker(object):
     
     
     def _check_if_else(self, node, context):
+        self.infer(node.condition, context)
+        
         for statement in node.true_body:
             self.update_context(statement, context)
         

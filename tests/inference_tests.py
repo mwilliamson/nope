@@ -221,6 +221,18 @@ def local_variables_cannot_be_used_before_assigned():
 
 
 @istest
+def if_statement_has_condition_type_checked():
+    ref_node = nodes.ref("y")
+    node = nodes.if_else(ref_node, [], [])
+    
+    try:
+        update_context(node, Context({}))
+        assert False, "Expected error"
+    except errors.TypeCheckError as error:
+        assert_equal(ref_node, error.node)
+
+
+@istest
 def if_statement_has_true_body_type_checked():
     ref_node = nodes.ref("y")
     node = nodes.if_else(
