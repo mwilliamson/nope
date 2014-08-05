@@ -124,7 +124,11 @@ class TypeChecker(object):
             raise errors.TypeMismatchError(node, expected="Type with __add__", actual=left_type)
             
         add_func = left_type.attrs["__add__"]
-        if add_func.params[:-1] != [left_type]:
+            
+        if len(add_func.params) != 2:
+            raise errors.BadSignatureError(node, "__add__ should have exactly one argument")
+            
+        if not types.is_sub_type(add_func.params[0], left_type):
             raise errors.BadSignatureError(node, "Argument of __add__ should accept own type")
         
         right_type = self.infer(node.right, context)

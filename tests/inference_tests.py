@@ -144,7 +144,7 @@ def operands_of_add_operation_must_support_add():
 
 
 @istest
-def argument_of_add_must_have_same_type_as_object():
+def argument_of_add_method_must_have_same_type_as_object():
     cls = types.ScalarType("NotAddable", {})
     cls.attrs["__add__"] = types.func([types.int_type], cls)
     
@@ -156,6 +156,31 @@ def argument_of_add_must_have_same_type_as_object():
     except errors.BadSignatureError as error:
         assert_equal(addition, error.node)
         assert_equal("Argument of __add__ should accept own type", str(error))
+
+
+@istest
+def type_of_add_method_argument_allows_super_type():
+    cls = types.ScalarType("Addable", {})
+    cls.attrs["__add__"] = types.func([types.object_type], cls)
+    
+    context = Context({"x": cls, "y": cls})
+    addition = nodes.add(nodes.ref("x"), nodes.ref("y"))
+    assert_equal(cls, infer(addition, context))
+
+
+@istest
+def add_method_should_only_accept_one_argument():
+    cls = types.ScalarType("Addable", {})
+    cls.attrs["__add__"] = types.func([types.object_type, types.object_type], cls)
+    
+    context = Context({"x": cls, "y": cls})
+    addition = nodes.add(nodes.ref("x"), nodes.ref("y"))
+    try:
+        infer(addition, context)
+        assert False, "Expected error"
+    except errors.BadSignatureError as error:
+        assert_equal(addition, error.node)
+        assert_equal("__add__ should have exactly one argument", str(error))
 
     
 
