@@ -119,7 +119,6 @@ class TypeChecker(object):
     def _infer_binary_operation(self, node, context):
         left_type = self.infer(node.left, context)
         
-        # TODO: check argument and return type
         if "__add__" not in left_type.attrs:
             raise errors.TypeMismatchError(node, expected="Type with __add__", actual=left_type)
             
@@ -137,7 +136,7 @@ class TypeChecker(object):
         if left_type != right_type:
             raise errors.TypeMismatchError(node, expected=left_type, actual=right_type)
         
-        return left_type
+        return add_func.params[-1]
 
 
     def _infer_function_def(self, node, context):

@@ -170,7 +170,7 @@ def type_of_add_method_argument_allows_super_type():
 
 @istest
 def add_method_should_only_accept_one_argument():
-    cls = types.ScalarType("Addable", {})
+    cls = types.ScalarType("NotAddable", {})
     cls.attrs["__add__"] = types.func([types.object_type, types.object_type], cls)
     
     context = Context({"x": cls, "y": cls})
@@ -181,6 +181,16 @@ def add_method_should_only_accept_one_argument():
     except errors.BadSignatureError as error:
         assert_equal(addition, error.node)
         assert_equal("__add__ should have exactly one argument", str(error))
+
+
+@istest
+def return_type_of_add_can_differ_from_original_type():
+    cls = types.ScalarType("Addable", {})
+    cls.attrs["__add__"] = types.func([types.object_type], types.object_type)
+    
+    context = Context({"x": cls, "y": cls})
+    addition = nodes.add(nodes.ref("x"), nodes.ref("y"))
+    assert_equal(types.object_type, infer(addition, context))
 
     
 
