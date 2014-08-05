@@ -36,6 +36,7 @@ none_type = ScalarType("NoneType", {})
 boolean_type = ScalarType("BooleanType", {})
 
 int_type = ScalarType("int", {})
+int_type.attrs["__add__"] = func([int_type], int_type)
 
 str_type = ScalarType("str", {})
 str_type.attrs["find"] = func([str_type], int_type)

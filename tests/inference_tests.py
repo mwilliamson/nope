@@ -108,6 +108,40 @@ def type_error_if_attribute_does_not_exist():
     except errors.AttributeError as error:
         assert_equal("str object has no attribute swizzlify", str(error))
         assert error.node is node
+
+
+@istest
+def can_infer_type_of_addition_operation():
+    context = Context({"x": types.int_type, "y": types.int_type})
+    addition = nodes.add(nodes.ref("x"), nodes.ref("y"))
+    assert_equal(types.int_type, infer(addition, context))
+
+
+@istest
+def operands_of_add_operation_must_be_of_same_type():
+    context = Context({"x": types.int_type, "y": types.str_type})
+    addition = nodes.add(nodes.ref("x"), nodes.ref("y"))
+    try:
+        infer(addition, context)
+        assert False, "Expected error"
+    except errors.TypeMismatchError as error:
+        assert_equal(addition, error.node)
+        assert_equal(types.int_type, error.expected)
+        assert_equal(types.str_type, error.actual)
+
+
+@istest
+def operands_of_add_operation_must_support_add():
+    context = Context({"x": types.none_type, "y": types.none_type})
+    addition = nodes.add(nodes.ref("x"), nodes.ref("y"))
+    try:
+        infer(addition, context)
+        assert False, "Expected error"
+    except errors.TypeMismatchError as error:
+        assert_equal(addition, error.node)
+        assert_equal("Type with __add__", error.expected)
+        assert_equal(types.none_type, error.actual)
+
     
 
 @istest

@@ -115,6 +115,21 @@ class TypeChecker(object):
             return value_type.attrs[node.attr]
         else:
             raise errors.AttributeError(node, value_type.name, node.attr)
+    
+    def _infer_binary_operation(self, node, context):
+        left_type = self.infer(node.left, context)
+        
+        # TODO: check argument and return type
+        if "__add__" not in left_type.attrs:
+            raise errors.TypeMismatchError(node, expected="Type with __add__", actual=left_type)
+        
+        right_type = self.infer(node.right, context)
+        # This is a significant simplication of the rules in Python.
+        # We use equality instead of subtyping to maintain symmetry
+        if left_type != right_type:
+            raise errors.TypeMismatchError(node, expected=left_type, actual=right_type)
+        
+        return left_type
 
 
     def _infer_function_def(self, node, context):
@@ -163,6 +178,7 @@ class TypeChecker(object):
         nodes.VariableReference: _infer_ref,
         nodes.Call: _infer_call,
         nodes.AttributeAccess: _infer_attr,
+        nodes.BinaryOperation: _infer_binary_operation,
     }
 
 
