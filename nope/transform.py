@@ -176,7 +176,8 @@ class Converter(object):
     
     def _operator(self, operator):
         operators = {
-            ast.Add: nodes.add
+            ast.Add: nodes.add,
+            ast.Sub: nodes.sub,
         }
         return operators[type(operator)]
     

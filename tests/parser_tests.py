@@ -325,6 +325,12 @@ def test_parse_addition():
 
 
 @istest
+def test_parse_subtraction():
+    expected = nodes.sub(nodes.ref("x"), nodes.ref("y"))
+    _assert_expression_parse(expected, "x - y")
+
+
+@istest
 def test_parse_expression_statement():
     expected = nodes.expression_statement(nodes.ref("x"))
     _assert_statement_parse(expected, "x")
