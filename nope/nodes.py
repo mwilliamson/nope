@@ -78,7 +78,7 @@ def module(body, is_executable=False):
 
 binary_operation = BinaryOperation = collections.namedtuple("BinaryOperation", ["operator", "left", "right"])
 
-binary_operators = ["add", "sub"]
+binary_operators = ["add", "sub", "mul"]
 
 
 def _create_boolean_operators():

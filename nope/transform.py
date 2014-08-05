@@ -178,6 +178,7 @@ class Converter(object):
         operators = {
             ast.Add: nodes.add,
             ast.Sub: nodes.sub,
+            ast.Mult: nodes.mul,
         }
         return operators[type(operator)]
     
