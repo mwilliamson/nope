@@ -31,6 +31,7 @@ class Converter(object):
             ast.Name: self._name,
             ast.Call: self._call,
             ast.Attribute: self._attr,
+            ast.BinOp: self._bin_op,
         }
         
         # Python >= 3.4 has ast.NameConstant instead of reusing ast.Name
@@ -168,6 +169,16 @@ class Converter(object):
     
     def _attr(self, node):
         return nodes.attr(self.convert(node.value), node.attr)
+    
+    
+    def _bin_op(self, node):
+        return self._operator(node.op)(self.convert(node.left), self.convert(node.right))
+    
+    def _operator(self, operator):
+        operators = {
+            ast.Add: nodes.add
+        }
+        return operators[type(operator)]
     
 
     def _mapped(self, nodes):

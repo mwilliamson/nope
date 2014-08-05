@@ -75,3 +75,20 @@ import_alias = ImportAlias
 def module(body, is_executable=False):
     return Module(body, is_executable)
 
+
+binary_operation = BinaryOperation = collections.namedtuple("BinaryOperation", ["operator", "left", "right"])
+
+binary_operators = ["add"]
+
+
+def _create_boolean_operators():
+    import sys
+    for operator in binary_operators:
+        def create(left, right):
+            return BinaryOperation(operator, left, right)
+        
+        name = operator
+        create.__name__ = name
+        setattr(sys.modules[__name__], name, create)
+
+_create_boolean_operators()
