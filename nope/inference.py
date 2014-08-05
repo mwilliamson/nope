@@ -122,6 +122,10 @@ class TypeChecker(object):
         # TODO: check argument and return type
         if "__add__" not in left_type.attrs:
             raise errors.TypeMismatchError(node, expected="Type with __add__", actual=left_type)
+            
+        add_func = left_type.attrs["__add__"]
+        if add_func.params[:-1] != [left_type]:
+            raise errors.BadSignatureError(node, "Argument of __add__ should accept own type")
         
         right_type = self.infer(node.right, context)
         # This is a significant simplication of the rules in Python.

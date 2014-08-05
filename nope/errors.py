@@ -85,3 +85,12 @@ class MissingReturnError(TypeCheckError):
     
     def __str__(self):
         return "Function must return value of type '{}'".format(self._return_type)
+
+
+class BadSignatureError(TypeCheckError):
+    def __init__(self, node, message):
+        self.node = node
+        self._message = message
+    
+    def __str__(self):
+        return self._message
