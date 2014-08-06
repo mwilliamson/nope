@@ -210,6 +210,26 @@ def operands_of_sub_operation_must_support_sub():
         assert_equal("type with __sub__", error.expected)
         assert_equal(types.none_type, error.actual)
 
+
+@istest
+def can_infer_type_of_multiplication_operation():
+    context = Context({"x": types.int_type, "y": types.int_type})
+    multiplication = nodes.mul(nodes.ref("x"), nodes.ref("y"))
+    assert_equal(types.int_type, infer(multiplication, context))
+
+
+@istest
+def operands_of_mul_operation_must_support_mul():
+    context = Context({"x": types.none_type, "y": types.none_type})
+    multiplication = nodes.mul(nodes.ref("x"), nodes.ref("y"))
+    try:
+        infer(multiplication, context)
+        assert False, "Expected error"
+    except errors.TypeMismatchError as error:
+        assert_equal(multiplication, error.node)
+        assert_equal("type with __mul__", error.expected)
+        assert_equal(types.none_type, error.actual)
+
     
 
 @istest
