@@ -83,12 +83,16 @@ binary_operators = ["add", "sub", "mul"]
 
 def _create_boolean_operators():
     import sys
-    for operator in binary_operators:
+    
+    def _create_boolean_operator(operator):
         def create(left, right):
             return BinaryOperation(operator, left, right)
         
         name = operator
         create.__name__ = name
         setattr(sys.modules[__name__], name, create)
+        
+    for operator in binary_operators:
+        _create_boolean_operator(operator)
 
 _create_boolean_operators()

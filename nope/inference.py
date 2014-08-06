@@ -117,17 +117,19 @@ class TypeChecker(object):
             raise errors.AttributeError(node, value_type.name, node.attr)
     
     def _infer_binary_operation(self, node, context):
+        operator = node.operator
+        method_name = "__{}__".format(operator)
         left_type = self.infer(node.left, context)
         
-        if "__add__" not in left_type.attrs:
-            raise errors.TypeMismatchError(node, expected="Type with __add__", actual=left_type)
+        if method_name not in left_type.attrs:
+            raise errors.TypeMismatchError(node, expected="type with {}".format(method_name), actual=left_type)
             
-        add_func = left_type.attrs["__add__"]
+        operator_method = left_type.attrs[method_name]
             
-        if len(add_func.params) != 2:
-            raise errors.BadSignatureError(node, "__add__ should have exactly one argument")
+        if len(operator_method.params) != 2:
+            raise errors.BadSignatureError(node, "{} should have exactly one argument".format(method_name))
         
-        arg_type, return_type = add_func.params
+        arg_type, return_type = operator_method.params
             
         right_type = self.infer(node.right, context)
         if not types.is_sub_type(arg_type, right_type):

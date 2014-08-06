@@ -139,7 +139,7 @@ def operands_of_add_operation_must_support_add():
         assert False, "Expected error"
     except errors.TypeMismatchError as error:
         assert_equal(addition, error.node)
-        assert_equal("Type with __add__", error.expected)
+        assert_equal("type with __add__", error.expected)
         assert_equal(types.none_type, error.actual)
 
 
@@ -189,6 +189,26 @@ def return_type_of_add_can_differ_from_original_type():
     context = Context({"x": cls, "y": cls})
     addition = nodes.add(nodes.ref("x"), nodes.ref("y"))
     assert_equal(types.object_type, infer(addition, context))
+
+
+@istest
+def can_infer_type_of_subtraction_operation():
+    context = Context({"x": types.int_type, "y": types.int_type})
+    subtraction = nodes.sub(nodes.ref("x"), nodes.ref("y"))
+    assert_equal(types.int_type, infer(subtraction, context))
+
+
+@istest
+def operands_of_sub_operation_must_support_sub():
+    context = Context({"x": types.none_type, "y": types.none_type})
+    subtraction = nodes.sub(nodes.ref("x"), nodes.ref("y"))
+    try:
+        infer(subtraction, context)
+        assert False, "Expected error"
+    except errors.TypeMismatchError as error:
+        assert_equal(subtraction, error.node)
+        assert_equal("type with __sub__", error.expected)
+        assert_equal(types.none_type, error.actual)
 
     
 
