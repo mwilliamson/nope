@@ -118,7 +118,7 @@ def can_infer_type_of_addition_operation():
 
 
 @istest
-def operands_of_add_operation_must_be_of_same_type():
+def cannot_add_int_and_str():
     context = Context({"x": types.int_type, "y": types.str_type})
     addition = nodes.add(nodes.ref("x"), nodes.ref("y"))
     try:
@@ -144,18 +144,16 @@ def operands_of_add_operation_must_support_add():
 
 
 @istest
-def argument_of_add_method_must_have_same_type_as_object():
-    cls = types.ScalarType("NotAddable", {})
-    cls.attrs["__add__"] = types.func([types.int_type], cls)
-    
-    context = Context({"x": cls, "y": cls})
+def right_hand_operand_must_be_sub_type_of_argument():
+    context = Context({"x": types.int_type, "y": types.object_type})
     addition = nodes.add(nodes.ref("x"), nodes.ref("y"))
     try:
         infer(addition, context)
         assert False, "Expected error"
-    except errors.BadSignatureError as error:
+    except errors.TypeMismatchError as error:
         assert_equal(addition, error.node)
-        assert_equal("Argument of __add__ should accept own type", str(error))
+        assert_equal(types.int_type, error.expected)
+        assert_equal(types.object_type, error.actual)
 
 
 @istest

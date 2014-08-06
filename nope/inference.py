@@ -126,17 +126,14 @@ class TypeChecker(object):
             
         if len(add_func.params) != 2:
             raise errors.BadSignatureError(node, "__add__ should have exactly one argument")
-            
-        if not types.is_sub_type(add_func.params[0], left_type):
-            raise errors.BadSignatureError(node, "Argument of __add__ should accept own type")
         
+        arg_type, return_type = add_func.params
+            
         right_type = self.infer(node.right, context)
-        # This is a significant simplication of the rules in Python.
-        # We use equality instead of subtyping to maintain symmetry
-        if left_type != right_type:
+        if not types.is_sub_type(arg_type, right_type):
             raise errors.TypeMismatchError(node, expected=left_type, actual=right_type)
         
-        return add_func.params[-1]
+        return return_type
 
 
     def _infer_function_def(self, node, context):
