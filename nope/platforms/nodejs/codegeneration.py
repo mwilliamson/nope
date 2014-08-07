@@ -52,8 +52,7 @@ _builtin_names = [
 ]
 
 def _generate_prelude(fileobj, module, relative_path):
-    # TODO: make platform agnostic
-    relative_path = "../" * relative_path.count("/")
+    relative_path = "../" * _path_depth(relative_path)
     
     fileobj.write("""var $nope = require("{}./$nope");\n""".format(relative_path));
     fileobj.write("""var $exports = exports;\n""".format(relative_path));
@@ -70,11 +69,12 @@ def _generate_prelude(fileobj, module, relative_path):
 
 
 def _path_depth(path):
-    depth = 0
+    depth = -1
     while path:
         path, tail = os.path.split(path)
-        #if tail != ".":
         depth += 1
+    
+    return depth
         
 
 _main_require = """
