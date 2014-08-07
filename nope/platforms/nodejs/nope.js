@@ -30,7 +30,8 @@ var operators = {};
         if (isNumber(left)) {
             return numberOps[operatorName](left, right);
         } else {
-            return left.__add__(right);
+            // TODO: test operator overloading once classes can be defined
+            return left["__" + operatorName + "__"](right);
         }
     };
 });
