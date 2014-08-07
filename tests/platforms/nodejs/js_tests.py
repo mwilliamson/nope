@@ -1,6 +1,6 @@
 from nose.tools import istest, assert_equal
 
-from nope import js
+from nope.platforms.nodejs import js
 
 
 @istest

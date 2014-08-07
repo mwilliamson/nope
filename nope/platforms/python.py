@@ -1,12 +1,7 @@
 import os
 import shutil
 
-from . import nodejs
-from .walk import walk_tree
-
-
-def compile(source, nope_ast, destination_dir, platform):
-    compilers[platform].compile(source, nope_ast, destination_dir)
+from ..walk import walk_tree
 
 
 class Python2(object):
@@ -45,15 +40,6 @@ class Python3(object):
     
     def compile(self, source, nope_ast, destination_dir):
         _copy_recursive(source, destination_dir)
-    
-
-class NodeJs(object):
-    name = "node"
-    binary = "node"
-    extension = "js"
-    
-    def compile(self, source_path, nope_ast, destination_dir):
-        nodejs.nope_to_nodejs(source_path, nope_ast, destination_dir)
 
 
 def _copy_recursive(source_path, dest_path):
@@ -64,14 +50,3 @@ def _copy_recursive(source_path, dest_path):
         shutil.copy(path, os.path.join(dest_path, relative_path))
     
     walk_tree(source_path, handle_dir, handle_file)
-
-
-
-_all = [
-    Python2(),
-    Python3(),
-    NodeJs(),
-]
-
-
-compilers = dict((compiler.name, compiler) for compiler in _all)

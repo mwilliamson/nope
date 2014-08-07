@@ -1,6 +1,7 @@
 from nose.tools import istest, assert_equal
 
-from nope import nodejs, nodes, js
+from nope.platforms.nodejs import codegeneration, js
+from nope import nodes
 
 
 @istest
@@ -131,7 +132,7 @@ def test_transform_import_from_absolute_package():
 @istest
 def test_multiple_imports_use_different_names():
     assert_equal(
-        nodejs.transform(nodes.module([
+        codegeneration.transform(nodes.module([
             nodes.import_from([".", "x1"], [nodes.import_alias("y1", None)]),
             nodes.import_from([".", "x2"], [nodes.import_alias("y2", None)]),
         ])).statements[:4],
@@ -296,4 +297,4 @@ def test_transform_int_expression():
     
 
 def _assert_transform(nope, js, ignore=None):
-    assert_equal(js, nodejs.transform(nope))
+    assert_equal(js, codegeneration.transform(nope))

@@ -5,7 +5,7 @@ import spur
 from nose.tools import istest, nottest
 
 import nope
-from nope import compilers
+from nope import platforms
 
 
 _local = spur.LocalShell()
@@ -32,7 +32,7 @@ def _create_test_class(test_base, compiler):
 @nottest
 def create_platform_test_classes(module_name, test_base):
     module = sys.modules[module_name]
-    for compiler in compilers.compilers.values():
+    for compiler in platforms.platforms.values():
         test_class = _create_test_class(test_base, compiler)
         setattr(module, test_class.__name__, test_class)
 

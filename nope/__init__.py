@@ -1,7 +1,7 @@
 import collections
 import os
 
-from . import inference, parser, compilers, errors
+from . import inference, parser, platforms, errors
 
 
 def check(path):
@@ -57,7 +57,7 @@ def compile(source, destination_dir, platform):
     if not nope_ast.is_valid:
         raise nope_ast.error
     
-    compilers.compile(source, nope_ast.value, destination_dir, platform)
+    platforms.compile(source, nope_ast.value, destination_dir, platform)
 
 
 Result = collections.namedtuple("Result", ["is_valid", "error", "value"])

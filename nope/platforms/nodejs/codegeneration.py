@@ -1,7 +1,8 @@
 import os
 
-from . import nodes, js, util
-from .walk import walk_tree
+from . import js
+from ... import nodes, util
+from ...walk import walk_tree
 
 
 def nope_to_nodejs(source_path, source_tree, destination_dir):
@@ -333,3 +334,4 @@ def _int(node):
 
 def _str(node):
     return js.string(node.value)
+
