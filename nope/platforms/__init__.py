@@ -7,7 +7,7 @@ from . import nodejs, python
 
 
 def find_platform_by_name(platform_name):
-    return platforms[platform_name]
+    return _platforms[platform_name]
 
 
 _all = [
@@ -17,4 +17,4 @@ _all = [
 ]
 
 
-platforms = dict((platform.name, platform) for platform in _all)
+_platforms = dict((platform.name, platform) for platform in _all)
