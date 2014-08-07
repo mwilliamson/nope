@@ -14,20 +14,12 @@ class Python2(object):
     extension = "py"
     
     def compile(self, source_path, nope_ast, destination_dir):
-        def _source_path_to_dest_path(source_full_path):
-            if os.path.isfile(source_path):
-                root = os.path.dirname(source_path)
-            else:
-                root = source_path
-            relative_path = os.path.relpath(source_full_path, root)
-            return os.path.join(destination_dir, relative_path)
+        def handle_dir(path, relative_path):
+            os.mkdir(os.path.join(destination_dir, relative_path))
         
-        def handle_dir(path):
-            os.mkdir(_source_path_to_dest_path(path))
-        
-        def handle_file(path):
+        def handle_file(path, relative_path):
             with open(path) as source_file:
-                with open(_source_path_to_dest_path(path), "w") as dest_file:
+                with open(os.path.join(destination_dir, relative_path), "w") as dest_file:
                     started = False
                     while True:
                         line = source_file.readline()
@@ -64,31 +56,36 @@ class NodeJs(object):
 
 
 def _copy_recursive(source_path, dest_path):
-    def _source_path_to_dest_path(source_full_path):
-        relative_path = os.path.relpath(source_full_path, source_path)
-        return os.path.join(dest_path, relative_path)
+    def handle_dir(path, relative_path):
+        os.mkdir(os.path.join(dest_path, relative_path))
     
-    def handle_dir(path):
-        os.mkdir(_source_path_to_dest_path(path))
-    
-    def handle_file(path):
-        shutil.copy(path, _source_path_to_dest_path(path))
+    def handle_file(path, relative_path):
+        shutil.copy(path, os.path.join(dest_path, relative_path))
     
     _walk_tree(source_path, handle_dir, handle_file)
 
 
 def _walk_tree(path, handle_dir, handle_file):
+    def _source_path_to_relative_path(full_path):
+        if os.path.isfile(path):
+            root = os.path.dirname(path)
+        else:
+            root = path
+        return os.path.relpath(full_path, root)
+        
     if os.path.isdir(path):
         for root, dirnames, filenames in os.walk(path):
             for dirname in dirnames: 
                 full_path = os.path.join(root, dirname)
-                handle_dir(full_path)
+                relative_path = _source_path_to_relative_path(full_path)
+                handle_dir(full_path, relative_path)
             
             for filename in filenames:
                 full_path = os.path.join(root, filename)
-                handle_file(full_path)
+                relative_path = _source_path_to_relative_path(full_path)
+                handle_file(full_path, relative_path)
     else:
-        handle_file(path)
+        handle_file(path, os.path.basename(path))
 
 
 
