@@ -31,7 +31,7 @@ def _convert_file(source_path, relative_path, nope_ast, destination_root):
     dest_filename = _js_filename(source_filename)
     dest_path = os.path.join(destination_dir, dest_filename)
     with open(dest_path, "w") as dest_file:
-        _generate_prelude(dest_file, relative_path)
+        _generate_prelude(dest_file, nope_ast, relative_path)
         js.dump(transform(nope_ast), dest_file)
 
 
@@ -51,13 +51,15 @@ _builtin_names = [
     "bool", "print",
 ]
 
-def _generate_prelude(fileobj, relative_path):
+def _generate_prelude(fileobj, module, relative_path):
     # TODO: make platform agnostic
     relative_path = "../" * relative_path.count("/")
     
     fileobj.write("""var $nope = require("{}./$nope");\n""".format(relative_path));
     fileobj.write("""var $exports = exports;\n""".format(relative_path));
-    fileobj.write(_require)
+    if module.is_executable:
+        fileobj.write(_main_require)
+    fileobj.write("""var $require = global.$nopeRequire || require;\n""")
     
     for builtin_name in _builtin_names:
         builtin_assign = js.expression_statement(js.assign(
@@ -75,7 +77,7 @@ def _path_depth(path):
         depth += 1
         
 
-_require = """
+_main_require = """
 (function() {
     if (require.main === module) {
         // TODO: is there a way to resolve this at compile-time?
@@ -106,8 +108,6 @@ _require = """
         }
     }
 })();
-
-var $require = global.$nopeRequire || require;
 """
 
 
