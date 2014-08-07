@@ -51,13 +51,14 @@ def _check_file(path, source_tree=None):
     return Result(is_valid=True, error=None, value=nope_ast)
 
 
-def compile(source, destination_dir, platform):
-    nope_ast = check(source)
+def compile(source_path, destination_dir, platform_name):
+    source_tree = check(source_path)
     
-    if not nope_ast.is_valid:
-        raise nope_ast.error
+    if not source_tree.is_valid:
+        raise source_tree.error
     
-    platforms.compile(source, nope_ast.value, destination_dir, platform)
+    platform = platforms.find_platform_by_name(platform_name)
+    platform.compile(source_path, source_tree.value, destination_dir)
 
 
 Result = collections.namedtuple("Result", ["is_valid", "error", "value"])

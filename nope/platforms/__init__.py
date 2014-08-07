@@ -6,9 +6,8 @@ from ..walk import walk_tree
 from . import nodejs, python
 
 
-def compile(source, nope_ast, destination_dir, platform_name):
-    platforms[platform_name].compile(source, nope_ast, destination_dir)
-
+def find_platform_by_name(platform_name):
+    return platforms[platform_name]
 
 
 _all = [
