@@ -1,29 +1,17 @@
 import os
 
 from . import nodes, js, util
+from .walk import walk_tree
 
 
 def nope_to_nodejs(source_path, source_tree, destination_dir):
-    if os.path.isdir(source_path):
-        _convert_dir(source_path, source_tree, destination_dir)
-    else:
-        _convert_file(source_path, source_tree.ast(source_path), destination_dir)
-
-
-def _convert_dir(source_path, source_tree, destination_dir):
-    def _source_path_to_dest_path(source_full_path):
-        relative_path = os.path.relpath(source_full_path, source_path)
-        return os.path.join(destination_dir, relative_path)
+    def handle_dir(path, relative_path):
+        os.mkdir(os.path.join(destination_dir, relative_path))
     
-    for root, dirnames, filenames in os.walk(source_path):
-        for dirname in dirnames: 
-            full_path = os.path.join(root, dirname)
-            os.mkdir(_source_path_to_dest_path(full_path))
+    def handle_file(path, relative_path):
+        _convert_file(path, source_tree.ast(path), os.path.dirname(os.path.join(destination_dir, relative_path)))
         
-        for filename in filenames:
-            full_path = os.path.join(root, filename)
-            _convert_file(full_path, source_tree.ast(full_path), os.path.dirname(_source_path_to_dest_path(full_path)))
-    
+    walk_tree(source_path, handle_dir, handle_file)
 
 
 def _convert_file(source_path, nope_ast, destination_dir):
