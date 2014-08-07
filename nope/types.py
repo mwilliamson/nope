@@ -36,10 +36,13 @@ none_type = ScalarType("NoneType", {})
 boolean_type = ScalarType("BooleanType", {})
 
 int_type = ScalarType("int", {})
+
+float_type = ScalarType("float", {})
+
 int_type.attrs["__add__"] = func([int_type], int_type)
 int_type.attrs["__sub__"] = func([int_type], int_type)
 int_type.attrs["__mul__"] = func([int_type], int_type)
-int_type.attrs["__truediv__"] = func([int_type], int_type)
+int_type.attrs["__truediv__"] = func([int_type], float_type)
 int_type.attrs["__floordiv__"] = func([int_type], int_type)
 
 str_type = ScalarType("str", {})
