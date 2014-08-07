@@ -5,19 +5,11 @@ from . import inference, parser, compilers, errors
 
 
 def check(path):
-    if os.path.isdir(path):
-        return _check_dir(path)
-    else:
-        return _check_file(path)
-
-
-def _check_dir(path):
-    source_tree = _parse_source_tree(path)
-    
     try:
+        source_tree = _parse_source_tree(path)
         for path in source_tree.paths():
             source_tree.check(path)
-    except errors.TypeCheckError as error:
+    except (errors.TypeCheckError, SyntaxError) as error:
         return Result(is_valid=False, error=error, value=None)
     
     return Result(is_valid=True, error=None, value=source_tree)
@@ -28,19 +20,19 @@ def _parse_source_tree(tree_path):
         with open(path) as source_file:
             return parser.parse(source_file.read())
     
-    try:
-        return SourceTree(dict(
-            (path, read_ast(path))
-            for path in _source_paths(tree_path)
-        ))
-    except SyntaxError as error:
-        return Result(is_valid=False, error=error, value=None)
+    return SourceTree(dict(
+        (path, read_ast(path))
+        for path in _source_paths(tree_path)
+    ))
 
 
 def _source_paths(path):
-    for root, dirs, filenames in os.walk(path):
-        for filename in filenames:
-            yield os.path.abspath(os.path.join(root, filename))
+    if os.path.isfile(path):
+        yield path
+    else:
+        for root, dirs, filenames in os.walk(path):
+            for filename in filenames:
+                yield os.path.abspath(os.path.join(root, filename))
 
 
 def _check_file(path, source_tree=None):

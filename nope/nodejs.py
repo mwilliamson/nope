@@ -3,11 +3,11 @@ import os
 from . import nodes, js, util
 
 
-def nope_to_nodejs(source_path, nope_ast, destination_dir):
+def nope_to_nodejs(source_path, source_tree, destination_dir):
     if os.path.isdir(source_path):
-        _convert_dir(source_path, nope_ast, destination_dir)
+        _convert_dir(source_path, source_tree, destination_dir)
     else:
-        _convert_file(source_path, nope_ast, destination_dir)
+        _convert_file(source_path, source_tree.ast(source_path), destination_dir)
 
 
 def _convert_dir(source_path, source_tree, destination_dir):
