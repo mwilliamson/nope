@@ -16,14 +16,18 @@ def nope_to_nodejs(source_path, source_tree, destination_dir):
 
 def _convert_file(source_path, nope_ast, destination_dir):
     source_filename = os.path.basename(source_path)
-    if source_filename == "__init__.py":
-        dest_filename = "index.js"
-    else:
-        dest_filename = _replace_extension(source_filename, "js")
+    dest_filename = _js_filename(source_filename)
     dest_path = os.path.join(destination_dir, dest_filename)
     with open(dest_path, "w") as dest_file:
         dest_file.write(_prelude)
         js.dump(transform(nope_ast), dest_file)
+
+
+def _js_filename(python_filename):
+    if python_filename == "__init__.py":
+        return "index.js"
+    else:
+        return _replace_extension(python_filename, "js")
 
 
 def _replace_extension(filename, new_extension):
