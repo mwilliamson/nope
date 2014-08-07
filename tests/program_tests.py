@@ -131,6 +131,13 @@ True
         assert_equal(expected_output, result.output)
         assert_equal(b"", result.stderr_output)
     
+    @istest
+    def test_arithmetic(self):
+        result = self._run_program(path=_program_path("valid/arithmetic.py"), program="arithmetic")
+        assert_equal(0, result.return_code)
+        assert_equal(b"19\n", result.output)
+        assert_equal(b"", result.stderr_output)
+    
     def _run_program(self, path, program):
         return testing.compile_and_run(self.compiler, path, program)
 

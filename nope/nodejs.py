@@ -61,6 +61,33 @@ function print(value) {
         return Object.prototype.toString.call(value) === "[object Array]";
     }
     
+    function isNumber(value) {
+        return Object.prototype.toString.call(value) === "[object Number]";
+    }
+    
+    var operators = {};
+    ["add", "sub", "mul"].forEach(function(operatorName) {
+        operators[operatorName] = function(left, right) {
+            if (isNumber(left)) {
+                return numberOps[operatorName](left, right);
+            } else {
+                return left.__add__(right);
+            }
+        };
+    });
+    
+    var numberOps = {
+        add: function(left, right) {
+            return left + right;
+        },
+        sub: function(left, right) {
+            return left - right;
+        },
+        mul: function(left, right) {
+            return left * right;
+        }
+    };
+    
     if (require.main === module) {
         // TODO: is there a way to resolve this at compile-time?
         //       This would require the user to specify which modules are going to be executed directly
@@ -103,6 +130,7 @@ function print(value) {
         propertyAccess: propertyAccess,
         require: global.$nopeRequire || require,
         exports: exports,
+        operators: operators,
         
         bool: bool
     };
@@ -132,6 +160,7 @@ class Transformer(object):
             
             nodes.Call: self._call,
             nodes.AttributeAccess: self._attr,
+            nodes.BinaryOperation: self._binary_operation,
             nodes.VariableReference: _ref,
             nodes.NoneExpression: _none,
             nodes.BooleanExpression: _bool,
@@ -259,6 +288,13 @@ class Transformer(object):
         return js.call(
             js.ref("$nope.propertyAccess"),
             [self.transform(attr.value), js.string(attr.attr)],
+        )
+    
+    def _binary_operation(self, operation):
+        operator_func = "$nope.operators.{}".format(operation.operator)
+        return js.call(
+            js.ref(operator_func),
+            [self.transform(operation.left), self.transform(operation.right)]
         )
 
 
