@@ -19,11 +19,15 @@ def _convert_file(source_path, nope_ast, destination_dir):
     if source_filename == "__init__.py":
         dest_filename = "index.js"
     else:
-        dest_filename = source_filename[:source_filename.rindex(".")] + ".js"
+        dest_filename = _replace_extension(source_filename, "js")
     dest_path = os.path.join(destination_dir, dest_filename)
     with open(dest_path, "w") as dest_file:
         dest_file.write(_prelude)
         js.dump(transform(nope_ast), dest_file)
+
+
+def _replace_extension(filename, new_extension):
+    return filename[:filename.rindex(".")] + "." + new_extension
 
 
 _prelude = """
