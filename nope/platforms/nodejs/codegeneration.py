@@ -80,8 +80,6 @@ def _path_depth(path):
 _main_require = """
 (function() {
     if (require.main === module) {
-        // TODO: is there a way to resolve this at compile-time?
-        //       This would require the user to specify which modules are going to be executed directly
         var originalRequire = require;
         global.$nopeRequire = function(name) {
             if (isAbsoluteImport(name)) {
