@@ -66,7 +66,7 @@ function print(value) {
     }
     
     var operators = {};
-    ["add", "sub", "mul"].forEach(function(operatorName) {
+    ["add", "sub", "mul", "truediv", "floordiv"].forEach(function(operatorName) {
         operators[operatorName] = function(left, right) {
             if (isNumber(left)) {
                 return numberOps[operatorName](left, right);
@@ -85,6 +85,12 @@ function print(value) {
         },
         mul: function(left, right) {
             return left * right;
+        },
+        truediv: function(left, right) {
+            return left / right;
+        },
+        floordiv: function(left, right) {
+            return Math.floor(left / right);
         }
     };
     

@@ -179,6 +179,8 @@ class Converter(object):
             ast.Add: nodes.add,
             ast.Sub: nodes.sub,
             ast.Mult: nodes.mul,
+            ast.Div: nodes.truediv,
+            ast.FloorDiv: nodes.floordiv,
         }
         return operators[type(operator)]
     

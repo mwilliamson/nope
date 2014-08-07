@@ -39,6 +39,8 @@ int_type = ScalarType("int", {})
 int_type.attrs["__add__"] = func([int_type], int_type)
 int_type.attrs["__sub__"] = func([int_type], int_type)
 int_type.attrs["__mul__"] = func([int_type], int_type)
+int_type.attrs["__truediv__"] = func([int_type], int_type)
+int_type.attrs["__floordiv__"] = func([int_type], int_type)
 
 str_type = ScalarType("str", {})
 str_type.attrs["find"] = func([str_type], int_type)
