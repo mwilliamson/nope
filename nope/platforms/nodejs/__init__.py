@@ -6,5 +6,5 @@ class NodeJs(object):
     binary = "node"
     extension = "js"
     
-    def compile(self, source_path, nope_ast, destination_dir):
-        codegeneration.nope_to_nodejs(source_path, nope_ast, destination_dir)
+    def generate_code(self, source_path, source_tree, destination_dir):
+        codegeneration.nope_to_nodejs(source_path, source_tree, destination_dir)

@@ -58,7 +58,7 @@ def compile(source_path, destination_dir, platform_name):
         raise source_tree.error
     
     platform = platforms.find_platform_by_name(platform_name)
-    platform.compile(source_path, source_tree.value, destination_dir)
+    platform.generate_code(source_path, source_tree.value, destination_dir)
 
 
 Result = collections.namedtuple("Result", ["is_valid", "error", "value"])
