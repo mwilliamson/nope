@@ -181,6 +181,7 @@ class Converter(object):
             ast.Mult: nodes.mul,
             ast.Div: nodes.truediv,
             ast.FloorDiv: nodes.floordiv,
+            ast.Mod: nodes.mod,
         }
         return operators[type(operator)]
     

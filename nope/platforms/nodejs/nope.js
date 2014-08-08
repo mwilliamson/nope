@@ -25,7 +25,7 @@ function isNumber(value) {
 }
 
 var operators = {};
-["add", "sub", "mul", "truediv", "floordiv"].forEach(function(operatorName) {
+["add", "sub", "mul", "truediv", "floordiv", "mod"].forEach(function(operatorName) {
     operators[operatorName] = function(left, right) {
         if (isNumber(left)) {
             return numberOps[operatorName](left, right);
@@ -51,6 +51,14 @@ var numberOps = {
     },
     floordiv: function(left, right) {
         return Math.floor(left / right);
+    },
+    mod: function(left, right) {
+        var result = left % right;
+        if (result < 0) {
+            return result + right;
+        } else {
+            return result;
+        }
     }
 };
 
