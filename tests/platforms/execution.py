@@ -124,6 +124,11 @@ True
         self._test_expression("+(1 + 2)", b"3")
         self._test_expression("+(0 - 3)", b"-3")
     
+    @istest
+    def test_invert_int(self):
+        self._test_expression("~10", b"-11")
+        self._test_expression("~-10", b"9")
+    
     def _test_expression(self, expression, expected_output):
         with tempman.create_temp_dir() as temp_dir:
             with open(os.path.join(temp_dir.path, "main.py"), "w") as main_file:

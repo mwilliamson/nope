@@ -190,6 +190,7 @@ class Converter(object):
             
             ast.USub: nodes.neg,
             ast.UAdd: nodes.pos,
+            ast.Invert: nodes.invert,
         }
         return operators[type(operator)]
     
