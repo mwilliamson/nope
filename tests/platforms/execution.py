@@ -125,6 +125,11 @@ True
         self._test_expression("+(0 - 3)", b"-3")
     
     @istest
+    def test_abs_int(self):
+        self._test_expression("abs(10)", b"10")
+        self._test_expression("abs(-12)", b"12")
+    
+    @istest
     def test_invert_int(self):
         self._test_expression("~10", b"-11")
         self._test_expression("~-10", b"9")

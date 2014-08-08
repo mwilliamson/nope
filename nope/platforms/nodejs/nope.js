@@ -26,7 +26,13 @@ function isNumber(value) {
 
 var operators = {};
 ["add", "sub", "mul", "truediv", "floordiv", "mod", "neg", "pos", "invert"].forEach(function(operatorName) {
-    operators[operatorName] = function(left, right) {
+    operators[operatorName] = createOperator(operatorName);
+});
+
+var abs = createOperator("abs");
+
+function createOperator(operatorName) {
+    return function(left, right) {
         if (isNumber(left)) {
             return numberOps[operatorName](left, right);
         } else {
@@ -34,7 +40,7 @@ var operators = {};
             return left["__" + operatorName + "__"](right);
         }
     };
-});
+}
 
 var numberOps = {
     add: function(left, right) {
@@ -67,6 +73,9 @@ var numberOps = {
     pos: function(operand) {
         return operand;
     },
+    abs: function(operand) {
+        return Math.abs(operand);
+    },
     invert: function(operand) {
         return ~operand;
     }
@@ -83,7 +92,8 @@ function bool(value) {
 
 var builtins = {
     bool: bool,
-    print: print
+    print: print,
+    abs: abs
 };
 
 module.exports = {
