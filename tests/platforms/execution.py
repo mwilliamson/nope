@@ -1,4 +1,7 @@
+import os
+
 from nose.tools import istest, nottest, assert_equal
+import tempman
 
 from .. import testing
 from ..testing import program_path
@@ -84,6 +87,24 @@ True
         assert_equal(0, result.return_code)
         assert_equal(b"19\n1.25\n1\n", result.output)
         assert_equal(b"", result.stderr_output)
+    
+    @istest
+    def test_add_int(self):
+        self._test_expression("4 + 5", b"9")
+    
+    def _test_expression(self, expression, expected_output):
+        with tempman.create_temp_dir() as temp_dir:
+            with open(os.path.join(temp_dir.path, "main.py"), "w") as main_file:
+                main_file.write("#!/usr/bin/env python\n")
+                main_file.write("print({})\n".format(expression))
+            
+            result = self._run_program(path=temp_dir.path, program="main")
+        
+        assert_equal(0, result.return_code)
+        assert_equal(expected_output + b"\n", result.output)
+        assert_equal(b"", result.stderr_output)
+        
+            
     
     def _run_program(self, path, program):
         return testing.compile_and_run(self.platform, path, program)
