@@ -253,6 +253,14 @@ def test_transform_binary_operation():
 
 
 @istest
+def test_transform_unary_operation():
+    _assert_transform(
+        nodes.neg(nodes.ref("x")),
+        js.call(js.ref("$nope.operators.neg"), [js.ref("x")])
+    )
+
+
+@istest
 def test_transform_variable_reference():
     _assert_transform(
         nodes.ref("x"),

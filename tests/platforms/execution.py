@@ -115,6 +115,10 @@ True
         self._test_expression("5 % 3", b"2")
         self._test_expression("(0 - 5) % 3", b"1")
     
+    @istest
+    def test_neg_int(self):
+        self._test_expression("-(1 + 2)", b"-3")
+    
     def _test_expression(self, expression, expected_output):
         with tempman.create_temp_dir() as temp_dir:
             with open(os.path.join(temp_dir.path, "main.py"), "w") as main_file:

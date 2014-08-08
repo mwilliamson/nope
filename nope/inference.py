@@ -117,15 +117,9 @@ class TypeChecker(object):
             raise errors.AttributeError(node, value_type.name, node.attr)
     
     def _infer_binary_operation(self, node, context):
-        operator = node.operator
-        method_name = "__{}__".format(operator)
-        left_type = self.infer(node.left, context)
-        
-        if method_name not in left_type.attrs:
-            raise errors.TypeMismatchError(node, expected="type with {}".format(method_name), actual=left_type)
-            
+        left_type, method_name = self._read_receiver(node, node.left, context)
         operator_method = left_type.attrs[method_name]
-            
+        
         if len(operator_method.params) != 2:
             raise errors.BadSignatureError(node, "{} should have exactly one argument".format(method_name))
         
@@ -136,6 +130,24 @@ class TypeChecker(object):
             raise errors.TypeMismatchError(node, expected=left_type, actual=right_type)
         
         return return_type
+    
+    def _infer_unary_operation(self, node, context):
+        operand_type, method_name = self._read_receiver(node, node.operand, context)
+        operator_method = operand_type.attrs[method_name]
+        
+        return_type, = operator_method.params
+        
+        return return_type
+    
+    def _read_receiver(self, node, receiver, context):
+        operator = node.operator
+        method_name = "__{}__".format(operator)
+        receiver_type = self.infer(receiver, context)
+        
+        if method_name not in receiver_type.attrs:
+            raise errors.TypeMismatchError(node, expected="type with {}".format(method_name), actual=receiver_type)
+        
+        return receiver_type, method_name
 
 
     def _infer_function_def(self, node, context):
@@ -185,6 +197,7 @@ class TypeChecker(object):
         nodes.Call: _infer_call,
         nodes.AttributeAccess: _infer_attr,
         nodes.BinaryOperation: _infer_binary_operation,
+        nodes.UnaryOperation: _infer_unary_operation,
     }
 
 

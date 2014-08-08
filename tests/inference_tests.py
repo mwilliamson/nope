@@ -230,6 +230,13 @@ def operands_of_mul_operation_must_support_mul():
         assert_equal("type with __mul__", error.expected)
         assert_equal(types.none_type, error.actual)
 
+
+@istest
+def can_infer_type_of_negation_operation():
+    context = Context({"x": types.int_type})
+    negation = nodes.neg(nodes.ref("x"))
+    assert_equal(types.int_type, infer(negation, context))
+
     
 
 @istest

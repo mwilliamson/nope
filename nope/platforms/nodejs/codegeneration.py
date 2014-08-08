@@ -130,6 +130,7 @@ class Transformer(object):
             nodes.Call: self._call,
             nodes.AttributeAccess: self._attr,
             nodes.BinaryOperation: self._binary_operation,
+            nodes.UnaryOperation: self._unary_operation,
             nodes.VariableReference: _ref,
             nodes.NoneExpression: _none,
             nodes.BooleanExpression: _bool,
@@ -260,11 +261,19 @@ class Transformer(object):
         )
     
     def _binary_operation(self, operation):
+        return self._operation(operation, [operation.left, operation.right])
+    
+    
+    def _unary_operation(self, operation):
+        return self._operation(operation, [operation.operand])
+    
+    def _operation(self, operation, operands):
         operator_func = "$nope.operators.{}".format(operation.operator)
         return js.call(
             js.ref(operator_func),
-            [self.transform(operation.left), self.transform(operation.right)]
+            [self.transform(operand) for operand in operands]
         )
+        
 
 
     def _list(self, node):

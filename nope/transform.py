@@ -32,6 +32,7 @@ class Converter(object):
             ast.Call: self._call,
             ast.Attribute: self._attr,
             ast.BinOp: self._bin_op,
+            ast.UnaryOp: self._unary_op,
         }
         
         # Python >= 3.4 has ast.NameConstant instead of reusing ast.Name
@@ -174,6 +175,10 @@ class Converter(object):
     def _bin_op(self, node):
         return self._operator(node.op)(self.convert(node.left), self.convert(node.right))
     
+    
+    def _unary_op(self, node):
+        return self._operator(node.op)(self.convert(node.operand))
+    
     def _operator(self, operator):
         operators = {
             ast.Add: nodes.add,
@@ -182,6 +187,8 @@ class Converter(object):
             ast.Div: nodes.truediv,
             ast.FloorDiv: nodes.floordiv,
             ast.Mod: nodes.mod,
+            
+            ast.USub: nodes.neg,
         }
         return operators[type(operator)]
     

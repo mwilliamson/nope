@@ -337,6 +337,12 @@ def test_parse_multiplication():
 
 
 @istest
+def test_parse_negation():
+    expected = nodes.neg(nodes.ref("x"))
+    _assert_expression_parse(expected, "-x")
+
+
+@istest
 def test_parse_expression_statement():
     expected = nodes.expression_statement(nodes.ref("x"))
     _assert_statement_parse(expected, "x")

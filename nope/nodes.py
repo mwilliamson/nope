@@ -1,4 +1,5 @@
 import collections
+import sys
 
 
 NoneExpression = collections.namedtuple("NoneExpression", [])
@@ -76,14 +77,32 @@ def module(body, is_executable=False):
     return Module(body, is_executable)
 
 
+unary_operation = UnaryOperation = collections.namedtuple("UnaryOperation", ["operator", "operand"])
+
+unary_operators = ["neg"]
+
+
+def _create_unary_operators():
+    def _create_unary_operator(operator):
+        def create(operand):
+            return UnaryOperation(operator, operand)
+        
+        name = operator
+        create.__name__ = name
+        setattr(sys.modules[__name__], name, create)
+        
+    for operator in unary_operators:
+        _create_unary_operator(operator)
+
+_create_unary_operators()
+
+
 binary_operation = BinaryOperation = collections.namedtuple("BinaryOperation", ["operator", "left", "right"])
 
 binary_operators = ["add", "sub", "mul", "truediv", "floordiv", "mod"]
 
 
 def _create_boolean_operators():
-    import sys
-    
     def _create_boolean_operator(operator):
         def create(left, right):
             return BinaryOperation(operator, left, right)
