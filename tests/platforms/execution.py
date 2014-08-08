@@ -92,6 +92,24 @@ True
     def test_add_int(self):
         self._test_expression("4 + 5", b"9")
     
+    @istest
+    def test_sub_int(self):
+        self._test_expression("4 - 5", b"-1")
+    
+    @istest
+    def test_mul_int(self):
+        self._test_expression("4 * 5", b"20")
+    
+    @istest
+    def test_truediv_int(self):
+        self._test_expression("1 / 2", b"0.5")
+        self._test_expression("(0 - 1) / 2", b"-0.5")
+    
+    @istest
+    def test_floordiv_int(self):
+        self._test_expression("1 // 2", b"0")
+        self._test_expression("(0 - 1) // 2", b"-1")
+    
     def _test_expression(self, expression, expected_output):
         with tempman.create_temp_dir() as temp_dir:
             with open(os.path.join(temp_dir.path, "main.py"), "w") as main_file:
