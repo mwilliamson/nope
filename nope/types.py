@@ -48,6 +48,7 @@ int_type.attrs["__mod__"] = func([int_type], int_type)
 
 int_type.attrs["__neg__"] = func([], int_type)
 int_type.attrs["__pos__"] = func([], int_type)
+int_type.attrs["__abs__"] = func([], int_type)
 int_type.attrs["__invert__"] = func([], int_type)
 
 str_type = ScalarType("str", {})
