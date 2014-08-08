@@ -79,7 +79,7 @@ def module(body, is_executable=False):
 
 unary_operation = UnaryOperation = collections.namedtuple("UnaryOperation", ["operator", "operand"])
 
-unary_operators = ["neg"]
+unary_operators = ["neg", "pos"]
 
 
 def _create_unary_operators():

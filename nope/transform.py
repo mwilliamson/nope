@@ -189,6 +189,7 @@ class Converter(object):
             ast.Mod: nodes.mod,
             
             ast.USub: nodes.neg,
+            ast.UAdd: nodes.pos,
         }
         return operators[type(operator)]
     

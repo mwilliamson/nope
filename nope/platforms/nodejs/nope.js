@@ -25,7 +25,7 @@ function isNumber(value) {
 }
 
 var operators = {};
-["add", "sub", "mul", "truediv", "floordiv", "mod", "neg"].forEach(function(operatorName) {
+["add", "sub", "mul", "truediv", "floordiv", "mod", "neg", "pos"].forEach(function(operatorName) {
     operators[operatorName] = function(left, right) {
         if (isNumber(left)) {
             return numberOps[operatorName](left, right);
@@ -63,6 +63,9 @@ var numberOps = {
     
     neg: function(operand) {
         return -operand;
+    },
+    pos: function(operand) {
+        return operand;
     }
 };
 
