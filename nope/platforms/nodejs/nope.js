@@ -3,13 +3,9 @@ function print(value) {
 }
 
 function propertyAccess(value, propertyName) {
-    if (isNumber(value)) {
-        return numberMethods[propertyName].bind(value);
-    } else if (isArray(value)) {
-        return arrayMethods[propertyName].bind(value);
-    } else if (isString(value)) {
-        // TODO: perform this rewriting at compile-time
-        return stringMethods[propertyName].bind(value);
+    var methods = builtinMethods[Object.prototype.toString.call(value)];
+    if (methods) {
+        return methods[propertyName].bind(value);
     } else {
         // TODO: bind this if the property is a function
         return value[propertyName];
@@ -99,6 +95,12 @@ var arrayMethods = {
         // TODO: exceptions
         return this[slice];
     }
+};
+
+var builtinMethods = {
+    "[object Number]": numberMethods,
+    "[object String]": stringMethods,
+    "[object Array]": arrayMethods
 };
 
 function bool(value) {
