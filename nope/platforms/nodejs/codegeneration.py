@@ -131,6 +131,7 @@ class Transformer(object):
             nodes.AttributeAccess: self._attr,
             nodes.BinaryOperation: self._binary_operation,
             nodes.UnaryOperation: self._unary_operation,
+            nodes.Subscript: self._subscript,
             nodes.VariableReference: _ref,
             nodes.NoneExpression: _none,
             nodes.BooleanExpression: _bool,
@@ -273,7 +274,12 @@ class Transformer(object):
             js.ref(operator_func),
             [self.transform(operand) for operand in operands]
         )
-        
+    
+    def _subscript(self, subscript):
+        return js.call(
+            js.ref("$nope.operators.getitem"),
+            [self.transform(subscript.value), self.transform(subscript.slice)]
+        )
 
 
     def _list(self, node):

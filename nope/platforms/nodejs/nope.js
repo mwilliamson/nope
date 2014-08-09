@@ -25,7 +25,7 @@ function isNumber(value) {
 }
 
 var operators = {};
-["add", "sub", "mul", "truediv", "floordiv", "mod", "neg", "pos", "invert"].forEach(function(operatorName) {
+["add", "sub", "mul", "truediv", "floordiv", "mod", "neg", "pos", "invert", "getitem"].forEach(function(operatorName) {
     operators[operatorName] = createOperator(operatorName);
 });
 
@@ -35,6 +35,8 @@ function createOperator(operatorName) {
     return function(left, right) {
         if (isNumber(left)) {
             return numberOps[operatorName](left, right);
+        } else if (isArray(left)) {
+            return arrayOps[operatorName](left, right);
         } else {
             // TODO: test operator overloading once classes can be defined
             return left["__" + operatorName + "__"](right);
@@ -78,6 +80,13 @@ var numberOps = {
     },
     invert: function(operand) {
         return ~operand;
+    }
+};
+
+var arrayOps = {
+    getitem: function(value, slice) {
+        // TODO: exceptions
+        return value[slice];
     }
 };
 

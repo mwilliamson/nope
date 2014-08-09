@@ -134,6 +134,10 @@ True
         self._test_expression("~10", b"-11")
         self._test_expression("~-10", b"9")
     
+    @istest
+    def test_getitem_list(self):
+        self._test_expression("[42, 53, 75][1]", b"53")
+    
     def _test_expression(self, expression, expected_output):
         with tempman.create_temp_dir() as temp_dir:
             with open(os.path.join(temp_dir.path, "main.py"), "w") as main_file:

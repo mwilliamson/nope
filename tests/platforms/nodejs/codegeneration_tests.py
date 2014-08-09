@@ -245,6 +245,14 @@ def test_transform_property_access():
 
 
 @istest
+def test_transform_getitem_subscript():
+    _assert_transform(
+        nodes.subscript(nodes.ref("x"), nodes.ref("y")),
+        js.call(js.ref("$nope.operators.getitem"), [js.ref("x"), js.ref("y")])
+    )
+
+
+@istest
 def test_transform_binary_operation():
     _assert_transform(
         nodes.add(nodes.ref("x"), nodes.ref("y")),
