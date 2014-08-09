@@ -89,10 +89,7 @@ class TypeChecker(object):
 
     def _infer_call(self, node, context):
         func_type = self.infer(node.func, context)
-        _with_error_node(
-            lambda: self._type_check_args(node.args, func_type.params[:-1], context),
-            node
-        )
+        self._type_check_args(node, node.args, func_type.params[:-1], context)
         return self.infer(node.func, context).params[-1]
 
 
@@ -104,15 +101,15 @@ class TypeChecker(object):
             raise errors.AttributeError(node, value_type.name, node.attr)
     
     def _infer_binary_operation(self, node, context):
-        return self._read_magic_method(node.operator, node.left, [node.right], context)
+        return self._read_magic_method(node, node.operator, node.left, [node.right], context)
     
     def _infer_unary_operation(self, node, context):
-        return self._read_magic_method(node.operator, node.operand, [], context)
+        return self._read_magic_method(node, node.operator, node.operand, [], context)
     
     def _infer_subscript(self, node, context):
-        return self._read_magic_method("getitem", node.value, [node.slice], context)
+        return self._read_magic_method(node, "getitem", node.value, [node.slice], context)
     
-    def _read_magic_method(self, short_name, receiver, actual_args, context):
+    def _read_magic_method(self, node, short_name, receiver, actual_args, context):
         method_name = "__{}__".format(short_name)
         receiver_type = self.infer(receiver, context)
         
@@ -126,14 +123,14 @@ class TypeChecker(object):
         if len(formal_arg_types) != len(actual_args):
             raise errors.BadSignatureError(receiver, "{} should have exactly {} argument(s)".format(method_name, len(actual_args)))
         
-        self._type_check_args(actual_args, formal_arg_types, context)
+        self._type_check_args(node, actual_args, formal_arg_types, context)
         
         return formal_return_type
     
-    def _type_check_args(self, actual_args, formal_arg_types, context):
+    def _type_check_args(self, node, actual_args, formal_arg_types, context):
         if len(formal_arg_types) != len(actual_args):
             raise errors.ArgumentsLengthError(
-                None,
+                node,
                 expected=len(formal_arg_types),
                 actual=len(actual_args)
             )
@@ -302,12 +299,3 @@ class TypeChecker(object):
         nodes.Import: _check_import,
         nodes.ImportFrom: _check_import_from,
     }
-
-
-def _with_error_node(func, node):
-    try:
-        return func()
-    except errors.TypeCheckError as error:
-        if error.node is None:
-            error.node = node
-        raise
