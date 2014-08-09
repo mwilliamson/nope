@@ -2,7 +2,7 @@ import os
 import shutil
 
 from . import js
-from ... import nodes, util
+from ... import nodes, util, types
 from ...walk import walk_tree
 
 
@@ -109,13 +109,18 @@ _main_require = """
 """
 
 
-def transform(nope_node):
-    transformer = Transformer()
+def transform(nope_node, type_lookup=None):
+    if type_lookup is None:
+        type_lookup = types.TypeLookup({})
+    
+    transformer = Transformer(type_lookup)
     return transformer.transform(nope_node)
 
 
 class Transformer(object):
-    def __init__(self):
+    def __init__(self, type_lookup):
+        self._type_lookup = type_lookup
+        
         self._transformers = {
             nodes.Module: self._module,
             nodes.Import: self._import,
@@ -262,7 +267,18 @@ class Transformer(object):
         )
     
     def _binary_operation(self, operation):
-        return self._operation(operation, [operation.left, operation.right])
+        # TODO: document subclassing int (and other builtins) is prohibited (or rather, might misbehave) due to this optimisation
+        # TODO: unify description of these operations with operations in nope.js
+        # TODO: other operators
+        # TODO: generate TypeLookup in type inference phase, and pass to this phase
+        if operation.operator == "add" and self._type_of(operation.left) == types.int_type:
+            return js.binary_operation(
+                "+",
+                self.transform(operation.left),
+                self.transform(operation.right)
+            )
+        else:
+            return self._operation(operation, [operation.left, operation.right])
     
     
     def _unary_operation(self, operation):
@@ -288,6 +304,10 @@ class Transformer(object):
 
     def _transform_all(self, nodes):
         return list(map(self.transform, nodes))
+    
+    
+    def _type_of(self, node):
+        return self._type_lookup.type_of(node)
 
 
 def _generate_vars(statements):

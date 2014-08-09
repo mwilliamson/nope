@@ -1,7 +1,7 @@
 from nose.tools import istest, assert_equal
 
 from nope.platforms.nodejs import codegeneration, js
-from nope import nodes
+from nope import nodes, types
 
 
 @istest
@@ -261,6 +261,23 @@ def test_transform_binary_operation():
 
 
 @istest
+def test_normal_js_addition_is_used_if_both_operands_are_ints():
+    left = nodes.ref("x")
+    right = nodes.ref("y")
+    
+    type_lookup = types.TypeLookup({
+        id(left): types.int_type,
+        id(right): types.int_type,
+    })
+    
+    _assert_transform(
+        nodes.add(left, right),
+        js.binary_operation("+", js.ref("x"), js.ref("y")),
+        type_lookup=type_lookup,
+    )
+
+
+@istest
 def test_transform_unary_operation():
     _assert_transform(
         nodes.neg(nodes.ref("x")),
@@ -312,5 +329,5 @@ def test_transform_int_expression():
     )
     
 
-def _assert_transform(nope, js, ignore=None):
-    assert_equal(js, codegeneration.transform(nope))
+def _assert_transform(nope, js, type_lookup=None):
+    assert_equal(js, codegeneration.transform(nope, type_lookup))

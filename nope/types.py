@@ -127,3 +127,11 @@ class Module(object):
     def __init__(self, name, attrs):
         self.name = name
         self.attrs = attrs
+
+
+class TypeLookup(object):
+    def __init__(self, types):
+        self._types = types
+    
+    def type_of(self, node):
+        return self._types.get(id(node))
