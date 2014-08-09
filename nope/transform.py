@@ -33,6 +33,8 @@ class Converter(object):
             ast.Attribute: self._attr,
             ast.BinOp: self._bin_op,
             ast.UnaryOp: self._unary_op,
+            ast.Subscript: self._subscript,
+            ast.Index: self._index,
         }
         
         # Python >= 3.4 has ast.NameConstant instead of reusing ast.Name
@@ -194,6 +196,11 @@ class Converter(object):
         }
         return operators[type(operator)]
     
+    def _subscript(self, node):
+        return nodes.subscript(self.convert(node.value), self.convert(node.slice))
+    
+    def _index(self, node):
+        return self.convert(node.value)
 
     def _mapped(self, nodes):
         return [

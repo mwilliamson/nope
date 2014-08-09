@@ -115,3 +115,5 @@ def _create_binary_operators():
         _create_binary_operator(operator)
 
 _create_binary_operators()
+
+subscript = Subscript = collections.namedtuple("Subscript", ["value", "slice"])
