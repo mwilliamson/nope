@@ -3,7 +3,11 @@ function print(value) {
 }
 
 function propertyAccess(value, propertyName) {
-    if (isString(value) && propertyName === "find") {
+    if (isNumber(value)) {
+        return numberMethods[propertyName].bind(value);
+    } else if (isArray(value)) {
+        return arrayMethods[propertyName].bind(value);
+    } else if (isString(value) && propertyName === "find") {
         // TODO: perform this rewriting at compile-time
         return value.indexOf.bind(value);
     } else {
@@ -25,43 +29,46 @@ function isNumber(value) {
 }
 
 var operators = {};
-["add", "sub", "mul", "truediv", "floordiv", "mod", "neg", "pos", "invert", "getitem"].forEach(function(operatorName) {
-    operators[operatorName] = createOperator(operatorName);
+["add", "sub", "mul", "truediv", "floordiv", "mod", "getitem"].forEach(function(operatorName) {
+    operators[operatorName] = createMagicBinaryFunction(operatorName);
 });
 
-var abs = createOperator("abs");
+["neg", "pos", "invert"].forEach(function(operatorName) {
+    operators[operatorName] = createMagicUnaryFunction(operatorName);
+});
 
-function createOperator(operatorName) {
-    return function(left, right) {
-        if (isNumber(left)) {
-            return numberOps[operatorName](left, right);
-        } else if (isArray(left)) {
-            return arrayOps[operatorName](left, right);
-        } else {
-            // TODO: test operator overloading once classes can be defined
-            return left["__" + operatorName + "__"](right);
-        }
+var abs = createMagicUnaryFunction("abs");
+
+function createMagicUnaryFunction(operatorName) {
+    return function(operand) {
+        return propertyAccess(operand, "__" + operatorName + "__")();
     };
 }
 
-var numberOps = {
-    add: function(left, right) {
-        return left + right;
+function createMagicBinaryFunction(operatorName) {
+    return function(left, right) {
+        return propertyAccess(left, "__" + operatorName + "__")(right);
+    };
+}
+
+var numberMethods = {
+    __add__: function(right) {
+        return this + right;
     },
-    sub: function(left, right) {
-        return left - right;
+    __sub__: function(right) {
+        return this - right;
     },
-    mul: function(left, right) {
-        return left * right;
+    __mul__: function(right) {
+        return this * right;
     },
-    truediv: function(left, right) {
-        return left / right;
+    __truediv__: function(right) {
+        return this / right;
     },
-    floordiv: function(left, right) {
-        return Math.floor(left / right);
+    __floordiv__: function(right) {
+        return Math.floor(this / right);
     },
-    mod: function(left, right) {
-        var result = left % right;
+    __mod__: function(right) {
+        var result = this % right;
         if (result < 0) {
             return result + right;
         } else {
@@ -69,24 +76,24 @@ var numberOps = {
         }
     },
     
-    neg: function(operand) {
-        return -operand;
+    __neg__: function() {
+        return -this;
     },
-    pos: function(operand) {
-        return operand;
+    __pos__: function() {
+        return +this;
     },
-    abs: function(operand) {
-        return Math.abs(operand);
+    __abs__: function() {
+        return Math.abs(this);
     },
-    invert: function(operand) {
-        return ~operand;
+    __invert__: function() {
+        return ~this;
     }
 };
 
-var arrayOps = {
-    getitem: function(value, slice) {
+var arrayMethods = {
+    __getitem__: function(slice) {
         // TODO: exceptions
-        return value[slice];
+        return this[slice];
     }
 };
 
