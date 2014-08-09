@@ -271,6 +271,7 @@ class Transformer(object):
         # TODO: unify description of these operations with operations in nope.js
         # TODO: other operators
         # TODO: generate TypeLookup in type inference phase, and pass to this phase
+        # TODO: check type of right hand side
         if operation.operator == "add" and self._type_of(operation.left) == types.int_type:
             return js.binary_operation(
                 "+",
