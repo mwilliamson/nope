@@ -125,7 +125,7 @@ def cannot_add_int_and_str():
         infer(addition, context)
         assert False, "Expected error"
     except errors.TypeMismatchError as error:
-        assert_equal(addition, error.node)
+        assert_equal(addition.right, error.node)
         assert_equal(types.int_type, error.expected)
         assert_equal(types.str_type, error.actual)
 
@@ -138,20 +138,20 @@ def operands_of_add_operation_must_support_add():
         infer(addition, context)
         assert False, "Expected error"
     except errors.TypeMismatchError as error:
-        assert_equal(addition, error.node)
+        assert_equal(addition.left, error.node)
         assert_equal("type with __add__", error.expected)
         assert_equal(types.none_type, error.actual)
 
 
 @istest
-def right_hand_operand_must_be_sub_type_of_argument():
+def right_hand_operand_must_be_sub_type_of_formal_argument():
     context = Context({"x": types.int_type, "y": types.object_type})
     addition = nodes.add(nodes.ref("x"), nodes.ref("y"))
     try:
         infer(addition, context)
         assert False, "Expected error"
     except errors.TypeMismatchError as error:
-        assert_equal(addition, error.node)
+        assert_equal(addition.right, error.node)
         assert_equal(types.int_type, error.expected)
         assert_equal(types.object_type, error.actual)
 
@@ -177,8 +177,8 @@ def add_method_should_only_accept_one_argument():
         infer(addition, context)
         assert False, "Expected error"
     except errors.BadSignatureError as error:
-        assert_equal(addition, error.node)
-        assert_equal("__add__ should have exactly one argument", str(error))
+        assert_equal(addition.left, error.node)
+        assert_equal("__add__ should have exactly 1 argument(s)", str(error))
 
 
 @istest
@@ -206,7 +206,7 @@ def operands_of_sub_operation_must_support_sub():
         infer(subtraction, context)
         assert False, "Expected error"
     except errors.TypeMismatchError as error:
-        assert_equal(subtraction, error.node)
+        assert_equal(subtraction.left, error.node)
         assert_equal("type with __sub__", error.expected)
         assert_equal(types.none_type, error.actual)
 
@@ -226,7 +226,7 @@ def operands_of_mul_operation_must_support_mul():
         infer(multiplication, context)
         assert False, "Expected error"
     except errors.TypeMismatchError as error:
-        assert_equal(multiplication, error.node)
+        assert_equal(multiplication.left, error.node)
         assert_equal("type with __mul__", error.expected)
         assert_equal(types.none_type, error.actual)
 

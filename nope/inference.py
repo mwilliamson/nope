@@ -117,43 +117,39 @@ class TypeChecker(object):
             raise errors.AttributeError(node, value_type.name, node.attr)
     
     def _infer_binary_operation(self, node, context):
-        left_type, method_name = self._read_receiver(node, node.left, context)
-        operator_method = left_type.attrs[method_name]
-        
-        if len(operator_method.params) != 2:
-            raise errors.BadSignatureError(node, "{} should have exactly one argument".format(method_name))
-        
-        arg_type, return_type = operator_method.params
-            
-        right_type = self.infer(node.right, context)
-        if not types.is_sub_type(arg_type, right_type):
-            raise errors.TypeMismatchError(node, expected=left_type, actual=right_type)
-        
-        return return_type
+        return self._read_magic_method(node.operator, node.left, [node.right], context)
     
     def _infer_unary_operation(self, node, context):
-        operand_type, method_name = self._read_receiver(node, node.operand, context)
-        operator_method = operand_type.attrs[method_name]
-        
-        return_type, = operator_method.params
-        
-        return return_type
+        return self._read_magic_method(node.operator, node.operand, [], context)
     
-    def _read_receiver(self, node, receiver, context):
-        operator = node.operator
-        method_name = "__{}__".format(operator)
+    def _infer_subscript(self, node, context):
+        return self._read_magic_method("getitem", node.value, [node.slice], context)
+    
+    def _read_magic_method(self, short_name, receiver, actual_args, context):
+        method_name = "__{}__".format(short_name)
         receiver_type = self.infer(receiver, context)
         
         if method_name not in receiver_type.attrs:
-            raise errors.TypeMismatchError(node, expected="type with {}".format(method_name), actual=receiver_type)
+            raise errors.TypeMismatchError(receiver, expected="type with {}".format(method_name), actual=receiver_type)
         
-        return receiver_type, method_name
-    
-    def _infer_subscript(self, node, context):
-        value_type = infer(node.value, context)
-        getitem_type = value_type.attrs["__getitem__"]
-        arg_type, return_type = getitem_type.params
-        return return_type
+        method = receiver_type.attrs[method_name]
+        formal_arg_types = method.params[:-1]
+        formal_return_type = method.params[-1]
+        
+        if len(formal_arg_types) != len(actual_args):
+            raise errors.BadSignatureError(receiver, "{} should have exactly {} argument(s)".format(method_name, len(actual_args)))
+        
+        # TODO: remove duplication with call inference
+        for actual_arg, formal_arg_type in zip(actual_args, formal_arg_types):
+            actual_arg_type = self.infer(actual_arg, context)
+            if not types.is_sub_type(formal_arg_type, actual_arg_type):
+                raise errors.TypeMismatchError(
+                    actual_arg,
+                    expected=formal_arg_type,
+                    actual=actual_arg_type
+                )
+        
+        return formal_return_type
 
 
     def _infer_function_def(self, node, context):
