@@ -148,6 +148,12 @@ class TypeChecker(object):
             raise errors.TypeMismatchError(node, expected="type with {}".format(method_name), actual=receiver_type)
         
         return receiver_type, method_name
+    
+    def _infer_subscript(self, node, context):
+        value_type = infer(node.value, context)
+        getitem_type = value_type.attrs["__getitem__"]
+        arg_type, return_type = getitem_type.params
+        return return_type
 
 
     def _infer_function_def(self, node, context):
@@ -198,6 +204,7 @@ class TypeChecker(object):
         nodes.AttributeAccess: _infer_attr,
         nodes.BinaryOperation: _infer_binary_operation,
         nodes.UnaryOperation: _infer_unary_operation,
+        nodes.Subscript: _infer_subscript,
     }
 
 

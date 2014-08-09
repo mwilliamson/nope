@@ -237,6 +237,16 @@ def can_infer_type_of_negation_operation():
     negation = nodes.neg(nodes.ref("x"))
     assert_equal(types.int_type, infer(negation, context))
 
+
+@istest
+def can_infer_type_of_subscript_using_getitem():
+    cls = types.ScalarType("Blah", {
+        "__getitem__": types.func([types.int_type], types.str_type)
+    })
+    context = Context({"x": cls})
+    node = nodes.subscript(nodes.ref("x"), nodes.int(4))
+    assert_equal(types.str_type, infer(node, context))
+
     
 
 @istest

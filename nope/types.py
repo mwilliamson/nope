@@ -3,6 +3,9 @@ import collections
 class ScalarType(collections.namedtuple("ScalarType", ["name", "attrs"])):
     def __str__(self):
         return self.name
+    
+    def __repr__(self):
+        return str(self)
 
 # TODO: number of type params
 class GenericType(collections.namedtuple("GenericType", ["name"])):
