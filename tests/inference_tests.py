@@ -247,6 +247,13 @@ def can_infer_type_of_subscript_using_getitem():
     node = nodes.subscript(nodes.ref("x"), nodes.int(4))
     assert_equal(types.str_type, infer(node, context))
 
+
+@istest
+def can_infer_type_of_subscript_of_list():
+    context = Context({"x": types.list_type(types.str_type)})
+    node = nodes.subscript(nodes.ref("x"), nodes.int(4))
+    assert_equal(types.str_type, infer(node, context))
+
     
 
 @istest

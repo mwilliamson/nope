@@ -6,21 +6,66 @@ class ScalarType(collections.namedtuple("ScalarType", ["name", "attrs"])):
     
     def __repr__(self):
         return str(self)
+    
+    def substitute_types(self, param_map):
+        return self
 
 # TODO: number of type params
-class GenericType(collections.namedtuple("GenericType", ["name"])):
+class _GenericType(collections.namedtuple("GenericType", ["name", "params", "attrs"])):
     def __call__(self, *args):
         return self.instantiate(list(args))
     
     def instantiate(self, params):
-        return InstantiatedType(self, params)
+        param_map = dict(zip(self.params, params))
+        instantiated_attrs = _substitute_types(self.attrs, param_map)
+        return InstantiatedType(self, params, instantiated_attrs)
 
-generic_type = GenericType
+def generic_type(name, params, attrs):
+    # We allow the caller to use string literals to represent formal params, so we need to replace them
+    # e.g. generic_type("Foo", ["T"], {"x": "T"}) =>
+    #           GenericType("Foo", [T], {"x": T}) where T = FormalParameter("T")
+    formal_params = [_FormalParameter(param) for param in params]
+    param_map = dict(zip(params, formal_params))
+    return _GenericType(name, formal_params, _substitute_types(attrs, param_map))
 
-InstantiatedType = collections.namedtuple("InstantiatedType", ["generic_type", "params"])
+
+def _substitute_types(type_, type_map):
+    if isinstance(type_, dict):
+        return dict(
+            (name, _substitute_types(attr_type, type_map))
+            for name, attr_type in type_.items()
+        )
+    if isinstance(type_, str):
+        return type_map[type_]
+    else:
+        return type_.substitute_types(type_map)
+        
+
+class _FormalParameter(object):
+    def __init__(self, name):
+        self._name = name
+    
+    def substitute_types(self, type_map):
+        return type_map.get(self, self)
+
+
+class InstantiatedType(collections.namedtuple("InstantiatedType", ["generic_type", "params", "attrs"])):
+    def substitute_types(self, type_map):
+        # TODO: test shadowing
+        
+        instantiated_params = [
+            _substitute_types(param_type, type_map)
+            for param_type in self.params
+        ]
+        instantiated_attrs = _substitute_types(self.attrs, type_map)
+        return InstantiatedType(self.generic_type, instantiated_params, instantiated_attrs)
+        
+    
 TypeType = collections.namedtuple("TypeType", ["type"])
+    
 
-func_type = generic_type("func")
+# TODO: set type params of func correctly (needs varargs?)
+func_type = generic_type("func", [], {})
 
 def func(args, return_type):
     return func_type.instantiate(list(args) + [return_type])
@@ -57,7 +102,9 @@ int_type.attrs["__invert__"] = func([], int_type)
 str_type = ScalarType("str", {})
 str_type.attrs["find"] = func([str_type], int_type)
 
-list_type = GenericType("list")
+list_type = generic_type("list", ["T"], {
+    "__getitem__": func([int_type], "T"),
+})
 
 type_type = TypeType
 
