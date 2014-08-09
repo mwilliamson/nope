@@ -7,9 +7,9 @@ function propertyAccess(value, propertyName) {
         return numberMethods[propertyName].bind(value);
     } else if (isArray(value)) {
         return arrayMethods[propertyName].bind(value);
-    } else if (isString(value) && propertyName === "find") {
+    } else if (isString(value)) {
         // TODO: perform this rewriting at compile-time
-        return value.indexOf.bind(value);
+        return stringMethods[propertyName].bind(value);
     } else {
         // TODO: bind this if the property is a function
         return value[propertyName];
@@ -88,6 +88,10 @@ var numberMethods = {
     __invert__: function() {
         return ~this;
     }
+};
+
+var stringMethods = {
+    find: String.prototype.indexOf
 };
 
 var arrayMethods = {
