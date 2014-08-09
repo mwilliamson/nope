@@ -89,23 +89,10 @@ class TypeChecker(object):
 
     def _infer_call(self, node, context):
         func_type = self.infer(node.func, context)
-        
-        if len(func_type.params) - 1 != len(node.args):
-            raise errors.ArgumentsLengthError(
-                node,
-                expected=len(func_type.params) - 1,
-                actual=len(node.args)
-            )
-        
-        for actual_arg, formal_arg_type in zip(node.args, func_type.params[:-1]):
-            actual_arg_type = self.infer(actual_arg, context)
-            if not types.is_sub_type(formal_arg_type, actual_arg_type):
-                raise errors.TypeMismatchError(
-                    actual_arg,
-                    expected=formal_arg_type,
-                    actual=actual_arg_type
-                )
-        
+        _with_error_node(
+            lambda: self._type_check_args(node.args, func_type.params[:-1], context),
+            node
+        )
         return self.infer(node.func, context).params[-1]
 
 
@@ -139,7 +126,18 @@ class TypeChecker(object):
         if len(formal_arg_types) != len(actual_args):
             raise errors.BadSignatureError(receiver, "{} should have exactly {} argument(s)".format(method_name, len(actual_args)))
         
-        # TODO: remove duplication with call inference
+        self._type_check_args(actual_args, formal_arg_types, context)
+        
+        return formal_return_type
+    
+    def _type_check_args(self, actual_args, formal_arg_types, context):
+        if len(formal_arg_types) != len(actual_args):
+            raise errors.ArgumentsLengthError(
+                None,
+                expected=len(formal_arg_types),
+                actual=len(actual_args)
+            )
+            
         for actual_arg, formal_arg_type in zip(actual_args, formal_arg_types):
             actual_arg_type = self.infer(actual_arg, context)
             if not types.is_sub_type(formal_arg_type, actual_arg_type):
@@ -149,7 +147,6 @@ class TypeChecker(object):
                     actual=actual_arg_type
                 )
         
-        return formal_return_type
 
 
     def _infer_function_def(self, node, context):
@@ -305,3 +302,12 @@ class TypeChecker(object):
         nodes.Import: _check_import,
         nodes.ImportFrom: _check_import_from,
     }
+
+
+def _with_error_node(func, node):
+    try:
+        return func()
+    except errors.TypeCheckError as error:
+        if error.node is None:
+            error.node = node
+        raise
