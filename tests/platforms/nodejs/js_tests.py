@@ -52,6 +52,11 @@ def test_serialize_call_with_multiple_args():
 @istest
 def test_serialize_property_access():
     assert_equal("(x).y", js.dumps(js.property_access(js.ref("x"), "y")))
+    
+
+@istest
+def test_serialize_binary_operation():
+    assert_equal("(x) + (y)", js.dumps(js.binary_operation("+", js.ref("x"), js.ref("y"))))
 
 
 @istest
