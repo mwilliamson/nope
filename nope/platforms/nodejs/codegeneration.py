@@ -311,8 +311,9 @@ class Transformer(object):
     def _binary_operation(self, operation):
         # TODO: document subclassing int (and other builtins) is prohibited (or rather, might misbehave) due to this optimisation
         # TODO: generate TypeLookup in type inference phase, and pass to this phase
-        # TODO: check type of right hand side
-        if operation.operator in _number_operators and self._type_of(operation.left) == types.int_type:
+        if (operation.operator in _number_operators and
+                self._type_of(operation.left) == types.int_type and
+                self._type_of(operation.right) == types.int_type):
             return _number_operators[operation.operator](
                 self.transform(operation.left),
                 self.transform(operation.right),

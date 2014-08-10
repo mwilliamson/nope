@@ -278,6 +278,29 @@ def test_normal_js_addition_is_used_if_both_operands_are_ints():
 
 
 @istest
+def test_normal_binary_operation_if_only_one_side_is_int():
+    x = nodes.ref("x")
+    y = nodes.ref("y")
+    
+    type_lookup = types.TypeLookup({
+        id(x): types.int_type,
+        id(y): types.object_type,
+    })
+    
+    _assert_transform(
+        nodes.add(x, y),
+        js.call(js.ref("$nope.operators.add"), [js.ref("x"), js.ref("y")]),
+        type_lookup=type_lookup,
+    )
+    
+    _assert_transform(
+        nodes.add(y, x),
+        js.call(js.ref("$nope.operators.add"), [js.ref("y"), js.ref("x")]),
+        type_lookup=type_lookup,
+    )
+
+
+@istest
 def test_transform_unary_operation():
     _assert_transform(
         nodes.neg(nodes.ref("x")),
