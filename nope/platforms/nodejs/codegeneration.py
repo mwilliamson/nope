@@ -334,10 +334,18 @@ class Transformer(object):
         )
     
     def _subscript(self, subscript):
-        return js.call(
-            js.ref("$nope.operators.getitem"),
-            [self.transform(subscript.value), self.transform(subscript.slice)]
-        )
+        js_value = self.transform(subscript.value)
+        js_slice = self.transform(subscript.slice)
+        
+        value_type = self._type_of(subscript.value)
+        
+        if isinstance(value_type, types.InstantiatedType) and value_type.generic_type == types.list_type:
+            return js.property_access(js_value, js_slice)
+        else:
+            return js.call(
+                js.ref("$nope.operators.getitem"),
+                [js_value, js_slice]
+            )
 
 
     def _list(self, node):
