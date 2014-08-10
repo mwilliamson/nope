@@ -33,6 +33,26 @@ def declared_names_removes_duplicates():
 
 
 @istest
+def declared_names_includes_target_of_for_loop():
+    for_loop = nodes.for_loop(
+        nodes.ref("x"),
+        nodes.ref("xs"),
+        [],
+    )
+    assert_equal(["x"], list(util.declared_names(for_loop)))
+
+
+@istest
+def declared_names_includes_names_in_for_loop_body():
+    for_loop = nodes.for_loop(
+        nodes.ref("x"),
+        nodes.ref("xs"),
+        [nodes.assign("y", nodes.none())],
+    )
+    assert_equal(["x", "y"], list(util.declared_names(for_loop)))
+
+
+@istest
 def error_is_raised_if_all_is_not_a_list():
     try:
         all_node = nodes.assign(["__all__"], nodes.none())

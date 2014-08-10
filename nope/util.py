@@ -15,17 +15,23 @@ def declared_names(node):
     if isinstance(node, nodes.FunctionDef):
         return OrderedSet([node.name])
     elif isinstance(node, nodes.Assignment):
-        return OrderedSet([
-            target.name
-            for target in node.targets
-            if isinstance(target, nodes.VariableReference)
-        ])
+        return _target_names(node.targets)
     elif isinstance(node, (nodes.ImportFrom, nodes.Import)):
         return OrderedSet([alias.value_name for alias in node.names])
     elif isinstance(node, nodes.IfElse):
         return declared_locals(node.true_body) | declared_locals(node.false_body)
+    elif isinstance(node, nodes.ForLoop):
+        return _target_names([node.target]) | declared_locals(node.body)
     else:
         return OrderedSet([])
+
+
+def _target_names(targets):
+    return OrderedSet([
+        target.name
+        for target in targets
+        if isinstance(target, nodes.VariableReference)
+    ])
 
 
 class OrderedSet(object):
