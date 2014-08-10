@@ -587,6 +587,8 @@ def type_of_variable_remains_unset_if_only_assigned_to_in_for_loop():
         nodes.assign("y", nodes.none()),
     ])
     
+    # TODO: although the variable should remain unreferenceable, we should ensure its type is consistent (ditto for if statements)
+    
     context = Context({
         "x": None,
         "xs": types.list_type(types.str_type),
