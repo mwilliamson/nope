@@ -565,6 +565,38 @@ def for_statement_target_can_be_variable():
 
 
 @istest
+def body_of_for_loop_is_type_checked():
+    bad_ref = nodes.ref("bad")
+    node = nodes.for_loop(nodes.ref("x"), nodes.ref("xs"), [
+        nodes.expression_statement(bad_ref),
+    ])
+    
+    try:
+        update_context(node, Context({
+            "x": None,
+            "xs": types.list_type(types.str_type),
+        }))
+        assert False, "Expected error"
+    except errors.TypeCheckError as error:
+        assert_equal(bad_ref, error.node)
+
+
+@istest
+def type_of_variable_remains_unset_if_only_assigned_to_in_for_loop():
+    node = nodes.for_loop(nodes.ref("x"), nodes.ref("xs"), [
+        nodes.assign("y", nodes.none()),
+    ])
+    
+    context = Context({
+        "x": None,
+        "xs": types.list_type(types.str_type),
+        "y": None,
+    })
+    update_context(node, context)
+    assert_equal(None, context.lookup("y"))
+
+
+@istest
 def check_generates_type_lookup_for_all_expressions():
     int_ref_node = nodes.ref("a")
     int_node = nodes.int(3)

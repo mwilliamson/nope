@@ -277,10 +277,10 @@ class _TypeChecker(object):
         iterable_type, = iter_type.params
         element_type, = iterable_type.params
         
-        self._assign(node, node.target, element_type, context)
-        target_type = self.infer(node.target, context)
-        if not types.is_sub_type(target_type, element_type):
-            raise errors.TypeMismatchError(node.target, expected=element_type, actual=target_type)
+        body_context = context.enter_block()
+        self._assign(node, node.target, element_type, body_context)
+        for statement in node.body:
+            self.update_context(statement, body_context)
 
     def _check_import(self, node, context):
         for alias in node.names:
