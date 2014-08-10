@@ -62,7 +62,10 @@ class BlockVars(object):
         self._new_vars = {}
     
     def __getitem__(self, key):
-        return self._original_vars[key]
+        if key in self._new_vars:
+            return self._new_vars[key]
+        else:
+            return self._original_vars[key]
     
     def __setitem__(self, key, value):
         self._new_vars[key] = value

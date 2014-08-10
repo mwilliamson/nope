@@ -19,8 +19,9 @@ def print_program_is_valid():
 
 
 # TODO:
-#~ @istest
+@istest
 def fib_program_is_valid():
+    print(nope.check(path=program_path("valid/fib.py")))
     assert nope.check(path=program_path("valid/fib.py")).is_valid
 
 
