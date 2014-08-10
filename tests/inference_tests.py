@@ -28,7 +28,7 @@ def can_infer_type_of_int_literal():
 
 @istest
 def can_infer_type_of_str_literal():
-    assert_equal(types.str_type, infer(nodes.str("!")))
+    assert_equal(types.str_type, infer(nodes.string("!")))
 
 
 @istest
@@ -60,7 +60,7 @@ def empty_list_has_elements_of_type_bottom():
 @istest
 def can_infer_type_of_call():
     context = Context({"f": types.func([types.str_type], types.int_type)})
-    assert_equal(types.int_type, infer(nodes.call(nodes.ref("f"), [nodes.str("")]), context))
+    assert_equal(types.int_type, infer(nodes.call(nodes.ref("f"), [nodes.string("")]), context))
 
 
 @istest
@@ -287,7 +287,7 @@ def can_infer_type_of_function_with_no_args_and_return_annotation():
 
 @istest
 def type_mismatch_if_return_type_is_incorrect():
-    return_node = nodes.ret(nodes.str("!"))
+    return_node = nodes.ret(nodes.string("!"))
     node = nodes.func(
         "f",
         args=nodes.arguments([]),
@@ -353,7 +353,7 @@ def variables_can_be_reassigned_if_type_is_consistent():
 @istest
 def variables_are_shadowed_in_defs():
     node = nodes.func("g", nodes.args([]), None, [
-        nodes.assign(["x"], nodes.str("Hello")),
+        nodes.assign(["x"], nodes.string("Hello")),
         nodes.expression_statement(nodes.call(nodes.ref("f"), [nodes.ref("x")])),
     ])
     
@@ -372,7 +372,7 @@ def local_variables_cannot_be_used_before_assigned():
     usage_node = nodes.ref("x")
     node = nodes.func("g", nodes.args([]), None, [
         nodes.expression_statement(nodes.call(nodes.ref("f"), [usage_node])),
-        nodes.assign("x", nodes.str("Hello")),
+        nodes.assign("x", nodes.string("Hello")),
     ])
     
     context = Context({
@@ -448,7 +448,7 @@ def type_of_variable_is_unified_if_branches_of_if_else_use_different_types():
     node = nodes.if_else(
         nodes.int(1),
         [nodes.assign("x", nodes.int(1))],
-        [nodes.assign("x", nodes.str("blah"))],
+        [nodes.assign("x", nodes.string("blah"))],
     )
     context = Context({"x": None})
     update_context(node, context)
@@ -471,7 +471,7 @@ def type_of_variable_remains_undefined_if_only_set_in_one_branch_of_if_else():
 def check_generates_type_lookup_for_all_expressions():
     int_ref_node = nodes.ref("a")
     int_node = nodes.int(3)
-    str_node = nodes.str("Hello")
+    str_node = nodes.string("Hello")
     
     module_node = nodes.module([
         nodes.assign(["a"], int_node),
@@ -491,9 +491,9 @@ def check_generates_type_lookup_for_all_expressions():
 @istest
 def module_exports_are_specified_using_all():
     module_node = nodes.module([
-        nodes.assign(["__all__"], nodes.list([nodes.str("x"), nodes.str("z")])),
-        nodes.assign(["x"], nodes.str("one")),
-        nodes.assign(["y"], nodes.str("two")),
+        nodes.assign(["__all__"], nodes.list([nodes.string("x"), nodes.string("z")])),
+        nodes.assign(["x"], nodes.string("one")),
+        nodes.assign(["y"], nodes.string("two")),
         nodes.assign(["z"], nodes.int(3)),
     ])
     
@@ -507,8 +507,8 @@ def module_exports_are_specified_using_all():
 @istest
 def module_exports_default_to_values_without_leading_underscore_if_all_is_not_specified():
     module_node = nodes.module([
-        nodes.assign(["x"], nodes.str("one")),
-        nodes.assign(["_y"], nodes.str("two")),
+        nodes.assign(["x"], nodes.string("one")),
+        nodes.assign(["_y"], nodes.string("two")),
         nodes.assign(["z"], nodes.int(3)),
     ])
     

@@ -133,7 +133,7 @@ class Converter(object):
     
 
     def _str_literal(self, node):
-        return nodes.str(node.s)
+        return nodes.string(node.s)
 
 
     def _num_literal(self, node):

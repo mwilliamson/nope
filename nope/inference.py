@@ -218,8 +218,11 @@ class _TypeChecker(object):
 
     def _check_assignment(self, node, context):
         value_type = self.infer(node.value, context)
-        for name in node.targets:
-            context.add(node, name, value_type)
+        for target in node.targets:
+            if isinstance(target, nodes.VariableReference):
+                context.add(node, target.name, value_type)
+            else:
+                raise Exception("Not implemented yet")
     
     
     def _check_if_else(self, node, context):

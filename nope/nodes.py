@@ -47,7 +47,7 @@ def int(value):
     return IntExpression(value)
 
 boolean = BooleanExpression
-str = StringExpression
+string = StringExpression
 list = ListExpression
 ref = VariableReference
 
@@ -57,7 +57,16 @@ type_apply = TypeApplication
 
 ret = ReturnStatement
 expression_statement = ExpressionStatement
-assign = Assignment
+
+
+def assign(targets, value):
+    target_nodes = [
+        ref(target) if isinstance(target, str) else target
+        for target in targets
+    ]
+    return Assignment(target_nodes, value)
+
+
 if_else = IfElse
 
 def func(name, args, return_annotation, body, type_params=None):

@@ -268,8 +268,8 @@ class Transformer(object):
 
     def _assign(self, assignment):
         value = self.transform(assignment.value)
-        for name in reversed(assignment.targets):
-            value = js.assign(name, value)
+        for target in reversed(assignment.targets):
+            value = js.assign(self.transform(target), value)
         return js.expression_statement(value)
         
 

@@ -15,7 +15,11 @@ def declared_names(node):
     if isinstance(node, nodes.FunctionDef):
         return OrderedSet([node.name])
     elif isinstance(node, nodes.Assignment):
-        return OrderedSet(node.targets)
+        return OrderedSet([
+            target.name
+            for target in node.targets
+            if isinstance(target, nodes.VariableReference)
+        ])
     elif isinstance(node, (nodes.ImportFrom, nodes.Import)):
         return OrderedSet([alias.value_name for alias in node.names])
     elif isinstance(node, nodes.IfElse):
@@ -49,7 +53,7 @@ def exported_names(module):
     export_names = None
     
     for statement in module.body:
-        if isinstance(statement, nodes.Assignment) and "__all__" in statement.targets:
+        if isinstance(statement, nodes.Assignment) and any(target.name == "__all__" for target in statement.targets):
             if not isinstance(statement.value, nodes.ListExpression):
                 raise _all_wrong_type_error(statement)
             

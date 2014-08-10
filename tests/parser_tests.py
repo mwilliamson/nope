@@ -290,12 +290,12 @@ def test_parse_int():
 
 @istest
 def test_parse_string():
-    _assert_expression_parse(nodes.str("hello"), "'hello'")
+    _assert_expression_parse(nodes.string("hello"), "'hello'")
 
 
 @istest
 def test_parse_list():
-    _assert_expression_parse(nodes.list([nodes.str("hello"), nodes.int(4)]), "['hello', 4]")
+    _assert_expression_parse(nodes.list([nodes.string("hello"), nodes.int(4)]), "['hello', 4]")
 
 
 @istest
