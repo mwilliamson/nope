@@ -135,15 +135,21 @@ class _TypeChecker(object):
         return formal_return_type
     
     def _type_check_args(self, node, actual_args, formal_arg_types, context):
-        if len(formal_arg_types) != len(actual_args):
+        actual_args_with_types = [
+            (actual_arg, self.infer(actual_arg, context))
+            for actual_arg in actual_args
+        ]
+        return self._type_check_arg_types(node, actual_args_with_types, formal_arg_types)
+        
+    def _type_check_arg_types(self, node, actual_args_with_types, formal_arg_types):
+        if len(formal_arg_types) != len(actual_args_with_types):
             raise errors.ArgumentsLengthError(
                 node,
                 expected=len(formal_arg_types),
-                actual=len(actual_args)
+                actual=len(actual_args_with_types)
             )
             
-        for actual_arg, formal_arg_type in zip(actual_args, formal_arg_types):
-            actual_arg_type = self.infer(actual_arg, context)
+        for (actual_arg, actual_arg_type), formal_arg_type in zip(actual_args_with_types, formal_arg_types):
             if not types.is_sub_type(formal_arg_type, actual_arg_type):
                 raise errors.TypeMismatchError(
                     actual_arg,
@@ -219,16 +225,31 @@ class _TypeChecker(object):
     def _check_assignment(self, node, context):
         value_type = self.infer(node.value, context)
         for target in node.targets:
-            if isinstance(target, nodes.VariableReference):
-                context.add(node, target.name, value_type)
-            elif isinstance(target, nodes.Subscript):
-                target_value_type = self.infer(target.value, context)
-                # TODO: check setitem exists and has correct signature
-                setitem_type = target_value_type.attrs["__setitem__"]
-                self._type_check_args(node, [target.slice, node.value], setitem_type.params[:-1], context)
-                
-            else:
-                raise Exception("Not implemented yet")
+            self._assign(node, target, value_type, context)
+    
+    def _assign(self, node, target, value_type, context):
+        if isinstance(target, nodes.VariableReference):
+            # TODO: should we pass target in instead of node?
+            context.add(node, target.name, value_type)
+        elif isinstance(target, nodes.Subscript):
+            target_value_type = self.infer(target.value, context)
+            # TODO: check setitem exists and has correct signature
+            setitem_type = target_value_type.attrs["__setitem__"]
+            try:
+                value_node = object()
+                self._type_check_arg_types(
+                    node,
+                    [(target.slice, self.infer(target.slice, context)), (value_node, value_type)],
+                    setitem_type.params[:-1],
+                )
+            except errors.TypeMismatchError as error:
+                if error.node is value_node:
+                    raise errors.TypeMismatchError(target, expected=error.actual, actual=error.expected)
+                else:
+                    raise
+            
+        else:
+            raise Exception("Not implemented yet")
     
     
     def _check_if_else(self, node, context):
@@ -244,6 +265,22 @@ class _TypeChecker(object):
         
         context.unify([true_context, false_context])
     
+    
+    def _check_for_loop(self, node, context):
+        iterable_type = self.infer(node.iterable, context)
+        
+        if "__iter__" not in iterable_type.attrs:
+            raise errors.TypeMismatchError(node.iterable, expected="type with __iter__", actual=iterable_type)
+        # TODO: check __iter__ signature
+        
+        iter_type = iterable_type.attrs["__iter__"]
+        iterable_type, = iter_type.params
+        element_type, = iterable_type.params
+        
+        self._assign(node, node.target, element_type, context)
+        target_type = self.infer(node.target, context)
+        if not types.is_sub_type(target_type, element_type):
+            raise errors.TypeMismatchError(node.target, expected=element_type, actual=target_type)
 
     def _check_import(self, node, context):
         for alias in node.names:
@@ -311,6 +348,7 @@ class _TypeChecker(object):
         nodes.ReturnStatement: _check_return,
         nodes.Assignment: _check_assignment,
         nodes.IfElse: _check_if_else,
+        nodes.ForLoop: _check_for_loop,
         nodes.FunctionDef: _check_function_def,
         nodes.Import: _check_import,
         nodes.ImportFrom: _check_import_from,

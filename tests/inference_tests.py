@@ -340,8 +340,9 @@ def assignment_to_list_allows_subtype():
 
 @istest
 def assignment_to_list_does_not_allow_supertype():
+    target_node = nodes.subscript(nodes.ref("x"), nodes.int(0))
     value_node = nodes.ref("y")
-    node = nodes.assign([nodes.subscript(nodes.ref("x"), nodes.int(0))], value_node)
+    node = nodes.assign([target_node], value_node)
     context = Context({
         "x": types.list_type(types.str_type),
         "y": types.object_type,
@@ -350,9 +351,9 @@ def assignment_to_list_does_not_allow_supertype():
         update_context(node, context)
         assert False, "Expected error"
     except errors.TypeMismatchError as error:
-        assert_equal(value_node, error.node)
-        assert_equal(types.str_type, error.expected)
-        assert_equal(types.object_type, error.actual)
+        assert_equal(target_node, error.node)
+        assert_equal(types.object_type, error.expected)
+        assert_equal(types.str_type, error.actual)
 
 
 @istest
@@ -489,6 +490,81 @@ def type_of_variable_remains_undefined_if_only_set_in_one_branch_of_if_else():
     context = Context({"x": None})
     update_context(node, context)
     assert_equal(None, context.lookup("x"))
+
+
+@istest
+def for_statement_has_iterable_type_checked():
+    ref_node = nodes.ref("xs")
+    node = nodes.for_loop(nodes.ref("x"), ref_node, [])
+    
+    try:
+        update_context(node, Context({}))
+        assert False, "Expected error"
+    except errors.TypeCheckError as error:
+        assert_equal(ref_node, error.node)
+
+
+@istest
+def for_statement_requires_iterable_to_have_iter_method():
+    # TODO: support sequence protocol
+    ref_node = nodes.ref("xs")
+    node = nodes.for_loop(nodes.ref("x"), ref_node, [])
+    
+    try:
+        update_context(node, Context({"x": None, "xs": types.int_type}))
+        assert False, "Expected error"
+    except errors.TypeMismatchError as error:
+        assert_equal(ref_node, error.node)
+        assert_equal("type with __iter__", error.expected)
+        assert_equal(types.int_type, error.actual)
+
+
+@istest
+def for_statement_target_can_be_supertype_of_iterable_element_type():
+    ref_node = nodes.ref("xs")
+    node = nodes.for_loop(nodes.subscript(nodes.ref("ys"), nodes.int(0)), ref_node, [])
+    
+    update_context(node, Context({
+        "xs": types.list_type(types.int_type),
+        "ys": types.list_type(types.object_type),
+    }))
+
+
+@istest
+def for_statement_target_cannot_be_strict_subtype_of_iterable_element_type():
+    target_node = nodes.subscript(nodes.ref("ys"), nodes.int(0))
+    iterable_node = nodes.ref("xs")
+    node = nodes.for_loop(target_node, iterable_node, [])
+    
+    try:
+        update_context(node, Context({
+            "xs": types.list_type(types.object_type),
+            "ys": types.list_type(types.int_type),
+        }))
+        assert False, "Expected error"
+    except errors.TypeMismatchError as error:
+        # TODO: Ideally, we want an error on the target_node.
+        # Having the error on iterable_node is confusing since the actual type isn't T, but iterable(T)
+        # (but there is no node representing the type of the element)
+        assert_equal(target_node, error.node)
+        assert_equal(types.object_type, error.expected)
+        assert_equal(types.int_type, error.actual)
+
+
+@istest
+def for_statement_target_can_be_variable():
+    node = nodes.for_loop(nodes.ref("x"), nodes.ref("xs"), [])
+    
+    # Unassigned case
+    update_context(node, Context({
+        "x": None,
+        "xs": types.list_type(types.str_type),
+    }))
+    # Assigned case
+    update_context(node, Context({
+        "x": types.str_type,
+        "xs": types.list_type(types.str_type),
+    }))
 
 
 @istest

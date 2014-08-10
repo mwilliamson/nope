@@ -1,5 +1,39 @@
 import collections
 
+
+class GenericTypeAttributes(object):
+    def __init__(self, attrs, param_map):
+        self._attrs = _substitute_types(attrs, param_map)
+        self._param_map = param_map
+    
+    def substitute_types(self, type_map):
+        return GenericTypeAttributes(_substitute_types(self._attrs, type_map), self._param_map)
+    
+    def __getitem__(self, key):
+        return self._attrs[key]
+    
+    def __setitem__(self, key, value):
+        self._attrs[key] = _substitute_types(value, self._param_map)
+    
+    def __contains__(self, key):
+        return key in self._attrs
+    
+    def __str__(self):
+        return str(self._attrs)
+    
+    def __repr__(self):
+        return repr(self._attrs)
+    
+    def __eq__(self, other):
+        if isinstance(other, GenericTypeAttributes):
+            return self._attrs == other._attrs
+        else:
+            return NotImplemented
+    
+    def __neq__(self, other):
+        return not (self == other)
+
+
 class ScalarType(collections.namedtuple("ScalarType", ["name", "attrs"])):
     def __str__(self):
         return self.name
@@ -19,6 +53,12 @@ class _GenericType(collections.namedtuple("GenericType", ["name", "params", "att
         param_map = dict(zip(self.params, params))
         instantiated_attrs = _substitute_types(self.attrs, param_map)
         return InstantiatedType(self, params, instantiated_attrs)
+    
+    def __str__(self):
+        return self.name
+        
+    def __repr__(self):
+        return str(self)
 
 def generic_type(name, params, attrs):
     # We allow the caller to use string literals to represent formal params, so we need to replace them
@@ -26,7 +66,7 @@ def generic_type(name, params, attrs):
     #           GenericType("Foo", [T], {"x": T}) where T = FormalParameter("T")
     formal_params = [_FormalParameter(param) for param in params]
     param_map = dict(zip(params, formal_params))
-    return _GenericType(name, formal_params, _substitute_types(attrs, param_map))
+    return _GenericType(name, formal_params, GenericTypeAttributes(attrs, param_map))
 
 
 def _substitute_types(type_, type_map):
@@ -102,9 +142,13 @@ int_type.attrs["__invert__"] = func([], int_type)
 str_type = ScalarType("str", {})
 str_type.attrs["find"] = func([str_type], int_type)
 
+iterable = generic_type("iterable", ["T"], {})
+iterable.attrs["__iter__"] = func([], iterable("T"))
+
 list_type = generic_type("list", ["T"], {
     "__getitem__": func([int_type], "T"),
     "__setitem__": func([int_type, "T"], none_type),
+    "__iter__": func([], iterable("T"))
 })
 
 type_type = TypeType
