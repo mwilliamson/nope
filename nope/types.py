@@ -104,6 +104,7 @@ str_type.attrs["find"] = func([str_type], int_type)
 
 list_type = generic_type("list", ["T"], {
     "__getitem__": func([int_type], "T"),
+    "__setitem__": func([int_type, "T"], none_type),
 })
 
 type_type = TypeType

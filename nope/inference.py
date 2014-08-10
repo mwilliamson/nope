@@ -221,6 +221,12 @@ class _TypeChecker(object):
         for target in node.targets:
             if isinstance(target, nodes.VariableReference):
                 context.add(node, target.name, value_type)
+            elif isinstance(target, nodes.Subscript):
+                target_value_type = self.infer(target.value, context)
+                # TODO: check setitem exists and has correct signature
+                setitem_type = target_value_type.attrs["__setitem__"]
+                self._type_check_args(node, [target.slice, node.value], setitem_type.params[:-1], context)
+                
             else:
                 raise Exception("Not implemented yet")
     

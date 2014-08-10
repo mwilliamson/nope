@@ -332,6 +332,30 @@ def assignment_adds_variable_to_context():
 
 
 @istest
+def assignment_to_list_allows_subtype():
+    node = nodes.assign([nodes.subscript(nodes.ref("x"), nodes.int(0))], nodes.string("Hello"))
+    context = Context({"x": types.list_type(types.object_type)})
+    update_context(node, context)
+
+
+@istest
+def assignment_to_list_does_not_allow_supertype():
+    value_node = nodes.ref("y")
+    node = nodes.assign([nodes.subscript(nodes.ref("x"), nodes.int(0))], value_node)
+    context = Context({
+        "x": types.list_type(types.str_type),
+        "y": types.object_type,
+    })
+    try:
+        update_context(node, context)
+        assert False, "Expected error"
+    except errors.TypeMismatchError as error:
+        assert_equal(value_node, error.node)
+        assert_equal(types.str_type, error.expected)
+        assert_equal(types.object_type, error.actual)
+
+
+@istest
 def variables_cannot_change_type():
     node = nodes.assign(["x"], nodes.int(1))
     context = Context({"x": types.none_type})

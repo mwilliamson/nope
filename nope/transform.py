@@ -115,13 +115,9 @@ class Converter(object):
     
     
     def _assign(self, node):
-        def extract_id(name):
-            assert isinstance(name, ast.Name)
-            return name.id
+        targets = [self.convert(target) for target in node.targets]
         
-        names = [extract_id(target) for target in node.targets]
-        
-        return nodes.assign(names, self.convert(node.value))
+        return nodes.assign(targets, self.convert(node.value))
     
     
     def _if(self, node):
