@@ -105,7 +105,7 @@ class _TypeChecker(object):
         if node.attr in value_type.attrs:
             return value_type.attrs[node.attr]
         else:
-            raise errors.AttributeError(node, value_type.name, node.attr)
+            raise errors.AttributeError(node, str(value_type), node.attr)
     
     def _infer_binary_operation(self, node, context):
         return self._read_magic_method(node, node.operator, node.left, [node.right], context)

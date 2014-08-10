@@ -18,10 +18,8 @@ def print_program_is_valid():
     assert nope.check(path=program_path("valid/print.py")).is_valid
 
 
-# TODO:
 @istest
 def fib_program_is_valid():
-    print(nope.check(path=program_path("valid/fib.py")))
     assert nope.check(path=program_path("valid/fib.py")).is_valid
 
 

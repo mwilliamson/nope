@@ -29,6 +29,13 @@ class ExecutionTests(object):
         assert_equal(0, result.return_code)
         assert_equal(b"42\n", result.output)
         assert_equal(b"", result.stderr_output)
+        
+    @istest
+    def fib_program_prints_result_to_stdout(self):
+        result = self._run_program(path=program_path("valid/fib.py"), program="fib")
+        assert_equal(0, result.return_code)
+        assert_equal(b"55\n", result.output)
+        assert_equal(b"", result.stderr_output)
     
     @istest
     def can_read_attributes_of_builtins(self):

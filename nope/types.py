@@ -154,7 +154,8 @@ iterable.attrs["__iter__"] = func([], iterable("T"))
 list_type = generic_type("list", ["T"], {
     "__getitem__": func([int_type], "T"),
     "__setitem__": func([int_type, "T"], none_type),
-    "__iter__": func([], iterable("T"))
+    "__iter__": func([], iterable("T")),
+    "append": func(["T"], none_type),
 })
 
 type_type = TypeType
