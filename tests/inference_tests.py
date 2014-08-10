@@ -468,6 +468,27 @@ def type_of_variable_remains_undefined_if_only_set_in_one_branch_of_if_else():
 
 
 @istest
+def check_generates_type_lookup_for_all_expressions():
+    int_ref_node = nodes.ref("a")
+    int_node = nodes.int(3)
+    str_node = nodes.str("Hello")
+    
+    module_node = nodes.module([
+        nodes.assign(["a"], int_node),
+        nodes.func("f", nodes.args([]), None, [
+            nodes.assign("b", int_ref_node),
+            nodes.assign("c", str_node),
+        ]),
+    ])
+    
+    context = Context({})
+    module, type_lookup = inference.check(module_node)
+    assert_equal(types.int_type, type_lookup.type_of(int_node))
+    assert_equal(types.int_type, type_lookup.type_of(int_ref_node))
+    assert_equal(types.str_type, type_lookup.type_of(str_node))
+
+
+@istest
 def module_exports_are_specified_using_all():
     module_node = nodes.module([
         nodes.assign(["__all__"], nodes.list([nodes.str("x"), nodes.str("z")])),
