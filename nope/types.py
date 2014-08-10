@@ -99,6 +99,12 @@ class InstantiatedType(collections.namedtuple("InstantiatedType", ["generic_type
         ]
         instantiated_attrs = _substitute_types(self.attrs, type_map)
         return InstantiatedType(self.generic_type, instantiated_params, instantiated_attrs)
+    
+    def __str__(self):
+        return "{}[{}]".format(self.generic_type, ", ".join(map(str, self.params)))
+    
+    def __repr__(self):
+        return str(self)
         
     
 TypeType = collections.namedtuple("TypeType", ["type"])
