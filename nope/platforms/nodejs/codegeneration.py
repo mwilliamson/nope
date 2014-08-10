@@ -18,10 +18,14 @@ def nope_to_nodejs(source_path, source_tree, destination_dir):
             destination_dir,
         )
     
-    nope_js_path = os.path.join(os.path.dirname(__file__), "nope.js")
-    shutil.copy(nope_js_path, os.path.join(destination_dir, "$nope.js"))
+    _write_nope_js(destination_dir)
     
     walk_tree(source_path, handle_dir, handle_file)
+
+
+def _write_nope_js(destination_dir):
+    nope_js_path = os.path.join(os.path.dirname(__file__), "nope.js")
+    shutil.copy(nope_js_path, os.path.join(destination_dir, "$nope.js"))
 
 
 def _convert_file(source_path, relative_path, nope_ast, destination_root):
