@@ -24,6 +24,7 @@ class Converter(object):
             ast.Return: self._return,
             ast.Assign: self._assign,
             ast.If: self._if,
+            ast.For: self._for,
             
             ast.Str: self._str_literal,
             ast.Num: self._num_literal,
@@ -125,6 +126,14 @@ class Converter(object):
             self.convert(node.test),
             self._mapped(node.body),
             self._mapped(node.orelse),
+        )
+    
+    
+    def _for(self, node):
+        return nodes.for_loop(
+            self.convert(node.target),
+            self.convert(node.iter),
+            self._mapped(node.body),
         )
     
 

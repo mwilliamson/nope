@@ -17,6 +17,7 @@ ReturnStatement = collections.namedtuple("ReturnStatement", ["value"])
 ExpressionStatement = collections.namedtuple("ExpressionStatement", ["value"])
 Assignment = collections.namedtuple("Assignment", ["targets", "value"])
 IfElse = collections.namedtuple("IfElse", ["condition", "true_body", "false_body"])
+ForLoop = collections.namedtuple("ForLoop", ["target", "iterable", "body"])
 
 FunctionDef = collections.namedtuple("FunctionDef", ["name", "args", "return_annotation", "body", "type_params"])
 Arguments = collections.namedtuple("Arguments", ["args"])
@@ -68,6 +69,7 @@ def assign(targets, value):
 
 
 if_else = IfElse
+for_loop = ForLoop
 
 def func(name, args, return_annotation, body, type_params=None):
     if type_params is None:
