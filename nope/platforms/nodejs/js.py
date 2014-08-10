@@ -103,6 +103,13 @@ def _serialize_binary_operation(obj, fileobj):
     fileobj.write(")")
 
 
+def _serialize_unary_operation(obj, fileobj):
+    fileobj.write(obj.operator)
+    fileobj.write("(")
+    dump(obj.operand, fileobj)
+    fileobj.write(")")
+
+
 def _serialize_call(obj, fileobj):
     dump(obj.func, fileobj)
     fileobj.write("(")
@@ -186,6 +193,7 @@ def assign_statement(target, value):
 
 property_access = PropertyAccess = collections.namedtuple("PropertyAccess", ["value", "property"])
 binary_operation = BinaryOperation = collections.namedtuple("BinaryOperation", ["operator", "left", "right"])
+unary_operation = UnaryOperation = collections.namedtuple("UnaryOperation", ["operator", "operand"])
 call = Call = collections.namedtuple("Call", ["func", "args"])
 ref = VariableReference = collections.namedtuple("VariableReference", ["name"])
 number = Number = collections.namedtuple("Number", ["value"])
@@ -209,6 +217,7 @@ _serializers = {
     Assignment: _serialize_assignment,
     PropertyAccess: _serialize_property_access,
     BinaryOperation: _serialize_binary_operation,
+    UnaryOperation: _serialize_unary_operation,
     Call: _serialize_call,
     VariableReference: _serialize_ref,
     Number: _serialize_number,

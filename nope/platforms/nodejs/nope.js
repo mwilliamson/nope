@@ -47,45 +47,6 @@ function createMagicBinaryFunction(operatorName) {
     };
 }
 
-var numberMethods = {
-    __add__: function(right) {
-        return this + right;
-    },
-    __sub__: function(right) {
-        return this - right;
-    },
-    __mul__: function(right) {
-        return this * right;
-    },
-    __truediv__: function(right) {
-        return this / right;
-    },
-    __floordiv__: function(right) {
-        return Math.floor(this / right);
-    },
-    __mod__: function(right) {
-        var result = this % right;
-        if (result < 0) {
-            return result + right;
-        } else {
-            return result;
-        }
-    },
-    
-    __neg__: function() {
-        return -this;
-    },
-    __pos__: function() {
-        return +this;
-    },
-    __abs__: function() {
-        return Math.abs(this);
-    },
-    __invert__: function() {
-        return ~this;
-    }
-};
-
 var stringMethods = {
     find: String.prototype.indexOf
 };
@@ -118,9 +79,19 @@ var builtins = {
     abs: abs
 };
 
-module.exports = {
+function numberMod(left, right) {
+    var result = left % right;
+    if (result < 0) {
+        return result + right;
+    } else {
+        return result;
+    }
+}
+
+var $nope = module.exports = {
     propertyAccess: propertyAccess,
     exports: exports,
     operators: operators,
-    builtins: builtins
+    builtins: builtins,
+    numberMod: numberMod,
 };

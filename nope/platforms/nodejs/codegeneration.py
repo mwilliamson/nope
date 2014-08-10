@@ -1,5 +1,6 @@
 import os
 import shutil
+import inspect
 
 from . import js
 from ... import nodes, util, types
@@ -25,7 +26,30 @@ def nope_to_nodejs(source_path, source_tree, destination_dir):
 
 def _write_nope_js(destination_dir):
     nope_js_path = os.path.join(os.path.dirname(__file__), "nope.js")
-    shutil.copy(nope_js_path, os.path.join(destination_dir, "$nope.js"))
+    with open(os.path.join(destination_dir, "$nope.js"), "w") as dest_file:
+        js.dump(_number_methods_ast(), dest_file)
+        
+        with open(os.path.join(nope_js_path)) as source_file:
+            shutil.copyfileobj(source_file, dest_file)
+
+
+def _number_methods_ast():
+    return js.var("numberMethods", js.obj(dict(
+        ("__{}__".format(name), _generate_number_method(generate_operation))
+        for name, generate_operation in _number_operators.items()
+    )))
+
+
+def _generate_number_method(generate_operation):
+    number_of_args = inspect.getargspec(generate_operation)[0]
+    if len(number_of_args) == 1:
+        return js.function_expression([], [
+            js.ret(generate_operation(js.ref("this")))
+        ])
+    else:
+        return js.function_expression(["right"], [
+            js.ret(generate_operation(js.ref("this"), js.ref("right")))
+        ])
 
 
 def _convert_file(source_path, relative_path, nope_ast, destination_root):
@@ -54,6 +78,20 @@ def _replace_extension(filename, new_extension):
 _builtin_names = [
     "bool", "print", "abs",
 ]
+
+_number_operators = {
+    "add": lambda left, right: js.binary_operation("+", left, right),
+    "sub": lambda left, right: js.binary_operation("-", left, right),
+    "mul": lambda left, right: js.binary_operation("*", left, right),
+    "truediv": lambda left, right: js.binary_operation("/", left, right),
+    "floordiv": lambda left, right: js.call(js.ref("Math.floor"), [js.binary_operation("/", left, right)]),
+    "mod": lambda left, right: js.call(js.ref("$nope.numberMod"), [left, right]),
+    
+    "neg": lambda operand: js.unary_operation("-", operand),
+    "pos": lambda operand: js.unary_operation("+", operand),
+    "abs": lambda operand: js.call(js.ref("Math.abs"), [operand]),
+    "invert": lambda operand: js.unary_operation("~", operand),
+}
 
 def _generate_prelude(fileobj, module, relative_path):
     relative_path = "../" * _path_depth(relative_path)
@@ -111,13 +149,6 @@ _main_require = """
     }
 })();
 """
-
-_number_operators = {
-    "add": lambda left, right: js.binary_operation("+", left, right),
-    "sub": lambda left, right: js.binary_operation("-", left, right),
-    "mul": lambda left, right: js.binary_operation("*", left, right),
-    
-}
 
 
 def transform(nope_node, type_lookup=None):

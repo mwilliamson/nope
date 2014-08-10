@@ -65,6 +65,11 @@ def test_serialize_property_access():
 @istest
 def test_serialize_binary_operation():
     assert_equal("(x) + (y)", js.dumps(js.binary_operation("+", js.ref("x"), js.ref("y"))))
+    
+
+@istest
+def test_serialize_unary_operation():
+    assert_equal("-(x)", js.dumps(js.unary_operation("-", js.ref("x"))))
 
 
 @istest
