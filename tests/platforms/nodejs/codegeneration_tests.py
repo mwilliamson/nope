@@ -197,10 +197,22 @@ def test_transform_function_declaration_declares_variables_at_top_of_function():
 
 
 @istest
+def test_transform_single_assignment():
+    _assert_transform(
+        nodes.assign(["x"], nodes.ref("z")),
+        js.expression_statement(js.assign("x", js.ref("z"))),
+    )
+
+
+@istest
 def test_transform_compound_assignments():
     _assert_transform(
         nodes.assign(["x", "y"], nodes.ref("z")),
-        js.expression_statement(js.assign("x", js.assign("y", js.ref("z")))),
+        js.statements([
+            js.var("$tmp0", js.ref("z")),
+            js.assign_statement("x", js.ref("$tmp0")),
+            js.assign_statement("y", js.ref("$tmp0")),
+        ]),
     )
 
 

@@ -185,7 +185,7 @@ class Transformer(object):
             nodes.ListExpression: self._list,
         }
         
-        self._import_index = 0
+        self._unique_name_index = 0
     
     def transform(self, nope_node):
         return self._transformers[type(nope_node)](nope_node)
@@ -237,8 +237,7 @@ class Transformer(object):
 
 
     def _import_from(self, import_from):
-        module_import_name = "$import{}".format(self._import_index)
-        self._import_index += 1
+        module_import_name = self._unique_name("import")
         
         statements = [
             js.var(
@@ -268,9 +267,17 @@ class Transformer(object):
 
     def _assign(self, assignment):
         value = self.transform(assignment.value)
-        for target in reversed(assignment.targets):
-            value = js.assign(self.transform(target), value)
-        return js.expression_statement(value)
+        targets = [self.transform(target) for target in assignment.targets]
+        
+        if len(targets) == 1:
+            return js.assign_statement(targets[0], value)
+        
+        tmp_name = self._unique_name("tmp")
+        assignments = [
+            js.assign_statement(target, js.ref(tmp_name))
+            for target in targets
+        ]
+        return js.statements([js.var(tmp_name, value)] + assignments)
         
 
     def _function_def(self, func):
@@ -360,6 +367,11 @@ class Transformer(object):
     
     def _type_of(self, node):
         return self._type_lookup.type_of(node)
+    
+    def _unique_name(self, base):
+        name = "${}{}".format(base, self._unique_name_index)
+        self._unique_name_index += 1
+        return name
 
 
 def _generate_vars(statements):
