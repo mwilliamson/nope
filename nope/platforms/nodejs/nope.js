@@ -5,7 +5,12 @@ function print(value) {
 function propertyAccess(value, propertyName) {
     var methods = builtinMethods[Object.prototype.toString.call(value)];
     if (methods) {
-        return methods[propertyName].bind(value);
+        var method = methods[propertyName];
+        if (method === undefined) {
+            return method;
+        } else {
+            return method.bind(value);
+        }
     } else {
         // TODO: bind this if the property is a function
         return value[propertyName];
@@ -67,6 +72,9 @@ var arrayMethods = {
     },
     __setitem__: function(slice, value) {
         this[slice] = value;
+    },
+    __len__: function() {
+        return this.length;
     }
 };
 
@@ -78,8 +86,9 @@ var builtinMethods = {
 
 function bool(value) {
     // TODO: add support for __len__ and __iszero__
-    if (isArray(value)) {
-        return value.length > 0;
+    var __len__ = propertyAccess(value, "__len__");
+    if (__len__ !== undefined) {
+        return __len__() > 0;
     }
     
     return !!value;
