@@ -85,7 +85,8 @@ _number_operators = {
     "mul": lambda left, right: js.binary_operation("*", left, right),
     "truediv": lambda left, right: js.binary_operation("/", left, right),
     "floordiv": lambda left, right: js.call(js.ref("Math.floor"), [js.binary_operation("/", left, right)]),
-    "mod": lambda left, right: js.call(js.ref("$nope.numberMod"), [left, right]),
+    # mod left right = (left % right + right) % right
+    "mod": lambda left, right: js.binary_operation("%", js.binary_operation("+", js.binary_operation("%", left, right), right), right),
     
     "neg": lambda operand: js.unary_operation("-", operand),
     "pos": lambda operand: js.unary_operation("+", operand),

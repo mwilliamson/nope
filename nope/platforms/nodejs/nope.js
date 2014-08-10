@@ -79,19 +79,9 @@ var builtins = {
     abs: abs
 };
 
-function numberMod(left, right) {
-    var result = left % right;
-    if (result < 0) {
-        return result + right;
-    } else {
-        return result;
-    }
-}
-
 var $nope = module.exports = {
     propertyAccess: propertyAccess,
     exports: exports,
     operators: operators,
     builtins: builtins,
-    numberMod: numberMod,
 };
