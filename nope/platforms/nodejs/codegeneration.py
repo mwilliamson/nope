@@ -108,6 +108,13 @@ _main_require = """
 })();
 """
 
+_number_operators = {
+    "add": lambda left, right: js.binary_operation("+", left, right),
+    "sub": lambda left, right: js.binary_operation("-", left, right),
+    "mul": lambda left, right: js.binary_operation("*", left, right),
+    
+}
+
 
 def transform(nope_node, type_lookup=None):
     if type_lookup is None:
@@ -272,11 +279,10 @@ class Transformer(object):
         # TODO: other operators
         # TODO: generate TypeLookup in type inference phase, and pass to this phase
         # TODO: check type of right hand side
-        if operation.operator == "add" and self._type_of(operation.left) == types.int_type:
-            return js.binary_operation(
-                "+",
+        if operation.operator in _number_operators and self._type_of(operation.left) == types.int_type:
+            return _number_operators[operation.operator](
                 self.transform(operation.left),
-                self.transform(operation.right)
+                self.transform(operation.right),
             )
         else:
             return self._operation(operation, [operation.left, operation.right])
