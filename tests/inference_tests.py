@@ -543,9 +543,6 @@ def for_statement_target_cannot_be_strict_subtype_of_iterable_element_type():
         }))
         assert False, "Expected error"
     except errors.TypeMismatchError as error:
-        # TODO: Ideally, we want an error on the target_node.
-        # Having the error on iterable_node is confusing since the actual type isn't T, but iterable(T)
-        # (but there is no node representing the type of the element)
         assert_equal(target_node, error.node)
         assert_equal(types.object_type, error.expected)
         assert_equal(types.int_type, error.actual)
