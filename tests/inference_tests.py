@@ -477,7 +477,7 @@ def module_exports_are_specified_using_all():
     ])
     
     context = Context({})
-    module = inference.check(module_node)
+    module, type_lookup = inference.check(module_node)
     assert_equal(types.str_type, module.attrs["x"])
     assert_raises(KeyError, lambda: module.attrs["y"])
     assert_equal(types.int_type, module.attrs["z"])
@@ -492,7 +492,7 @@ def module_exports_default_to_values_without_leading_underscore_if_all_is_not_sp
     ])
     
     context = Context({})
-    module = inference.check(module_node)
+    module, type_lookup = inference.check(module_node)
     assert_equal(types.str_type, module.attrs["x"])
     assert_raises(KeyError, lambda: module.attrs["_y"])
     assert_equal(types.int_type, module.attrs["z"])

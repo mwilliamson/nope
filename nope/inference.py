@@ -5,26 +5,33 @@ from .context import new_module_context
 
 
 def check(module, source_tree=None, module_path=None):
-    checker = TypeChecker(source_tree, module_path, module.is_executable)
-    return checker.check(module)
+    checker = _TypeChecker(source_tree, module_path, module.is_executable)
+    module_type = checker.check(module)
+    return module_type, checker.type_lookup()
 
 def infer(expression, context, source_tree=None, module_path=None):
-    checker = TypeChecker(source_tree, module_path, False)
+    checker = _TypeChecker(source_tree, module_path, False)
     return checker.infer(expression, context)
 
 def update_context(statement, context, source_tree=None, module_path=None, is_executable=False):
-    checker = TypeChecker(source_tree, module_path, is_executable)
+    checker = _TypeChecker(source_tree, module_path, is_executable)
     return checker.update_context(statement, context)
 
 
-class TypeChecker(object):
+class _TypeChecker(object):
     def __init__(self, source_tree, module_path, is_executable):
         self._source_tree = source_tree
         self._module_path = module_path
         self._is_executable = is_executable
+        self._type_lookup = {}
+    
+    def type_lookup(self):
+        return types.TypeLookup(self._type_lookup)
 
     def infer(self, expression, context):
-        return self._inferers[type(expression)](self, expression, context)
+        expression_type = self._inferers[type(expression)](self, expression, context)
+        self._type_lookup[id(expression)] = expression_type
+        return expression_type
 
     def update_context(self, statement, context, source_tree=None):
         self._checkers[type(statement)](self, statement, context)

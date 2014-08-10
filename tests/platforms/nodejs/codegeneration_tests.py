@@ -135,7 +135,7 @@ def test_multiple_imports_use_different_names():
         codegeneration.transform(nodes.module([
             nodes.import_from([".", "x1"], [nodes.import_alias("y1", None)]),
             nodes.import_from([".", "x2"], [nodes.import_alias("y2", None)]),
-        ])).statements[:4],
+        ]), type_lookup=types.TypeLookup({})).statements[:4],
         [
             js.var("y1"),
             js.var("y2"),
@@ -147,7 +147,7 @@ def test_multiple_imports_use_different_names():
                 js.var("$import1", js.call(js.ref("$require"), [js.string("./x2")])),
                 js.assign_statement("y2", js.property_access(js.ref("$import1"), "y2")),
             ]),
-        ]
+        ],
     )
 
 
@@ -353,4 +353,7 @@ def test_transform_int_expression():
     
 
 def _assert_transform(nope, js, type_lookup=None):
+    if type_lookup is None:
+        type_lookup = types.TypeLookup({})
+    
     assert_equal(js, codegeneration.transform(nope, type_lookup))

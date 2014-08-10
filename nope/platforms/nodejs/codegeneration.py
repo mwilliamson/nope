@@ -16,6 +16,7 @@ def nope_to_nodejs(source_path, source_tree, destination_dir):
             path,
             relative_path,
             source_tree.ast(path),
+            source_tree.type_lookup(path),
             destination_dir,
         )
     
@@ -52,7 +53,7 @@ def _generate_number_method(generate_operation):
         ])
 
 
-def _convert_file(source_path, relative_path, nope_ast, destination_root):
+def _convert_file(source_path, relative_path, nope_ast, type_lookup, destination_root):
     destination_dir = os.path.dirname(os.path.join(destination_root, relative_path))
     
     source_filename = os.path.basename(source_path)
@@ -60,7 +61,7 @@ def _convert_file(source_path, relative_path, nope_ast, destination_root):
     dest_path = os.path.join(destination_dir, dest_filename)
     with open(dest_path, "w") as dest_file:
         _generate_prelude(dest_file, nope_ast, relative_path)
-        js.dump(transform(nope_ast), dest_file)
+        js.dump(transform(nope_ast, type_lookup), dest_file)
 
 
 def _js_filename(python_filename):
@@ -151,10 +152,7 @@ _main_require = """
 """
 
 
-def transform(nope_node, type_lookup=None):
-    if type_lookup is None:
-        type_lookup = types.TypeLookup({})
-    
+def transform(nope_node, type_lookup):
     transformer = Transformer(type_lookup)
     return transformer.transform(nope_node)
 
@@ -310,7 +308,6 @@ class Transformer(object):
     
     def _binary_operation(self, operation):
         # TODO: document subclassing int (and other builtins) is prohibited (or rather, might misbehave) due to this optimisation
-        # TODO: generate TypeLookup in type inference phase, and pass to this phase
         if (operation.operator in _number_operators and
                 self._type_of(operation.left) == types.int_type and
                 self._type_of(operation.right) == types.int_type):

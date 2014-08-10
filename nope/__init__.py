@@ -84,6 +84,10 @@ class SourceTree(object):
     def ast(self, path):
         return self._asts[path]
     
+    def type_lookup(self, path):
+        module, type_lookup = self._type_check_module(path)
+        return type_lookup
+    
     def check(self, path):
         self._type_check_module(path)
     
@@ -92,7 +96,8 @@ class SourceTree(object):
             return None
         if self._asts[path].is_executable:
             raise errors.ImportError(None, "Cannot import executable modules")
-        return self._type_check_module(path)
+        module, type_lookup = self._type_check_module(path)
+        return module
         
     def _type_check_module(self, path):
         if path not in self._module_checkers:
