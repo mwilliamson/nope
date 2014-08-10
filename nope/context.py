@@ -78,6 +78,7 @@ module_context = Context({
     "bool": types.func([types.object_type], types.boolean_type),
     # TODO: make abs generic e.g. T => T -> T
     "abs": types.func([types.int_type], types.int_type),
+    "range": types.func([types.int_type, types.int_type], types.iterable(types.int_type)),
 })
 
 def new_module_context(declared_names):
