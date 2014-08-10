@@ -89,8 +89,14 @@ def _serialize_assignment(obj, fileobj):
 def _serialize_property_access(obj, fileobj):
     fileobj.write("(")
     dump(obj.value, fileobj)
-    fileobj.write(").")
-    fileobj.write(obj.property)
+    fileobj.write(")")
+    if isinstance(obj.property, str):
+        fileobj.write(".")
+        fileobj.write(obj.property)
+    else:
+        fileobj.write("[")
+        dump(obj.property, fileobj)
+        fileobj.write("]")
 
 
 def _serialize_binary_operation(obj, fileobj):

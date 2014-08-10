@@ -58,8 +58,13 @@ def test_serialize_call_with_multiple_args():
 
 
 @istest
-def test_serialize_property_access():
+def test_serialize_property_access_with_dot_notation():
     assert_equal("(x).y", js.dumps(js.property_access(js.ref("x"), "y")))
+
+
+@istest
+def test_serialize_property_access_with_subscript_notation():
+    assert_equal("(x)[y]", js.dumps(js.property_access(js.ref("x"), js.ref("y"))))
     
 
 @istest
