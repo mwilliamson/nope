@@ -17,18 +17,6 @@ function propertyAccess(value, propertyName) {
     }
 }
 
-function isString(value) {
-    return Object.prototype.toString.call(value) === "[object String]";
-}
-
-function isArray(value) {
-    return Object.prototype.toString.call(value) === "[object Array]";
-}
-
-function isNumber(value) {
-    return Object.prototype.toString.call(value) === "[object Number]";
-}
-
 var operators = {};
 ["setitem"].forEach(function(operatorName) {
     operators[operatorName] = createMagicTernaryFunction(operatorName);
