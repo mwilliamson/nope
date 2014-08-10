@@ -310,8 +310,6 @@ class Transformer(object):
     
     def _binary_operation(self, operation):
         # TODO: document subclassing int (and other builtins) is prohibited (or rather, might misbehave) due to this optimisation
-        # TODO: unify description of these operations with operations in nope.js
-        # TODO: other operators
         # TODO: generate TypeLookup in type inference phase, and pass to this phase
         # TODO: check type of right hand side
         if operation.operator in _number_operators and self._type_of(operation.left) == types.int_type:
