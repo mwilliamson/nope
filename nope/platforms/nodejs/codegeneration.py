@@ -353,17 +353,10 @@ class Transformer(object):
         js_value = self.transform(subscript.value)
         js_slice = self.transform(subscript.slice)
         
-        value_type = self._type_of(subscript.value)
-        
-        if (isinstance(value_type, types.InstantiatedType) and
-                value_type.generic_type == types.list_type and
-                self._type_of(subscript.slice) == types.int_type):
-            return js.property_access(js_value, js_slice)
-        else:
-            return js.call(
-                js.ref("$nope.operators.getitem"),
-                [js_value, js_slice]
-            )
+        return js.call(
+            js.ref("$nope.operators.getitem"),
+            [js_value, js_slice]
+        )
 
 
     def _list(self, node):

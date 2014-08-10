@@ -265,43 +265,6 @@ def test_transform_getitem_subscript():
 
 
 @istest
-def test_getitem_is_transformed_to_direct_subscript_on_array_if_indexing_with_integer_onto_list():
-    array_node = nodes.ref("x")
-    index_node = nodes.ref("y")
-    
-    type_lookup = types.TypeLookup({
-        id(array_node): types.list_type(types.str_type),
-        id(index_node): types.int_type,
-    })
-    _assert_transform(
-        nodes.subscript(array_node, index_node),
-        js.property_access(js.ref("x"), js.ref("y")),
-        type_lookup=type_lookup,
-    )
-
-
-@istest
-def test_getitem_uses_operator_method_if_value_is_not_list_or_index_is_not_integer():
-    array_node = nodes.ref("x")
-    index_node = nodes.ref("y")
-    
-    type_lookup = types.TypeLookup({
-        id(array_node): types.list_type(types.str_type),
-        id(index_node): types.int_type,
-    })
-    _assert_transform(
-        nodes.subscript(nodes.ref("x"), index_node),
-        js.call(js.ref("$nope.operators.getitem"), [js.ref("x"), js.ref("y")]),
-        type_lookup=type_lookup,
-    )
-    _assert_transform(
-        nodes.subscript(array_node, nodes.ref("y")),
-        js.call(js.ref("$nope.operators.getitem"), [js.ref("x"), js.ref("y")]),
-        type_lookup=type_lookup,
-    )
-
-
-@istest
 def test_transform_setitem_subscript():
     _assert_transform(
         nodes.assign([nodes.subscript(nodes.ref("x"), nodes.ref("y"))], nodes.ref("z")),
