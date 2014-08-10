@@ -309,6 +309,21 @@ def test_transform_unary_operation():
 
 
 @istest
+def test_normal_javascript_negation_is_used_if_operand_is_int():
+    x = nodes.ref("x")
+    
+    type_lookup = types.TypeLookup({
+        id(x): types.int_type,
+    })
+    
+    _assert_transform(
+        nodes.neg(x),
+        js.unary_operation("-", js.ref("x")),
+        type_lookup=type_lookup,
+    )
+
+
+@istest
 def test_transform_variable_reference():
     _assert_transform(
         nodes.ref("x"),

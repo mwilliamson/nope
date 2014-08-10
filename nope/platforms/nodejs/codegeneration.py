@@ -320,7 +320,11 @@ class Transformer(object):
     
     
     def _unary_operation(self, operation):
-        return self._operation(operation, [operation.operand])
+        if (operation.operator in _number_operators and
+                self._type_of(operation.operand) == types.int_type):
+            return _number_operators[operation.operator](self.transform(operation.operand))
+        else:
+            return self._operation(operation, [operation.operand])
     
     def _operation(self, operation, operands):
         operator_func = "$nope.operators.{}".format(operation.operator)
