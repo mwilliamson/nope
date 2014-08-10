@@ -24,8 +24,18 @@ def _serialize_expression_statement(obj, fileobj):
 
 
 def _serialize_function_declaration(obj, fileobj):
-    fileobj.write("function ")
-    fileobj.write(obj.name)
+    _serialize_function(obj, fileobj, name=obj.name)
+
+
+def _serialize_function_expression(obj, fileobj):
+    _serialize_function(obj, fileobj, name=None)
+
+
+def _serialize_function(obj, fileobj, name):
+    fileobj.write("function")
+    if name is not None:
+        fileobj.write(" ")
+        fileobj.write(name)
     fileobj.write("(")
     
     for index, arg in enumerate(obj.args):
@@ -136,10 +146,24 @@ def _serialize_array(obj, fileobj):
     
     fileobj.write("]")
 
+def _serialize_object(obj, fileobj):
+    fileobj.write("{")
+    
+    for index, (key, value) in enumerate(obj.properties.items()):
+        if index > 0:
+            fileobj.write(", ");
+            
+        json.dump(key, fileobj)
+        fileobj.write(": ")
+        dump(value, fileobj)
+        
+    fileobj.write("}")
+
 statements = Statements = collections.namedtuple("Statements", ["statements"])
 
 expression_statement = ExpressionStatement = collections.namedtuple("ExpressionStatement", ["value"])
 function_declaration = FunctionDeclaration = collections.namedtuple("FunctionDeclaration", ["name", "args", "body"])
+function_expression = FunctionExpression = collections.namedtuple("FunctionExpression", ["args", "body"])
 ret = ReturnStatement = collections.namedtuple("ReturnStatement", ["value"])
 
 VariableDeclaration = collections.namedtuple("VariableDeclaration", ["name", "value"])
@@ -170,12 +194,14 @@ null = NullLiteral()
 boolean = Boolean = collections.namedtuple("Boolean", ["value"])
 string = String = collections.namedtuple("String", ["value"])
 array = Array = collections.namedtuple("Array", ["elements"])
+obj = Object = collections.namedtuple("Object", ["properties"])
 
 _serializers = {
     Statements: _serialize_statements,
     
     ExpressionStatement: _serialize_expression_statement,
     FunctionDeclaration: _serialize_function_declaration,
+    FunctionExpression: _serialize_function_expression,
     ReturnStatement: _serialize_return_statement,
     VariableDeclaration: _serialize_variable_declaration,
     IfElse: _serialize_if_else,
@@ -190,4 +216,5 @@ _serializers = {
     Boolean: _serialize_boolean,
     String: _serialize_string,
     Array: _serialize_array,
+    Object: _serialize_object,
 }

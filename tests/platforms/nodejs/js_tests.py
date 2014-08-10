@@ -1,3 +1,5 @@
+import collections
+
 from nose.tools import istest, assert_equal
 
 from nope.platforms.nodejs import js
@@ -32,6 +34,12 @@ def test_serialize_variable_reference():
 @istest
 def test_serialize_array():
     assert_equal("[1, null]", js.dumps(js.array([js.number(1), js.null])))
+
+
+@istest
+def test_serialize_object():
+    obj = js.obj(collections.OrderedDict([("a", js.number(1)), ("b", js.number(2))]))
+    assert_equal('{"a": 1, "b": 2}', js.dumps(obj))
 
 
 @istest
@@ -81,6 +89,18 @@ def test_serialize_function_declaration():
         ],
     )
     assert_equal("function f(x, y) { y;x; }", js.dumps(func))
+
+
+@istest
+def test_serialize_function_expression():
+    func = js.function_expression(
+        args=["x", "y"],
+        body = [
+            js.expression_statement(js.ref("y")),
+            js.expression_statement(js.ref("x")),
+        ],
+    )
+    assert_equal("function(x, y) { y;x; }", js.dumps(func))
 
 
 @istest
