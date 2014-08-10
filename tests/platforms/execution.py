@@ -89,6 +89,10 @@ True
         assert_equal(b"", result.stderr_output)
     
     @istest
+    def test_call_int_magic_method_directly(self):
+        self._test_expression("(4).__add__(5)", b"9")
+    
+    @istest
     def test_add_int(self):
         self._test_expression("4 + 5", b"9")
     
