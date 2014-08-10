@@ -25,6 +25,9 @@ function isNumber(value) {
 }
 
 var operators = {};
+["setitem"].forEach(function(operatorName) {
+    operators[operatorName] = createMagicTernaryFunction(operatorName);
+});
 ["add", "sub", "mul", "truediv", "floordiv", "mod", "getitem"].forEach(function(operatorName) {
     operators[operatorName] = createMagicBinaryFunction(operatorName);
 });
@@ -47,6 +50,12 @@ function createMagicBinaryFunction(operatorName) {
     };
 }
 
+function createMagicTernaryFunction(operatorName) {
+    return function(a, b, c) {
+        return propertyAccess(a, "__" + operatorName + "__")(b, c);
+    };
+}
+
 var stringMethods = {
     find: String.prototype.indexOf
 };
@@ -55,6 +64,9 @@ var arrayMethods = {
     __getitem__: function(slice) {
         // TODO: exceptions
         return this[slice];
+    },
+    __setitem__: function(slice, value) {
+        this[slice] = value;
     }
 };
 

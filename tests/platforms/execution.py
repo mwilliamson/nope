@@ -144,11 +144,15 @@ True
     def test_getitem_list(self):
         self._test_expression("[42, 53, 75][1]", b"53")
     
-    def _test_expression(self, expression, expected_output):
+    @istest
+    def test_settitem_list(self):
+        self._test_program_string("x = [1]\nx[0] = 2\nprint(x[0])", b"2")
+    
+    def _test_program_string(self, program, expected_output):
         with tempman.create_temp_dir() as temp_dir:
             with open(os.path.join(temp_dir.path, "main.py"), "w") as main_file:
                 main_file.write("#!/usr/bin/env python\n")
-                main_file.write("print({})\n".format(expression))
+                main_file.write(program)
             
             result = self._run_program(path=temp_dir.path, program="main")
         
@@ -156,7 +160,10 @@ True
         assert_equal(expected_output + b"\n", result.output)
         assert_equal(b"", result.stderr_output)
         
-            
+    
+    def _test_expression(self, expression, expected_output):
+        self._test_program_string("print({})\n".format(expression), expected_output)
+        
     
     def _run_program(self, path, program):
         return testing.compile_and_run(self.platform, path, program)
