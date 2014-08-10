@@ -267,17 +267,26 @@ class Transformer(object):
 
     def _assign(self, assignment):
         value = self.transform(assignment.value)
-        targets = [self.transform(target) for target in assignment.targets]
         
-        if len(targets) == 1:
-            return js.assign_statement(targets[0], value)
+        if len(assignment.targets) == 1:
+            return self._create_single_assignment(assignment.targets[0], value)
         
         tmp_name = self._unique_name("tmp")
         assignments = [
-            js.assign_statement(target, js.ref(tmp_name))
-            for target in targets
+            self._create_single_assignment(target, js.ref(tmp_name))
+            for target in assignment.targets
         ]
         return js.statements([js.var(tmp_name, value)] + assignments)
+    
+    def _create_single_assignment(self, target, value):
+        if isinstance(target, nodes.Subscript):
+            call = js.call(
+                js.ref("$nope.operators.setitem"),
+                [self.transform(target.value), self.transform(target.slice), value]
+            )
+            return js.expression_statement(call)
+        else:
+            return js.assign_statement(self.transform(target), value)
         
 
     def _function_def(self, func):

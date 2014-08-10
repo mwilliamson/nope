@@ -302,6 +302,14 @@ def test_getitem_uses_operator_method_if_value_is_not_list_or_index_is_not_integ
 
 
 @istest
+def test_transform_setitem_subscript():
+    _assert_transform(
+        nodes.assign([nodes.subscript(nodes.ref("x"), nodes.ref("y"))], nodes.ref("z")),
+        js.expression_statement(js.call(js.ref("$nope.operators.setitem"), [js.ref("x"), js.ref("y"), js.ref("z")]))
+    )
+
+
+@istest
 def test_transform_binary_operation():
     _assert_transform(
         nodes.add(nodes.ref("x"), nodes.ref("y")),
