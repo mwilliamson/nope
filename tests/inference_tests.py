@@ -493,6 +493,18 @@ def type_of_variable_remains_undefined_if_only_set_in_one_branch_of_if_else():
 
 
 @istest
+def while_loop_has_condition_type_checked():
+    condition_node = nodes.ref("x")
+    node = nodes.while_loop(condition_node, [])
+    
+    try:
+        update_context(node, Context({}))
+        assert False, "Expected error"
+    except errors.TypeCheckError as error:
+        assert_equal(condition_node, error.node)
+
+
+@istest
 def for_statement_has_iterable_type_checked():
     ref_node = nodes.ref("xs")
     node = nodes.for_loop(nodes.ref("x"), ref_node, [])

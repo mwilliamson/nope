@@ -264,6 +264,10 @@ class _TypeChecker(object):
             self.update_context(statement, false_context)
         
         context.unify([true_context, false_context])
+
+
+    def _check_while_loop(self, node, context):
+        self.infer(node.condition, context)
     
     
     def _check_for_loop(self, node, context):
@@ -365,6 +369,7 @@ class _TypeChecker(object):
         nodes.ReturnStatement: _check_return,
         nodes.Assignment: _check_assignment,
         nodes.IfElse: _check_if_else,
+        nodes.WhileLoop: _check_while_loop,
         nodes.ForLoop: _check_for_loop,
         nodes.BreakStatement: _check_break,
         nodes.ContinueStatement: _check_continue,
