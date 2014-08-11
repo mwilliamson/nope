@@ -101,6 +101,12 @@ def _serialize_while_loop(obj, fileobj):
     fileobj.write(" }")
 
 
+def _serialize_throw(obj, fileobj):
+    fileobj.write("throw ");
+    dump(obj.value, fileobj)
+    fileobj.write(";")
+
+
 def _serialize_assignment(obj, fileobj):
     dump(obj.target, fileobj)
     fileobj.write(" = ")
@@ -208,6 +214,7 @@ def var(name, value=None):
 if_else = IfElse = collections.namedtuple("IfElse", ["condition", "true_body", "false_body"])
 try_catch = TryCatch = collections.namedtuple("TryCatch", ["try_body", "error_name", "catch_body"])
 while_loop = WhileLoop = collections.namedtuple("WhileLoop", ["condition", "body"])
+throw = Throw = collections.namedtuple("Throw", ["value"])
 
 Assignment = collections.namedtuple("Assignment", ["target", "value"])
 
@@ -244,6 +251,7 @@ _serializers = {
     IfElse: _serialize_if_else,
     TryCatch: _serialize_try_catch,
     WhileLoop: _serialize_while_loop,
+    Throw: _serialize_throw,
     
     Assignment: _serialize_assignment,
     PropertyAccess: _serialize_property_access,

@@ -166,3 +166,9 @@ def test_serialize_while_loop():
         [js.ret(js.ref("value"))]
     )
     assert_equal("while (condition) { return value; }", js.dumps(node))
+
+
+@istest
+def test_serialize_throw():
+    node = js.throw(js.ref("error"))
+    assert_equal("throw error;", js.dumps(node))
