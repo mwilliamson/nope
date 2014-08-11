@@ -65,6 +65,26 @@ var arrayMethods = {
     __len__: function() {
         return this.length;
     },
+    __iter__: function() {
+        var self = this;
+        var index = 0
+        var end = this.length;
+        var iterator = {
+            __iter__: function() {
+                return self;
+            },
+            __next__: function() {
+                if (index < end) {
+                    return self[index++];
+                } else {
+                    var error = new Error();
+                    error.nopeType = StopIteration;
+                    throw error;
+                }
+            }
+        };
+        return iterator;
+    },
     append: function(value) {
         this.push(value);
         return null;
@@ -113,7 +133,7 @@ function range(start, end) {
 }
 
 function iter(iterable) {
-    return iterable.__iter__();
+    return getattr(iterable, "__iter__")();
 }
 
 function next(iterable, stopValue) {
