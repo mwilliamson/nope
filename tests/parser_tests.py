@@ -392,6 +392,11 @@ def test_parse_break():
     _assert_statement_parse(nodes.break_statement(), "break")
 
 
+@istest
+def test_parse_continue():
+    _assert_statement_parse(nodes.continue_statement(), "continue")
+
+
 
 def _assert_expression_parse(expected, source):
     module = parser.parse(source)

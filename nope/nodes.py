@@ -19,6 +19,7 @@ Assignment = collections.namedtuple("Assignment", ["targets", "value"])
 IfElse = collections.namedtuple("IfElse", ["condition", "true_body", "false_body"])
 ForLoop = collections.namedtuple("ForLoop", ["target", "iterable", "body"])
 BreakStatement = collections.namedtuple("BreakStatement", [])
+ContinueStatement = collections.namedtuple("ContinueStatement", [])
 
 FunctionDef = collections.namedtuple("FunctionDef", ["name", "args", "return_annotation", "body", "type_params"])
 Arguments = collections.namedtuple("Arguments", ["args"])
@@ -72,6 +73,7 @@ def assign(targets, value):
 if_else = IfElse
 for_loop = ForLoop
 break_statement = BreakStatement
+continue_statement = ContinueStatement
 
 def func(name, args, return_annotation, body, type_params=None):
     if type_params is None:

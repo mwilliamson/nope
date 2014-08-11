@@ -106,4 +106,4 @@ This section describes support for parsing and type-checking each of
 
 * **``break`` keyword**: supported.
 
-* **``continue`` keyword**: unsupported.
+* **``continue`` keyword**: supported.

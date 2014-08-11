@@ -284,8 +284,16 @@ class _TypeChecker(object):
     
     
     def _check_break(self, node, context):
+        self._check_loop_control_statement("break", node, context)
+    
+    
+    def _check_continue(self, node, context):
+        self._check_loop_control_statement("continue", node, context)
+    
+        
+    def _check_loop_control_statement(self, name, node, context):
         if not context.in_loop:
-            raise errors.InvalidStatementError(node, "'break' outside loop")
+            raise errors.InvalidStatementError(node, "'{}' outside loop".format(name))
     
 
     def _check_import(self, node, context):
@@ -359,6 +367,7 @@ class _TypeChecker(object):
         nodes.IfElse: _check_if_else,
         nodes.ForLoop: _check_for_loop,
         nodes.BreakStatement: _check_break,
+        nodes.ContinueStatement: _check_continue,
         nodes.FunctionDef: _check_function_def,
         nodes.Import: _check_import,
         nodes.ImportFrom: _check_import_from,

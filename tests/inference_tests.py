@@ -627,6 +627,18 @@ def break_is_valid_in_if_else_in_for_loop():
 
 
 @istest
+def continue_is_not_valid_in_module():
+    node = nodes.continue_statement()
+    context = Context({})
+    try:
+        update_context(node, context)
+        assert False, "Expected error"
+    except errors.TypeCheckError as error:
+        assert_equal(node, error.node)
+        assert_equal("'continue' outside loop", str(error))
+
+
+@istest
 def check_generates_type_lookup_for_all_expressions():
     int_ref_node = nodes.ref("a")
     int_node = nodes.int(3)
