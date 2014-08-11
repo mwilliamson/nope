@@ -94,3 +94,12 @@ class BadSignatureError(TypeCheckError):
     
     def __str__(self):
         return self._message
+
+
+class InvalidStatementError(TypeCheckError):
+    def __init__(self, node, message):
+        self.node = node
+        self._message = message
+    
+    def __str__(self):
+        return self._message

@@ -599,6 +599,34 @@ def type_of_variable_remains_unset_if_only_assigned_to_in_for_loop():
 
 
 @istest
+def break_is_not_valid_in_module():
+    node = nodes.break_statement()
+    context = Context({})
+    try:
+        update_context(node, context)
+        assert False, "Expected error"
+    except errors.TypeCheckError as error:
+        assert_equal(node, error.node)
+        assert_equal("'break' outside loop", str(error))
+
+
+@istest
+def break_is_valid_in_for_loop():
+    node = nodes.for_loop(nodes.ref("x"), nodes.ref("xs"), [nodes.break_statement()])
+    context = Context({"x": types.int_type, "xs": types.list_type(types.int_type)})
+    update_context(node, context)
+
+
+@istest
+def break_is_valid_in_if_else_in_for_loop():
+    node = nodes.for_loop(nodes.ref("x"), nodes.ref("xs"), [
+        nodes.if_else(nodes.ref("x"), [nodes.break_statement()], []),
+    ])
+    context = Context({"x": types.int_type, "xs": types.list_type(types.int_type)})
+    update_context(node, context)
+
+
+@istest
 def check_generates_type_lookup_for_all_expressions():
     int_ref_node = nodes.ref("a")
     int_node = nodes.int(3)

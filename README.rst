@@ -104,6 +104,6 @@ This section describes support for parsing and type-checking each of
 
 * **``pass`` keyword**: supported.
 
-* **``break`` keyword**: unsupported.
+* **``break`` keyword**: supported.
 
 * **``continue`` keyword**: unsupported.

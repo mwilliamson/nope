@@ -25,6 +25,7 @@ class Converter(object):
             ast.Assign: self._assign,
             ast.If: self._if,
             ast.For: self._for,
+            ast.Break: self._break,
             
             ast.Str: self._str_literal,
             ast.Num: self._num_literal,
@@ -127,6 +128,10 @@ class Converter(object):
             self.convert(node.iter),
             self._mapped(node.body),
         )
+    
+    
+    def _break(self, node):
+        return nodes.break_statement()
     
 
     def _str_literal(self, node):

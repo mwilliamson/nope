@@ -255,11 +255,11 @@ class _TypeChecker(object):
     def _check_if_else(self, node, context):
         self.infer(node.condition, context)
         
-        true_context = context.enter_block()
+        true_context = context.enter_if_else_branch()
         for statement in node.true_body:
             self.update_context(statement, true_context)
         
-        false_context = context.enter_block()
+        false_context = context.enter_if_else_branch()
         for statement in node.false_body:
             self.update_context(statement, false_context)
         
@@ -277,10 +277,16 @@ class _TypeChecker(object):
         iterable_type, = iter_type.params
         element_type, = iterable_type.params
         
-        body_context = context.enter_block()
+        body_context = context.enter_loop()
         self._assign(node, node.target, element_type, body_context)
         for statement in node.body:
             self.update_context(statement, body_context)
+    
+    
+    def _check_break(self, node, context):
+        if not context.in_loop:
+            raise errors.InvalidStatementError(node, "'break' outside loop")
+    
 
     def _check_import(self, node, context):
         for alias in node.names:
@@ -341,6 +347,9 @@ class _TypeChecker(object):
             os.path.join(import_path, "__init__.py"),
             import_path + ".py"
         )
+
+    def _nop_check(self, node, context):
+        pass
         
 
     _checkers = {
@@ -349,6 +358,7 @@ class _TypeChecker(object):
         nodes.Assignment: _check_assignment,
         nodes.IfElse: _check_if_else,
         nodes.ForLoop: _check_for_loop,
+        nodes.BreakStatement: _check_break,
         nodes.FunctionDef: _check_function_def,
         nodes.Import: _check_import,
         nodes.ImportFrom: _check_import_from,

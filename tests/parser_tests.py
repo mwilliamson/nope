@@ -1,4 +1,4 @@
-from nose.tools import istest, assert_equal
+from nose.tools import istest, assert_equal, assert_raises_regexp
 
 from nope import parser, nodes
 
@@ -385,6 +385,11 @@ def test_parse_for_loop():
     expected = nodes.for_loop(nodes.ref("x"), nodes.ref("xs"), [nodes.ret(nodes.ref("x"))])
     
     _assert_statement_parse(expected, "for x in xs:\n  return x")
+
+
+@istest
+def test_parse_break():
+    _assert_statement_parse(nodes.break_statement(), "break")
 
 
 

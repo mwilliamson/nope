@@ -2,10 +2,11 @@ from . import types, errors
 
 
 class Context(object):
-    def __init__(self, bindings, return_type=None, is_module_scope=False):
+    def __init__(self, bindings, return_type=None, is_module_scope=False, in_loop=False):
         self._vars = bindings
         self.return_type = return_type
         self.is_module_scope = is_module_scope
+        self.in_loop = in_loop
     
     def add(self, node, name, binding):
         # All names should be declared on entering a scope, so if `name` isn't
@@ -30,13 +31,13 @@ class Context(object):
         for name in declared_names:
             module_vars[name] = None
         return Context(module_vars, return_type=None, is_module_scope=True)
+    
+    def enter_loop(self):
+        return self._enter_block(in_loop=True)
+    
+    def enter_if_else_branch(self):
+        return self._enter_block(in_loop=self.in_loop)
 
-    def enter_block(self):
-        return Context(
-            BlockVars(self._vars),
-            return_type=self.return_type,
-            is_module_scope=self.is_module_scope,
-        )
     
     def unify(self, contexts):
         new_bindings = [
@@ -54,6 +55,14 @@ class Context(object):
             if not any(var_type is None for var_type in var_types):
                 unified_type = types.unify(var_types)
                 self.add(None, key, unified_type)
+
+    def _enter_block(self, in_loop=False):
+        return Context(
+            BlockVars(self._vars),
+            return_type=self.return_type,
+            is_module_scope=self.is_module_scope,
+            in_loop=in_loop,
+        )
 
 
 class BlockVars(object):
