@@ -80,6 +80,18 @@ def _serialize_if_else(obj, fileobj):
     fileobj.write(" }")
 
 
+def _serialize_try_catch(obj, fileobj):
+    fileobj.write("try { ")
+    for statement in obj.try_body:
+        dump(statement, fileobj)
+    fileobj.write(" } catch (")
+    fileobj.write(obj.error_name)
+    fileobj.write(") { ")
+    for statement in obj.catch_body:
+        dump(statement, fileobj)
+    fileobj.write(" }")
+
+
 def _serialize_assignment(obj, fileobj):
     dump(obj.target, fileobj)
     fileobj.write(" = ")
@@ -185,6 +197,7 @@ def var(name, value=None):
     return VariableDeclaration(name, value)
 
 if_else = IfElse = collections.namedtuple("IfElse", ["condition", "true_body", "false_body"])
+try_catch = TryCatch = collections.namedtuple("TryCatch", ["try_body", "error_name", "catch_body"])
 
 Assignment = collections.namedtuple("Assignment", ["target", "value"])
 
@@ -219,6 +232,7 @@ _serializers = {
     ReturnStatement: _serialize_return_statement,
     VariableDeclaration: _serialize_variable_declaration,
     IfElse: _serialize_if_else,
+    TryCatch: _serialize_try_catch,
     
     Assignment: _serialize_assignment,
     PropertyAccess: _serialize_property_access,

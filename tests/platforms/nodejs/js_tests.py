@@ -147,3 +147,13 @@ def test_serialize_statements():
         js.expression_statement(js.ref("x")),
         js.expression_statement(js.ref("y")),
     ])))
+
+
+@istest
+def test_serialize_try_catch():
+    node = js.try_catch(
+        [js.ret(js.ref("x"))],
+        "error",
+        [js.ret(js.ref("y"))]
+    )
+    assert_equal("try { return x; } catch (error) { return y; }", js.dumps(node))
