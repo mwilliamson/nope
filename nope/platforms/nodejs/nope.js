@@ -2,7 +2,7 @@ function print(value) {
     console.log(value);
 }
 
-function propertyAccess(value, propertyName) {
+function getattr(value, propertyName) {
     var methods = builtinMethods[Object.prototype.toString.call(value)];
     if (methods) {
         var method = methods[propertyName];
@@ -33,19 +33,19 @@ var abs = createMagicUnaryFunction("abs");
 
 function createMagicUnaryFunction(operatorName) {
     return function(operand) {
-        return propertyAccess(operand, "__" + operatorName + "__")();
+        return getattr(operand, "__" + operatorName + "__")();
     };
 }
 
 function createMagicBinaryFunction(operatorName) {
     return function(left, right) {
-        return propertyAccess(left, "__" + operatorName + "__")(right);
+        return getattr(left, "__" + operatorName + "__")(right);
     };
 }
 
 function createMagicTernaryFunction(operatorName) {
     return function(a, b, c) {
-        return propertyAccess(a, "__" + operatorName + "__")(b, c);
+        return getattr(a, "__" + operatorName + "__")(b, c);
     };
 }
 
@@ -79,7 +79,7 @@ var builtinMethods = {
 
 function bool(value) {
     // TODO: add support for __len__ and __iszero__
-    var __len__ = propertyAccess(value, "__len__");
+    var __len__ = getattr(value, "__len__");
     if (__len__ !== undefined) {
         return __len__() > 0;
     }
@@ -130,6 +130,7 @@ function next(iterable, stopValue) {
 }
 
 var builtins = {
+    getattr: getattr,
     bool: bool,
     print: print,
     abs: abs,
@@ -143,7 +144,6 @@ function numberMod(left, right) {
 }
 
 var $nope = module.exports = {
-    propertyAccess: propertyAccess,
     exports: exports,
     operators: operators,
     builtins: builtins,

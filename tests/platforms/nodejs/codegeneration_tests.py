@@ -278,7 +278,7 @@ def test_transform_call():
 def test_transform_property_access():
     _assert_transform(
         nodes.attr(nodes.ref("x"), "y"),
-        js.call(js.ref("$nope.propertyAccess"), [js.ref("x"), js.string("y")])
+        js.call(js.ref("$nope.builtins.getattr"), [js.ref("x"), js.string("y")])
     )
 
 

@@ -337,7 +337,7 @@ class Transformer(object):
 
     def _attr(self, attr):
         return js.call(
-            js.ref("$nope.propertyAccess"),
+            js.ref("$nope.builtins.getattr"),
             [self.transform(attr.value), js.string(attr.attr)],
         )
     
