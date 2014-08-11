@@ -108,6 +108,18 @@ import messages
 
 
 @istest
+def function_can_have_no_signature_if_it_takes_no_args():
+    source = """
+def f():
+    pass
+"""
+    
+    module_node = parser.parse(source)
+    expected = nodes.func("f", nodes.args([]), None, [])
+    assert_equal(expected, module_node.body[0])
+
+
+@istest
 def can_parse_signature_comment_with_no_args():
     source = """
 #:: -> str
