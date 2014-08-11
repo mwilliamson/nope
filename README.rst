@@ -49,6 +49,20 @@ This section describes support for parsing and type-checking each of
   * **decorators**: unsupported.
   
   * **annotations**: unsupported (both argument and return annotations).
+  
+  The signature of a function should be specified by a signature comment immediately before the function definition.
+  For instance:
+  
+  .. code-block:: python
+
+      #:: int -> int
+      def increment(x):
+          return x + 1
+      
+      #:: int, str -> none
+      def repeated_greeting(repeat, message):
+          for i in range(0, repeat):
+              print(message)
 
 * **Class definitions**: unsupported.
 
