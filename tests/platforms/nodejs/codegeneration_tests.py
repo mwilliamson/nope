@@ -275,6 +275,14 @@ def test_transform_break():
 
 
 @istest
+def test_transform_continue():
+    _assert_transform(
+        nodes.continue_statement(),
+        js.continue_statement(),
+    )
+
+
+@istest
 def test_transform_call():
     _assert_transform(
         nodes.call(nodes.ref("f"), [nodes.ref("x"), nodes.ref("y")]),

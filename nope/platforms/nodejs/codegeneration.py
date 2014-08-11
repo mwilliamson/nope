@@ -173,6 +173,7 @@ class Transformer(object):
             nodes.IfElse: self._if_else,
             nodes.ForLoop: self._for_loop,
             nodes.BreakStatement: self._break_statement,
+            nodes.ContinueStatement: self._continue_statement,
             
             nodes.Call: self._call,
             nodes.AttributeAccess: self._attr,
@@ -334,6 +335,10 @@ class Transformer(object):
     
     def _break_statement(self, statement):
         return js.break_statement()
+    
+    
+    def _continue_statement(self, statement):
+        return js.continue_statement()
 
 
     def _call(self, call):

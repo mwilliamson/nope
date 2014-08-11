@@ -93,6 +93,10 @@ def _serialize_break_statement(obj, fileobj):
     fileobj.write("break;")
 
 
+def _serialize_continue_statement(obj, fileobj):
+    fileobj.write("continue;")
+
+
 def _serialize_try_catch(obj, fileobj):
     fileobj.write("try { ")
     for statement in obj.try_body:
@@ -219,6 +223,7 @@ if_else = IfElse = collections.namedtuple("IfElse", ["condition", "true_body", "
 try_catch = TryCatch = collections.namedtuple("TryCatch", ["try_body", "error_name", "catch_body"])
 while_loop = WhileLoop = collections.namedtuple("WhileLoop", ["condition", "body"])
 break_statement = BreakStatement = collections.namedtuple("BreakStatement", [])
+continue_statement = ContinueStatement = collections.namedtuple("ContinueStatement", [])
 throw = Throw = collections.namedtuple("Throw", ["value"])
 
 Assignment = collections.namedtuple("Assignment", ["target", "value"])
@@ -256,6 +261,7 @@ _serializers = {
     IfElse: _serialize_if_else,
     WhileLoop: _serialize_while_loop,
     BreakStatement: _serialize_break_statement,
+    ContinueStatement: _serialize_continue_statement,
     TryCatch: _serialize_try_catch,
     Throw: _serialize_throw,
     

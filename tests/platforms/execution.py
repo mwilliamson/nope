@@ -159,6 +159,10 @@ True
     def test_break_for(self):
         self._test_program_string("y = 0\nfor x in [2, 3]:\n  if y:\n    break\n  y = -x\nprint(y)", b"-2")
     
+    @istest
+    def test_continue_for(self):
+        self._test_program_string("y = 1\nfor x in [0, 3]:\n  if x:\n    pass\n  else:\n    continue\n  y = y * x\nprint(y)", b"3")
+    
     def _test_program_string(self, program, expected_output):
         with tempman.create_temp_dir() as temp_dir:
             with open(os.path.join(temp_dir.path, "main.py"), "w") as main_file:

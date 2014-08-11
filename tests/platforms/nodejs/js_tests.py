@@ -175,6 +175,12 @@ def test_serialize_break():
 
 
 @istest
+def test_serialize_continue():
+    node = js.continue_statement()
+    assert_equal("continue;", js.dumps(node))
+
+
+@istest
 def test_serialize_throw():
     node = js.throw(js.ref("error"))
     assert_equal("throw error;", js.dumps(node))
