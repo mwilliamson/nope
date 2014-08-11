@@ -156,6 +156,10 @@ True
         self._test_program_string("x = [1]\nx[0] = 2\nprint(x[0])", b"2")
     
     @istest
+    def test_while(self):
+        self._test_program_string("x = 4\nwhile x: x = x - 1\nprint(x)", b"0")
+    
+    @istest
     def test_for(self):
         self._test_program_string("x = 0\nfor y in [1, 2, 3]:\n  x = x + y\nprint(x)", b"6")
     
