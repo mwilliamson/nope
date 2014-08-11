@@ -77,7 +77,7 @@ def _replace_extension(filename, new_extension):
 
 # TODO: should probably yank this from somewhere more general since it's not specific to node.js
 _builtin_names = [
-    "bool", "print", "abs",
+    "bool", "print", "abs", "range",
 ]
 
 _number_operators = {

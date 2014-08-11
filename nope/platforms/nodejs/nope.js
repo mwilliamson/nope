@@ -60,9 +60,14 @@ var arrayMethods = {
     },
     __setitem__: function(slice, value) {
         this[slice] = value;
+        return null;
     },
     __len__: function() {
         return this.length;
+    },
+    append: function(value) {
+        this.push(value);
+        return null;
     }
 };
 
@@ -82,10 +87,55 @@ function bool(value) {
     return !!value;
 }
 
+var StopIteration = {};
+
+function range(start, end) {
+    return {
+        __iter__: function() {
+            var index = start;
+            var iterator = {
+                __iter__: function() {
+                    return iterator;
+                },
+                __next__: function() {
+                    if (index < end) {
+                        return index++;
+                    } else {
+                        var error = new Error();
+                        error.nopeType = StopIteration;
+                        throw error;
+                    }
+                }
+            };
+            return iterator;
+        }
+    };
+}
+
+function iter(iterable) {
+    return iterable.__iter__();
+}
+
+function next(iterable, stopValue) {
+    // TODO: support stopValue being undefined i.e. one-arg version of `next`
+    try {
+        return iterable.__next__();
+    } catch (error) {
+        if (error.nopeType === StopIteration) {
+            return stopValue;
+        } else {
+            throw error;
+        }
+    }
+}
+
 var builtins = {
     bool: bool,
     print: print,
-    abs: abs
+    abs: abs,
+    range: range,
+    iter: iter,
+    next: next
 };
 
 function numberMod(left, right) {
