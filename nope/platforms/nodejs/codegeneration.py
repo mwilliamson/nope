@@ -171,6 +171,7 @@ class Transformer(object):
             nodes.FunctionDef: self._function_def,
             nodes.ReturnStatement: self._return_statement,
             nodes.IfElse: self._if_else,
+            nodes.WhileLoop: self._while_loop,
             nodes.ForLoop: self._for_loop,
             nodes.BreakStatement: self._break_statement,
             nodes.ContinueStatement: self._continue_statement,
@@ -309,9 +310,22 @@ class Transformer(object):
 
     def _if_else(self, statement):
         return js.if_else(
-            js.call(js.ref("$nope.builtins.bool"), [self.transform(statement.condition)]),
+            self._condition(statement.condition),
             self._transform_all(statement.true_body),
             self._transform_all(statement.false_body),
+        )
+    
+    
+    def _while_loop(self, loop):
+        return js.while_loop(
+            self._condition(loop.condition),
+            self._transform_all(loop.body),
+        )
+    
+    def _condition(self, condition):
+        return js.call(
+            js.ref("$nope.builtins.bool"),
+            [self.transform(condition)]
         )
     
     
