@@ -517,6 +517,16 @@ def while_loop_has_body_type_checked():
 
 
 @istest
+def type_of_variable_remains_undefined_if_set_in_while_loop_body():
+    node = nodes.while_loop(nodes.boolean(True), [
+        nodes.assign([nodes.ref("x")], nodes.int(2))
+    ])
+    context = Context({"x": None})
+    update_context(node, context)
+    assert_equal(None, context.lookup("x"))
+
+
+@istest
 def for_statement_has_iterable_type_checked():
     ref_node = nodes.ref("xs")
     node = nodes.for_loop(nodes.ref("x"), ref_node, [])

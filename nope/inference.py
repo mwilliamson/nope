@@ -269,8 +269,9 @@ class _TypeChecker(object):
     def _check_while_loop(self, node, context):
         self.infer(node.condition, context)
         
+        body_context = context.enter_loop()
         for statement in node.body:
-            self.update_context(statement, context)
+            self.update_context(statement, body_context)
     
     
     def _check_for_loop(self, node, context):
