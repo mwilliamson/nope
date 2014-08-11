@@ -326,7 +326,7 @@ class Transformer(object):
                     js.assign(element_name, js.call(js.ref("$nope.builtins.next"), [js.ref(iterator_name), sentinel])),
                     sentinel,
                 ),
-                self._transform_all(loop.body),
+                [js.assign_statement(self.transform(loop.target), js.ref(element_name)),] + self._transform_all(loop.body),
             ),
         ])
 

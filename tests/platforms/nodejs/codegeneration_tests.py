@@ -258,6 +258,7 @@ def test_transform_for_loop():
                     js.ref("$nope.loopSentinel"),
                 ),
                 [
+                    js.assign_statement(js.ref("x"), js.ref("$element1")),
                     js.ret(js.ref("x")),
                 ],
             ),
