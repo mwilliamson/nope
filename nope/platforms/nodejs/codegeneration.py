@@ -171,6 +171,7 @@ class Transformer(object):
             nodes.FunctionDef: self._function_def,
             nodes.ReturnStatement: self._return_statement,
             nodes.IfElse: self._if_else,
+            nodes.ForLoop: self._for_loop,
             
             nodes.Call: self._call,
             nodes.AttributeAccess: self._attr,
@@ -310,6 +311,24 @@ class Transformer(object):
             self._transform_all(statement.true_body),
             self._transform_all(statement.false_body),
         )
+    
+    
+    def _for_loop(self, loop):
+        iterator_name = self._unique_name("iterator")
+        element_name = self._unique_name("element")
+        sentinel = js.ref("$nope.loopSentinel")
+        return js.statements([
+            js.var(iterator_name, js.call(js.ref("$nope.builtins.iter"), [self.transform(loop.iterable)])),
+            js.var(element_name),
+            js.while_loop(
+                js.binary_operation(
+                    "!==",
+                    js.assign(element_name, js.call(js.ref("$nope.builtins.next"), [js.ref(iterator_name), sentinel])),
+                    sentinel,
+                ),
+                self._transform_all(loop.body),
+            ),
+        ])
 
 
     def _call(self, call):

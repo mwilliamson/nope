@@ -241,6 +241,31 @@ def test_transform_if_else():
 
 
 @istest
+def test_transform_for_loop():
+    _assert_transform(
+        nodes.for_loop(
+            nodes.ref("x"),
+            nodes.ref("xs"),
+            [nodes.ret(nodes.ref("x"))],
+        ),
+        js.statements([
+            js.var("$iterator0", js.call(js.ref("$nope.builtins.iter"), [js.ref("xs")])),
+            js.var("$element1"),
+            js.while_loop(
+                js.binary_operation(
+                    "!==",
+                    js.assign("$element1", js.call(js.ref("$nope.builtins.next"), [js.ref("$iterator0"), js.ref("$nope.loopSentinel")])),
+                    js.ref("$nope.loopSentinel"),
+                ),
+                [
+                    js.ret(js.ref("x")),
+                ],
+            ),
+        ])
+    )
+
+
+@istest
 def test_transform_call():
     _assert_transform(
         nodes.call(nodes.ref("f"), [nodes.ref("x"), nodes.ref("y")]),
