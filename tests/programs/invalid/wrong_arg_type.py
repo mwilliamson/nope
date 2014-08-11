@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
-def f(x: int):
+#:: int -> none
+def f(x):
     pass
     
 f("1")

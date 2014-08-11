@@ -108,30 +108,6 @@ import messages
 
 
 @istest
-def can_parse_function_definition():
-    source = """
-def f():
-    pass
-"""
-    
-    module_node = parser.parse(source)
-    assert_equal(nodes.func("f", nodes.args([]), None, []), module_node.body[0])
-
-
-@istest
-def can_parse_argument_and_return_annotations():
-    source = """
-def f(x: int) -> str:
-    pass
-"""
-    
-    module_node = parser.parse(source)
-    arg = nodes.arg("x", nodes.ref("int"))
-    expected = nodes.func("f", nodes.args([arg]), nodes.ref("str"), [])
-    assert_equal(expected, module_node.body[0])
-
-
-@istest
 def can_parse_signature_comment_with_no_args():
     source = """
 #:: -> str
