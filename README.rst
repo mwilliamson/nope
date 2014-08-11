@@ -35,6 +35,7 @@ Syntax
 
 This section describes support for parsing and type-checking each of
 `Python 3.4's syntax nodes <https://docs.python.org/3.4/library/ast.html#abstract-grammar>`_.
+Note that not all backends may support all features.
 
 * **Function definitions**: partially supported.
 
