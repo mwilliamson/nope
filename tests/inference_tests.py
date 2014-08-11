@@ -505,6 +505,18 @@ def while_loop_has_condition_type_checked():
 
 
 @istest
+def while_loop_has_body_type_checked():
+    body_node = nodes.ref("x")
+    node = nodes.while_loop(nodes.boolean(True), [nodes.expression_statement(body_node)])
+    
+    try:
+        update_context(node, Context({}))
+        assert False, "Expected error"
+    except errors.TypeCheckError as error:
+        assert_equal(body_node, error.node)
+
+
+@istest
 def for_statement_has_iterable_type_checked():
     ref_node = nodes.ref("xs")
     node = nodes.for_loop(nodes.ref("x"), ref_node, [])
