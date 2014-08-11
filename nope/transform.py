@@ -24,6 +24,7 @@ class Converter(object):
             ast.Return: self._return,
             ast.Assign: self._assign,
             ast.If: self._if,
+            ast.While: self._while,
             ast.For: self._for,
             ast.Break: self._break,
             ast.Continue: self._continue,
@@ -120,6 +121,13 @@ class Converter(object):
             self.convert(node.test),
             self._mapped(node.body),
             self._mapped(node.orelse),
+        )
+    
+    
+    def _while(self, node):
+        return nodes.while_loop(
+            self.convert(node.test),
+            self._mapped(node.body),
         )
     
     

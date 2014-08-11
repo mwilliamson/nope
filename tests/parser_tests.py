@@ -381,6 +381,13 @@ def test_parse_if_else_statement():
 
 
 @istest
+def test_parse_while_loop():
+    expected = nodes.while_loop(nodes.ref("x"), [nodes.ret(nodes.ref("x"))])
+    
+    _assert_statement_parse(expected, "while x:\n  return x")
+
+
+@istest
 def test_parse_for_loop():
     expected = nodes.for_loop(nodes.ref("x"), nodes.ref("xs"), [nodes.ret(nodes.ref("x"))])
     
