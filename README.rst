@@ -83,7 +83,7 @@ This section describes support for parsing and type-checking each of
 
 * **If statements**: supported.
 
-* **With statments**: unsupported.
+* **With statements**: unsupported.
 
 * **Raise statements**: unsupported.
 
