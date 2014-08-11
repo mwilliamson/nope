@@ -172,6 +172,7 @@ class Transformer(object):
             nodes.ReturnStatement: self._return_statement,
             nodes.IfElse: self._if_else,
             nodes.ForLoop: self._for_loop,
+            nodes.BreakStatement: self._break_statement,
             
             nodes.Call: self._call,
             nodes.AttributeAccess: self._attr,
@@ -329,6 +330,10 @@ class Transformer(object):
                 [js.assign_statement(self.transform(loop.target), js.ref(element_name)),] + self._transform_all(loop.body),
             ),
         ])
+    
+    
+    def _break_statement(self, statement):
+        return js.break_statement()
 
 
     def _call(self, call):

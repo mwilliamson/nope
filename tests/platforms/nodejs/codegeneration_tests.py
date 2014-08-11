@@ -267,6 +267,14 @@ def test_transform_for_loop():
 
 
 @istest
+def test_transform_break():
+    _assert_transform(
+        nodes.break_statement(),
+        js.break_statement(),
+    )
+
+
+@istest
 def test_transform_call():
     _assert_transform(
         nodes.call(nodes.ref("f"), [nodes.ref("x"), nodes.ref("y")]),
