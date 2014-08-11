@@ -156,6 +156,10 @@ True
         self._test_program_string("x = [1]\nx[0] = 2\nprint(x[0])", b"2")
     
     @istest
+    def test_for(self):
+        self._test_program_string("x = 0\nfor y in [1, 2, 3]:\n  x = x + y\nprint(x)", b"6")
+    
+    @istest
     def test_break_for(self):
         self._test_program_string("y = 0\nfor x in [2, 3]:\n  if y:\n    break\n  y = -x\nprint(y)", b"-2")
     
