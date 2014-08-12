@@ -2,7 +2,7 @@ from nose.tools import istest, assert_equal, assert_raises
 
 from nope import types, nodes, inference, errors
 from nope.inference import infer as _infer, update_context
-from nope.context import bound_context, new_module_context
+from nope.context import bound_context, new_module_context, Context, Variable
 
 
 def infer(node, context=None):
@@ -360,6 +360,17 @@ def assignment_to_list_does_not_allow_supertype():
 def variables_cannot_change_type():
     node = nodes.assign(["x"], nodes.int(1))
     context = bound_context({"x": types.none_type})
+    try:
+        update_context(node, context)
+        assert False, "Expected error"
+    except errors.TypeMismatchError as error:
+        assert_equal(node, error.node)
+
+
+@istest
+def variables_cannot_change_type_even_if_variable_is_potentially_unbound():
+    node = nodes.assign(["x"], nodes.int(1))
+    context = Context({"x": Variable(types.none_type, is_bound=False)})
     try:
         update_context(node, context)
         assert False, "Expected error"

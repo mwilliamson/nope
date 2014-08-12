@@ -3,6 +3,9 @@ import collections
 from . import types, errors
 
 
+# If is_bound is False, a variable *may* still be bound on some execution paths.
+# For instance, if a variable is bound in the true branch of if-else,
+# then is_bound is False, but the variable will still have a type for var_type
 Variable = collections.namedtuple("Variable", ["var_type", "is_bound"])
 Variable.unbound = lambda: Variable(None, is_bound=False)
 
@@ -22,10 +25,10 @@ def _create_var(binding):
 
 
 def bound_context(bindings):
-    return _Context(_create_vars(bindings))
+    return Context(_create_vars(bindings))
 
 
-class _Context(object):
+class Context(object):
     def __init__(self, bindings, return_type=None, is_module_scope=False, in_loop=False):
         self._vars = bindings
         self.return_type = return_type
@@ -59,13 +62,13 @@ class _Context(object):
         func_vars = self._vars.copy()
         for local_name in local_names:
             func_vars[local_name] = Variable.unbound()
-        return _Context(func_vars, return_type=return_type, is_module_scope=False)
+        return Context(func_vars, return_type=return_type, is_module_scope=False)
     
     def enter_module(self, declared_names):
         module_vars = self._vars.copy()
         for name in declared_names:
             module_vars[name] = Variable.unbound()
-        return _Context(module_vars, return_type=None, is_module_scope=True)
+        return Context(module_vars, return_type=None, is_module_scope=True)
     
     def enter_loop(self):
         return self._enter_block(in_loop=True)
@@ -99,7 +102,7 @@ class _Context(object):
                     self._vars[key] = Variable(unified_type, is_bound)
 
     def _enter_block(self, in_loop=False):
-        return _Context(
+        return Context(
             BlockVars(self._vars),
             return_type=self.return_type,
             is_module_scope=self.is_module_scope,
