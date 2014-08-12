@@ -18,9 +18,9 @@ class Context(object):
         # All names should be declared on entering a scope, so if `name` isn't
         # in `self._vars` it's a programming error i.e. a bug in the type checker
         var_type = self._vars[name]
-        if var_type is None or types.is_sub_type(var_type, binding):
+        if var_type is None:
             self._vars[name] = binding
-        else:
+        elif not types.is_sub_type(var_type, binding):
             raise errors.TypeMismatchError(node, expected=var_type, actual=binding)
     
     def lookup(self, name):
