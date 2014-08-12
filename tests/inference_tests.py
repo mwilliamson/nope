@@ -579,6 +579,20 @@ def for_statement_requires_iterable_to_have_iter_method():
 
 
 @istest
+def iter_method_must_take_no_arguments():
+    cls = types.ScalarType("Blah", {})
+    cls.attrs["__iter__"] = types.func([types.str_type], types.iterable(types.str_type))
+    ref_node = nodes.ref("xs")
+    node = nodes.for_loop(nodes.ref("x"), ref_node, [])
+    
+    try:
+        update_context(node, bound_context({"x": None, "xs": cls}))
+        assert False, "Expected error"
+    except errors.BadSignatureError as error:
+        assert_equal(ref_node, error.node)
+
+
+@istest
 def for_statement_target_can_be_supertype_of_iterable_element_type():
     ref_node = nodes.ref("xs")
     node = nodes.for_loop(nodes.subscript(nodes.ref("ys"), nodes.int(0)), ref_node, [])

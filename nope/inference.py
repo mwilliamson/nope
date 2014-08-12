@@ -287,14 +287,7 @@ class _TypeChecker(object):
     
     
     def _check_for_loop(self, node, context):
-        iterable_type = self.infer(node.iterable, context)
-        
-        if "__iter__" not in iterable_type.attrs:
-            raise errors.TypeMismatchError(node.iterable, expected="type with __iter__", actual=iterable_type)
-        # TODO: check __iter__ signature
-        
-        iter_type = iterable_type.attrs["__iter__"]
-        iterable_type, = iter_type.params
+        iterable_type = self._read_magic_method(node, "iter", node.iterable, [], context)
         element_type, = iterable_type.params
         
         body_context = context.enter_loop()
