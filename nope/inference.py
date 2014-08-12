@@ -87,11 +87,11 @@ class _TypeChecker(object):
     def _infer_ref(self, node, context):
         if not context.has_name(node.name):
             raise errors.UndefinedNameError(node, node.name)
-        ref_type = context.lookup(node.name)
-        if ref_type is None:
+            
+        if not context.is_bound(node.name):
             raise errors.UnboundLocalError(node, node.name)
-        else:
-            return ref_type
+            
+        return context.lookup(node.name)
 
     def _infer_call(self, node, context):
         func_type = self.infer(node.func, context)

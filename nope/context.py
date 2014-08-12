@@ -11,6 +11,9 @@ class Context(object):
     def has_name(self, name):
         return name in self._vars
     
+    def is_bound(self, name):
+        return self._vars[name] is not None
+    
     def add(self, node, name, binding):
         # All names should be declared on entering a scope, so if `name` isn't
         # in `self._vars` it's a programming error i.e. a bug in the type checker
