@@ -17,7 +17,7 @@ ReturnStatement = collections.namedtuple("ReturnStatement", ["value"])
 ExpressionStatement = collections.namedtuple("ExpressionStatement", ["value"])
 Assignment = collections.namedtuple("Assignment", ["targets", "value"])
 IfElse = collections.namedtuple("IfElse", ["condition", "true_body", "false_body"])
-WhileLoop = collections.namedtuple("WhileLoop", ["condition", "body"])
+WhileLoop = collections.namedtuple("WhileLoop", ["condition", "body", "else_body"])
 ForLoop = collections.namedtuple("ForLoop", ["target", "iterable", "body"])
 BreakStatement = collections.namedtuple("BreakStatement", [])
 ContinueStatement = collections.namedtuple("ContinueStatement", [])
@@ -74,7 +74,12 @@ def assign(targets, value):
 
 if_else = IfElse
 for_loop = ForLoop
-while_loop = WhileLoop
+
+def while_loop(condition, body, else_body=None):
+    if else_body is None:
+        else_body = []
+    return WhileLoop(condition, body, else_body)
+
 break_statement = BreakStatement
 continue_statement = ContinueStatement
 raise_statement = RaiseStatement
