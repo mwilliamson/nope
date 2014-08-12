@@ -2,12 +2,12 @@ from nose.tools import istest, assert_equal, assert_raises
 
 from nope import types, nodes, inference, errors
 from nope.inference import infer as _infer, update_context
-from nope.context import Context, new_module_context
+from nope.context import bound_context, new_module_context
 
 
 def infer(node, context=None):
     if context is None:
-        context = Context({})
+        context = bound_context({})
     return _infer(node, context)
 
 
@@ -33,14 +33,14 @@ def can_infer_type_of_str_literal():
 
 @istest
 def can_infer_type_of_variable_reference():
-    assert_equal(types.int_type, infer(nodes.ref("x"), Context({"x": types.int_type})))
+    assert_equal(types.int_type, infer(nodes.ref("x"), bound_context({"x": types.int_type})))
 
 
 @istest
 def type_error_if_ref_to_undefined_variable():
     node = nodes.ref("x")
     try:
-        infer(node, Context({}))
+        infer(node, bound_context({}))
         assert False, "Expected error"
     except errors.UndefinedNameError as error:
         assert_equal(node, error.node)
@@ -59,13 +59,13 @@ def empty_list_has_elements_of_type_bottom():
 
 @istest
 def can_infer_type_of_call():
-    context = Context({"f": types.func([types.str_type], types.int_type)})
+    context = bound_context({"f": types.func([types.str_type], types.int_type)})
     assert_equal(types.int_type, infer(nodes.call(nodes.ref("f"), [nodes.string("")]), context))
 
 
 @istest
 def call_arguments_must_match():
-    context = Context({"f": types.func([types.str_type], types.int_type)})
+    context = bound_context({"f": types.func([types.str_type], types.int_type)})
     arg_node = nodes.int(4)
     node = nodes.call(nodes.ref("f"), [arg_node])
     _assert_type_mismatch(
@@ -78,7 +78,7 @@ def call_arguments_must_match():
 
 @istest
 def call_arguments_length_must_match():
-    context = Context({"f": types.func([types.str_type], types.int_type)})
+    context = bound_context({"f": types.func([types.str_type], types.int_type)})
     node = nodes.call(nodes.ref("f"), [])
     try:
         infer(node, context)
@@ -91,7 +91,7 @@ def call_arguments_length_must_match():
 
 @istest
 def can_infer_type_of_attribute():
-    context = Context({"x": types.str_type})
+    context = bound_context({"x": types.str_type})
     assert_equal(
         types.func([types.str_type], types.int_type),
         infer(nodes.attr(nodes.ref("x"), "find"), context)
@@ -100,7 +100,7 @@ def can_infer_type_of_attribute():
 
 @istest
 def type_error_if_attribute_does_not_exist():
-    context = Context({"x": types.str_type})
+    context = bound_context({"x": types.str_type})
     node = nodes.attr(nodes.ref("x"), "swizzlify")
     try:
         infer(node, context)
@@ -112,14 +112,14 @@ def type_error_if_attribute_does_not_exist():
 
 @istest
 def can_infer_type_of_addition_operation():
-    context = Context({"x": types.int_type, "y": types.int_type})
+    context = bound_context({"x": types.int_type, "y": types.int_type})
     addition = nodes.add(nodes.ref("x"), nodes.ref("y"))
     assert_equal(types.int_type, infer(addition, context))
 
 
 @istest
 def cannot_add_int_and_str():
-    context = Context({"x": types.int_type, "y": types.str_type})
+    context = bound_context({"x": types.int_type, "y": types.str_type})
     addition = nodes.add(nodes.ref("x"), nodes.ref("y"))
     try:
         infer(addition, context)
@@ -132,7 +132,7 @@ def cannot_add_int_and_str():
 
 @istest
 def operands_of_add_operation_must_support_add():
-    context = Context({"x": types.none_type, "y": types.none_type})
+    context = bound_context({"x": types.none_type, "y": types.none_type})
     addition = nodes.add(nodes.ref("x"), nodes.ref("y"))
     try:
         infer(addition, context)
@@ -145,7 +145,7 @@ def operands_of_add_operation_must_support_add():
 
 @istest
 def right_hand_operand_must_be_sub_type_of_formal_argument():
-    context = Context({"x": types.int_type, "y": types.object_type})
+    context = bound_context({"x": types.int_type, "y": types.object_type})
     addition = nodes.add(nodes.ref("x"), nodes.ref("y"))
     try:
         infer(addition, context)
@@ -161,7 +161,7 @@ def type_of_add_method_argument_allows_super_type():
     cls = types.ScalarType("Addable", {})
     cls.attrs["__add__"] = types.func([types.object_type], cls)
     
-    context = Context({"x": cls, "y": cls})
+    context = bound_context({"x": cls, "y": cls})
     addition = nodes.add(nodes.ref("x"), nodes.ref("y"))
     assert_equal(cls, infer(addition, context))
 
@@ -171,7 +171,7 @@ def add_method_should_only_accept_one_argument():
     cls = types.ScalarType("NotAddable", {})
     cls.attrs["__add__"] = types.func([types.object_type, types.object_type], cls)
     
-    context = Context({"x": cls, "y": cls})
+    context = bound_context({"x": cls, "y": cls})
     addition = nodes.add(nodes.ref("x"), nodes.ref("y"))
     try:
         infer(addition, context)
@@ -186,21 +186,21 @@ def return_type_of_add_can_differ_from_original_type():
     cls = types.ScalarType("Addable", {})
     cls.attrs["__add__"] = types.func([types.object_type], types.object_type)
     
-    context = Context({"x": cls, "y": cls})
+    context = bound_context({"x": cls, "y": cls})
     addition = nodes.add(nodes.ref("x"), nodes.ref("y"))
     assert_equal(types.object_type, infer(addition, context))
 
 
 @istest
 def can_infer_type_of_subtraction_operation():
-    context = Context({"x": types.int_type, "y": types.int_type})
+    context = bound_context({"x": types.int_type, "y": types.int_type})
     subtraction = nodes.sub(nodes.ref("x"), nodes.ref("y"))
     assert_equal(types.int_type, infer(subtraction, context))
 
 
 @istest
 def operands_of_sub_operation_must_support_sub():
-    context = Context({"x": types.none_type, "y": types.none_type})
+    context = bound_context({"x": types.none_type, "y": types.none_type})
     subtraction = nodes.sub(nodes.ref("x"), nodes.ref("y"))
     try:
         infer(subtraction, context)
@@ -213,14 +213,14 @@ def operands_of_sub_operation_must_support_sub():
 
 @istest
 def can_infer_type_of_multiplication_operation():
-    context = Context({"x": types.int_type, "y": types.int_type})
+    context = bound_context({"x": types.int_type, "y": types.int_type})
     multiplication = nodes.mul(nodes.ref("x"), nodes.ref("y"))
     assert_equal(types.int_type, infer(multiplication, context))
 
 
 @istest
 def operands_of_mul_operation_must_support_mul():
-    context = Context({"x": types.none_type, "y": types.none_type})
+    context = bound_context({"x": types.none_type, "y": types.none_type})
     multiplication = nodes.mul(nodes.ref("x"), nodes.ref("y"))
     try:
         infer(multiplication, context)
@@ -233,7 +233,7 @@ def operands_of_mul_operation_must_support_mul():
 
 @istest
 def can_infer_type_of_negation_operation():
-    context = Context({"x": types.int_type})
+    context = bound_context({"x": types.int_type})
     negation = nodes.neg(nodes.ref("x"))
     assert_equal(types.int_type, infer(negation, context))
 
@@ -243,14 +243,14 @@ def can_infer_type_of_subscript_using_getitem():
     cls = types.ScalarType("Blah", {
         "__getitem__": types.func([types.int_type], types.str_type)
     })
-    context = Context({"x": cls})
+    context = bound_context({"x": cls})
     node = nodes.subscript(nodes.ref("x"), nodes.int(4))
     assert_equal(types.str_type, infer(node, context))
 
 
 @istest
 def can_infer_type_of_subscript_of_list():
-    context = Context({"x": types.list_type(types.str_type)})
+    context = bound_context({"x": types.list_type(types.str_type)})
     node = nodes.subscript(nodes.ref("x"), nodes.int(4))
     assert_equal(types.str_type, infer(node, context))
 
@@ -326,7 +326,7 @@ def function_adds_arguments_to_context():
 @istest
 def assignment_adds_variable_to_context():
     node = nodes.assign(["x"], nodes.int(1))
-    context = Context({"x": None})
+    context = bound_context({"x": None})
     update_context(node, context)
     assert_equal(types.int_type, context.lookup("x"))
 
@@ -334,7 +334,7 @@ def assignment_adds_variable_to_context():
 @istest
 def assignment_to_list_allows_subtype():
     node = nodes.assign([nodes.subscript(nodes.ref("x"), nodes.int(0))], nodes.string("Hello"))
-    context = Context({"x": types.list_type(types.object_type)})
+    context = bound_context({"x": types.list_type(types.object_type)})
     update_context(node, context)
 
 
@@ -343,7 +343,7 @@ def assignment_to_list_does_not_allow_supertype():
     target_node = nodes.subscript(nodes.ref("x"), nodes.int(0))
     value_node = nodes.ref("y")
     node = nodes.assign([target_node], value_node)
-    context = Context({
+    context = bound_context({
         "x": types.list_type(types.str_type),
         "y": types.object_type,
     })
@@ -359,7 +359,7 @@ def assignment_to_list_does_not_allow_supertype():
 @istest
 def variables_cannot_change_type():
     node = nodes.assign(["x"], nodes.int(1))
-    context = Context({"x": types.none_type})
+    context = bound_context({"x": types.none_type})
     try:
         update_context(node, context)
         assert False, "Expected error"
@@ -370,7 +370,7 @@ def variables_cannot_change_type():
 @istest
 def variables_can_be_reassigned_if_type_is_consistent():
     node = nodes.assign(["x"], nodes.int(1))
-    context = Context({"x": types.object_type})
+    context = bound_context({"x": types.object_type})
     update_context(node, context)
     assert_equal(types.object_type, context.lookup("x"))
 
@@ -382,7 +382,7 @@ def variables_are_shadowed_in_defs():
         nodes.expression_statement(nodes.call(nodes.ref("f"), [nodes.ref("x")])),
     ])
     
-    context = Context({
+    context = bound_context({
         "g": None,
         "f": types.func([types.str_type], types.none_type),
         "x": types.int_type,
@@ -400,7 +400,7 @@ def local_variables_cannot_be_used_before_assigned():
         nodes.assign("x", nodes.string("Hello")),
     ])
     
-    context = Context({
+    context = bound_context({
         "f": types.func([types.str_type], types.none_type),
         "x": types.int_type,
     })
@@ -418,7 +418,7 @@ def if_statement_has_condition_type_checked():
     node = nodes.if_else(ref_node, [], [])
     
     try:
-        update_context(node, Context({}))
+        update_context(node, bound_context({}))
         assert False, "Expected error"
     except errors.TypeCheckError as error:
         assert_equal(ref_node, error.node)
@@ -434,7 +434,7 @@ def if_statement_has_true_body_type_checked():
     )
     
     try:
-        update_context(node, Context({}))
+        update_context(node, bound_context({}))
         assert False, "Expected error"
     except errors.TypeCheckError as error:
         assert_equal(ref_node, error.node)
@@ -450,7 +450,7 @@ def if_statement_has_false_body_type_checked():
     )
     
     try:
-        update_context(node, Context({}))
+        update_context(node, bound_context({}))
         assert False, "Expected error"
     except errors.TypeCheckError as error:
         assert_equal(ref_node, error.node)
@@ -463,7 +463,7 @@ def assignment_in_both_branches_of_if_statement_is_added_to_context():
         [nodes.assign("x", nodes.int(1))],
         [nodes.assign("x", nodes.int(2))],
     )
-    context = Context({"x": None})
+    context = bound_context({"x": None})
     update_context(node, context)
     assert_equal(types.int_type, context.lookup("x"))
 
@@ -475,7 +475,7 @@ def type_of_variable_is_unified_if_branches_of_if_else_use_different_types():
         [nodes.assign("x", nodes.int(1))],
         [nodes.assign("x", nodes.string("blah"))],
     )
-    context = Context({"x": None})
+    context = bound_context({"x": None})
     update_context(node, context)
     assert_equal(types.object_type, context.lookup("x"))
 
@@ -487,9 +487,10 @@ def type_of_variable_remains_undefined_if_only_set_in_one_branch_of_if_else():
         [nodes.assign("x", nodes.int(1))],
         [],
     )
-    context = Context({"x": None})
+    context = bound_context({"x": None})
     update_context(node, context)
-    assert_equal(None, context.lookup("x"))
+    assert not context.is_bound("x")
+    assert_equal(types.int_type, context.lookup("x", allow_unbound=True))
 
 
 @istest
@@ -498,7 +499,7 @@ def while_loop_has_condition_type_checked():
     node = nodes.while_loop(condition_node, [])
     
     try:
-        update_context(node, Context({}))
+        update_context(node, bound_context({}))
         assert False, "Expected error"
     except errors.TypeCheckError as error:
         assert_equal(condition_node, error.node)
@@ -510,7 +511,7 @@ def while_loop_has_body_type_checked():
     node = nodes.while_loop(nodes.boolean(True), [nodes.expression_statement(body_node)])
     
     try:
-        update_context(node, Context({}))
+        update_context(node, bound_context({}))
         assert False, "Expected error"
     except errors.TypeCheckError as error:
         assert_equal(body_node, error.node)
@@ -522,7 +523,7 @@ def while_loop_has_else_body_type_checked():
     node = nodes.while_loop(nodes.boolean(True), [], [nodes.expression_statement(body_node)])
     
     try:
-        update_context(node, Context({}))
+        update_context(node, bound_context({}))
         assert False, "Expected error"
     except errors.TypeCheckError as error:
         assert_equal(body_node, error.node)
@@ -533,9 +534,10 @@ def type_of_variable_remains_undefined_if_set_in_while_loop_body():
     node = nodes.while_loop(nodes.boolean(True), [
         nodes.assign([nodes.ref("x")], nodes.int(2))
     ])
-    context = Context({"x": None})
+    context = bound_context({"x": None})
     update_context(node, context)
-    assert_equal(None, context.lookup("x"))
+    assert not context.is_bound("x")
+    assert_equal(types.int_type, context.lookup("x", allow_unbound=True))
 
 
 @istest
@@ -544,7 +546,7 @@ def for_statement_has_iterable_type_checked():
     node = nodes.for_loop(nodes.ref("x"), ref_node, [])
     
     try:
-        update_context(node, Context({}))
+        update_context(node, bound_context({}))
         assert False, "Expected error"
     except errors.TypeCheckError as error:
         assert_equal(ref_node, error.node)
@@ -557,7 +559,7 @@ def for_statement_requires_iterable_to_have_iter_method():
     node = nodes.for_loop(nodes.ref("x"), ref_node, [])
     
     try:
-        update_context(node, Context({"x": None, "xs": types.int_type}))
+        update_context(node, bound_context({"x": None, "xs": types.int_type}))
         assert False, "Expected error"
     except errors.TypeMismatchError as error:
         assert_equal(ref_node, error.node)
@@ -570,7 +572,7 @@ def for_statement_target_can_be_supertype_of_iterable_element_type():
     ref_node = nodes.ref("xs")
     node = nodes.for_loop(nodes.subscript(nodes.ref("ys"), nodes.int(0)), ref_node, [])
     
-    update_context(node, Context({
+    update_context(node, bound_context({
         "xs": types.list_type(types.int_type),
         "ys": types.list_type(types.object_type),
     }))
@@ -583,7 +585,7 @@ def for_statement_target_cannot_be_strict_subtype_of_iterable_element_type():
     node = nodes.for_loop(target_node, iterable_node, [])
     
     try:
-        update_context(node, Context({
+        update_context(node, bound_context({
             "xs": types.list_type(types.object_type),
             "ys": types.list_type(types.int_type),
         }))
@@ -599,12 +601,12 @@ def for_statement_target_can_be_variable():
     node = nodes.for_loop(nodes.ref("x"), nodes.ref("xs"), [])
     
     # Unassigned case
-    update_context(node, Context({
+    update_context(node, bound_context({
         "x": None,
         "xs": types.list_type(types.str_type),
     }))
     # Assigned case
-    update_context(node, Context({
+    update_context(node, bound_context({
         "x": types.str_type,
         "xs": types.list_type(types.str_type),
     }))
@@ -618,7 +620,7 @@ def body_of_for_loop_is_type_checked():
     ])
     
     try:
-        update_context(node, Context({
+        update_context(node, bound_context({
             "x": None,
             "xs": types.list_type(types.str_type),
         }))
@@ -628,26 +630,27 @@ def body_of_for_loop_is_type_checked():
 
 
 @istest
-def type_of_variable_remains_unset_if_only_assigned_to_in_for_loop():
+def type_of_variable_remains_unbound_if_only_assigned_to_in_for_loop():
     node = nodes.for_loop(nodes.ref("x"), nodes.ref("xs"), [
         nodes.assign("y", nodes.none()),
     ])
     
     # TODO: although the variable should remain unreferenceable, we should ensure its type is consistent (ditto for if statements)
     
-    context = Context({
+    context = bound_context({
         "x": None,
         "xs": types.list_type(types.str_type),
         "y": None,
     })
     update_context(node, context)
-    assert_equal(None, context.lookup("y"))
+    assert not context.is_bound("y")
+    assert_equal(types.none_type, context.lookup("y", allow_unbound=True))
 
 
 @istest
 def break_is_not_valid_in_module():
     node = nodes.break_statement()
-    context = Context({})
+    context = bound_context({})
     try:
         update_context(node, context)
         assert False, "Expected error"
@@ -659,7 +662,7 @@ def break_is_not_valid_in_module():
 @istest
 def break_is_valid_in_for_loop():
     node = nodes.for_loop(nodes.ref("x"), nodes.ref("xs"), [nodes.break_statement()])
-    context = Context({"x": types.int_type, "xs": types.list_type(types.int_type)})
+    context = bound_context({"x": types.int_type, "xs": types.list_type(types.int_type)})
     update_context(node, context)
 
 
@@ -668,14 +671,14 @@ def break_is_valid_in_if_else_in_for_loop():
     node = nodes.for_loop(nodes.ref("x"), nodes.ref("xs"), [
         nodes.if_else(nodes.ref("x"), [nodes.break_statement()], []),
     ])
-    context = Context({"x": types.int_type, "xs": types.list_type(types.int_type)})
+    context = bound_context({"x": types.int_type, "xs": types.list_type(types.int_type)})
     update_context(node, context)
 
 
 @istest
 def continue_is_not_valid_in_module():
     node = nodes.continue_statement()
-    context = Context({})
+    context = bound_context({})
     try:
         update_context(node, context)
         assert False, "Expected error"
@@ -698,7 +701,7 @@ def check_generates_type_lookup_for_all_expressions():
         ]),
     ])
     
-    context = Context({})
+    context = bound_context({})
     module, type_lookup = inference.check(module_node)
     assert_equal(types.int_type, type_lookup.type_of(int_node))
     assert_equal(types.int_type, type_lookup.type_of(int_ref_node))
@@ -714,7 +717,7 @@ def module_exports_are_specified_using_all():
         nodes.assign(["z"], nodes.int(3)),
     ])
     
-    context = Context({})
+    context = bound_context({})
     module, type_lookup = inference.check(module_node)
     assert_equal(types.str_type, module.attrs["x"])
     assert_raises(KeyError, lambda: module.attrs["y"])
@@ -729,7 +732,7 @@ def module_exports_default_to_values_without_leading_underscore_if_all_is_not_sp
         nodes.assign(["z"], nodes.int(3)),
     ])
     
-    context = Context({})
+    context = bound_context({})
     module, type_lookup = inference.check(module_node)
     assert_equal(types.str_type, module.attrs["x"])
     assert_raises(KeyError, lambda: module.attrs["_y"])
@@ -982,7 +985,7 @@ def _infer_func_type(func_node):
 
 
 def _update_blank_context(node, *args, declared_names=[], **kwargs):
-    context = Context(dict((name, None) for name in declared_names))
+    context = bound_context(dict((name, None) for name in declared_names))
     update_context(node, context, *args, **kwargs)
     return context
 

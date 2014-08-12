@@ -65,6 +65,7 @@ class _TypeChecker(object):
         return types.Module(self._module_path, dict(
             (name, context.lookup(name))
             for name in util.exported_names(module)
+            if context.is_bound(name)
         ))
 
 
@@ -267,7 +268,7 @@ class _TypeChecker(object):
         for statement in node.false_body:
             self.update_context(statement, false_context)
         
-        context.unify([true_context, false_context])
+        context.unify([true_context, false_context], bind=True)
 
 
     def _check_while_loop(self, node, context):
@@ -280,6 +281,8 @@ class _TypeChecker(object):
         else_body_context = context.enter_loop()
         for statement in node.else_body:
             self.update_context(statement, else_body_context)
+            
+        context.unify([body_context, else_body_context], bind=False)
     
     
     def _check_for_loop(self, node, context):
@@ -297,6 +300,8 @@ class _TypeChecker(object):
         self._assign(node, node.target, element_type, body_context)
         for statement in node.body:
             self.update_context(statement, body_context)
+            
+        context.unify([body_context], bind=False)
     
     
     def _check_break(self, node, context):
