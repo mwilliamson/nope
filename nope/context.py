@@ -21,6 +21,7 @@ class Context(object):
         if var_type is None:
             self._vars[name] = binding
         else:
+            # TODO: raise a proper TypeCheckError with a node attribute, or push responsibility into inference.py
             raise Exception("Variable is already bound")
     
     def lookup(self, name):
