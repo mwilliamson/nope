@@ -22,6 +22,8 @@ def declared_names(node):
         return declared_locals(node.true_body) | declared_locals(node.false_body)
     elif isinstance(node, nodes.ForLoop):
         return _target_names([node.target]) | declared_locals(node.body)
+    elif isinstance(node, nodes.WhileLoop):
+        return declared_locals(node.body) | declared_locals(node.else_body)
     else:
         return OrderedSet([])
 

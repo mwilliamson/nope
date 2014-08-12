@@ -53,6 +53,16 @@ def declared_names_includes_names_in_for_loop_body():
 
 
 @istest
+def declared_names_includes_names_in_while_loop_bodies():
+    while_loop = nodes.while_loop(
+        nodes.ref("x"),
+        [nodes.assign("x", nodes.none())],
+        [nodes.assign("y", nodes.none())],
+    )
+    assert_equal(["x", "y"], list(util.declared_names(while_loop)))
+
+
+@istest
 def error_is_raised_if_all_is_not_a_list():
     try:
         all_node = nodes.assign(["__all__"], nodes.none())
