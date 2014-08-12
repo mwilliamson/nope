@@ -318,7 +318,36 @@ class Transformer(object):
     
     def _while_loop(self, loop):
         condition = self._condition(loop.condition)
-        body = self._transform_all(loop.body)
+        return self._loop(loop, condition, at_loop_start=[])
+        
+    
+    def _condition(self, condition):
+        return js.call(
+            js.ref("$nope.builtins.bool"),
+            [self.transform(condition)]
+        )
+    
+    
+    def _for_loop(self, loop):
+        iterator_name = self._unique_name("iterator")
+        element_name = self._unique_name("element")
+        sentinel = js.ref("$nope.loopSentinel")
+        
+        condition = js.binary_operation(
+            "!==",
+            js.assign(element_name, js.call(js.ref("$nope.builtins.next"), [js.ref(iterator_name), sentinel])),
+            sentinel,
+        )
+        assign_loop_target = js.assign_statement(self.transform(loop.target), js.ref(element_name))
+        
+        return js.statements([
+            js.var(iterator_name, js.call(js.ref("$nope.builtins.iter"), [self.transform(loop.iterable)])),
+            js.var(element_name),
+            self._loop(loop, condition, at_loop_start=[assign_loop_target]),
+        ])
+    
+    def _loop(self, loop, condition, at_loop_start):
+        body = at_loop_start + self._transform_all(loop.body)
         
         if loop.else_body:
             else_body = self._transform_all(loop.else_body)
@@ -350,30 +379,6 @@ class Transformer(object):
                 condition,
                 body,
             )
-    
-    def _condition(self, condition):
-        return js.call(
-            js.ref("$nope.builtins.bool"),
-            [self.transform(condition)]
-        )
-    
-    
-    def _for_loop(self, loop):
-        iterator_name = self._unique_name("iterator")
-        element_name = self._unique_name("element")
-        sentinel = js.ref("$nope.loopSentinel")
-        return js.statements([
-            js.var(iterator_name, js.call(js.ref("$nope.builtins.iter"), [self.transform(loop.iterable)])),
-            js.var(element_name),
-            js.while_loop(
-                js.binary_operation(
-                    "!==",
-                    js.assign(element_name, js.call(js.ref("$nope.builtins.next"), [js.ref(iterator_name), sentinel])),
-                    sentinel,
-                ),
-                [js.assign_statement(self.transform(loop.target), js.ref(element_name)),] + self._transform_all(loop.body),
-            ),
-        ])
     
     
     def _break_statement(self, statement):

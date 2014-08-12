@@ -222,6 +222,59 @@ countdown(2)
         self._test_program_string("x = 0\nfor y in [1, 2, 3]:\n  x = x + y\nprint(x)", b"6\n")
     
     @istest
+    def test_for_else(self):
+        program = """
+#:: int -> none
+def countup(length):
+    for index in range(0, length):
+        print(index)
+    else:
+        print("blastoff")
+
+countup(0)
+countup(1)
+countup(2)
+
+"""
+        self._test_program_string(program, b"blastoff\n0\nblastoff\n0\n1\nblastoff\n")
+    
+    @istest
+    def test_for_else_break(self):
+        program = """
+#:: int -> none
+def countup(length):
+    for index in range(0, length):
+        print(index)
+        break
+    else:
+        print("blastoff")
+
+countup(0)
+countup(1)
+countup(2)
+
+"""
+        self._test_program_string(program, b"blastoff\n0\n0\n")
+    
+    @istest
+    def test_while_else_continue(self):
+        program = """
+#:: int -> none
+def countup(length):
+    for index in range(0, length):
+        continue
+        print(index)
+    else:
+        print("blastoff")
+
+countup(0)
+countup(1)
+countup(2)
+
+"""
+        self._test_program_string(program, b"blastoff\nblastoff\nblastoff\n")
+    
+    @istest
     def test_break_for(self):
         self._test_program_string("y = 0\nfor x in [2, 3]:\n  if y:\n    break\n  y = -x\nprint(y)", b"-2\n")
     
