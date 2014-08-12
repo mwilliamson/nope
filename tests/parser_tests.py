@@ -408,6 +408,17 @@ def test_parse_for_loop():
 
 
 @istest
+def test_parse_for_loop_with_else_body():
+    expected = nodes.for_loop(
+        nodes.ref("x"), nodes.ref("xs"),
+        [],
+        [nodes.ret(nodes.ref("x"))],
+    )
+    
+    _assert_statement_parse(expected, "for x in xs:\n  pass\nelse:\n  return x")
+
+
+@istest
 def test_parse_break():
     _assert_statement_parse(nodes.break_statement(), "break")
 

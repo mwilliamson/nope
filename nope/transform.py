@@ -142,6 +142,7 @@ class Converter(object):
             self.convert(node.target),
             self.convert(node.iter),
             self._mapped(node.body),
+            self._mapped(node.orelse),
         )
     
     
