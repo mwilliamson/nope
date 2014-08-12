@@ -301,8 +301,12 @@ class _TypeChecker(object):
         self._assign(node, node.target, element_type, body_context)
         for statement in node.body:
             self.update_context(statement, body_context)
-            
-        context.unify([body_context], bind=False)
+        
+        else_body_context = context.enter_loop()
+        for statement in node.else_body:
+            self.update_context(statement, else_body_context)
+        
+        context.unify([body_context, else_body_context], bind=False)
     
     
     def _check_break(self, node, context):
