@@ -28,6 +28,7 @@ class Converter(object):
             ast.For: self._for,
             ast.Break: self._break,
             ast.Continue: self._continue,
+            ast.Raise: self._raise,
             
             ast.Str: self._str_literal,
             ast.Num: self._num_literal,
@@ -145,6 +146,10 @@ class Converter(object):
     
     def _continue(self, node):
         return nodes.continue_statement()
+    
+    
+    def _raise(self, node):
+        return nodes.raise_statement(self.convert(node.exc))
     
 
     def _str_literal(self, node):
