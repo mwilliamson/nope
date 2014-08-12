@@ -80,8 +80,7 @@ Note that not all backends may support all features.
 * **For loops**: partially supported.
   The sequence protocol is currently unsupported, as is the ``else`` block.
   
-* **While loops**: partially supported.
-  The ``else`` block is currently unsupported.
+* **While loops**: supported.
 
 * **If statements**: supported.
 
