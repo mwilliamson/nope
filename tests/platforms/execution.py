@@ -153,23 +153,81 @@ True
     
     @istest
     def test_settitem_list(self):
-        self._test_program_string("x = [1]\nx[0] = 2\nprint(x[0])", b"2")
+        self._test_program_string("x = [1]\nx[0] = 2\nprint(x[0])", b"2\n")
     
     @istest
     def test_while(self):
-        self._test_program_string("x = 4\nwhile x: x = x - 1\nprint(x)", b"0")
+        self._test_program_string("x = 4\nwhile x: x = x - 1\nprint(x)", b"0\n")
+    
+    @istest
+    def test_while_else(self):
+        program = """
+#:: int -> none
+def countdown(length):
+    index = length
+    while index:
+        print(index)
+        index = index - 1
+    else:
+        print("blastoff")
+
+countdown(0)
+countdown(1)
+countdown(2)
+
+"""
+        self._test_program_string(program, b"blastoff\n1\nblastoff\n2\n1\nblastoff\n")
+    
+    @istest
+    def test_while_else_break(self):
+        program = """
+#:: int -> none
+def countdown(length):
+    index = length
+    while index:
+        print(index)
+        break
+    else:
+        print("blastoff")
+
+countdown(0)
+countdown(1)
+countdown(2)
+
+"""
+        self._test_program_string(program, b"blastoff\n1\n2\n")
+    
+    @istest
+    def test_while_else_continue(self):
+        program = """
+#:: int -> none
+def countdown(length):
+    index = length
+    while index:
+        index = index - 1
+        continue
+        print(index)
+    else:
+        print("blastoff")
+
+countdown(0)
+countdown(1)
+countdown(2)
+
+"""
+        self._test_program_string(program, b"blastoff\nblastoff\nblastoff\n")
     
     @istest
     def test_for(self):
-        self._test_program_string("x = 0\nfor y in [1, 2, 3]:\n  x = x + y\nprint(x)", b"6")
+        self._test_program_string("x = 0\nfor y in [1, 2, 3]:\n  x = x + y\nprint(x)", b"6\n")
     
     @istest
     def test_break_for(self):
-        self._test_program_string("y = 0\nfor x in [2, 3]:\n  if y:\n    break\n  y = -x\nprint(y)", b"-2")
+        self._test_program_string("y = 0\nfor x in [2, 3]:\n  if y:\n    break\n  y = -x\nprint(y)", b"-2\n")
     
     @istest
     def test_continue_for(self):
-        self._test_program_string("y = 1\nfor x in [0, 3]:\n  if x:\n    pass\n  else:\n    continue\n  y = y * x\nprint(y)", b"3")
+        self._test_program_string("y = 1\nfor x in [0, 3]:\n  if x:\n    pass\n  else:\n    continue\n  y = y * x\nprint(y)", b"3\n")
     
     def _test_program_string(self, program, expected_output):
         with tempman.create_temp_dir() as temp_dir:
@@ -180,12 +238,12 @@ True
             result = self._run_program(path=temp_dir.path, program="main")
         
         assert_equal(0, result.return_code)
-        assert_equal(expected_output + b"\n", result.output)
+        assert_equal(expected_output, result.output)
         assert_equal(b"", result.stderr_output)
         
     
     def _test_expression(self, expression, expected_output):
-        self._test_program_string("print({})\n".format(expression), expected_output)
+        self._test_program_string("print({})\n".format(expression), expected_output + b"\n")
         
     
     def _run_program(self, path, program):

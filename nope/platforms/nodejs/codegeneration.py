@@ -317,10 +317,39 @@ class Transformer(object):
     
     
     def _while_loop(self, loop):
-        return js.while_loop(
-            self._condition(loop.condition),
-            self._transform_all(loop.body),
-        )
+        condition = self._condition(loop.condition)
+        body = self._transform_all(loop.body)
+        
+        if loop.else_body:
+            else_body = self._transform_all(loop.else_body)
+            
+            normal_exit_name = self._unique_name("normalExit")
+            normal_exit = js.ref(normal_exit_name)
+            
+            def assign_normal_exit(value):
+                return js.assign_statement(normal_exit, js.boolean(value))
+            
+            return js.statements([
+                js.var(normal_exit_name, js.boolean(True)),
+                js.while_loop(
+                    js.boolean(True),
+                    # TODO: continue support
+                    [assign_normal_exit(True)] +
+                        [js.if_else(condition, [], [js.break_statement()])] +
+                        [assign_normal_exit(False)] +
+                        body,
+                ),
+                js.if_else(
+                    normal_exit,
+                    else_body,
+                    []
+                )
+            ])
+        else:
+            return js.while_loop(
+                condition,
+                body,
+            )
     
     def _condition(self, condition):
         return js.call(
