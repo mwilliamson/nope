@@ -481,7 +481,7 @@ def type_of_variable_is_unified_if_branches_of_if_else_use_different_types():
 
 
 @istest
-def type_of_variable_remains_undefined_if_only_set_in_one_branch_of_if_else():
+def variable_remains_unbound_if_only_set_in_one_branch_of_if_else():
     node = nodes.if_else(
         nodes.int(1),
         [nodes.assign("x", nodes.int(1))],
