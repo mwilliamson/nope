@@ -133,6 +133,7 @@ class Converter(object):
         return nodes.while_loop(
             self.convert(node.test),
             self._mapped(node.body),
+            self._mapped(node.orelse),
         )
     
     
