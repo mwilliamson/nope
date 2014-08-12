@@ -8,6 +8,9 @@ class Context(object):
         self.is_module_scope = is_module_scope
         self.in_loop = in_loop
     
+    def has_name(self, name):
+        return name in self._vars
+    
     def add(self, node, name, binding):
         # All names should be declared on entering a scope, so if `name` isn't
         # in `self._vars` it's a programming error i.e. a bug in the type checker
@@ -78,6 +81,9 @@ class BlockVars(object):
     
     def __setitem__(self, key, value):
         self._new_vars[key] = value
+    
+    def __contains__(self, key):
+        return key in self._original_vars
 
 
 module_context = Context({
