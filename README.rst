@@ -97,14 +97,14 @@ Note that not all backends may support all features.
   However, only local modules are currently supported.
   Modules from the standard library or dependencies are unsupported.
   
-* **``global`` keyword**: unsupported.
+* **global keyword**: unsupported.
 
-* **``nonlocal`` keyword**: unsupported.
+* **nonlocal keyword**: unsupported.
 
 * **Expression statements**: supported.
 
-* **``pass`` keyword**: supported.
+* **pass keyword**: supported.
 
-* **``break`` keyword**: supported.
+* **break keyword**: supported.
 
-* **``continue`` keyword**: supported.
+* **continue keyword**: supported.
