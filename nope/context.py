@@ -20,8 +20,8 @@ class Context(object):
         var_type = self._vars[name]
         if var_type is None:
             self._vars[name] = binding
-        elif not types.is_sub_type(var_type, binding):
-            raise errors.TypeMismatchError(node, expected=var_type, actual=binding)
+        else:
+            raise Exception("Variable is already bound")
     
     def lookup(self, name):
         return self._vars[name]

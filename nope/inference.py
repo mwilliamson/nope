@@ -229,7 +229,12 @@ class _TypeChecker(object):
     def _assign(self, node, target, value_type, context):
         if isinstance(target, nodes.VariableReference):
             # TODO: should we pass target in instead of node?
-            context.add(node, target.name, value_type)
+            if context.is_bound(target.name):
+                var_type = context.lookup(target.name)
+                if not types.is_sub_type(var_type, value_type):
+                    raise errors.TypeMismatchError(node, expected=var_type, actual=value_type)
+            else:
+                context.add(node, target.name, value_type)
         elif isinstance(target, nodes.Subscript):
             target_value_type = self.infer(target.value, context)
             # TODO: check setitem exists and has correct signature
