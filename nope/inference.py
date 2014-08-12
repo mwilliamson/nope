@@ -272,6 +272,10 @@ class _TypeChecker(object):
         body_context = context.enter_loop()
         for statement in node.body:
             self.update_context(statement, body_context)
+        
+        else_body_context = context.enter_loop()
+        for statement in node.else_body:
+            self.update_context(statement, else_body_context)
     
     
     def _check_for_loop(self, node, context):
