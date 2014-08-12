@@ -349,6 +349,12 @@ def test_parse_return_statement():
 
 
 @istest
+def test_parse_return_with_no_value_is_parsed_as_return_none():
+    expected = nodes.ret(nodes.none())
+    _assert_statement_parse(expected, "return")
+
+
+@istest
 def test_parse_single_assignment():
     expected = nodes.assign(["x"], nodes.ref("y"))
     _assert_statement_parse(expected, "x = y")

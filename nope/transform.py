@@ -108,7 +108,11 @@ class Converter(object):
 
     
     def _return(self, node):
-        return nodes.ret(self.convert(node.value))
+        if node.value is None:
+            value = nodes.none()
+        else:
+            value = self.convert(node.value)
+        return nodes.ret(value)
     
     
     def _assign(self, node):
