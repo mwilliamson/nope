@@ -108,3 +108,15 @@ Note that not all backends may support all features.
 * **break keyword**: supported.
 
 * **continue keyword**: supported.
+
+Differences from Python 3
+-------------------------
+
+Subclassing builtins
+~~~~~~~~~~~~~~~~~~~~~
+
+Nope does not allow subclassing of some builtins,
+such as ``int`` and ``list``.
+This restraint means a value of type ``int`` has the concrete type ``int`` rather than a subclass of ``int`,
+allowing certain optimisations to be used when generating code.
+

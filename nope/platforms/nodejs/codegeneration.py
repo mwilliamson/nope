@@ -399,7 +399,6 @@ class Transformer(object):
         )
     
     def _binary_operation(self, operation):
-        # TODO: document subclassing int (and other builtins) is prohibited (or rather, might misbehave) due to this optimisation
         if (operation.operator in _number_operators and
                 self._type_of(operation.left) == types.int_type and
                 self._type_of(operation.right) == types.int_type):
