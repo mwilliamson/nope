@@ -119,6 +119,15 @@ class InstantiatedType(object):
         instantiated_attrs = _substitute_types(self.attrs, type_map)
         return InstantiatedType(self.generic_type, instantiated_params, instantiated_attrs)
     
+    def __eq__(self, other):
+        if not isinstance(other, InstantiatedType):
+            return False
+            
+        return self.generic_type == other.generic_type and self.params == other.params
+    
+    def __neq__(self, other):
+        return not (self == other)
+    
     def __str__(self):
         return "{}[{}]".format(self.generic_type, ", ".join(map(str, self.params)))
     
