@@ -95,9 +95,15 @@ class _TypeChecker(object):
         return context.lookup(node.name)
 
     def _infer_call(self, node, context):
-        func_type = self.infer(node.func, context)
+        callee_type = self.infer(node.func, context)
+        if types.func_type.is_instantiated_type(callee_type):
+            func_type = callee_type
+        elif "__call__" in callee_type.attrs:
+            func_type = callee_type.attrs["__call__"]
+            
+            
         self._type_check_args(node, node.args, func_type.params[:-1], context)
-        return self.infer(node.func, context).params[-1]
+        return func_type.params[-1]
 
 
     def _infer_attr(self, node, context):

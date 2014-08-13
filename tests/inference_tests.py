@@ -64,6 +64,15 @@ def can_infer_type_of_call():
 
 
 @istest
+def object_can_be_called_if_it_has_call_magic_method():
+    cls = types.ScalarType("Blah", {
+        "__call__": types.func([types.str_type], types.int_type)
+    })
+    context = bound_context({"f": cls})
+    assert_equal(types.int_type, infer(nodes.call(nodes.ref("f"), [nodes.string("")]), context))
+
+
+@istest
 def call_arguments_must_match():
     context = bound_context({"f": types.func([types.str_type], types.int_type)})
     arg_node = nodes.int(4)
