@@ -34,18 +34,28 @@ class GenericTypeAttributes(object):
         return not (self == other)
 
 
-class ScalarType(collections.namedtuple("ScalarType", ["name", "attrs"])):
+class ScalarType(object):
+    def __init__(self, name, attrs):
+        self.name = name
+        self.attrs = attrs
+    
     def __str__(self):
         return self.name
     
     def __repr__(self):
         return str(self)
     
-    def substitute_types(self, param_map):
+    def substitute_types(self, type_map):
         return self
 
+
 # TODO: number of type params
-class _GenericType(collections.namedtuple("GenericType", ["name", "params", "attrs"])):
+class _GenericType(object):
+    def __init__(self, name, params, attrs):
+        self.name = name
+        self.params = params
+        self.attrs = attrs
+    
     def __call__(self, *args):
         return self.instantiate(list(args))
     
@@ -83,7 +93,7 @@ def _substitute_types(type_, type_map):
         return type_map[type_]
     else:
         return type_.substitute_types(type_map)
-        
+
 
 class _FormalParameter(object):
     def __init__(self, name):
@@ -93,7 +103,12 @@ class _FormalParameter(object):
         return type_map.get(self, self)
 
 
-class InstantiatedType(collections.namedtuple("InstantiatedType", ["generic_type", "params", "attrs"])):
+class InstantiatedType(object):
+    def __init__(self, generic_type, params, attrs):
+        self.generic_type = generic_type
+        self.params = params
+        self.attrs = attrs
+    
     def substitute_types(self, type_map):
         # TODO: test shadowing
         
