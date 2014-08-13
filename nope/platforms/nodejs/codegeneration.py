@@ -362,7 +362,6 @@ class Transformer(object):
                 js.var(normal_exit_name, js.boolean(True)),
                 js.while_loop(
                     js.boolean(True),
-                    # TODO: continue support
                     [assign_normal_exit(True)] +
                         [js.if_else(condition, [], [js.break_statement()])] +
                         [assign_normal_exit(False)] +
