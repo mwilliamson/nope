@@ -127,12 +127,8 @@ class _TypeChecker(object):
     
     def _infer_magic_method_call(self, node, short_name, receiver, actual_args, context):
         method_name = "__{}__".format(short_name)
-        receiver_type = self.infer(receiver, context)
+        method = self._get_magic_method(receiver, short_name, context, required=True)
         
-        if method_name not in receiver_type.attrs:
-            raise errors.TypeMismatchError(receiver, expected="type with {}".format(method_name), actual=receiver_type)
-        
-        method = receiver_type.attrs[method_name]
         formal_arg_types = method.params[:-1]
         formal_return_type = method.params[-1]
         
@@ -143,12 +139,15 @@ class _TypeChecker(object):
         
         return formal_return_type
     
-    def _get_magic_method(self, receiver, short_name, context):
+    def _get_magic_method(self, receiver, short_name, context, required=False):
         method_name = "__{}__".format(short_name)
         receiver_type = self.infer(receiver, context)
         
         if method_name not in receiver_type.attrs:
-            return None
+            if required:
+                raise errors.TypeMismatchError(receiver, expected="type with {}".format(method_name), actual=receiver_type)
+            else:
+                return None
         
         method_type = receiver_type.attrs[method_name]
         
