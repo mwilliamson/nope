@@ -288,6 +288,9 @@ class _TypeChecker(object):
     
     def _check_for_loop(self, node, context):
         iterator_type = self._read_magic_method(node, "iter", node.iterable, [], context)
+        if not types.iterator.is_instantiated_type(iterator_type):
+            raise errors.BadSignatureError(node.iterable, "__iter__ should return an iterator")
+            
         element_type, = iterator_type.params
         
         body_context = context.enter_loop()

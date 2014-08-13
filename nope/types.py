@@ -54,6 +54,10 @@ class _GenericType(collections.namedtuple("GenericType", ["name", "params", "att
         instantiated_attrs = _substitute_types(self.attrs, param_map)
         return InstantiatedType(self, params, instantiated_attrs)
     
+    def is_instantiated_type(self, other):
+        # TODO: handle subtyping
+        return isinstance(other, InstantiatedType) and other.generic_type == self
+    
     def __str__(self):
         return self.name
         
