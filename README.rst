@@ -117,6 +117,6 @@ Subclassing builtins
 
 Nope does not allow subclassing of some builtins,
 such as ``int`` and ``list``.
-This restraint means a value of type ``int`` has the concrete type ``int`` rather than a subclass of ``int`,
+This restraint means a value of type ``int`` is guaranteed to have the concrete type ``int`` rather than a subclass of ``int`,
 allowing certain optimisations to be used when generating code.
 
