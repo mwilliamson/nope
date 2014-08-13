@@ -73,6 +73,33 @@ def object_can_be_called_if_it_has_call_magic_method():
 
 
 @istest
+def callee_must_be_function_or_have_call_magic_method():
+    cls = types.ScalarType("Blah", {})
+    context = bound_context({"f": cls})
+    callee_node = nodes.ref("f")
+    try:
+        infer(nodes.call(callee_node, []), context)
+        assert False, "Expected error"
+    except errors.TypeMismatchError as error:
+        assert_equal(callee_node, error.node)
+        assert_equal("callable object", error.expected)
+        assert_equal(cls, error.actual)
+
+
+@istest
+def call_attribute_must_be_function():
+    cls = types.ScalarType("Blah", {"__call__": types.int_type})
+    context = bound_context({"f": cls})
+    callee_node = nodes.ref("f")
+    try:
+        infer(nodes.call(callee_node, []), context)
+        assert False, "Expected error"
+    except errors.BadSignatureError as error:
+        assert_equal(callee_node, error.node)
+        assert_equal("__call__ should be a method", str(error))
+
+
+@istest
 def call_arguments_must_match():
     context = bound_context({"f": types.func([types.str_type], types.int_type)})
     arg_node = nodes.int(4)

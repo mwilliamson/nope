@@ -99,8 +99,13 @@ class _TypeChecker(object):
         if types.func_type.is_instantiated_type(callee_type):
             func_type = callee_type
         elif "__call__" in callee_type.attrs:
-            func_type = callee_type.attrs["__call__"]
-            
+            call_method = callee_type.attrs["__call__"]
+            if types.func_type.is_instantiated_type(call_method):
+                func_type = call_method
+            else:
+                raise errors.BadSignatureError(node.func, "__call__ should be a method")
+        else:
+            raise errors.TypeMismatchError(node.func, expected="callable object", actual=callee_type)
             
         self._type_check_args(node, node.args, func_type.params[:-1], context)
         return func_type.params[-1]
