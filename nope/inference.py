@@ -119,15 +119,15 @@ class _TypeChecker(object):
             raise errors.AttributeError(node, str(value_type), node.attr)
     
     def _infer_binary_operation(self, node, context):
-        return self._read_magic_method(node, node.operator, node.left, [node.right], context)
+        return self._infer_magic_method_call(node, node.operator, node.left, [node.right], context)
     
     def _infer_unary_operation(self, node, context):
-        return self._read_magic_method(node, node.operator, node.operand, [], context)
+        return self._infer_magic_method_call(node, node.operator, node.operand, [], context)
     
     def _infer_subscript(self, node, context):
-        return self._read_magic_method(node, "getitem", node.value, [node.slice], context)
+        return self._infer_magic_method_call(node, "getitem", node.value, [node.slice], context)
     
-    def _read_magic_method(self, node, short_name, receiver, actual_args, context):
+    def _infer_magic_method_call(self, node, short_name, receiver, actual_args, context):
         method_name = "__{}__".format(short_name)
         receiver_type = self.infer(receiver, context)
         
@@ -298,7 +298,7 @@ class _TypeChecker(object):
     
     
     def _check_for_loop(self, node, context):
-        iterator_type = self._read_magic_method(node, "iter", node.iterable, [], context)
+        iterator_type = self._infer_magic_method_call(node, "iter", node.iterable, [], context)
         if not types.iterator.is_instantiated_type(iterator_type):
             raise errors.BadSignatureError(node.iterable, "__iter__ should return an iterator")
             
