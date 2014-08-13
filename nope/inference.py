@@ -287,8 +287,8 @@ class _TypeChecker(object):
     
     
     def _check_for_loop(self, node, context):
-        iterable_type = self._read_magic_method(node, "iter", node.iterable, [], context)
-        element_type, = iterable_type.params
+        iterator_type = self._read_magic_method(node, "iter", node.iterable, [], context)
+        element_type, = iterator_type.params
         
         body_context = context.enter_loop()
         self._assign(node, node.target, element_type, body_context)

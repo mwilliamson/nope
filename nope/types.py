@@ -148,13 +148,17 @@ int_type.attrs["__invert__"] = func([], int_type)
 str_type = ScalarType("str", {})
 str_type.attrs["find"] = func([str_type], int_type)
 
+# TODO: should be a structural type (with __next__)
+iterator = generic_type("iterator", ["T"], {})
+iterator.attrs["__iter__"] = func([], iterator("T"))
+
 iterable = generic_type("iterable", ["T"], {})
-iterable.attrs["__iter__"] = func([], iterable("T"))
+iterable.attrs["__iter__"] = func([], iterator("T"))
 
 list_type = generic_type("list", ["T"], {
     "__getitem__": func([int_type], "T"),
     "__setitem__": func([int_type, "T"], none_type),
-    "__iter__": func([], iterable("T")),
+    "__iter__": func([], iterator("T")),
     "append": func(["T"], none_type),
 })
 
