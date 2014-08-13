@@ -98,14 +98,12 @@ class _TypeChecker(object):
         callee_type = self.infer(node.func, context)
         if types.func_type.is_instantiated_type(callee_type):
             func_type = callee_type
-        elif "__call__" in callee_type.attrs:
-            call_method = callee_type.attrs["__call__"]
-            if types.func_type.is_instantiated_type(call_method):
-                func_type = call_method
-            else:
-                raise errors.BadSignatureError(node.func, "__call__ should be a method")
         else:
-            raise errors.TypeMismatchError(node.func, expected="callable object", actual=callee_type)
+            call_method = self._get_magic_method(node.func, "call", context)
+            if call_method is None:
+                raise errors.TypeMismatchError(node.func, expected="callable object", actual=callee_type)
+            else:
+                func_type = call_method
             
         self._type_check_args(node, node.args, func_type.params[:-1], context)
         return func_type.params[-1]
@@ -144,6 +142,20 @@ class _TypeChecker(object):
         self._type_check_args(node, actual_args, formal_arg_types, context)
         
         return formal_return_type
+    
+    def _get_magic_method(self, receiver, short_name, context):
+        method_name = "__{}__".format(short_name)
+        receiver_type = self.infer(receiver, context)
+        
+        if method_name not in receiver_type.attrs:
+            return None
+        
+        method_type = receiver_type.attrs[method_name]
+        
+        if not types.func_type.is_instantiated_type(method_type):
+            raise errors.BadSignatureError(receiver, "{} should be a method".format(method_name))
+        
+        return receiver_type.attrs[method_name]
     
     def _type_check_args(self, node, actual_args, formal_arg_types, context):
         actual_args_with_types = [
