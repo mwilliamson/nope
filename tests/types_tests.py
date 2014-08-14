@@ -95,3 +95,10 @@ class SubTypeTests(object):
     def scalar_type_is_subtype_of_object_type(self):
         cls = types.ScalarType("Blah", {})
         assert types.is_sub_type(types.object_type, cls)
+        
+    @istest
+    def scalar_type_is_subtype_of_base_class(self):
+        super_type = types.ScalarType("Parent", {})
+        cls = types.ScalarType("Blah", {}, base_classes=[super_type])
+        assert types.is_sub_type(super_type, cls)
+        assert not types.is_sub_type(cls, super_type)
