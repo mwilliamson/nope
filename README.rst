@@ -86,7 +86,8 @@ Note that not all backends may support all features.
 
 * **With statements**: unsupported.
 
-* **Raise statements**: unsupported.
+* **Raise statements**: partially supported.
+  Only statements in the form ``raise value`` are supported.
 
 * **Try statements**: unsupported.
 
