@@ -2,36 +2,12 @@ import collections
 
 
 class GenericTypeAttributes(object):
-    def __init__(self, attrs, param_map):
-        self._attrs = _substitute_types(attrs, param_map)
-        self._param_map = param_map
+    def __init__(self, params, attrs):
+        self._params = params
+        self._attrs = attrs
     
-    def substitute_types(self, type_map):
-        return GenericTypeAttributes(_substitute_types(self._attrs, type_map), self._param_map)
-    
-    def __getitem__(self, key):
-        return self._attrs[key]
-    
-    def __setitem__(self, key, value):
-        self._attrs[key] = _substitute_types(value, self._param_map)
-    
-    def __contains__(self, key):
-        return key in self._attrs
-    
-    def __str__(self):
-        return str(self._attrs)
-    
-    def __repr__(self):
-        return repr(self._attrs)
-    
-    def __eq__(self, other):
-        if isinstance(other, GenericTypeAttributes):
-            return self._attrs == other._attrs
-        else:
-            return NotImplemented
-    
-    def __neq__(self, other):
-        return not (self == other)
+    def __setitem__(self, name, create_attr):
+        self._attrs[name] = create_attr(*self._params)
 
 
 class ScalarType(object):
@@ -58,17 +34,14 @@ class _GenericType(object):
     def __init__(self, params, underlying_type):
         self.underlying_type = underlying_type
         self.params = params
-    
-    @property
-    def attrs(self):
-        return self.underlying_type.attrs
+        self.attrs = GenericTypeAttributes(params, underlying_type.attrs)
     
     def __call__(self, *args):
         return self.instantiate(list(args))
     
     def instantiate(self, params):
         param_map = dict(zip(self.params, params))
-        instantiated_attrs = _substitute_types(self.attrs, param_map)
+        instantiated_attrs = _substitute_types(self.underlying_type.attrs, param_map)
         return InstantiatedType(self, params, instantiated_attrs)
     
     def is_instantiated_type(self, other):
@@ -81,13 +54,18 @@ class _GenericType(object):
     def __repr__(self):
         return str(self)
 
-def generic_type(name, params, attrs):
-    # We allow the caller to use string literals to represent formal params, so we need to replace them
-    # e.g. generic_type("Foo", ["T"], {"x": "T"}) =>
-    #           GenericType("Foo", [T], {"x": T}) where T = FormalParameter("T")
+def generic_type(name, params, attrs=None):
+    if attrs is None:
+        attrs = {}
+    
     formal_params = [_FormalParameter(param) for param in params]
     param_map = dict(zip(params, formal_params))
-    return _GenericType(formal_params, ScalarType(name, GenericTypeAttributes(attrs, param_map)))
+    generic_type = _GenericType(formal_params, ScalarType(name, {}))
+    
+    for name, create_attr in attrs.items():
+        generic_type.attrs[name] = create_attr
+    
+    return generic_type
 
 
 def _substitute_types(type_, type_map):
@@ -96,8 +74,6 @@ def _substitute_types(type_, type_map):
             (name, _substitute_types(attr_type, type_map))
             for name, attr_type in type_.items()
         )
-    if isinstance(type_, str):
-        return type_map[type_]
     else:
         return type_.substitute_types(type_map)
 
@@ -146,7 +122,7 @@ TypeType = collections.namedtuple("TypeType", ["type"])
     
 
 # TODO: set type params of func correctly (needs varargs?)
-func_type = generic_type("func", [], {})
+func_type = generic_type("func", [])
 
 def func(args, return_type):
     return func_type.instantiate(list(args) + [return_type])
@@ -187,17 +163,17 @@ str_type = ScalarType("str", {})
 str_type.attrs["find"] = func([str_type], int_type)
 
 # TODO: should be a structural type (with __next__)
-iterator = generic_type("iterator", ["T"], {})
-iterator.attrs["__iter__"] = func([], iterator("T"))
+iterator = generic_type("iterator", ["T"])
+iterator.attrs["__iter__"] = lambda T: func([], iterator(T))
 
-iterable = generic_type("iterable", ["T"], {})
-iterable.attrs["__iter__"] = func([], iterator("T"))
+iterable = generic_type("iterable", ["T"])
+iterable.attrs["__iter__"] = lambda T: func([], iterator(T))
 
 list_type = generic_type("list", ["T"], {
-    "__getitem__": func([int_type], "T"),
-    "__setitem__": func([int_type, "T"], none_type),
-    "__iter__": func([], iterator("T")),
-    "append": func(["T"], none_type),
+    "__getitem__": lambda T: func([int_type], T),
+    "__setitem__": lambda T: func([int_type, T], none_type),
+    "__iter__": lambda T: func([], iterator(T)),
+    "append": lambda T: func([T], none_type),
 })
 
 type_type = TypeType
