@@ -1,6 +1,6 @@
 import os
 
-from nose.tools import istest, nottest, assert_equal
+from nose.tools import istest, nottest, assert_equal, assert_not_equal, assert_in
 import tempman
 
 from .. import testing
@@ -282,17 +282,28 @@ countup(2)
     def test_continue_for(self):
         self._test_program_string("y = 1\nfor x in [0, 3]:\n  if x:\n    pass\n  else:\n    continue\n  y = y * x\nprint(y)", b"3\n")
     
+    @istest
+    def test_unhandled_exception(self):
+        result = self._run_program_string("raise Exception('Argh!')")
+        assert_not_equal(0, result.return_code)
+        assert_equal(b"", result.output)
+        assert_in(b"Exception: Argh!", result.stderr_output)
+    
     def _test_program_string(self, program, expected_output):
+        result = self._run_program_string(program)
+        
+        assert_equal(0, result.return_code)
+        assert_equal(expected_output, result.output)
+        assert_equal(b"", result.stderr_output)
+    
+    
+    def _run_program_string(self, program):
         with tempman.create_temp_dir() as temp_dir:
             with open(os.path.join(temp_dir.path, "main.py"), "w") as main_file:
                 main_file.write("#!/usr/bin/env python\n")
                 main_file.write(program)
             
-            result = self._run_program(path=temp_dir.path, program="main")
-        
-        assert_equal(0, result.return_code)
-        assert_equal(expected_output, result.output)
-        assert_equal(b"", result.stderr_output)
+            return self._run_program(path=temp_dir.path, program="main")
         
     
     def _test_expression(self, expression, expected_output):

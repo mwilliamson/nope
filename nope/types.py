@@ -118,7 +118,7 @@ class InstantiatedType(object):
         return str(self)
         
     
-TypeType = collections.namedtuple("TypeType", ["type"])
+TypeType = collections.namedtuple("TypeType", ["type", "attrs"])
     
 
 # TODO: set type params of func correctly (needs varargs?)
@@ -176,13 +176,20 @@ list_type = generic_type("list", ["T"], {
     "append": lambda T: func([T], none_type),
 })
 
-type_type = TypeType
+def type_type(name, attrs=None):
+    if attrs is None:
+        attrs = {}
+    
+    return TypeType(name, attrs)
 
 object_type = ScalarType("object", {})
 
 bottom_type = ScalarType("bottom", {})
 
 exception_type = ScalarType("Exception", {})
+exception_meta_type = type_type(exception_type, {
+    "__call__": func([str_type], exception_type)
+})
 
 def unify(types):
     if len(types) == 0:

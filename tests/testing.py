@@ -14,7 +14,7 @@ def compile_and_run(compiler, path, program):
         output_dir = temp_dir.path
         nope.compile(path, output_dir, compiler.name)
         output_path = "{}.{}".format(program, compiler.extension)
-        return _local.run([compiler.binary, output_path], cwd=output_dir)
+        return _local.run([compiler.binary, output_path], cwd=output_dir, allow_error=True)
 
 
 def program_path(path):

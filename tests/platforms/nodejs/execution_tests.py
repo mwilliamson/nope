@@ -7,3 +7,5 @@ from .. import execution
 @istest
 class NodeJsExecutionTests(execution.ExecutionTests):
     platform = NodeJs()
+
+    test_unhandled_exception = None
