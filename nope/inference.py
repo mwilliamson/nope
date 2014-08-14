@@ -342,7 +342,7 @@ class _TypeChecker(object):
     
     def _check_raise(self, node, context):
         exception_type = self.infer(node.value, context)
-        if exception_type != types.exception_type:
+        if not types.is_sub_type(types.exception_type, exception_type):
             raise errors.TypeMismatchError(
                 node.value,
                 expected=types.exception_type,

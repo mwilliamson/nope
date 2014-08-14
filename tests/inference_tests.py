@@ -784,6 +784,13 @@ def raise_value_can_be_instance_of_exception():
 
 
 @istest
+def raise_value_can_be_instance_of_subtype_of_exception():
+    cls = types.ScalarType("BlahError", {}, base_classes=[types.exception_type])
+    context = bound_context({"error": cls})
+    update_context(nodes.raise_statement(nodes.ref("error")), context)
+
+
+@istest
 def raise_value_cannot_be_non_subtype_of_exception():
     context = bound_context({"error": types.object_type})
     ref_node = nodes.ref("error")
