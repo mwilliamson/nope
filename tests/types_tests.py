@@ -82,3 +82,16 @@ class TypeEqualityTests(object):
         second_instantiated_type = generic_type.instantiate([second_scalar_type])
         
         assert_not_equal(first_instantiated_type, second_instantiated_type)
+
+
+@istest
+class SubTypeTests(object):
+    @istest
+    def scalar_type_is_subtype_of_itself(self):
+        cls = types.ScalarType("Blah", {})
+        assert types.is_sub_type(cls, cls)
+        
+    @istest
+    def scalar_type_is_subtype_of_object_type(self):
+        cls = types.ScalarType("Blah", {})
+        assert types.is_sub_type(types.object_type, cls)
