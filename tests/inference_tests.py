@@ -778,6 +778,23 @@ def continue_is_not_valid_in_module():
 
 
 @istest
+def raise_value_can_be_instance_of_exception():
+    context = bound_context({"error": types.exception_type})
+    update_context(nodes.raise_statement(nodes.ref("error")), context)
+
+
+@istest
+def raise_value_cannot_be_non_subtype_of_exception():
+    context = bound_context({"error": types.object_type})
+    ref_node = nodes.ref("error")
+    try:
+        update_context(nodes.raise_statement(ref_node), context)
+        assert False, "Expected error"
+    except errors.TypeMismatchError as error:
+        assert_equal(ref_node, error.node)
+
+
+@istest
 def check_generates_type_lookup_for_all_expressions():
     int_ref_node = nodes.ref("a")
     int_node = nodes.int(3)

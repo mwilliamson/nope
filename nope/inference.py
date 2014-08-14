@@ -339,6 +339,16 @@ class _TypeChecker(object):
         if not context.in_loop:
             raise errors.InvalidStatementError(node, "'{}' outside loop".format(name))
     
+    
+    def _check_raise(self, node, context):
+        exception_type = self.infer(node.value, context)
+        if exception_type != types.exception_type:
+            raise errors.TypeMismatchError(
+                node.value,
+                expected=types.exception_type,
+                actual=exception_type,
+            )
+    
 
     def _check_import(self, node, context):
         for alias in node.names:
@@ -413,6 +423,7 @@ class _TypeChecker(object):
         nodes.ForLoop: _check_for_loop,
         nodes.BreakStatement: _check_break,
         nodes.ContinueStatement: _check_continue,
+        nodes.RaiseStatement: _check_raise,
         nodes.FunctionDef: _check_function_def,
         nodes.Import: _check_import,
         nodes.ImportFrom: _check_import_from,

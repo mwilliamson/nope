@@ -196,6 +196,8 @@ object_type = ScalarType("object", {})
 
 bottom_type = ScalarType("bottom", {})
 
+exception_type = ScalarType("Exception", {})
+
 def unify(types):
     if len(types) == 0:
         return bottom_type
