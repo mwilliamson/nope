@@ -257,7 +257,7 @@ countup(2)
         self._test_program_string(program, b"blastoff\n0\n0\n")
     
     @istest
-    def test_while_else_continue(self):
+    def test_for_else_continue(self):
         program = """
 #:: int -> none
 def countup(length):
