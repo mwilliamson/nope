@@ -55,10 +55,13 @@ class ScalarType(object):
 
 # TODO: number of type params
 class _GenericType(object):
-    def __init__(self, name, params, attrs):
-        self.name = name
+    def __init__(self, params, underlying_type):
+        self.underlying_type = underlying_type
         self.params = params
-        self.attrs = attrs
+    
+    @property
+    def attrs(self):
+        return self.underlying_type.attrs
     
     def __call__(self, *args):
         return self.instantiate(list(args))
@@ -84,7 +87,7 @@ def generic_type(name, params, attrs):
     #           GenericType("Foo", [T], {"x": T}) where T = FormalParameter("T")
     formal_params = [_FormalParameter(param) for param in params]
     param_map = dict(zip(params, formal_params))
-    return _GenericType(name, formal_params, GenericTypeAttributes(attrs, param_map))
+    return _GenericType(formal_params, ScalarType(name, GenericTypeAttributes(attrs, param_map)))
 
 
 def _substitute_types(type_, type_map):
