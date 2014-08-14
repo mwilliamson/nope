@@ -77,7 +77,7 @@ def _replace_extension(filename, new_extension):
 
 # TODO: should probably yank this from somewhere more general since it's not specific to node.js
 _builtin_names = [
-    "bool", "print", "abs", "range",
+    "bool", "print", "abs", "range", "Exception",
 ]
 
 _number_operators = {
@@ -175,6 +175,7 @@ class Transformer(object):
             nodes.ForLoop: self._for_loop,
             nodes.BreakStatement: self._break_statement,
             nodes.ContinueStatement: self._continue_statement,
+            nodes.RaiseStatement: self._raise_statement,
             
             nodes.Call: self._call,
             nodes.AttributeAccess: self._attr,
@@ -386,6 +387,33 @@ class Transformer(object):
     
     def _continue_statement(self, statement):
         return js.continue_statement()
+
+    
+    def _raise_statement(self, statement):
+        exception_name = self._unique_name("exception")
+        error_name = self._unique_name("error")
+        
+        exception_value = self.transform(statement.value)
+        exception_type = js.call(js.ref("$nope.builtins.type"), [exception_value])
+        exception_type_name = js.call(js.ref("$nope.builtins.getattr"), [exception_type, js.string("__name__")])
+        error_message = js.binary_operation("+",
+            js.binary_operation("+",
+                exception_type_name,
+                js.string(": "),
+            ),
+            js.call(js.ref("$nope.builtins.str"), [js.ref(exception_name)])
+        )
+        js_error = js.call(
+            # TODO: create a proper `new` JS node
+            js.ref("new Error"),
+            [error_message]
+        )
+        
+        return js.statements([
+            js.var(exception_name, exception_value),
+            js.var(error_name, js_error),
+            js.throw(js.ref(error_name)),
+        ])
 
 
     def _call(self, call):

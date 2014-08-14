@@ -50,7 +50,10 @@ function createMagicTernaryFunction(operatorName) {
 }
 
 var stringMethods = {
-    find: String.prototype.indexOf
+    find: String.prototype.indexOf,
+    __str__: function() {
+        return this;
+    }
 };
 
 var arrayMethods = {
@@ -149,14 +152,36 @@ function next(iterable, stopValue) {
     }
 }
 
+function Exception(message) {
+    return {
+        $nopeType: Exception,
+        __str__: function() {
+            return str(message);
+        }
+    };
+}
+
+Exception.__name__ = "Exception"
+
+function str(value) {
+    return getattr(value, "__str__")();
+}
+
+function type(value) {
+    return value.$nopeType;
+}
+
 var builtins = {
+    str: str,
     getattr: getattr,
     bool: bool,
     print: print,
     abs: abs,
     range: range,
     iter: iter,
-    next: next
+    next: next,
+    Exception: Exception,
+    type: type
 };
 
 function numberMod(left, right) {
@@ -167,5 +192,5 @@ var $nope = module.exports = {
     exports: exports,
     operators: operators,
     builtins: builtins,
-    numberMod: numberMod,
+    numberMod: numberMod
 };
