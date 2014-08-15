@@ -94,9 +94,12 @@ def call_attribute_must_be_function():
     try:
         infer(nodes.call(callee_node, []), context)
         assert False, "Expected error"
-    except errors.BadSignatureError as error:
-        assert_equal(callee_node, error.node)
-        assert_equal("__call__ should be a method", str(error))
+    except errors.TypeMismatchError as error:
+        # TODO:
+        #~ assert_equal(callee_node, ephemeral.root_node(error.node))
+        #~ assert_equal(nodes.attr(callee_node, "__call__"), ephemeral.underlying_node(error.node))
+        assert_equal("callable object", error.expected)
+        assert_equal(types.int_type, error.actual)
 
 
 @istest

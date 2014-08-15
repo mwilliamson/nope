@@ -1,4 +1,5 @@
 from .. import nodes, types, errors
+from . import ephemeral
 
 
 class ExpressionTypeInferer(object):
@@ -17,6 +18,7 @@ class ExpressionTypeInferer(object):
             nodes.BinaryOperation: self._infer_binary_operation,
             nodes.UnaryOperation: self._infer_unary_operation,
             nodes.Subscript: self._infer_subscript,
+            ephemeral.EphemeralNode: lambda node, context: self.infer(node._node, context),
         }
     
     def infer(self, expression, context):
@@ -50,18 +52,18 @@ class ExpressionTypeInferer(object):
         return context.lookup(node.name)
 
     def _infer_call(self, node, context):
-        callee_type = self.infer(node.func, context)
+        call_type = self._get_call_type(node.func, context)
+        self._type_check_args(node, node.args, call_type.params[:-1], context)
+        return call_type.params[-1]
+
+    def _get_call_type(self, node, context):
+        callee_type = self.infer(node, context)
         if types.func_type.is_instantiated_type(callee_type):
-            func_type = callee_type
+            return callee_type
+        elif "__call__" in callee_type.attrs:
+            return self._get_call_type(ephemeral.attr(node, "__call__"), context)
         else:
-            call_method = self._get_magic_method(node.func, "call", context)
-            if call_method is None:
-                raise errors.TypeMismatchError(node.func, expected="callable object", actual=callee_type)
-            else:
-                func_type = call_method
-            
-        self._type_check_args(node, node.args, func_type.params[:-1], context)
-        return func_type.params[-1]
+            raise errors.TypeMismatchError(node, expected="callable object", actual=callee_type)
 
 
     def _infer_attr(self, node, context):
