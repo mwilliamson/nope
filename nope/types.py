@@ -116,7 +116,16 @@ class InstantiatedType(object):
     
     def __repr__(self):
         return str(self)
-        
+
+
+class StructuralType(object):
+    def __init__(self, name, attrs):
+        self.name = name
+        self.attrs = attrs
+
+
+structural_type = StructuralType
+
     
 TypeType = collections.namedtuple("TypeType", ["type", "attrs"])
     
@@ -135,6 +144,12 @@ def is_sub_type(super_type, sub_type):
     
     if isinstance(sub_type, ScalarType) and super_type in sub_type.base_classes:
         return True
+    
+    if isinstance(super_type, StructuralType):
+        return all(
+            is_sub_type(super_type.attrs[name], sub_type.attrs.get(name))
+            for name, attr in super_type.attrs.items()
+        )
     
     return super_type == sub_type
 

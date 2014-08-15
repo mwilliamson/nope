@@ -102,3 +102,27 @@ class SubTypeTests(object):
         cls = types.ScalarType("Blah", {}, base_classes=[super_type])
         assert types.is_sub_type(super_type, cls)
         assert not types.is_sub_type(cls, super_type)
+        
+    @istest
+    def scalar_type_is_subtype_of_structural_type_if_it_has_subset_of_attrs(self):
+        cls = types.ScalarType("Person", {
+            "name": types.str_type,
+            "number_of_hats": types.int_type,
+        })
+        structural_type = types.structural_type("HasName", {
+            "name": types.str_type,
+        })
+        
+        assert types.is_sub_type(structural_type, cls)
+        assert not types.is_sub_type(cls, structural_type)
+        
+    @istest
+    def scalar_type_is_not_subtype_of_structural_type_if_it_is_missing_attrs(self):
+        cls = types.ScalarType("Person", {
+        })
+        structural_type = types.structural_type("HasName", {
+            "name": types.str_type,
+        })
+        
+        assert not types.is_sub_type(structural_type, cls)
+        assert not types.is_sub_type(cls, structural_type)
