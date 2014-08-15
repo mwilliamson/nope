@@ -190,7 +190,7 @@ iterator = generic_structural_type("iterator", ["T"])
 iterator.attrs["__iter__"] = lambda T: func([], iterator(T))
 iterator.attrs["__next__"] = lambda T: func([], T)
 
-iterable = generic_class("iterable", ["T"])
+iterable = generic_structural_type("iterable", ["T"])
 iterable.attrs["__iter__"] = lambda T: func([], iterator(T))
 
 list_type = generic_class("list", ["T"], {
