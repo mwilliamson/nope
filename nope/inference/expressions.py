@@ -107,21 +107,15 @@ class ExpressionTypeInferer(object):
         return self.get_call_type(ephemeral.attr(receiver, method_name), context)
     
     def type_check_args(self, node, actual_args, formal_arg_types, context):
-        actual_args_with_types = [
-            (actual_arg, self.infer(actual_arg, context))
-            for actual_arg in actual_args
-        ]
-        return self._type_check_arg_types(node, actual_args_with_types, formal_arg_types)
-        
-    def _type_check_arg_types(self, node, actual_args_with_types, formal_arg_types):
-        if len(formal_arg_types) != len(actual_args_with_types):
+        if len(formal_arg_types) != len(actual_args):
             raise errors.ArgumentsLengthError(
                 node,
                 expected=len(formal_arg_types),
-                actual=len(actual_args_with_types)
+                actual=len(actual_args)
             )
             
-        for (actual_arg, actual_arg_type), formal_arg_type in zip(actual_args_with_types, formal_arg_types):
+        for actual_arg, formal_arg_type in zip(actual_args, formal_arg_types):
+            actual_arg_type = self.infer(actual_arg, context)
             if not types.is_sub_type(formal_arg_type, actual_arg_type):
                 if isinstance(actual_arg, ephemeral.FormalArgumentConstraint):
                     raise errors.TypeMismatchError(
