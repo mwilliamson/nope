@@ -378,9 +378,9 @@ def assignment_to_list_allows_subtype():
 
 @istest
 def assignment_to_list_does_not_allow_supertype():
-    target_node = nodes.subscript(nodes.ref("x"), nodes.int(0))
+    target_sequence_node = nodes.ref("x")
     value_node = nodes.ref("y")
-    node = nodes.assign([target_node], value_node)
+    node = nodes.assign([nodes.subscript(target_sequence_node, nodes.int(0))], value_node)
     context = bound_context({
         "x": types.list_type(types.str_type),
         "y": types.object_type,
@@ -389,7 +389,8 @@ def assignment_to_list_does_not_allow_supertype():
         update_context(node, context)
         assert False, "Expected error"
     except errors.TypeMismatchError as error:
-        assert_equal(target_node, error.node)
+        assert_equal(target_sequence_node, ephemeral.root_node(error.node))
+        assert_equal(nodes.attr(target_sequence_node, "__setitem__"), ephemeral.underlying_node(error.node))
         assert_equal(types.object_type, error.expected)
         assert_equal(types.str_type, error.actual)
 
@@ -690,7 +691,8 @@ def for_statement_target_can_be_supertype_of_iterable_element_type():
 
 @istest
 def for_statement_target_cannot_be_strict_subtype_of_iterable_element_type():
-    target_node = nodes.subscript(nodes.ref("ys"), nodes.int(0))
+    target_sequence_node = nodes.ref("ys")
+    target_node = nodes.subscript(target_sequence_node, nodes.int(0))
     iterable_node = nodes.ref("xs")
     node = nodes.for_loop(target_node, iterable_node, [])
     
@@ -701,7 +703,8 @@ def for_statement_target_cannot_be_strict_subtype_of_iterable_element_type():
         }))
         assert False, "Expected error"
     except errors.TypeMismatchError as error:
-        assert_equal(target_node, error.node)
+        assert_equal(target_sequence_node, ephemeral.root_node(error.node))
+        assert_equal(nodes.attr(target_sequence_node, "__setitem__"), ephemeral.underlying_node(error.node))
         assert_equal(types.object_type, error.expected)
         assert_equal(types.int_type, error.actual)
 

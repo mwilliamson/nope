@@ -21,3 +21,13 @@ def root_node(node):
 
 def underlying_node(node):
     return node._node
+
+
+def formal_arg_constraint(formal_arg_node, type_):
+    return FormalArgumentConstraint(formal_arg_node, type_)
+
+
+class FormalArgumentConstraint(object):
+    def __init__(self, formal_arg_node, type_):
+        self.formal_arg_node = formal_arg_node
+        self.type = type_

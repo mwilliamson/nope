@@ -113,20 +113,15 @@ class StatementTypeChecker(object):
                 context.add(node, target.name, value_type)
             
         elif isinstance(target, nodes.Subscript):
-            setitem_type = self._expression_type_inferer.get_call_type(ephemeral.attr(target.value, "__setitem__"), context)
-            try:
-                value_node = object()
-                self._expression_type_inferer.type_check_arg_types(
-                    node,
-                    [(target.slice, self._infer(target.slice, context)), (value_node, value_type)],
-                    setitem_type.params[:-1],
-                )
-            except errors.TypeMismatchError as error:
-                if error.node is value_node:
-                    raise errors.TypeMismatchError(target, expected=error.actual, actual=error.expected)
-                else:
-                    raise
-            
+            setitem_node = ephemeral.attr(target.value, "__setitem__")
+            setitem_type = self._expression_type_inferer.get_call_type(setitem_node, context)
+            self._expression_type_inferer.type_check_args(
+                node,
+                # TODO: use ephemeral node to represent formal argument of __setitem__
+                [target.slice, ephemeral.formal_arg_constraint(setitem_node, value_type)],
+                setitem_type.params[:-1],
+                context,
+            )
         else:
             raise Exception("Not implemented yet")
     

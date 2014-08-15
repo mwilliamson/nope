@@ -19,6 +19,7 @@ class ExpressionTypeInferer(object):
             nodes.UnaryOperation: self._infer_unary_operation,
             nodes.Subscript: self._infer_subscript,
             ephemeral.EphemeralNode: lambda node, context: self.infer(node._node, context),
+            ephemeral.FormalArgumentConstraint: lambda node, context: node.type,
         }
     
     def infer(self, expression, context):
@@ -53,7 +54,7 @@ class ExpressionTypeInferer(object):
 
     def _infer_call(self, node, context):
         call_type = self.get_call_type(node.func, context)
-        self._type_check_args(node, node.args, call_type.params[:-1], context)
+        self.type_check_args(node, node.args, call_type.params[:-1], context)
         return call_type.params[-1]
 
     def get_call_type(self, node, context):
@@ -93,7 +94,7 @@ class ExpressionTypeInferer(object):
         if len(formal_arg_types) != len(actual_args):
             raise errors.BadSignatureError(receiver, "{} should have exactly {} argument(s)".format(method_name, len(actual_args)))
         
-        self._type_check_args(node, actual_args, formal_arg_types, context)
+        self.type_check_args(node, actual_args, formal_arg_types, context)
         
         return formal_return_type
     
@@ -105,14 +106,14 @@ class ExpressionTypeInferer(object):
         
         return self.get_call_type(ephemeral.attr(receiver, method_name), context)
     
-    def _type_check_args(self, node, actual_args, formal_arg_types, context):
+    def type_check_args(self, node, actual_args, formal_arg_types, context):
         actual_args_with_types = [
             (actual_arg, self.infer(actual_arg, context))
             for actual_arg in actual_args
         ]
-        return self.type_check_arg_types(node, actual_args_with_types, formal_arg_types)
+        return self._type_check_arg_types(node, actual_args_with_types, formal_arg_types)
         
-    def type_check_arg_types(self, node, actual_args_with_types, formal_arg_types):
+    def _type_check_arg_types(self, node, actual_args_with_types, formal_arg_types):
         if len(formal_arg_types) != len(actual_args_with_types):
             raise errors.ArgumentsLengthError(
                 node,
@@ -122,8 +123,15 @@ class ExpressionTypeInferer(object):
             
         for (actual_arg, actual_arg_type), formal_arg_type in zip(actual_args_with_types, formal_arg_types):
             if not types.is_sub_type(formal_arg_type, actual_arg_type):
-                raise errors.TypeMismatchError(
-                    actual_arg,
-                    expected=formal_arg_type,
-                    actual=actual_arg_type
-                )
+                if isinstance(actual_arg, ephemeral.FormalArgumentConstraint):
+                    raise errors.TypeMismatchError(
+                        actual_arg.formal_arg_node,
+                        expected=actual_arg_type,
+                        actual=formal_arg_type
+                    )
+                else:
+                    raise errors.TypeMismatchError(
+                        actual_arg,
+                        expected=formal_arg_type,
+                        actual=actual_arg_type
+                    )
