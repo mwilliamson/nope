@@ -102,7 +102,7 @@ class ExpressionTypeInferer(object):
         receiver_type = self.infer(receiver, context)
         
         if method_name not in receiver_type.attrs:
-            raise errors.TypeMismatchError(receiver, expected="type with {}".format(method_name), actual=receiver_type)
+            raise errors.TypeMismatchError(receiver, expected="object with method '{}'".format(method_name), actual=receiver_type)
         
         return self.get_call_type(ephemeral.attr(receiver, method_name), context)
     

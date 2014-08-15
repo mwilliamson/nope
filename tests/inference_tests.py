@@ -189,7 +189,7 @@ def operands_of_add_operation_must_support_add():
         assert False, "Expected error"
     except errors.TypeMismatchError as error:
         assert_equal(addition.left, error.node)
-        assert_equal("type with __add__", error.expected)
+        assert_equal("object with method '__add__'", error.expected)
         assert_equal(types.none_type, error.actual)
 
 
@@ -257,7 +257,7 @@ def operands_of_sub_operation_must_support_sub():
         assert False, "Expected error"
     except errors.TypeMismatchError as error:
         assert_equal(subtraction.left, error.node)
-        assert_equal("type with __sub__", error.expected)
+        assert_equal("object with method '__sub__'", error.expected)
         assert_equal(types.none_type, error.actual)
 
 
@@ -277,7 +277,7 @@ def operands_of_mul_operation_must_support_mul():
         assert False, "Expected error"
     except errors.TypeMismatchError as error:
         assert_equal(multiplication.left, error.node)
-        assert_equal("type with __mul__", error.expected)
+        assert_equal("object with method '__mul__'", error.expected)
         assert_equal(types.none_type, error.actual)
 
 
