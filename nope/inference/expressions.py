@@ -107,12 +107,7 @@ class ExpressionTypeInferer(object):
             else:
                 return None
         
-        method_type = receiver_type.attrs[method_name]
-        
-        if not types.func_type.is_instantiated_type(method_type):
-            raise errors.BadSignatureError(receiver, "{} should be a method".format(method_name))
-        
-        return receiver_type.attrs[method_name]
+        return self._get_call_type(ephemeral.attr(receiver, method_name), context)
     
     def _type_check_args(self, node, actual_args, formal_arg_types, context):
         actual_args_with_types = [
