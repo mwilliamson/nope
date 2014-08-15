@@ -54,18 +54,23 @@ class _GenericType(object):
     def __repr__(self):
         return str(self)
 
-def generic_class(name, params, attrs=None):
+
+def _generic_type(params, underlying_type, attrs=None):
     if attrs is None:
         attrs = {}
     
     formal_params = [_FormalParameter(param) for param in params]
     param_map = dict(zip(params, formal_params))
-    generic_class = _GenericType(formal_params, ScalarType(name, {}))
+    generic_class = _GenericType(formal_params, underlying_type)
     
     for name, create_attr in attrs.items():
         generic_class.attrs[name] = create_attr
     
     return generic_class
+
+
+def generic_class(name, params, attrs=None):
+    return _generic_type(params, ScalarType(name, {}), attrs)
 
 
 def _substitute_types(type_, type_map):
@@ -126,6 +131,9 @@ class StructuralType(object):
 
 structural_type = StructuralType
 
+def generic_structural_type(name, params, attrs=None):
+    return _generic_type(params, structural_type(name, {}), attrs)
+
     
 TypeType = collections.namedtuple("TypeType", ["type", "attrs"])
     
@@ -178,8 +186,9 @@ str_type = ScalarType("str", {})
 str_type.attrs["find"] = func([str_type], int_type)
 
 # TODO: should be a structural type (with __next__)
-iterator = generic_class("iterator", ["T"])
+iterator = generic_structural_type("iterator", ["T"])
 iterator.attrs["__iter__"] = lambda T: func([], iterator(T))
+iterator.attrs["__next__"] = lambda T: func([], T)
 
 iterable = generic_class("iterable", ["T"])
 iterable.attrs["__iter__"] = lambda T: func([], iterator(T))
