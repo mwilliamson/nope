@@ -1,6 +1,4 @@
-import os
-
-from .. import types, nodes, util, errors, returns
+from .. import types, util
 from ..context import new_module_context
 from .expressions import ExpressionTypeInferer
 from .statements import StatementTypeChecker
