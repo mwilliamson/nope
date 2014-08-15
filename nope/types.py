@@ -135,7 +135,7 @@ def generic_structural_type(name, params, attrs=None):
     return _generic_type(params, structural_type(name, {}), attrs)
 
     
-TypeType = collections.namedtuple("TypeType", ["type", "attrs"])
+MetaType = collections.namedtuple("MetaType", ["type", "attrs"])
     
 
 # TODO: set type params of func correctly (needs varargs?)
@@ -200,18 +200,18 @@ list_type = generic_class("list", ["T"], {
     "append": lambda T: func([T], none_type),
 })
 
-def type_type(name, attrs=None):
+def meta_type(name, attrs=None):
     if attrs is None:
         attrs = {}
     
-    return TypeType(name, attrs)
+    return MetaType(name, attrs)
 
 any_type = object_type = ScalarType("object", {})
 
 bottom_type = ScalarType("bottom", {})
 
 exception_type = ScalarType("Exception", {})
-exception_meta_type = type_type(exception_type, {
+exception_meta_type = meta_type(exception_type, {
     "__call__": func([str_type], exception_type)
 })
 
