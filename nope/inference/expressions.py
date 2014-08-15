@@ -85,7 +85,7 @@ class ExpressionTypeInferer(object):
     
     def infer_magic_method_call(self, node, short_name, receiver, actual_args, context):
         method_name = "__{}__".format(short_name)
-        method = self._get_magic_method(receiver, short_name, context, required=True)
+        method = self._get_magic_method(receiver, short_name, context)
         
         formal_arg_types = method.params[:-1]
         formal_return_type = method.params[-1]
@@ -97,15 +97,12 @@ class ExpressionTypeInferer(object):
         
         return formal_return_type
     
-    def _get_magic_method(self, receiver, short_name, context, required=False):
+    def _get_magic_method(self, receiver, short_name, context):
         method_name = "__{}__".format(short_name)
         receiver_type = self.infer(receiver, context)
         
         if method_name not in receiver_type.attrs:
-            if required:
-                raise errors.TypeMismatchError(receiver, expected="type with {}".format(method_name), actual=receiver_type)
-            else:
-                return None
+            raise errors.TypeMismatchError(receiver, expected="type with {}".format(method_name), actual=receiver_type)
         
         return self._get_call_type(ephemeral.attr(receiver, method_name), context)
     
