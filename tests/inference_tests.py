@@ -588,6 +588,23 @@ def type_of_variable_remains_undefined_if_set_in_while_loop_body():
 
 
 @istest
+def for_statement_accepts_iterable_with_iter_method():
+    cls = types.ScalarType("Blah", {})
+    cls.attrs["__iter__"] = types.func([], types.iterator(types.str_type))
+    
+    node = nodes.for_loop(nodes.ref("x"), nodes.ref("xs"), [])
+    
+    context = bound_context({
+        "x": None,
+        "xs": cls,
+    })
+    
+    update_context(node, context)
+    
+    assert_equal(types.str_type, context.lookup("x", allow_unbound=True))
+
+
+@istest
 def for_statement_has_iterable_type_checked():
     ref_node = nodes.ref("xs")
     node = nodes.for_loop(nodes.ref("x"), ref_node, [])
