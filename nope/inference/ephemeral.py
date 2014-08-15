@@ -15,8 +15,10 @@ class EphemeralNode(object):
 
 
 def root_node(node):
-    # TODO: should keep recursing until we reach a non-ephemeral node
-    return node._root_node
+    while isinstance(node, EphemeralNode):
+        node = node._root_node
+        
+    return node
 
 
 def underlying_node(node):
