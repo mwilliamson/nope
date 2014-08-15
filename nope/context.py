@@ -41,7 +41,7 @@ class Context(object):
     def is_bound(self, name):
         return self._vars[name].is_bound
     
-    def add(self, node, name, var_type):
+    def add(self, name, var_type):
         # All names should be declared on entering a scope, so if `name` isn't
         # in `self._vars` it's a programming error i.e. a bug in the type checker
         variable = self._vars[name]

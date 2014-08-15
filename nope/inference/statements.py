@@ -75,7 +75,7 @@ class StatementTypeChecker(object):
         body_context = context.enter_func(return_type, local_names=local_names)
         
         for arg, arg_type in zip(node.args.args, func_type.params):
-            body_context.add(arg, arg.name, arg_type)
+            body_context.add(arg.name, arg_type)
             
         for statement in node.body:
             self.update_context(statement, body_context)
@@ -83,7 +83,7 @@ class StatementTypeChecker(object):
         if return_type != types.none_type and not returns.has_unconditional_return(node.body):
             raise errors.MissingReturnError(node, return_type)
         
-        context.add(node, node.name, func_type)
+        context.add(node.name, func_type)
 
 
     def _check_expression_statement(self, node, context):
@@ -104,13 +104,12 @@ class StatementTypeChecker(object):
     
     def _assign(self, node, target, value_type, context):
         if isinstance(target, nodes.VariableReference):
-            # TODO: should we pass target in instead of node?
             var_type = context.lookup(target.name, allow_unbound=True)
             if var_type is not None and not types.is_sub_type(var_type, value_type):
                 raise errors.TypeMismatchError(node, expected=var_type, actual=value_type)
             
             if not context.is_bound(target.name):
-                context.add(node, target.name, value_type)
+                context.add(target.name, value_type)
             
         elif isinstance(target, nodes.Subscript):
             setitem_node = ephemeral.attr(target.value, "__setitem__")
@@ -212,7 +211,7 @@ class StatementTypeChecker(object):
                     this_module = self._find_module(node, parts[:index + 1])
                     
                     if index == 0:
-                        context.add(node, part, this_module)
+                        context.add(part, this_module)
                     else:
                         last_module.attrs[part] = this_module
                         
@@ -220,7 +219,7 @@ class StatementTypeChecker(object):
                 
             else:
                 module = self._find_module(node, alias.name_parts)
-                context.add(node, alias.value_name, module)
+                context.add(alias.value_name, module)
 
 
     def _check_import_from(self, node, context):
@@ -228,11 +227,11 @@ class StatementTypeChecker(object):
         for alias in node.names:
             module_value = module.attrs.get(alias.name)
             if module_value is not None:
-                context.add(node, alias.value_name, module_value)
+                context.add(alias.value_name, module_value)
             else:
                 submodule = self._find_module(node, node.module + [alias.name])
                 module.attrs[alias.value_name] = submodule
-                context.add(node, alias.value_name, submodule)
+                context.add(alias.value_name, submodule)
 
     
     def _find_module(self, node, names):
