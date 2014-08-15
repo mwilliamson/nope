@@ -625,6 +625,30 @@ def for_statement_accepts_iterable_with_getitem_method():
 
 
 @istest
+def for_statement_requires_iterable_getitem_method_to_accept_integers():
+    cls = types.ScalarType("Blah", {})
+    cls.attrs["__getitem__"] = types.func([types.str_type], types.str_type)
+    
+    ref_node = nodes.ref("xs")
+    node = nodes.for_loop(nodes.ref("x"), ref_node, [])
+    
+    context = bound_context({
+        "x": None,
+        "xs": cls,
+    })
+    
+    try:
+        update_context(node, context)
+        assert False, "Expected error"
+    except errors.TypeMismatchError as error:
+        assert_equal(ref_node, ephemeral.root_node(error.node))
+        # TODO: use ephemeral node to represent formal argument of __getitem__
+        assert_equal(nodes.attr(ref_node, "__getitem__"), ephemeral.underlying_node(error.node))
+        assert_equal(types.int_type, error.expected)
+        assert_equal(types.str_type, error.actual)
+
+
+@istest
 def for_statement_has_iterable_type_checked():
     ref_node = nodes.ref("xs")
     node = nodes.for_loop(nodes.ref("x"), ref_node, [])

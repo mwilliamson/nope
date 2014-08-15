@@ -163,7 +163,8 @@ class StatementTypeChecker(object):
             
             element_type, = iterator_type.params
         elif "__getitem__" in iterable_type.attrs:
-            element_type = self._expression_type_inferer.infer_magic_method_call(node, "getitem", node.iterable, [nodes.int(0)], context)
+            args = [ephemeral.formal_arg_constraint(ephemeral.attr(node.iterable, "__getitem__"), types.int_type)]
+            element_type = self._expression_type_inferer.infer_magic_method_call(node, "getitem", node.iterable, args, context)
         else:
             raise errors.TypeMismatchError(node.iterable, expected="iterable type", actual=iterable_type)
         
