@@ -73,6 +73,18 @@ def object_can_be_called_if_it_has_call_magic_method():
 
 
 @istest
+def object_can_be_called_if_it_has_call_magic_method_that_returns_callable():
+    second_cls = types.ScalarType("Second", {
+        "__call__": types.func([types.str_type], types.int_type)
+    })
+    first_cls = types.ScalarType("First", {
+        "__call__": second_cls
+    })
+    context = bound_context({"f": first_cls})
+    assert_equal(types.int_type, infer(nodes.call(nodes.ref("f"), [nodes.string("")]), context))
+
+
+@istest
 def callee_must_be_function_or_have_call_magic_method():
     cls = types.ScalarType("Blah", {})
     context = bound_context({"f": cls})
