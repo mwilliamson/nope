@@ -1,7 +1,7 @@
 from nose.tools import istest, assert_equal, assert_raises
 
 from nope import types, nodes, inference, errors
-from nope.inference import infer as _infer, update_context
+from nope.inference import infer as _infer, update_context, ephemeral
 from nope.context import bound_context, new_module_context, Context, Variable
 
 
@@ -95,9 +95,8 @@ def call_attribute_must_be_function():
         infer(nodes.call(callee_node, []), context)
         assert False, "Expected error"
     except errors.TypeMismatchError as error:
-        # TODO:
-        #~ assert_equal(callee_node, ephemeral.root_node(error.node))
-        #~ assert_equal(nodes.attr(callee_node, "__call__"), ephemeral.underlying_node(error.node))
+        assert_equal(callee_node, ephemeral.root_node(error.node))
+        assert_equal(nodes.attr(callee_node, "__call__"), ephemeral.underlying_node(error.node))
         assert_equal("callable object", error.expected)
         assert_equal(types.int_type, error.actual)
 
