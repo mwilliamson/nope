@@ -309,11 +309,17 @@ class _TypeChecker(object):
     
     
     def _check_for_loop(self, node, context):
-        iterator_type = self._infer_magic_method_call(node, "iter", node.iterable, [], context)
-        if not types.iterator.is_instantiated_type(iterator_type):
-            raise errors.BadSignatureError(node.iterable, "__iter__ should return an iterator")
+        iterable_type = self.infer(node.iterable, context)
+        if "__iter__" in iterable_type.attrs:
+            iterator_type = self._infer_magic_method_call(node, "iter", node.iterable, [], context)
+            if not types.iterator.is_instantiated_type(iterator_type):
+                raise errors.BadSignatureError(node.iterable, "__iter__ should return an iterator")
             
-        element_type, = iterator_type.params
+            element_type, = iterator_type.params
+        elif "__getitem__" in iterable_type.attrs:
+            element_type = self._infer_magic_method_call(node, "getitem", node.iterable, [nodes.int(0)], context)
+        else:
+            raise errors.TypeMismatchError(node.iterable, expected="iterable type", actual=iterable_type)
         
         body_context = context.enter_loop()
         self._assign(node, node.target, element_type, body_context)

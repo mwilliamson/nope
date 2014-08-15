@@ -605,6 +605,23 @@ def for_statement_accepts_iterable_with_iter_method():
 
 
 @istest
+def for_statement_accepts_iterable_with_getitem_method():
+    cls = types.ScalarType("Blah", {})
+    cls.attrs["__getitem__"] = types.func([types.int_type], types.str_type)
+    
+    node = nodes.for_loop(nodes.ref("x"), nodes.ref("xs"), [])
+    
+    context = bound_context({
+        "x": None,
+        "xs": cls,
+    })
+    
+    update_context(node, context)
+    
+    assert_equal(types.str_type, context.lookup("x", allow_unbound=True))
+
+
+@istest
 def for_statement_has_iterable_type_checked():
     ref_node = nodes.ref("xs")
     node = nodes.for_loop(nodes.ref("x"), ref_node, [])
@@ -618,7 +635,6 @@ def for_statement_has_iterable_type_checked():
 
 @istest
 def for_statement_requires_iterable_to_have_iter_method():
-    # TODO: support sequence protocol
     ref_node = nodes.ref("xs")
     node = nodes.for_loop(nodes.ref("x"), ref_node, [])
     
@@ -627,7 +643,7 @@ def for_statement_requires_iterable_to_have_iter_method():
         assert False, "Expected error"
     except errors.TypeMismatchError as error:
         assert_equal(ref_node, error.node)
-        assert_equal("type with __iter__", error.expected)
+        assert_equal("iterable type", error.expected)
         assert_equal(types.int_type, error.actual)
 
 
