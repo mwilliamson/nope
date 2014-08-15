@@ -182,7 +182,7 @@ def type_type(name, attrs=None):
     
     return TypeType(name, attrs)
 
-object_type = ScalarType("object", {})
+any_type = object_type = ScalarType("object", {})
 
 bottom_type = ScalarType("bottom", {})
 
