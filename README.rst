@@ -78,7 +78,6 @@ Note that not all backends may support all features.
 * **Augmented assignments**: unsupported.
 
 * **For loops**: partially supported.
-  The sequence protocol is currently unsupported.
   
 * **While loops**: supported.
 
@@ -109,6 +108,20 @@ Note that not all backends may support all features.
 * **break keyword**: supported.
 
 * **continue keyword**: supported.
+
+Node.js backend
+~~~~~~~~~~~~~~~
+
+Support builtin functions:
+
+* ``abs``: supported
+
+* ``bool``: partially supported. The magic method ``__bool__`` is ignored.
+
+* ``iter``: partially supported. The sequence protocol is unsupported.
+
+* ``print``: only a single argument is accepted.
+
 
 Differences from Python 3
 -------------------------
