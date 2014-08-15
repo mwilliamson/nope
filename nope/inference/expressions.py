@@ -52,16 +52,16 @@ class ExpressionTypeInferer(object):
         return context.lookup(node.name)
 
     def _infer_call(self, node, context):
-        call_type = self._get_call_type(node.func, context)
+        call_type = self.get_call_type(node.func, context)
         self._type_check_args(node, node.args, call_type.params[:-1], context)
         return call_type.params[-1]
 
-    def _get_call_type(self, node, context):
+    def get_call_type(self, node, context):
         callee_type = self.infer(node, context)
         if types.func_type.is_instantiated_type(callee_type):
             return callee_type
         elif "__call__" in callee_type.attrs:
-            return self._get_call_type(ephemeral.attr(node, "__call__"), context)
+            return self.get_call_type(ephemeral.attr(node, "__call__"), context)
         else:
             raise errors.TypeMismatchError(node, expected="callable object", actual=callee_type)
 
@@ -103,7 +103,7 @@ class ExpressionTypeInferer(object):
         if method_name not in receiver_type.attrs:
             raise errors.TypeMismatchError(receiver, expected="type with {}".format(method_name), actual=receiver_type)
         
-        return self._get_call_type(ephemeral.attr(receiver, method_name), context)
+        return self.get_call_type(ephemeral.attr(receiver, method_name), context)
     
     def _type_check_args(self, node, actual_args, formal_arg_types, context):
         actual_args_with_types = [

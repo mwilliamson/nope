@@ -1,6 +1,7 @@
 import os
 
 from .. import nodes, types, util, returns, errors
+from . import ephemeral
 
 
 class StatementTypeChecker(object):
@@ -112,9 +113,7 @@ class StatementTypeChecker(object):
                 context.add(node, target.name, value_type)
             
         elif isinstance(target, nodes.Subscript):
-            target_value_type = self._infer(target.value, context)
-            # TODO: check setitem exists and has correct signature
-            setitem_type = target_value_type.attrs["__setitem__"]
+            setitem_type = self._expression_type_inferer.get_call_type(ephemeral.attr(target.value, "__setitem__"), context)
             try:
                 value_node = object()
                 self._expression_type_inferer.type_check_arg_types(
