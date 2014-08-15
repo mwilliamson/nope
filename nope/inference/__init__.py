@@ -1,7 +1,8 @@
 import os
 
-from . import types, nodes, util, errors, returns
-from .context import new_module_context
+from .. import types, nodes, util, errors, returns
+from ..context import new_module_context
+from .expressions import ExpressionTypeInferer
 
 
 def check(module, source_tree=None, module_path=None):
@@ -24,14 +25,13 @@ class _TypeChecker(object):
         self._module_path = module_path
         self._is_executable = is_executable
         self._type_lookup = {}
+        self._expression_type_inferer = ExpressionTypeInferer(self._type_lookup)
     
     def type_lookup(self):
         return types.TypeLookup(self._type_lookup)
 
     def infer(self, expression, context):
-        expression_type = self._inferers[type(expression)](self, expression, context)
-        self._type_lookup[id(expression)] = expression_type
-        return expression_type
+        return self._expression_type_inferer.infer(expression, context)
 
     def update_context(self, statement, context, source_tree=None):
         self._checkers[type(statement)](self, statement, context)
@@ -67,117 +67,6 @@ class _TypeChecker(object):
             for name in util.exported_names(module)
             if context.is_bound(name)
         ))
-
-
-    def _infer_none(self, node, context):
-        return types.none_type
-    
-    def _infer_bool(self, node, context):
-        return types.boolean_type
-    
-    def _infer_int(self, node, context):
-        return types.int_type
-
-    def _infer_str(self, node, context):
-        return types.str_type
-
-    def _infer_list(self, node, context):
-        element_types = [self.infer(element, context) for element in node.elements]
-        return types.list_type(types.unify(element_types))
-
-    def _infer_ref(self, node, context):
-        if not context.has_name(node.name):
-            raise errors.UndefinedNameError(node, node.name)
-            
-        if not context.is_bound(node.name):
-            raise errors.UnboundLocalError(node, node.name)
-            
-        return context.lookup(node.name)
-
-    def _infer_call(self, node, context):
-        callee_type = self.infer(node.func, context)
-        if types.func_type.is_instantiated_type(callee_type):
-            func_type = callee_type
-        else:
-            call_method = self._get_magic_method(node.func, "call", context)
-            if call_method is None:
-                raise errors.TypeMismatchError(node.func, expected="callable object", actual=callee_type)
-            else:
-                func_type = call_method
-            
-        self._type_check_args(node, node.args, func_type.params[:-1], context)
-        return func_type.params[-1]
-
-
-    def _infer_attr(self, node, context):
-        value_type = self.infer(node.value, context)
-        if node.attr in value_type.attrs:
-            return value_type.attrs[node.attr]
-        else:
-            raise errors.AttributeError(node, str(value_type), node.attr)
-    
-    def _infer_binary_operation(self, node, context):
-        return self._infer_magic_method_call(node, node.operator, node.left, [node.right], context)
-    
-    def _infer_unary_operation(self, node, context):
-        return self._infer_magic_method_call(node, node.operator, node.operand, [], context)
-    
-    def _infer_subscript(self, node, context):
-        return self._infer_magic_method_call(node, "getitem", node.value, [node.slice], context)
-    
-    def _infer_magic_method_call(self, node, short_name, receiver, actual_args, context):
-        method_name = "__{}__".format(short_name)
-        method = self._get_magic_method(receiver, short_name, context, required=True)
-        
-        formal_arg_types = method.params[:-1]
-        formal_return_type = method.params[-1]
-        
-        if len(formal_arg_types) != len(actual_args):
-            raise errors.BadSignatureError(receiver, "{} should have exactly {} argument(s)".format(method_name, len(actual_args)))
-        
-        self._type_check_args(node, actual_args, formal_arg_types, context)
-        
-        return formal_return_type
-    
-    def _get_magic_method(self, receiver, short_name, context, required=False):
-        method_name = "__{}__".format(short_name)
-        receiver_type = self.infer(receiver, context)
-        
-        if method_name not in receiver_type.attrs:
-            if required:
-                raise errors.TypeMismatchError(receiver, expected="type with {}".format(method_name), actual=receiver_type)
-            else:
-                return None
-        
-        method_type = receiver_type.attrs[method_name]
-        
-        if not types.func_type.is_instantiated_type(method_type):
-            raise errors.BadSignatureError(receiver, "{} should be a method".format(method_name))
-        
-        return receiver_type.attrs[method_name]
-    
-    def _type_check_args(self, node, actual_args, formal_arg_types, context):
-        actual_args_with_types = [
-            (actual_arg, self.infer(actual_arg, context))
-            for actual_arg in actual_args
-        ]
-        return self._type_check_arg_types(node, actual_args_with_types, formal_arg_types)
-        
-    def _type_check_arg_types(self, node, actual_args_with_types, formal_arg_types):
-        if len(formal_arg_types) != len(actual_args_with_types):
-            raise errors.ArgumentsLengthError(
-                node,
-                expected=len(formal_arg_types),
-                actual=len(actual_args_with_types)
-            )
-            
-        for (actual_arg, actual_arg_type), formal_arg_type in zip(actual_args_with_types, formal_arg_types):
-            if not types.is_sub_type(formal_arg_type, actual_arg_type):
-                raise errors.TypeMismatchError(
-                    actual_arg,
-                    expected=formal_arg_type,
-                    actual=actual_arg_type
-                )
         
 
 
@@ -216,21 +105,6 @@ class _TypeChecker(object):
             raise errors.MissingReturnError(node, return_type)
         
         context.add(node, node.name, func_type)
-    
-
-    _inferers = {
-        nodes.NoneExpression: _infer_none,
-        nodes.BooleanExpression: _infer_bool,
-        nodes.IntExpression: _infer_int,
-        nodes.StringExpression: _infer_str,
-        nodes.ListExpression: _infer_list,
-        nodes.VariableReference: _infer_ref,
-        nodes.Call: _infer_call,
-        nodes.AttributeAccess: _infer_attr,
-        nodes.BinaryOperation: _infer_binary_operation,
-        nodes.UnaryOperation: _infer_unary_operation,
-        nodes.Subscript: _infer_subscript,
-    }
 
 
     def _check_expression_statement(self, node, context):
@@ -265,7 +139,7 @@ class _TypeChecker(object):
             setitem_type = target_value_type.attrs["__setitem__"]
             try:
                 value_node = object()
-                self._type_check_arg_types(
+                self._expression_type_inferer.type_check_arg_types(
                     node,
                     [(target.slice, self.infer(target.slice, context)), (value_node, value_type)],
                     setitem_type.params[:-1],
@@ -311,13 +185,13 @@ class _TypeChecker(object):
     def _check_for_loop(self, node, context):
         iterable_type = self.infer(node.iterable, context)
         if "__iter__" in iterable_type.attrs:
-            iterator_type = self._infer_magic_method_call(node, "iter", node.iterable, [], context)
+            iterator_type = self._expression_type_inferer.infer_magic_method_call(node, "iter", node.iterable, [], context)
             if not types.iterator.is_instantiated_type(iterator_type):
                 raise errors.BadSignatureError(node.iterable, "__iter__ should return an iterator")
             
             element_type, = iterator_type.params
         elif "__getitem__" in iterable_type.attrs:
-            element_type = self._infer_magic_method_call(node, "getitem", node.iterable, [nodes.int(0)], context)
+            element_type = self._expression_type_inferer.infer_magic_method_call(node, "getitem", node.iterable, [nodes.int(0)], context)
         else:
             raise errors.TypeMismatchError(node.iterable, expected="iterable type", actual=iterable_type)
         
