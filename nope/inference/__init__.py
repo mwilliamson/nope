@@ -290,10 +290,6 @@ class _TypeChecker(object):
             import_path + ".py"
         )
 
-    def _nop_check(self, node, context):
-        pass
-        
-
     _checkers = {
         nodes.ExpressionStatement: _check_expression_statement,
         nodes.ReturnStatement: _check_return,
