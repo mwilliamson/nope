@@ -128,38 +128,53 @@ class StatementTypeChecker(object):
     def _check_if_else(self, node, context):
         self._infer(node.condition, context)
         
-        true_context = context.enter_if_else_branch()
-        self.update_context(node.true_body, true_context)
-        
-        false_context = context.enter_if_else_branch()
-        self.update_context(node.false_body, false_context)
-        
-        context.unify([true_context, false_context], bind=True)
+        self._check_branches(
+            [
+                _IfElseBranch(node.true_body),
+                _IfElseBranch(node.false_body),
+            ],
+            context,
+            bind=True,
+        )
 
 
     def _check_while_loop(self, node, context):
         self._infer(node.condition, context)
-        
-        body_context = context.enter_loop()
-        self.update_context(node.body, body_context)
-        
-        else_body_context = context.enter_loop()
-        self.update_context(node.else_body, else_body_context)
-            
-        context.unify([body_context, else_body_context], bind=False)
+        self._check_branches(
+            [
+                _LoopBranch(node.body),
+                _LoopBranch(node.else_body),
+            ],
+            context,
+            bind=False,
+        )
     
     
     def _check_for_loop(self, node, context):
         element_type = self._infer_for_loop_element_type(node, context)
         
-        body_context = context.enter_loop()
-        self._assign(node, node.target, element_type, body_context)
-        self.update_context(node.body, body_context)
+        def assign_loop_target(body_context):
+            self._assign(node, node.target, element_type, body_context)
         
-        else_body_context = context.enter_loop()
-        self.update_context(node.else_body, else_body_context)
+        self._check_branches(
+            [
+                _LoopBranch(node.body, before=assign_loop_target),
+                _LoopBranch(node.else_body),
+            ],
+            context,
+            bind=False,
+        )
+    
+    
+    def _check_branches(self, branches, context, bind):
+        def check_branch(branch):
+            branch_context = branch.enter_context(context)
+            self.update_context(branch.statements, branch_context)
+            return branch_context
         
-        context.unify([body_context, else_body_context], bind=False)
+        contexts = list(map(check_branch, branches))
+        
+        context.unify(contexts, bind=bind)
     
     
     def _infer_for_loop_element_type(self, node, context):
@@ -267,3 +282,23 @@ class StatementTypeChecker(object):
     def _check_list(self, statements, context):
         for statement in statements:
             self.update_context(statement, context)
+
+
+class _LoopBranch(object):
+    def __init__(self, statements, before=None):
+        self.statements = statements
+        self.before = before
+    
+    def enter_context(self, context):
+        loop_context = context.enter_loop()
+        if self.before is not None:
+            self.before(loop_context)
+        return loop_context
+
+
+class _IfElseBranch(object):
+    def __init__(self, statements):
+        self.statements = statements
+        
+    def enter_context(self, context):
+        return context.enter_if_else_branch()
