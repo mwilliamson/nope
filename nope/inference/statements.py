@@ -104,25 +104,32 @@ class StatementTypeChecker(object):
     
     def _assign(self, node, target, value_type, context):
         if isinstance(target, nodes.VariableReference):
-            var_type = context.lookup(target.name, allow_unbound=True)
-            if var_type is not None and not types.is_sub_type(var_type, value_type):
-                raise errors.TypeMismatchError(node, expected=var_type, actual=value_type)
-            
-            if not context.is_bound(target.name):
-                context.add(target.name, value_type)
-            
+            self._assign_ref(node, target, value_type, context)
         elif isinstance(target, nodes.Subscript):
-            setitem_node = ephemeral.attr(target.value, "__setitem__")
-            setitem_type = self._expression_type_inferer.get_call_type(setitem_node, context)
-            self._expression_type_inferer.type_check_args(
-                node,
-                # TODO: use ephemeral node to represent formal argument of __setitem__
-                [target.slice, ephemeral.formal_arg_constraint(setitem_node, value_type)],
-                setitem_type.params[:-1],
-                context,
-            )
+            self._assign_subscript(node, target, value_type, context)
         else:
             raise Exception("Not implemented yet")
+    
+    
+    def _assign_ref(self, node, target, value_type, context):
+        var_type = context.lookup(target.name, allow_unbound=True)
+        if var_type is not None and not types.is_sub_type(var_type, value_type):
+            raise errors.TypeMismatchError(node, expected=var_type, actual=value_type)
+        
+        if not context.is_bound(target.name):
+            context.add(target.name, value_type)
+
+    
+    def _assign_subscript(self, node, target, value_type, context):
+        setitem_node = ephemeral.attr(target.value, "__setitem__")
+        setitem_type = self._expression_type_inferer.get_call_type(setitem_node, context)
+        self._expression_type_inferer.type_check_args(
+            node,
+            # TODO: use ephemeral node to represent formal argument of __setitem__
+            [target.slice, ephemeral.formal_arg_constraint(setitem_node, value_type)],
+            setitem_type.params[:-1],
+            context,
+        )
     
     
     def _check_if_else(self, node, context):
