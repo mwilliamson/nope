@@ -24,6 +24,7 @@ class StatementTypeChecker(object):
             nodes.FunctionDef: self._check_function_def,
             nodes.Import: self._check_import,
             nodes.ImportFrom: self._check_import_from,
+            list: self._check_list,
         }
 
     def update_context(self, statement, context):
@@ -77,8 +78,7 @@ class StatementTypeChecker(object):
         for arg, arg_type in zip(node.args.args, func_type.params):
             body_context.add(arg.name, arg_type)
             
-        for statement in node.body:
-            self.update_context(statement, body_context)
+        self.update_context(node.body, body_context)
         
         if return_type != types.none_type and not returns.has_unconditional_return(node.body):
             raise errors.MissingReturnError(node, return_type)
@@ -129,12 +129,10 @@ class StatementTypeChecker(object):
         self._infer(node.condition, context)
         
         true_context = context.enter_if_else_branch()
-        for statement in node.true_body:
-            self.update_context(statement, true_context)
+        self.update_context(node.true_body, true_context)
         
         false_context = context.enter_if_else_branch()
-        for statement in node.false_body:
-            self.update_context(statement, false_context)
+        self.update_context(node.false_body, false_context)
         
         context.unify([true_context, false_context], bind=True)
 
@@ -143,12 +141,10 @@ class StatementTypeChecker(object):
         self._infer(node.condition, context)
         
         body_context = context.enter_loop()
-        for statement in node.body:
-            self.update_context(statement, body_context)
+        self.update_context(node.body, body_context)
         
         else_body_context = context.enter_loop()
-        for statement in node.else_body:
-            self.update_context(statement, else_body_context)
+        self.update_context(node.else_body, else_body_context)
             
         context.unify([body_context, else_body_context], bind=False)
     
@@ -169,12 +165,10 @@ class StatementTypeChecker(object):
         
         body_context = context.enter_loop()
         self._assign(node, node.target, element_type, body_context)
-        for statement in node.body:
-            self.update_context(statement, body_context)
+        self.update_context(node.body, body_context)
         
         else_body_context = context.enter_loop()
-        for statement in node.else_body:
-            self.update_context(statement, else_body_context)
+        self.update_context(node.else_body, else_body_context)
         
         context.unify([body_context, else_body_context], bind=False)
     
@@ -264,3 +258,7 @@ class StatementTypeChecker(object):
         
     def _infer(self, node, context):
         return self._expression_type_inferer.infer(node, context)
+    
+    def _check_list(self, statements, context):
+        for statement in statements:
+            self.update_context(statement, context)
