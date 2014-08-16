@@ -150,18 +150,7 @@ class StatementTypeChecker(object):
     
     
     def _check_for_loop(self, node, context):
-        iterable_type = self._infer(node.iterable, context)
-        if "__iter__" in iterable_type.attrs:
-            iterator_type = self._expression_type_inferer.infer_magic_method_call(node, "iter", node.iterable, [], context)
-            if not types.iterator.is_instantiated_type(iterator_type):
-                raise errors.BadSignatureError(node.iterable, "__iter__ should return an iterator")
-            
-            element_type, = iterator_type.params
-        elif "__getitem__" in iterable_type.attrs:
-            args = [ephemeral.formal_arg_constraint(ephemeral.attr(node.iterable, "__getitem__"), types.int_type)]
-            element_type = self._expression_type_inferer.infer_magic_method_call(node, "getitem", node.iterable, args, context)
-        else:
-            raise errors.TypeMismatchError(node.iterable, expected="iterable type", actual=iterable_type)
+        element_type = self._infer_for_loop_element_type(node, context)
         
         body_context = context.enter_loop()
         self._assign(node, node.target, element_type, body_context)
@@ -171,6 +160,22 @@ class StatementTypeChecker(object):
         self.update_context(node.else_body, else_body_context)
         
         context.unify([body_context, else_body_context], bind=False)
+    
+    
+    def _infer_for_loop_element_type(self, node, context):
+        iterable_type = self._infer(node.iterable, context)
+        if "__iter__" in iterable_type.attrs:
+            iterator_type = self._expression_type_inferer.infer_magic_method_call(node, "iter", node.iterable, [], context)
+            if not types.iterator.is_instantiated_type(iterator_type):
+                raise errors.BadSignatureError(node.iterable, "__iter__ should return an iterator")
+            
+            element_type, = iterator_type.params
+            return element_type
+        elif "__getitem__" in iterable_type.attrs:
+            args = [ephemeral.formal_arg_constraint(ephemeral.attr(node.iterable, "__getitem__"), types.int_type)]
+            return self._expression_type_inferer.infer_magic_method_call(node, "getitem", node.iterable, args, context)
+        else:
+            raise errors.TypeMismatchError(node.iterable, expected="iterable type", actual=iterable_type)
     
     
     def _check_break(self, node, context):
