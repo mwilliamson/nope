@@ -65,28 +65,28 @@ def can_infer_type_of_call():
 
 @istest
 def object_can_be_called_if_it_has_call_magic_method():
-    cls = types.ScalarType("Blah", {
-        "__call__": types.func([types.str_type], types.int_type)
-    })
+    cls = types.scalar_type("Blah", [
+        types.attr("__call__", types.func([types.str_type], types.int_type)),
+    ])
     context = bound_context({"f": cls})
     assert_equal(types.int_type, infer(nodes.call(nodes.ref("f"), [nodes.string("")]), context))
 
 
 @istest
 def object_can_be_called_if_it_has_call_magic_method_that_returns_callable():
-    second_cls = types.ScalarType("Second", {
-        "__call__": types.func([types.str_type], types.int_type)
-    })
-    first_cls = types.ScalarType("First", {
-        "__call__": second_cls
-    })
+    second_cls = types.scalar_type("Second", [
+        types.attr("__call__", types.func([types.str_type], types.int_type)),
+    ])
+    first_cls = types.scalar_type("First", [
+        types.attr("__call__", second_cls),
+    ])
     context = bound_context({"f": first_cls})
     assert_equal(types.int_type, infer(nodes.call(nodes.ref("f"), [nodes.string("")]), context))
 
 
 @istest
 def callee_must_be_function_or_have_call_magic_method():
-    cls = types.ScalarType("Blah", {})
+    cls = types.scalar_type("Blah", {})
     context = bound_context({"f": cls})
     callee_node = nodes.ref("f")
     try:
@@ -100,7 +100,7 @@ def callee_must_be_function_or_have_call_magic_method():
 
 @istest
 def call_attribute_must_be_function():
-    cls = types.ScalarType("Blah", {"__call__": types.int_type})
+    cls = types.scalar_type("Blah", [types.attr("__call__", types.int_type)])
     context = bound_context({"f": cls})
     callee_node = nodes.ref("f")
     try:
@@ -208,8 +208,8 @@ def right_hand_operand_must_be_sub_type_of_formal_argument():
 
 @istest
 def type_of_add_method_argument_allows_super_type():
-    cls = types.ScalarType("Addable", {})
-    cls.attrs["__add__"] = types.func([types.object_type], cls)
+    cls = types.scalar_type("Addable", {})
+    cls.attrs.add("__add__", types.func([types.object_type], cls))
     
     context = bound_context({"x": cls, "y": cls})
     addition = nodes.add(nodes.ref("x"), nodes.ref("y"))
@@ -218,8 +218,8 @@ def type_of_add_method_argument_allows_super_type():
 
 @istest
 def add_method_should_only_accept_one_argument():
-    cls = types.ScalarType("NotAddable", {})
-    cls.attrs["__add__"] = types.func([types.object_type, types.object_type], cls)
+    cls = types.scalar_type("NotAddable", {})
+    cls.attrs.add("__add__", types.func([types.object_type, types.object_type], cls))
     
     context = bound_context({"x": cls, "y": cls})
     addition = nodes.add(nodes.ref("x"), nodes.ref("y"))
@@ -233,8 +233,8 @@ def add_method_should_only_accept_one_argument():
 
 @istest
 def return_type_of_add_can_differ_from_original_type():
-    cls = types.ScalarType("Addable", {})
-    cls.attrs["__add__"] = types.func([types.object_type], types.object_type)
+    cls = types.scalar_type("Addable", {})
+    cls.attrs.add("__add__", types.func([types.object_type], types.object_type))
     
     context = bound_context({"x": cls, "y": cls})
     addition = nodes.add(nodes.ref("x"), nodes.ref("y"))
@@ -290,9 +290,9 @@ def can_infer_type_of_negation_operation():
 
 @istest
 def can_infer_type_of_subscript_using_getitem():
-    cls = types.ScalarType("Blah", {
-        "__getitem__": types.func([types.int_type], types.str_type)
-    })
+    cls = types.scalar_type("Blah", [
+        types.attr("__getitem__", types.func([types.int_type], types.str_type)),
+    ])
     context = bound_context({"x": cls})
     node = nodes.subscript(nodes.ref("x"), nodes.int(4))
     assert_equal(types.str_type, infer(node, context))
@@ -409,7 +409,7 @@ def assignment_to_list_does_not_allow_supertype():
 
 @istest
 def assignment_to_attribute_allows_subtype():
-    cls = types.ScalarType("X", {"y": types.object_type})
+    cls = types.scalar_type("X", [types.attr("y", types.object_type)])
     
     node = nodes.assign([nodes.attr(nodes.ref("x"), "y")], nodes.string("Hello"))
     context = bound_context({"x": cls})
@@ -418,7 +418,7 @@ def assignment_to_attribute_allows_subtype():
 
 @istest
 def assignment_to_attribute_does_not_allow_strict_supertype():
-    cls = types.ScalarType("X", {"y": types.str_type})
+    cls = types.scalar_type("X", [types.attr("y", types.str_type)])
     
     attr_node = nodes.attr(nodes.ref("x"), "y")
     node = nodes.assign([attr_node], nodes.ref("obj"))
@@ -629,8 +629,8 @@ def type_of_variable_remains_undefined_if_set_in_while_loop_body():
 
 @istest
 def for_statement_accepts_iterable_with_iter_method():
-    cls = types.ScalarType("Blah", {})
-    cls.attrs["__iter__"] = types.func([], types.iterator(types.str_type))
+    cls = types.scalar_type("Blah")
+    cls.attrs.add("__iter__", types.func([], types.iterator(types.str_type)))
     
     node = nodes.for_loop(nodes.ref("x"), nodes.ref("xs"), [])
     
@@ -646,8 +646,8 @@ def for_statement_accepts_iterable_with_iter_method():
 
 @istest
 def for_statement_accepts_iterable_with_getitem_method():
-    cls = types.ScalarType("Blah", {})
-    cls.attrs["__getitem__"] = types.func([types.int_type], types.str_type)
+    cls = types.scalar_type("Blah")
+    cls.attrs.add("__getitem__", types.func([types.int_type], types.str_type))
     
     node = nodes.for_loop(nodes.ref("x"), nodes.ref("xs"), [])
     
@@ -663,8 +663,8 @@ def for_statement_accepts_iterable_with_getitem_method():
 
 @istest
 def for_statement_requires_iterable_getitem_method_to_accept_integers():
-    cls = types.ScalarType("Blah", {})
-    cls.attrs["__getitem__"] = types.func([types.str_type], types.str_type)
+    cls = types.scalar_type("Blah")
+    cls.attrs.add("__getitem__", types.func([types.str_type], types.str_type))
     
     ref_node = nodes.ref("xs")
     node = nodes.for_loop(nodes.ref("x"), ref_node, [])
@@ -713,8 +713,8 @@ def for_statement_requires_iterable_to_have_iter_method():
 
 @istest
 def iter_method_must_take_no_arguments():
-    cls = types.ScalarType("Blah", {})
-    cls.attrs["__iter__"] = types.func([types.str_type], types.iterable(types.str_type))
+    cls = types.scalar_type("Blah")
+    cls.attrs.add("__iter__", types.func([types.str_type], types.iterable(types.str_type)))
     ref_node = nodes.ref("xs")
     node = nodes.for_loop(nodes.ref("x"), ref_node, [])
     
@@ -727,8 +727,8 @@ def iter_method_must_take_no_arguments():
 
 @istest
 def iter_method_must_return_iterator():
-    cls = types.ScalarType("Blah", {})
-    cls.attrs["__iter__"] = types.func([], types.iterable(types.str_type))
+    cls = types.scalar_type("Blah")
+    cls.attrs.add("__iter__", types.func([], types.iterable(types.str_type)))
     ref_node = nodes.ref("xs")
     node = nodes.for_loop(nodes.ref("x"), ref_node, [])
     
@@ -884,7 +884,7 @@ def raise_value_can_be_instance_of_exception():
 
 @istest
 def raise_value_can_be_instance_of_subtype_of_exception():
-    cls = types.ScalarType("BlahError", {}, base_classes=[types.exception_type])
+    cls = types.scalar_type("BlahError", {}, base_classes=[types.exception_type])
     context = bound_context({"error": cls})
     update_context(nodes.raise_statement(nodes.ref("error")), context)
 
@@ -932,9 +932,9 @@ def module_exports_are_specified_using_all():
     
     context = bound_context({})
     module, type_lookup = inference.check(module_node)
-    assert_equal(types.str_type, module.attrs["x"])
-    assert_raises(KeyError, lambda: module.attrs["y"])
-    assert_equal(types.int_type, module.attrs["z"])
+    assert_equal(types.str_type, module.attrs.type_of("x"))
+    assert_equal(None, module.attrs.get("y"))
+    assert_equal(types.int_type, module.attrs.type_of("z"))
 
 
 @istest
@@ -947,9 +947,9 @@ def module_exports_default_to_values_without_leading_underscore_if_all_is_not_sp
     
     context = bound_context({})
     module, type_lookup = inference.check(module_node)
-    assert_equal(types.str_type, module.attrs["x"])
-    assert_raises(KeyError, lambda: module.attrs["_y"])
-    assert_equal(types.int_type, module.attrs["z"])
+    assert_equal(types.str_type, module.attrs.type_of("x"))
+    assert_equal(None, module.attrs.get("_y"))
+    assert_equal(types.int_type, module.attrs.type_of("z"))
 
 
 @istest
@@ -957,7 +957,7 @@ def can_import_local_module_using_plain_import_syntax():
     node = nodes.Import([nodes.import_alias("message", None)])
     
     source_tree = FakeSourceTree({
-        "root/message.py": _module({"value": types.str_type})
+        "root/message.py": _module([types.attr("value", types.str_type)])
     })
     
     context = _update_blank_context(node, source_tree,
@@ -965,7 +965,7 @@ def can_import_local_module_using_plain_import_syntax():
         is_executable=True,
         declared_names=["message"])
     
-    assert_equal(types.str_type, context.lookup("message").attrs["value"])
+    assert_equal(types.str_type, context.lookup("message").attrs.type_of("value"))
 
 
 @istest
@@ -973,7 +973,7 @@ def can_import_local_package_using_plain_import_syntax():
     node = nodes.Import([nodes.import_alias("message", None)])
     
     source_tree = FakeSourceTree({
-        "root/message/__init__.py": _module({"value": types.str_type})
+        "root/message/__init__.py": _module([types.attr("value", types.str_type)])
     })
     
     context = _update_blank_context(node, source_tree,
@@ -981,14 +981,14 @@ def can_import_local_package_using_plain_import_syntax():
         is_executable=True,
         declared_names=["message"])
     
-    assert_equal(types.str_type, context.lookup("message").attrs["value"])
+    assert_equal(types.str_type, context.lookup("message").attrs.type_of("value"))
 
 
 @istest
 def importing_module_in_package_mutates_that_package():
     node = nodes.Import([nodes.import_alias("messages.hello", None)])
-    messages_module = _module({})
-    hello_module = _module({"value": types.str_type})
+    messages_module = _module([])
+    hello_module = _module([types.attr("value", types.str_type)])
     
     source_tree = FakeSourceTree({
         "root/messages/__init__.py": messages_module,
@@ -1000,7 +1000,7 @@ def importing_module_in_package_mutates_that_package():
         is_executable=True,
         declared_names=["messages"])
     
-    assert_equal(hello_module, context.lookup("messages").attrs["hello"])
+    assert_equal(hello_module, context.lookup("messages").attrs.type_of("hello"))
 
 
 @istest
@@ -1008,7 +1008,7 @@ def can_use_aliases_with_plain_import_syntax():
     node = nodes.Import([nodes.import_alias("message", "m")])
     
     source_tree = FakeSourceTree({
-        "root/message.py": _module({"value": types.str_type})
+        "root/message.py": _module([types.attr("value", types.str_type)])
     })
     
     context = _update_blank_context(node, source_tree,
@@ -1016,7 +1016,7 @@ def can_use_aliases_with_plain_import_syntax():
         is_executable=True,
         declared_names=["m"])
     
-    assert_equal(types.str_type, context.lookup("m").attrs["value"])
+    assert_equal(types.str_type, context.lookup("m").attrs.type_of("value"))
     assert_raises(KeyError, lambda: context.lookup("message"))
 
 
@@ -1025,7 +1025,7 @@ def cannot_import_local_packages_if_not_in_executable():
     node = nodes.Import([nodes.import_alias("message", None)])
     
     source_tree = FakeSourceTree({
-        "root/message/__init__.py": _module({"value": types.str_type})
+        "root/message/__init__.py": _module([types.attr("value", types.str_type)]),
     })
     
     try:
@@ -1043,8 +1043,8 @@ def error_is_raised_if_import_is_ambiguous():
     node = nodes.Import([nodes.import_alias("message", None)])
     
     source_tree = FakeSourceTree({
-        "root/message/__init__.py": _module({"value": types.str_type}),
-        "root/message.py": _module({"value": types.str_type})
+        "root/message/__init__.py": _module([types.attr("value", types.str_type)]),
+        "root/message.py": _module([types.attr("value", types.str_type)]),
     })
     
     try:
@@ -1062,7 +1062,7 @@ def error_is_raised_if_import_is_ambiguous():
 def error_is_raised_if_import_cannot_be_resolved():
     node = nodes.Import([nodes.import_alias("message.value", None)])
     source_tree = FakeSourceTree({
-        "root/message/__init__.py": _module({}),
+        "root/message/__init__.py": _module([]),
     })
     
     try:
@@ -1122,7 +1122,7 @@ def module_can_have_value_with_same_name_as_sibling_module():
     value_node = nodes.assign("x", nodes.int(1))
     node = nodes.Module([value_node], is_executable=False)
     source_tree = FakeSourceTree({
-        "root/x.py": _module({}),
+        "root/x.py": _module([]),
     })
     
     inference.check(node, source_tree, module_path="root/y.py")
@@ -1133,7 +1133,7 @@ def can_import_value_from_relative_module_using_import_from_syntax():
     node = nodes.import_from([".", "message"], [nodes.import_alias("value", None)])
     
     source_tree = FakeSourceTree({
-        "root/message.py": _module({"value": types.str_type})
+        "root/message.py": _module([types.attr("value", types.str_type)])
     })
     
     context = _update_blank_context(node, source_tree,
@@ -1147,8 +1147,8 @@ def can_import_value_from_relative_module_using_import_from_syntax():
 @istest
 def can_import_relative_module_using_import_from_syntax():
     node = nodes.import_from(["."], [nodes.import_alias("message", None)])
-    root_module = _module({})
-    message_module = _module({"value": types.str_type})
+    root_module = _module([])
+    message_module = _module([types.attr("value", types.str_type)])
     
     source_tree = FakeSourceTree({
         "root/__init__.py": root_module,
@@ -1159,8 +1159,8 @@ def can_import_relative_module_using_import_from_syntax():
         module_path="root/main.py",
         declared_names=["message"])
     
-    assert_equal(types.str_type, context.lookup("message").attrs["value"])
-    assert_equal(message_module, root_module.attrs["message"])
+    assert_equal(types.str_type, context.lookup("message").attrs.type_of("value"))
+    assert_equal(message_module, root_module.attrs.type_of("message"))
 
 
 @istest
@@ -1168,7 +1168,7 @@ def can_import_relative_module_using_import_from_syntax_with_alias():
     node = nodes.import_from([".", "message"], [nodes.import_alias("value", "v")])
     
     source_tree = FakeSourceTree({
-        "root/message.py": _module({"value": types.str_type})
+        "root/message.py": _module([types.attr("value", types.str_type)]),
     })
     
     context = _update_blank_context(node, source_tree,
@@ -1204,7 +1204,7 @@ def _update_blank_context(node, *args, declared_names=[], **kwargs):
 
 
 def _module(attrs):
-    return types.Module("generic_module_name", attrs)
+    return types.module("generic_module_name", attrs)
 
 
 def _assert_type_mismatch(func, expected, actual, node):

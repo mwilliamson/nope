@@ -1,19 +1,60 @@
 import collections
 
 
-class GenericTypeAttributes(object):
+class _Attribute(object):
+    def __init__(self, name, type_, read_only=False):
+        self.name = name
+        self.type = type_
+        self.read_only = read_only
+    
+    def substitute_types(self, type_map):
+        return _Attribute(self.name, _substitute_types(self.type, type_map), self.read_only)
+
+
+attr = _Attribute
+
+
+class _Attributes(object):
+    def __init__(self, attrs):
+        self._attrs = attrs
+    
+    def add(self, name, type_, read_only=False):
+        self._attrs[name] = _Attribute(name, type_, read_only=read_only)
+    
+    def get(self, name):
+        return self._attrs.get(name)
+    
+    def type_of(self, name):
+        if name in self._attrs:
+            return self._attrs[name].type
+        else:
+            return None
+    
+    def __contains__(self, name):
+        return name in self._attrs
+    
+    def substitute_types(self, type_map):
+        return _Attributes(dict(
+            (name, _substitute_types(attr_type, type_map))
+            for name, attr_type in self._attrs.items()
+        ))
+    
+    def __iter__(self):
+        return iter(self._attrs.values())
+
+
+class _GenericTypeAttributes(object):
     def __init__(self, params, attrs):
         self._params = params
         self._attrs = attrs
     
-    def __setitem__(self, name, create_attr):
-        self._attrs[name] = create_attr(*self._params)
+    def add(self, name, type_, read_only=False):
+        self._attrs.add(name, type_(*self._params), read_only=read_only)
 
 
-class ScalarType(object):
-    def __init__(self, name, attrs, base_classes=None):
-        if base_classes is None:
-            base_classes = []
+class _ScalarType(object):
+    def __init__(self, name, attrs, base_classes):
+        assert isinstance(attrs, _Attributes)
         
         self.name = name
         self.attrs = attrs
@@ -29,12 +70,23 @@ class ScalarType(object):
         return self
 
 
+def scalar_type(name, attrs=None, base_classes=None):
+    if base_classes is None:
+        base_classes = []
+    
+    return _ScalarType(name, _generate_attrs(attrs), base_classes)
+
+
+def _generate_attrs(attrs):
+    return _Attributes(dict((attr.name, attr) for attr in (attrs or [])))
+
+
 # TODO: number of type params
 class _GenericType(object):
     def __init__(self, params, underlying_type):
         self.underlying_type = underlying_type
         self.params = params
-        self.attrs = GenericTypeAttributes(params, underlying_type.attrs)
+        self.attrs = _GenericTypeAttributes(params, underlying_type.attrs)
     
     def __call__(self, *args):
         return self.instantiate(list(args))
@@ -63,24 +115,18 @@ def _generic_type(params, underlying_type, attrs=None):
     param_map = dict(zip(params, formal_params))
     generic_class = _GenericType(formal_params, underlying_type)
     
-    for name, create_attr in attrs.items():
-        generic_class.attrs[name] = create_attr
+    for attr in attrs:
+        generic_class.attrs.add(attr.name, attr.type, attr.read_only)
     
     return generic_class
 
 
 def generic_class(name, params, attrs=None):
-    return _generic_type(params, ScalarType(name, {}), attrs)
+    return _generic_type(params, scalar_type(name), attrs)
 
 
 def _substitute_types(type_, type_map):
-    if isinstance(type_, dict):
-        return dict(
-            (name, _substitute_types(attr_type, type_map))
-            for name, attr_type in type_.items()
-        )
-    else:
-        return type_.substitute_types(type_map)
+    return type_.substitute_types(type_map)
 
 
 class _FormalParameter(object):
@@ -93,6 +139,8 @@ class _FormalParameter(object):
 
 class InstantiatedType(object):
     def __init__(self, generic_type, params, attrs):
+        assert isinstance(attrs, _Attributes)
+        
         self.generic_type = generic_type
         self.params = params
         self.attrs = attrs
@@ -123,13 +171,16 @@ class InstantiatedType(object):
         return str(self)
 
 
-class StructuralType(object):
+class _StructuralType(object):
     def __init__(self, name, attrs):
+        assert isinstance(attrs, _Attributes)
+        
         self.name = name
         self.attrs = attrs
 
 
-structural_type = StructuralType
+def structural_type(name, attrs=None):
+    return _StructuralType(name, _generate_attrs(attrs))
 
 def generic_structural_type(name, params, attrs=None):
     return _generic_type(params, structural_type(name, {}), attrs)
@@ -150,70 +201,67 @@ def is_sub_type(super_type, sub_type):
     if super_type == object_type:
         return True
     
-    if isinstance(sub_type, ScalarType) and super_type in sub_type.base_classes:
+    if isinstance(sub_type, _ScalarType) and super_type in sub_type.base_classes:
         return True
     
-    if isinstance(super_type, StructuralType):
+    if isinstance(super_type, _StructuralType):
         return all(
-            is_sub_type(super_type.attrs[name], sub_type.attrs.get(name))
-            for name, attr in super_type.attrs.items()
+            is_sub_type(attr.type, sub_type.attrs.type_of(attr.name))
+            for attr in super_type.attrs
         )
     
     return super_type == sub_type
 
 
-none_type = ScalarType("NoneType", {})
+none_type = scalar_type("NoneType")
 
-boolean_type = ScalarType("BooleanType", {})
+boolean_type = scalar_type("BooleanType")
 
-int_type = ScalarType("int", {})
+int_type = scalar_type("int")
 
-float_type = ScalarType("float", {})
+float_type = scalar_type("float")
 
-int_type.attrs["__add__"] = func([int_type], int_type)
-int_type.attrs["__sub__"] = func([int_type], int_type)
-int_type.attrs["__mul__"] = func([int_type], int_type)
-int_type.attrs["__truediv__"] = func([int_type], float_type)
-int_type.attrs["__floordiv__"] = func([int_type], int_type)
-int_type.attrs["__mod__"] = func([int_type], int_type)
+int_type.attrs.add("__add__", func([int_type], int_type), read_only=True)
+int_type.attrs.add("__sub__", func([int_type], int_type), read_only=True)
+int_type.attrs.add("__mul__", func([int_type], int_type), read_only=True)
+int_type.attrs.add("__truediv__", func([int_type], float_type), read_only=True)
+int_type.attrs.add("__floordiv__", func([int_type], int_type), read_only=True)
+int_type.attrs.add("__mod__", func([int_type], int_type), read_only=True)
 
-int_type.attrs["__neg__"] = func([], int_type)
-int_type.attrs["__pos__"] = func([], int_type)
-int_type.attrs["__abs__"] = func([], int_type)
-int_type.attrs["__invert__"] = func([], int_type)
+int_type.attrs.add("__neg__", func([], int_type), read_only=True)
+int_type.attrs.add("__pos__", func([], int_type), read_only=True)
+int_type.attrs.add("__abs__", func([], int_type), read_only=True)
+int_type.attrs.add("__invert__", func([], int_type), read_only=True)
 
-str_type = ScalarType("str", {})
-str_type.attrs["find"] = func([str_type], int_type)
+str_type = scalar_type("str")
+str_type.attrs.add("find", func([str_type], int_type), read_only=True)
 
 # TODO: should be a structural type (with __next__)
 iterator = generic_structural_type("iterator", ["T"])
-iterator.attrs["__iter__"] = lambda T: func([], iterator(T))
-iterator.attrs["__next__"] = lambda T: func([], T)
+iterator.attrs.add("__iter__", lambda T: func([], iterator(T)), read_only=True)
+iterator.attrs.add("__next__", lambda T: func([], T), read_only=True)
 
 iterable = generic_structural_type("iterable", ["T"])
-iterable.attrs["__iter__"] = lambda T: func([], iterator(T))
+iterable.attrs.add("__iter__", lambda T: func([], iterator(T)), read_only=True)
 
-list_type = generic_class("list", ["T"], {
-    "__getitem__": lambda T: func([int_type], T),
-    "__setitem__": lambda T: func([int_type, T], none_type),
-    "__iter__": lambda T: func([], iterator(T)),
-    "append": lambda T: func([T], none_type),
-})
+list_type = generic_class("list", ["T"], [
+    attr("__getitem__", lambda T: func([int_type], T), read_only=True),
+    attr("__setitem__", lambda T: func([int_type, T], none_type), read_only=True),
+    attr("__iter__", lambda T: func([], iterator(T)), read_only=True),
+    attr("append", lambda T: func([T], none_type), read_only=True),
+])
 
 def meta_type(name, attrs=None):
-    if attrs is None:
-        attrs = {}
-    
-    return MetaType(name, attrs)
+    return MetaType(name, _generate_attrs(attrs))
 
-any_type = object_type = ScalarType("object", {})
+any_type = object_type = scalar_type("object")
 
-bottom_type = ScalarType("bottom", {})
+bottom_type = scalar_type("bottom")
 
-exception_type = ScalarType("Exception", {})
-exception_meta_type = meta_type(exception_type, {
-    "__call__": func([str_type], exception_type)
-})
+exception_type = scalar_type("Exception")
+exception_meta_type = meta_type(exception_type, [
+    attr("__call__", func([str_type], exception_type)),
+])
 
 def unify(types):
     if len(types) == 0:
@@ -226,10 +274,14 @@ def unify(types):
     return types[0]
 
 
-class Module(object):
+class _Module(object):
     def __init__(self, name, attrs):
         self.name = name
         self.attrs = attrs
+
+
+def module(name, attrs):
+    return _Module(name, _generate_attrs(attrs))
 
 
 class TypeLookup(object):

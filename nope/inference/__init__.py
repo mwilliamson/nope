@@ -40,11 +40,12 @@ class _TypeChecker(object):
         for statement in module.body:
             self.update_context(statement, context)
         
-        return types.Module(self._module_path, dict(
-            (name, context.lookup(name))
+        return types.module(self._module_path, [
+            # TODO: set read_only as appropriate
+            types.attr(name, context.lookup(name))
             for name in util.exported_names(module)
             if context.is_bound(name)
-        ))
+        ])
         
 
 

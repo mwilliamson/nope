@@ -242,7 +242,8 @@ class StatementTypeChecker(object):
                     if index == 0:
                         context.add(part, this_module)
                     else:
-                        last_module.attrs[part] = this_module
+                        # TODO: set readonly
+                        last_module.attrs.add(part, this_module)
                         
                     last_module = this_module
                 
@@ -254,12 +255,13 @@ class StatementTypeChecker(object):
     def _check_import_from(self, node, context):
         module = self._find_module(node, node.module)
         for alias in node.names:
-            module_value = module.attrs.get(alias.name)
+            module_value = module.attrs.type_of(alias.name)
             if module_value is not None:
                 context.add(alias.value_name, module_value)
             else:
                 submodule = self._find_module(node, node.module + [alias.name])
-                module.attrs[alias.value_name] = submodule
+                # TODO: set readonly
+                module.attrs.add(alias.value_name, submodule)
                 context.add(alias.value_name, submodule)
 
     

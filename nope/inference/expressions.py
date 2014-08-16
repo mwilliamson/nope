@@ -70,7 +70,7 @@ class ExpressionTypeInferer(object):
     def _infer_attr(self, node, context):
         value_type = self.infer(node.value, context)
         if node.attr in value_type.attrs:
-            return value_type.attrs[node.attr]
+            return value_type.attrs.type_of(node.attr)
         else:
             raise errors.AttributeError(node, str(value_type), node.attr)
 
