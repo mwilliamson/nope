@@ -105,6 +105,8 @@ class StatementTypeChecker(object):
     def _assign(self, node, target, value_type, context):
         if isinstance(target, nodes.VariableReference):
             self._assign_ref(node, target, value_type, context)
+        elif isinstance(target, nodes.AttributeAccess):
+            self._assign_attr(node, target, value_type, context)
         elif isinstance(target, nodes.Subscript):
             self._assign_subscript(node, target, value_type, context)
         else:
@@ -118,6 +120,12 @@ class StatementTypeChecker(object):
         
         if not context.is_bound(target.name):
             context.add(target.name, value_type)
+
+
+    def _assign_attr(self, node, target, value_type, context):
+        target_type = self._infer(target, context)
+        if not types.is_sub_type(target_type, value_type):
+            raise errors.TypeMismatchError(target, expected=value_type, actual=target_type)
 
     
     def _assign_subscript(self, node, target, value_type, context):

@@ -408,6 +408,31 @@ def assignment_to_list_does_not_allow_supertype():
 
 
 @istest
+def assignment_to_attribute_allows_subtype():
+    cls = types.ScalarType("X", {"y": types.object_type})
+    
+    node = nodes.assign([nodes.attr(nodes.ref("x"), "y")], nodes.string("Hello"))
+    context = bound_context({"x": cls})
+    update_context(node, context)
+
+
+@istest
+def assignment_to_attribute_does_not_allow_strict_supertype():
+    cls = types.ScalarType("X", {"y": types.str_type})
+    
+    attr_node = nodes.attr(nodes.ref("x"), "y")
+    node = nodes.assign([attr_node], nodes.ref("obj"))
+    context = bound_context({"x": cls, "obj": types.object_type})
+    try:
+        update_context(node, context)
+        assert False, "Expected error"
+    except errors.TypeMismatchError as error:
+        assert_equal(attr_node, error.node)
+        assert_equal(types.object_type, error.expected)
+        assert_equal(types.str_type, error.actual)
+
+
+@istest
 def variables_cannot_change_type():
     node = nodes.assign(["x"], nodes.int(1))
     context = bound_context({"x": types.none_type})
