@@ -72,7 +72,7 @@ class ExpressionTypeInferer(object):
         if node.attr in value_type.attrs:
             return value_type.attrs.type_of(node.attr)
         else:
-            raise errors.AttributeError(node, str(value_type), node.attr)
+            raise errors.NoSuchAttributeError(node, str(value_type), node.attr)
 
 
     def _infer_binary_operation(self, node, context):

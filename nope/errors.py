@@ -37,7 +37,7 @@ class UnboundLocalError(TypeCheckError):
         return "local variable {0} referenced before assignment".format(self.name)
 
 
-class AttributeError(TypeCheckError):
+class NoSuchAttributeError(TypeCheckError):
     def __init__(self, node, obj_type, attr_name):
         self.node = node
         self._obj_type = obj_type
