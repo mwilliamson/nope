@@ -433,6 +433,21 @@ def assignment_to_attribute_does_not_allow_strict_supertype():
 
 
 @istest
+def cannot_reassign_read_only_attribute():
+    cls = types.scalar_type("X", [types.attr("y", types.str_type, read_only=True)])
+    
+    attr_node = nodes.attr(nodes.ref("x"), "y")
+    node = nodes.assign([attr_node], nodes.string("Hello"))
+    context = bound_context({"x": cls})
+    try:
+        update_context(node, context)
+        assert False, "Expected error"
+    except errors.ReadOnlyAttributeError as error:
+        assert_equal(attr_node, error.node)
+        assert_equal("'X' attribute 'y' is read-only", str(error))
+
+
+@istest
 def variables_cannot_change_type():
     node = nodes.assign(["x"], nodes.int(1))
     context = bound_context({"x": types.none_type})

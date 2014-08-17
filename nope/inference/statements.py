@@ -124,9 +124,13 @@ class StatementTypeChecker(object):
 
     def _assign_attr(self, node, target, value_type, context):
         target_type = self._infer(target, context)
+        
         if not types.is_sub_type(target_type, value_type):
             raise errors.TypeMismatchError(target, expected=value_type, actual=target_type)
-
+        
+        obj_type = self._infer(target.value, context)
+        if obj_type.attrs.get(target.attr).read_only:
+            raise errors.ReadOnlyAttributeError(target, obj_type, target.attr)
     
     def _assign_subscript(self, node, target, value_type, context):
         setitem_node = ephemeral.attr(target.value, "__setitem__")

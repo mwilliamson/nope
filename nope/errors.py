@@ -47,6 +47,16 @@ class NoSuchAttributeError(TypeCheckError):
         return "{} object has no attribute {}".format(self._obj_type, self._attr_name)
 
 
+class ReadOnlyAttributeError(TypeCheckError):
+    def __init__(self, node, obj_type, attr_name):
+        self.node = node
+        self._obj_type = obj_type
+        self._attr_name = attr_name
+    
+    def __str__(self):
+        return "'{}' attribute '{}' is read-only".format(self._obj_type, self._attr_name)
+
+
 class ImportError(TypeCheckError):
     def __init__(self, node, message):
         self.node = node
