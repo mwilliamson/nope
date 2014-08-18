@@ -77,7 +77,7 @@ Note that not all backends may support all features.
 
 * **Augmented assignments**: unsupported.
 
-* **For loops**: partially supported.
+* **For loops**: supported.
   
 * **While loops**: supported.
 
