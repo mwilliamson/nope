@@ -87,8 +87,11 @@ Note that not all backends may support all features.
 
 * **Raise statements**: partially supported.
   Only statements in the form ``raise value`` are supported.
+  ``raise``, ``raise ExceptionType`` and ``raise value1 from value2`` are unsupported.
 
-* **Try statements**: unsupported.
+* **Try statements**: partially supported.
+  Tuples of exceptions are not supported when specifying the type in exception handlers.
+  Restrictions on ``continue`` in ``finally`` are not enforced.
 
 * **Assert statements**: supported.
 
