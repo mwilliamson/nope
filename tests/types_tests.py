@@ -4,6 +4,10 @@ from nope import types
 
 
 _formal_param = types._FormalParameter("T")
+int_type = types.int_type
+str_type = types.str_type
+none_type = types.none_type
+
 
 @istest
 class TypeSubstitutionTests(object):
@@ -26,6 +30,18 @@ class TypeSubstitutionTests(object):
         replacement_type = types.scalar_type("Counter")
         new_type = types._substitute_types(scalar_type, {_formal_param: replacement_type})
         assert_equal(scalar_type, new_type)
+    
+    @istest
+    def function_type_arguments_are_substituted(self):
+        func_type = types.func([_formal_param, str_type], none_type)
+        new_type = types._substitute_types(func_type, {_formal_param: int_type})
+        assert_equal(types.func([int_type, str_type], none_type), new_type)
+    
+    @istest
+    def function_type_return_type_is_substituted(self):
+        func_type = types.func([], _formal_param)
+        new_type = types._substitute_types(func_type, {_formal_param: int_type})
+        assert_equal(types.func([], int_type), new_type)
         
 
 @istest

@@ -189,12 +189,30 @@ def generic_structural_type(name, params, attrs=None):
 MetaType = collections.namedtuple("MetaType", ["type", "attrs"])
     
 
-# TODO: set type params of func correctly (needs varargs?)
-func_type = generic_class("func", [])
+class _FunctionType(object):
+    def __init__(self, args, return_type):
+        self.args = args
+        self.return_type = return_type
+    
+    def substitute_types(self, type_map):
+        return _FunctionType(
+            [_substitute_types(arg, type_map) for arg in self.args],
+            _substitute_types(self.return_type, type_map)
+        )
+    
+    def __eq__(self, other):
+        return (self.args, self.return_type) == (other.args, other.return_type)
+    
+    def __neq__(self, other):
+        return not (self == other)
+
 
 def func(args, return_type):
-    return func_type.instantiate(list(args) + [return_type])
+    return _FunctionType(args, return_type)
 
+
+def is_func_type(type_):
+    return isinstance(type_, _FunctionType)
 
 
 def is_sub_type(super_type, sub_type):

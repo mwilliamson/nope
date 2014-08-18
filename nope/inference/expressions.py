@@ -54,12 +54,12 @@ class ExpressionTypeInferer(object):
 
     def _infer_call(self, node, context):
         call_type = self.get_call_type(node.func, context)
-        self.type_check_args(node, node.args, call_type.params[:-1], context)
-        return call_type.params[-1]
+        self.type_check_args(node, node.args, call_type.args, context)
+        return call_type.return_type
 
     def get_call_type(self, node, context):
         callee_type = self.infer(node, context)
-        if types.func_type.is_instantiated_type(callee_type):
+        if types.is_func_type(callee_type):
             return callee_type
         elif "__call__" in callee_type.attrs:
             return self.get_call_type(ephemeral.attr(node, "__call__"), context)
@@ -88,8 +88,8 @@ class ExpressionTypeInferer(object):
         method_name = "__{}__".format(short_name)
         method = self._get_method_type(receiver, method_name, context)
         
-        formal_arg_types = method.params[:-1]
-        formal_return_type = method.params[-1]
+        formal_arg_types = method.args
+        formal_return_type = method.return_type
         
         if len(formal_arg_types) != len(actual_args):
             raise errors.BadSignatureError(receiver, "{} should have exactly {} argument(s)".format(method_name, len(actual_args)))
