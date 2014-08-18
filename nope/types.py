@@ -301,6 +301,14 @@ exception_meta_type = meta_type(exception_type, [
     attr("__call__", func([str_type], exception_type)),
 ])
 
+
+tuple2 = generic_class("tuple2", ["A", "B"])
+
+def tuple(*args):
+    assert len(args) == 2
+    return tuple2(*args)
+
+
 def unify(types):
     if len(types) == 0:
         return bottom_type

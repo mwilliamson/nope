@@ -118,6 +118,13 @@ True
         self._test_expression("(0 - 5) % (0 - 3)", b"-2")
     
     @istest
+    def test_divmod_int(self):
+        self._test_expression("divmod(5, 3)", b"(1, 2)")
+        self._test_expression("divmod(-5, 3)", b"(-2, 1)")
+        self._test_expression("divmod(5, -3)", b"(-2, -1)")
+        self._test_expression("divmod(-5, -3)", b"(1, -2)")
+    
+    @istest
     def test_pow_int(self):
         self._test_expression("2 ** 3", b"8")
         self._test_expression("2 ** -3", b"0.125")

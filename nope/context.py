@@ -138,6 +138,8 @@ module_context = bound_context({
     "bool": types.func([types.object_type], types.boolean_type),
     # TODO: make abs generic e.g. T => T -> T
     "abs": types.func([types.int_type], types.int_type),
+    # TODO: make divmod generic e.g. T, U where T <: DivMod[U] => T, T -> U
+    "divmod": types.func([types.int_type, types.int_type], types.tuple(types.int_type, types.int_type)),
     "range": types.func([types.int_type, types.int_type], types.iterable(types.int_type)),
 })
 

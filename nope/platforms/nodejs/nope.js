@@ -1,5 +1,5 @@
 function print(value) {
-    console.log(value);
+    console.log(str(value));
 }
 
 function getattr(value, propertyName) {
@@ -21,7 +21,7 @@ var operators = {};
 ["setitem"].forEach(function(operatorName) {
     operators[operatorName] = createMagicTernaryFunction(operatorName);
 });
-["add", "sub", "mul", "truediv", "floordiv", "mod", "lshift", "getitem"].forEach(function(operatorName) {
+["add", "sub", "mul", "truediv", "floordiv", "mod", "divmod", "lshift", "getitem"].forEach(function(operatorName) {
     operators[operatorName] = createMagicBinaryFunction(operatorName);
 });
 
@@ -30,6 +30,7 @@ var operators = {};
 });
 
 var abs = createMagicUnaryFunction("abs");
+var divmod = createMagicBinaryFunction("divmod");
 
 function createMagicUnaryFunction(operatorName) {
     return function(operand) {
@@ -52,7 +53,7 @@ function createMagicTernaryFunction(operatorName) {
 var stringMethods = {
     find: String.prototype.indexOf,
     __str__: function() {
-        return this;
+        return "" + this;
     }
 };
 
@@ -184,7 +185,13 @@ function type(value) {
     return value.$nopeType;
 }
 
-var numberPow = Math.pow;
+function tuple(values) {
+    return {
+        __str__: function() {
+            return "(" + values.map(str).join(", ") + ")";
+        }
+    };
+}
 
 var builtins = {
     str: str,
@@ -192,6 +199,7 @@ var builtins = {
     bool: bool,
     print: print,
     abs: abs,
+    divmod: divmod,
     range: range,
     iter: iter,
     next: next,
@@ -204,10 +212,17 @@ function numberMod(left, right) {
     return (left % right + right) % right;
 }
 
+function numberDivMod(left, right) {
+    return tuple([Math.floor(left / right), numberMod(left, right)])
+}
+
+var numberPow = Math.pow;
+
 var $nope = module.exports = {
     exports: exports,
     operators: operators,
     builtins: builtins,
     numberMod: numberMod,
+    numberDivMod: numberDivMod,
     numberPow: numberPow
 };

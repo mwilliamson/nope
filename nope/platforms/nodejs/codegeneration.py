@@ -77,7 +77,7 @@ def _replace_extension(filename, new_extension):
 
 # TODO: should probably yank this from somewhere more general since it's not specific to node.js
 _builtin_names = [
-    "bool", "print", "abs", "range", "Exception",
+    "bool", "print", "abs", "divmod", "range", "Exception",
 ]
 
 _number_operators = {
@@ -87,6 +87,7 @@ _number_operators = {
     "truediv": lambda left, right: js.binary_operation("/", left, right),
     "floordiv": lambda left, right: js.call(js.ref("Math.floor"), [js.binary_operation("/", left, right)]),
     "mod": lambda left, right: js.call(js.ref("$nope.numberMod"), [left, right]),
+    "divmod": lambda left, right: js.call(js.ref("$nope.numberDivMod"), [left, right]),
     "pow": lambda left, right: js.call(js.ref("$nope.numberPow"), [left, right]),
     # TODO: raise error on negative shifts
     "lshift": lambda left, right: js.binary_operation("<<", left, right),
@@ -100,6 +101,8 @@ _number_operators = {
     "pos": lambda operand: js.unary_operation("+", operand),
     "abs": lambda operand: js.call(js.ref("Math.abs"), [operand]),
     "invert": lambda operand: js.unary_operation("~", operand),
+    
+    "str": lambda operand: js.call(js.property_access(operand, "toString"), []),
 }
 
 def _generate_prelude(fileobj, module, relative_path):
