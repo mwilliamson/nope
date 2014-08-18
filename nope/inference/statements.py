@@ -20,6 +20,7 @@ class StatementTypeChecker(object):
             nodes.ForLoop: self._check_for_loop,
             nodes.BreakStatement: self._check_break,
             nodes.ContinueStatement: self._check_continue,
+            nodes.TryStatement: self._check_try,
             nodes.RaiseStatement: self._check_raise,
             nodes.AssertStatement: self._check_assert,
             nodes.FunctionDef: self._check_function_def,
@@ -226,6 +227,15 @@ class StatementTypeChecker(object):
             raise errors.InvalidStatementError(node, "'{}' outside loop".format(name))
     
     
+    def _check_try(self, node, context):
+        self._check_branches(
+            [_Branch(node.body)] + [_Branch(handler.body) for handler in node.handlers],
+            context,
+            bind=False,
+        )
+        self.update_context(node.finally_body, context)
+    
+    
     def _check_raise(self, node, context):
         exception_type = self._infer(node.value, context)
         if not types.is_sub_type(types.exception_type, exception_type):
@@ -323,10 +333,11 @@ class _LoopBranch(object):
             self.before(loop_context)
         return loop_context
 
-
-class _IfElseBranch(object):
+class _Branch(object):
     def __init__(self, statements):
         self.statements = statements
         
     def enter_context(self, context):
-        return context.enter_if_else_branch()
+        return context.enter_branch()
+    
+_IfElseBranch = _Branch

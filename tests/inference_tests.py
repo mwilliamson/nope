@@ -574,15 +574,11 @@ def type_of_variable_is_unified_if_branches_of_if_else_use_different_types():
 
 @istest
 def variable_remains_unbound_if_only_set_in_one_branch_of_if_else():
-    node = nodes.if_else(
+    _assert_variable_remains_unbound(lambda assignment: nodes.if_else(
         nodes.int(1),
-        [nodes.assign("x", nodes.int(1))],
+        [assignment],
         [],
-    )
-    context = bound_context({"x": None})
-    update_context(node, context)
-    assert not context.is_bound("x")
-    assert_equal(types.int_type, context.lookup("x", allow_unbound=True))
+    ))
 
 
 @istest
@@ -863,6 +859,52 @@ def continue_is_not_valid_in_module():
     except errors.TypeCheckError as error:
         assert_equal(node, error.node)
         assert_equal("'continue' outside loop", str(error))
+
+
+@istest
+def try_body_is_type_checked():
+    _assert_statement_is_type_checked(
+        lambda bad_statement: nodes.try_statement([bad_statement])
+    )
+
+
+@istest
+def assigned_variable_in_try_body_remains_unbound():
+    _assert_variable_remains_unbound(
+        lambda assignment: nodes.try_statement([assignment])
+    )
+
+
+@istest
+def try_except_handler_body_is_type_checked():
+    _assert_statement_is_type_checked(
+        lambda bad_statement: nodes.try_statement([], handlers=[
+            nodes.except_handler(None, None, [bad_statement]),
+        ])
+    )
+
+
+@istest
+def assigned_variable_in_try_except_handler_body_remains_unbound():
+    _assert_variable_remains_unbound(
+        lambda assignment: nodes.try_statement([], handlers=[
+            nodes.except_handler(None, None, [assignment]),
+        ])
+    )
+
+
+@istest
+def try_finally_body_is_type_checked():
+    _assert_statement_is_type_checked(
+        lambda bad_statement: nodes.try_statement([], finally_body=[bad_statement])
+    )
+
+
+@istest
+def assigned_variable_in_finally_body_is_bound():
+    _assert_variable_is_bound(
+        lambda assignment: nodes.try_statement([], finally_body=[assignment])
+    )
 
 
 @istest
@@ -1239,3 +1281,21 @@ def _assert_statement_is_type_checked(create_node, context=None):
     except errors.TypeCheckError as error:
         assert_equal(bad_ref, error.node)
         assert_equal("bad", error.name)
+
+
+def _assert_variable_remains_unbound(create_node):
+    assignment = nodes.assign("x", nodes.int(1))
+    node = create_node(assignment)
+    context = bound_context({"x": None})
+    update_context(node, context)
+    assert not context.is_bound("x")
+    assert_equal(types.int_type, context.lookup("x", allow_unbound=True))
+
+
+def _assert_variable_is_bound(create_node):
+    assignment = nodes.assign("x", nodes.int(1))
+    node = create_node(assignment)
+    context = bound_context({"x": None})
+    update_context(node, context)
+    assert context.is_bound("x")
+    assert_equal(types.int_type, context.lookup("x"))

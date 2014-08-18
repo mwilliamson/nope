@@ -73,10 +73,9 @@ class Context(object):
     def enter_loop(self):
         return self._enter_block(in_loop=True)
     
-    def enter_if_else_branch(self):
+    def enter_branch(self):
         return self._enter_block(in_loop=self.in_loop)
 
-    
     def unify(self, contexts, bind):
         new_bindings = [
             context._vars._new_vars
