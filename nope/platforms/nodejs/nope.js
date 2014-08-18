@@ -163,6 +163,19 @@ function Exception(message) {
 
 Exception.__name__ = "Exception"
 
+// TODO: should be a subclass of Exception
+// TODO: convert to pure nope
+function AssertionError(message) {
+    return {
+        $nopeType: AssertionError,
+        __str__: function() {
+            return str(message);
+        }
+    };
+}
+
+AssertionError.__name__ = "AssertionError"
+
 function str(value) {
     return getattr(value, "__str__")();
 }
@@ -181,6 +194,7 @@ var builtins = {
     iter: iter,
     next: next,
     Exception: Exception,
+    AssertionError: AssertionError,
     type: type
 };
 

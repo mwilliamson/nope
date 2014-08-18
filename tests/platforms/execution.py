@@ -289,6 +289,27 @@ countup(2)
         assert_equal(b"", result.output)
         assert_in(b"Exception: Argh!", result.stderr_output)
     
+    @istest
+    def test_assert_true_shows_no_output(self):
+        result = self._run_program_string("assert True, 'Argh!'")
+        assert_equal(0, result.return_code)
+        assert_equal(b"", result.output)
+        assert_equal(b"", result.stderr_output)
+    
+    @istest
+    def test_assert_false_with_message(self):
+        result = self._run_program_string("assert False, 'Argh!'")
+        assert_not_equal(0, result.return_code)
+        assert_equal(b"", result.output)
+        assert_in(b"AssertionError: Argh!", result.stderr_output)
+    
+    @istest
+    def test_assert_false_without_message(self):
+        result = self._run_program_string("assert False")
+        assert_not_equal(0, result.return_code)
+        assert_equal(b"", result.output)
+        assert_in(b"AssertionError", result.stderr_output)
+    
     def _test_program_string(self, program, expected_output):
         result = self._run_program_string(program)
         

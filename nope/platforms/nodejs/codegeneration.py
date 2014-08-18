@@ -176,6 +176,7 @@ class Transformer(object):
             nodes.BreakStatement: self._break_statement,
             nodes.ContinueStatement: self._continue_statement,
             nodes.RaiseStatement: self._raise_statement,
+            nodes.AssertStatement: self._assert_statement,
             
             nodes.Call: self._call,
             nodes.AttributeAccess: self._attr,
@@ -390,10 +391,29 @@ class Transformer(object):
 
     
     def _raise_statement(self, statement):
+        exception_value = self.transform(statement.value)
+        return self._generate_raise(exception_value)
+    
+    
+    def _assert_statement(self, statement):
+        if statement.message is None:
+            message = js.string("")
+        else:
+            message = self.transform(statement.message)
+        
+        exception_value = js.call(js.ref("$nope.builtins.AssertionError"), [message])
+        
+        return js.if_else(
+            self._condition(statement.condition),
+            [],
+            [self._generate_raise(exception_value)],
+        )
+    
+    
+    def _generate_raise(self, exception_value):
         exception_name = self._unique_name("exception")
         error_name = self._unique_name("error")
         
-        exception_value = self.transform(statement.value)
         exception_type = js.call(js.ref("$nope.builtins.type"), [exception_value])
         exception_type_name = js.call(js.ref("$nope.builtins.getattr"), [exception_type, js.string("__name__")])
         error_message = js.binary_operation("+",
@@ -414,6 +434,7 @@ class Transformer(object):
             js.var(error_name, js_error),
             js.throw(js.ref(error_name)),
         ])
+        
 
 
     def _call(self, call):
