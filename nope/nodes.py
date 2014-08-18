@@ -22,6 +22,7 @@ ForLoop = collections.namedtuple("ForLoop", ["target", "iterable", "body", "else
 BreakStatement = collections.namedtuple("BreakStatement", [])
 ContinueStatement = collections.namedtuple("ContinueStatement", [])
 RaiseStatement = collections.namedtuple("RaiseStatement", ["value"])
+AssertStatement = collections.namedtuple("AssertStatement", ["condition", "message"])
 
 FunctionDef = collections.namedtuple("FunctionDef", ["name", "args", "return_annotation", "body", "type_params"])
 Arguments = collections.namedtuple("Arguments", ["args"])
@@ -90,6 +91,10 @@ def while_loop(condition, body, else_body=None):
 break_statement = BreakStatement
 continue_statement = ContinueStatement
 raise_statement = RaiseStatement
+
+def assert_statement(condition, message=None):
+    return AssertStatement(condition, message)
+
 
 def func(name, args, return_annotation, body, type_params=None):
     if type_params is None:

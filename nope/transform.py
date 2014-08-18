@@ -29,6 +29,7 @@ class Converter(object):
             ast.Break: self._break,
             ast.Continue: self._continue,
             ast.Raise: self._raise,
+            ast.Assert: self._assert,
             
             ast.Str: self._str_literal,
             ast.Num: self._num_literal,
@@ -156,6 +157,15 @@ class Converter(object):
     
     def _raise(self, node):
         return nodes.raise_statement(self.convert(node.exc))
+    
+    
+    def _assert(self, node):
+        condition = self.convert(node.test)
+        if node.msg is None:
+            message = None
+        else:
+            message = self.convert(node.msg)
+        return nodes.assert_statement(condition, message)
     
 
     def _str_literal(self, node):

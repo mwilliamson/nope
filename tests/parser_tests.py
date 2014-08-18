@@ -433,6 +433,19 @@ def test_parse_raise():
     _assert_statement_parse(nodes.raise_statement(nodes.ref("x")), "raise x")
 
 
+@istest
+def test_parse_assert_simple_form():
+    _assert_statement_parse(nodes.assert_statement(nodes.ref("x")), "assert x")
+
+
+@istest
+def test_parse_assert_extended_form():
+    _assert_statement_parse(
+        nodes.assert_statement(nodes.ref("x"), nodes.string("Oops")),
+        "assert x, 'Oops'"
+    )
+
+
 
 def _assert_expression_parse(expected, source):
     module = parser.parse(source)
