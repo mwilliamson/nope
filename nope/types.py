@@ -246,6 +246,7 @@ int_type.attrs.add("__truediv__", func([int_type], float_type), read_only=True)
 int_type.attrs.add("__floordiv__", func([int_type], int_type), read_only=True)
 int_type.attrs.add("__mod__", func([int_type], int_type), read_only=True)
 int_type.attrs.add("__lshift__", func([int_type], int_type), read_only=True)
+int_type.attrs.add("__rshift__", func([int_type], int_type), read_only=True)
 
 int_type.attrs.add("__neg__", func([], int_type), read_only=True)
 int_type.attrs.add("__pos__", func([], int_type), read_only=True)

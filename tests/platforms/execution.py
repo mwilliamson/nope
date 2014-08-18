@@ -123,6 +123,11 @@ True
         self._test_expression("-5 << 3", b"-40")
     
     @istest
+    def test_rshift_int(self):
+        self._test_expression("41 >> 3", b"5")
+        self._test_expression("-41 >> 3", b"-6")
+    
+    @istest
     def test_neg_int(self):
         self._test_expression("-(1 + 2)", b"-3")
     

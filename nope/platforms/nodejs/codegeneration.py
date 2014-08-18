@@ -89,6 +89,8 @@ _number_operators = {
     "mod": lambda left, right: js.call(js.ref("$nope.numberMod"), [left, right]),
     # TODO: raise error on negative shifts
     "lshift": lambda left, right: js.binary_operation("<<", left, right),
+    # TODO: raise error on negative shifts
+    "rshift": lambda left, right: js.binary_operation(">>", left, right),
     
     "neg": lambda operand: js.unary_operation("-", operand),
     "pos": lambda operand: js.unary_operation("+", operand),

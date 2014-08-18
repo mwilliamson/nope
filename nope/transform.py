@@ -249,6 +249,7 @@ class Converter(object):
             ast.FloorDiv: nodes.floordiv,
             ast.Mod: nodes.mod,
             ast.LShift: nodes.lshift,
+            ast.RShift: nodes.rshift,
             
             ast.USub: nodes.neg,
             ast.UAdd: nodes.pos,
