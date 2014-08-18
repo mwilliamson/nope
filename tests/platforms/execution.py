@@ -120,6 +120,7 @@ True
     @istest
     def test_pow_int(self):
         self._test_expression("2 ** 3", b"8")
+        self._test_expression("2 ** -3", b"0.125")
     
     @istest
     def test_lshift_int(self):

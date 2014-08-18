@@ -215,6 +215,15 @@ def is_func_type(type_):
     return isinstance(type_, _FunctionType)
 
 
+class _UnionType(object):
+    def __init__(self, types):
+        self._types = types
+
+
+def union(*types):
+    return _UnionType(types)
+
+
 def is_sub_type(super_type, sub_type):
     if super_type == object_type:
         return True
@@ -245,7 +254,7 @@ int_type.attrs.add("__mul__", func([int_type], int_type), read_only=True)
 int_type.attrs.add("__truediv__", func([int_type], float_type), read_only=True)
 int_type.attrs.add("__floordiv__", func([int_type], int_type), read_only=True)
 int_type.attrs.add("__mod__", func([int_type], int_type), read_only=True)
-int_type.attrs.add("__pow__", func([int_type], int_type), read_only=True)
+int_type.attrs.add("__pow__", func([int_type], union(int_type, float_type)), read_only=True)
 int_type.attrs.add("__lshift__", func([int_type], int_type), read_only=True)
 int_type.attrs.add("__rshift__", func([int_type], int_type), read_only=True)
 int_type.attrs.add("__and__", func([int_type], int_type), read_only=True)
