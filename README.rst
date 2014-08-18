@@ -90,7 +90,7 @@ Note that not all backends may support all features.
 
 * **Try statements**: unsupported.
 
-* **Assert statements**: unsupported.
+* **Assert statements**: supported.
 
 * **Import statements**: partially supported.
   The various forms of import statement are supported.
