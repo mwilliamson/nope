@@ -72,8 +72,8 @@ Note that not all backends may support all features.
 * **Delete statements**: unsupported.
 
 * **Assignments**: partially supported.
-  Assignments to variables (e.g. ``x``) and elements of sequences (e.g. ``x[i]``)
-  are supported, but not assignment to slices (e.g. ``x[:]``) nor attributes (e.g. ``x.y``)
+  Assignments to variables (e.g. ``x``), elements of sequences (e.g. ``x[i]``), and attributes (e.g. ``x.y``)
+  are supported, but not assignment to slices (e.g. ``x[:]``).
 
 * **Augmented assignments**: unsupported.
 
