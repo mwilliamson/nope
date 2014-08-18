@@ -528,34 +528,24 @@ def if_statement_has_condition_type_checked():
 
 @istest
 def if_statement_has_true_body_type_checked():
-    ref_node = nodes.ref("y")
-    node = nodes.if_else(
-        nodes.int(1),
-        [nodes.expression_statement(ref_node)],
-        [],
+    _assert_statement_is_type_checked(
+        lambda bad_statement: nodes.if_else(
+            nodes.int(1),
+            [bad_statement],
+            [],
+        )
     )
-    
-    try:
-        update_context(node, bound_context({}))
-        assert False, "Expected error"
-    except errors.TypeCheckError as error:
-        assert_equal(ref_node, error.node)
 
 
 @istest
 def if_statement_has_false_body_type_checked():
-    ref_node = nodes.ref("y")
-    node = nodes.if_else(
-        nodes.int(1),
-        [],
-        [nodes.expression_statement(ref_node)],
+    _assert_statement_is_type_checked(
+        lambda bad_statement: nodes.if_else(
+            nodes.int(1),
+            [],
+            [bad_statement],
+        )
     )
-    
-    try:
-        update_context(node, bound_context({}))
-        assert False, "Expected error"
-    except errors.TypeCheckError as error:
-        assert_equal(ref_node, error.node)
 
 
 @istest
@@ -609,26 +599,18 @@ def while_loop_has_condition_type_checked():
 
 @istest
 def while_loop_has_body_type_checked():
-    body_node = nodes.ref("x")
-    node = nodes.while_loop(nodes.boolean(True), [nodes.expression_statement(body_node)])
-    
-    try:
-        update_context(node, bound_context({}))
-        assert False, "Expected error"
-    except errors.TypeCheckError as error:
-        assert_equal(body_node, error.node)
+    _assert_statement_is_type_checked(
+        lambda bad_statement:
+            nodes.while_loop(nodes.boolean(True), [bad_statement])
+    )
 
 
 @istest
 def while_loop_has_else_body_type_checked():
-    body_node = nodes.ref("x")
-    node = nodes.while_loop(nodes.boolean(True), [], [nodes.expression_statement(body_node)])
-    
-    try:
-        update_context(node, bound_context({}))
-        assert False, "Expected error"
-    except errors.TypeCheckError as error:
-        assert_equal(body_node, error.node)
+    _assert_statement_is_type_checked(
+        lambda bad_statement:
+            nodes.while_loop(nodes.boolean(True), [], [bad_statement])
+    )
 
 
 @istest
@@ -803,36 +785,28 @@ def for_statement_target_can_be_variable():
 
 @istest
 def body_of_for_loop_is_type_checked():
-    bad_ref = nodes.ref("bad")
-    node = nodes.for_loop(nodes.ref("x"), nodes.ref("xs"), [
-        nodes.expression_statement(bad_ref),
-    ])
-    
-    try:
-        update_context(node, bound_context({
+    _assert_statement_is_type_checked(
+        lambda bad_statement: nodes.for_loop(nodes.ref("x"), nodes.ref("xs"), [
+            bad_statement,
+        ]),
+        bound_context({
             "x": None,
             "xs": types.list_type(types.str_type),
-        }))
-        assert False, "Expected error"
-    except errors.TypeCheckError as error:
-        assert_equal(bad_ref, error.node)
+        })
+    )
 
 
 @istest
 def else_body_of_for_loop_is_type_checked():
-    bad_ref = nodes.ref("bad")
-    node = nodes.for_loop(nodes.ref("x"), nodes.ref("xs"), [], [
-        nodes.expression_statement(bad_ref),
-    ])
-    
-    try:
-        update_context(node, bound_context({
+    _assert_statement_is_type_checked(
+        lambda bad_statement: nodes.for_loop(nodes.ref("x"), nodes.ref("xs"), [], [
+            bad_statement
+        ]),
+        bound_context({
             "x": None,
             "xs": types.list_type(types.str_type),
-        }))
-        assert False, "Expected error"
-    except errors.TypeCheckError as error:
-        assert_equal(bad_ref, error.node)
+        })
+    )
 
 
 @istest
@@ -1250,3 +1224,18 @@ def _assert_type_mismatch(func, expected, actual, node):
         assert_equal(expected, mismatch.expected)
         assert_equal(actual, mismatch.actual)
         assert mismatch.node is node
+
+
+def _assert_statement_is_type_checked(create_node, context=None):
+    if context is None:
+        context = bound_context({})
+    
+    bad_ref = nodes.ref("bad")
+    node = create_node(nodes.expression_statement(bad_ref))
+    
+    try:
+        update_context(node, context)
+        assert False, "Expected error"
+    except errors.TypeCheckError as error:
+        assert_equal(bad_ref, error.node)
+        assert_equal("bad", error.name)
