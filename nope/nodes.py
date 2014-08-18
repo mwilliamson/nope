@@ -149,7 +149,7 @@ _create_unary_operators()
 
 binary_operation = BinaryOperation = collections.namedtuple("BinaryOperation", ["operator", "left", "right"])
 
-binary_operators = ["add", "sub", "mul", "truediv", "floordiv", "mod"]
+binary_operators = ["add", "sub", "mul", "truediv", "floordiv", "mod", "lshift", "rshift", "and", "xor", "or"]
 
 
 def _create_binary_operators():

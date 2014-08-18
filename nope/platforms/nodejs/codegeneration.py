@@ -87,6 +87,8 @@ _number_operators = {
     "truediv": lambda left, right: js.binary_operation("/", left, right),
     "floordiv": lambda left, right: js.call(js.ref("Math.floor"), [js.binary_operation("/", left, right)]),
     "mod": lambda left, right: js.call(js.ref("$nope.numberMod"), [left, right]),
+    # TODO: raise error on negative shifts
+    "lshift": lambda left, right: js.binary_operation("<<", left, right),
     
     "neg": lambda operand: js.unary_operation("-", operand),
     "pos": lambda operand: js.unary_operation("+", operand),
