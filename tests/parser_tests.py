@@ -429,6 +429,58 @@ def test_parse_continue():
 
 
 @istest
+def test_parse_try_finally():
+    expected = nodes.try_statement(
+        [nodes.expression_statement(nodes.ref("x"))],
+        finally_body=[nodes.expression_statement(nodes.ref("y"))],
+    )
+    
+    _assert_statement_parse(expected, "try:\n  x\nfinally:\n  y")
+
+
+@istest
+def test_parse_try_except_that_catches_all_exceptions():
+    expected = nodes.try_statement(
+        [nodes.expression_statement(nodes.ref("x"))],
+        handlers=[
+            nodes.except_handler(None, None, [
+                nodes.expression_statement(nodes.ref("y"))
+            ]),
+        ]
+    )
+    
+    _assert_statement_parse(expected, "try:\n  x\nexcept:\n  y")
+
+
+@istest
+def test_parse_try_except_with_specific_type():
+    expected = nodes.try_statement(
+        [nodes.expression_statement(nodes.ref("x"))],
+        handlers=[
+            nodes.except_handler(nodes.ref("AssertionError"), None, [
+                nodes.expression_statement(nodes.ref("y"))
+            ]),
+        ]
+    )
+    
+    _assert_statement_parse(expected, "try:\n  x\nexcept AssertionError:\n  y")
+
+
+@istest
+def test_parse_try_except_with_specific_type_and_identifier():
+    expected = nodes.try_statement(
+        [nodes.expression_statement(nodes.ref("x"))],
+        handlers=[
+            nodes.except_handler(nodes.ref("AssertionError"), "error", [
+                nodes.expression_statement(nodes.ref("y"))
+            ]),
+        ]
+    )
+    
+    _assert_statement_parse(expected, "try:\n  x\nexcept AssertionError as error:\n  y")
+
+
+@istest
 def test_parse_raise():
     _assert_statement_parse(nodes.raise_statement(nodes.ref("x")), "raise x")
 

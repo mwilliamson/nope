@@ -21,6 +21,8 @@ WhileLoop = collections.namedtuple("WhileLoop", ["condition", "body", "else_body
 ForLoop = collections.namedtuple("ForLoop", ["target", "iterable", "body", "else_body"])
 BreakStatement = collections.namedtuple("BreakStatement", [])
 ContinueStatement = collections.namedtuple("ContinueStatement", [])
+TryStatement = collections.namedtuple("TryStatement", ["body", "handlers", "finally_body"])
+ExceptHandler = collections.namedtuple("ExceptHandler", ["type", "name", "body"])
 RaiseStatement = collections.namedtuple("RaiseStatement", ["value"])
 AssertStatement = collections.namedtuple("AssertStatement", ["condition", "message"])
 
@@ -90,6 +92,18 @@ def while_loop(condition, body, else_body=None):
 
 break_statement = BreakStatement
 continue_statement = ContinueStatement
+
+def try_statement(body, *, handlers=None, finally_body=None):
+    if handlers is None:
+        handlers = []
+    if finally_body is None:
+        finally_body = []
+    return TryStatement(body, handlers, finally_body)
+
+
+except_handler = ExceptHandler
+
+
 raise_statement = RaiseStatement
 
 def assert_statement(condition, message=None):

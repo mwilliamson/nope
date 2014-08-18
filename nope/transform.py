@@ -28,6 +28,8 @@ class Converter(object):
             ast.For: self._for,
             ast.Break: self._break,
             ast.Continue: self._continue,
+            ast.Try: self._try,
+            ast.ExceptHandler: self._except,
             ast.Raise: self._raise,
             ast.Assert: self._assert,
             
@@ -153,6 +155,27 @@ class Converter(object):
     
     def _continue(self, node):
         return nodes.continue_statement()
+    
+    
+    def _try(self, node):
+        return nodes.try_statement(
+            self._mapped(node.body),
+            handlers=self._mapped(node.handlers),
+            finally_body=self._mapped(node.finalbody),
+        )
+    
+    
+    def _except(self, node):
+        if node.type is None:
+            type_ = None
+        else:
+            type_ = self.convert(node.type)
+            
+        return nodes.except_handler(
+            type_,
+            node.name,
+            self._mapped(node.body),
+        )
     
     
     def _raise(self, node):
