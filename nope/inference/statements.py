@@ -21,6 +21,7 @@ class StatementTypeChecker(object):
             nodes.BreakStatement: self._check_break,
             nodes.ContinueStatement: self._check_continue,
             nodes.RaiseStatement: self._check_raise,
+            nodes.AssertStatement: self._check_assert,
             nodes.FunctionDef: self._check_function_def,
             nodes.Import: self._check_import,
             nodes.ImportFrom: self._check_import_from,
@@ -233,6 +234,12 @@ class StatementTypeChecker(object):
                 expected=types.exception_type,
                 actual=exception_type,
             )
+    
+    
+    def _check_assert(self, node, context):
+        self._infer(node.condition, context)
+        if node.message is not None:
+            self._infer(node.message, context)
     
 
     def _check_import(self, node, context):

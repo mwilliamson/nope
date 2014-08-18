@@ -916,6 +916,26 @@ def raise_value_cannot_be_non_subtype_of_exception():
 
 
 @istest
+def assert_condition_is_type_checked():
+    ref_node = nodes.ref("error")
+    try:
+        update_context(nodes.assert_statement(ref_node), bound_context({}))
+        assert False, "Expected error"
+    except errors.UndefinedNameError as error:
+        assert_equal(ref_node, error.node)
+
+
+@istest
+def assert_message_is_type_checked():
+    ref_node = nodes.ref("error")
+    try:
+        update_context(nodes.assert_statement(nodes.boolean(False), ref_node), bound_context({}))
+        assert False, "Expected error"
+    except errors.UndefinedNameError as error:
+        assert_equal(ref_node, error.node)
+
+
+@istest
 def check_generates_type_lookup_for_all_expressions():
     int_ref_node = nodes.ref("a")
     int_node = nodes.int(3)
