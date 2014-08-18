@@ -91,6 +91,7 @@ _number_operators = {
     "lshift": lambda left, right: js.binary_operation("<<", left, right),
     # TODO: raise error on negative shifts
     "rshift": lambda left, right: js.binary_operation(">>", left, right),
+    "and": lambda left, right: js.binary_operation("&", left, right),
     
     "neg": lambda operand: js.unary_operation("-", operand),
     "pos": lambda operand: js.unary_operation("+", operand),

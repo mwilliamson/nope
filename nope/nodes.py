@@ -160,6 +160,7 @@ def _create_binary_operators():
         name = operator
         create.__name__ = name
         setattr(sys.modules[__name__], name, create)
+        setattr(sys.modules[__name__], name + "_", create)
         
     for operator in binary_operators:
         _create_binary_operator(operator)

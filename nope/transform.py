@@ -250,6 +250,7 @@ class Converter(object):
             ast.Mod: nodes.mod,
             ast.LShift: nodes.lshift,
             ast.RShift: nodes.rshift,
+            ast.BitAnd: nodes.and_,
             
             ast.USub: nodes.neg,
             ast.UAdd: nodes.pos,
