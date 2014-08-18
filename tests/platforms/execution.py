@@ -12,70 +12,60 @@ class ExecutionTests(object):
     @istest
     def empty_program_runs_without_output(self):
         result = self._run_program(path=program_path("valid/empty.py"), program="empty")
-        assert_equal(0, result.return_code)
         assert_equal(b"", result.output)
         assert_equal(b"", result.stderr_output)
     
     @istest
     def print_program_prints_to_stdout(self):
         result = self._run_program(path=program_path("valid/print.py"), program="print")
-        assert_equal(0, result.return_code)
         assert_equal(b"42\n", result.output)
         assert_equal(b"", result.stderr_output)
     
     @istest
     def print_def_program_prints_to_stdout(self):
         result = self._run_program(path=program_path("valid/print_def.py"), program="print_def")
-        assert_equal(0, result.return_code)
         assert_equal(b"42\n", result.output)
         assert_equal(b"", result.stderr_output)
         
     @istest
     def fib_program_prints_result_to_stdout(self):
         result = self._run_program(path=program_path("valid/fib.py"), program="fib")
-        assert_equal(0, result.return_code)
         assert_equal(b"55\n", result.output)
         assert_equal(b"", result.stderr_output)
     
     @istest
     def can_read_attributes_of_builtins(self):
         result = self._run_program(path=program_path("valid/attribute_read.py"), program="attribute_read")
-        assert_equal(0, result.return_code)
         assert_equal(b"1\n", result.output)
         assert_equal(b"", result.stderr_output)
     
     @istest
     def can_import_value_from_local_package(self):
         result = self._run_program(path=program_path("valid/import_value_from_local_package"), program="main")
-        assert_equal(0, result.return_code)
         assert_equal(b"Hello\n", result.output)
         assert_equal(b"", result.stderr_output)
     
     @istest
     def can_import_local_package(self):
         result = self._run_program(path=program_path("valid/import_local_package"), program="main")
-        assert_equal(0, result.return_code)
         assert_equal(b"Hello\n", result.output)
         assert_equal(b"", result.stderr_output)
     
     @istest
     def can_import_local_module(self):
         result = self._run_program(path=program_path("valid/import_local_module"), program="main")
-        assert_equal(0, result.return_code)
         assert_equal(b"Hello\n", result.output)
         assert_equal(b"", result.stderr_output)
     
     @istest
     def can_import_module_in_package(self):
         result = self._run_program(path=program_path("valid/import_module_in_package"), program="main")
-        assert_equal(0, result.return_code)
         assert_equal(b"Hello\n", result.output)
         assert_equal(b"", result.stderr_output)
     
     @istest
     def test_output_of_bool(self):
         result = self._run_program(path=program_path("valid/bool.py"), program="bool")
-        assert_equal(0, result.return_code)
         expected_output = b"""False
 True
 False
@@ -91,7 +81,6 @@ True
     @istest
     def test_arithmetic(self):
         result = self._run_program(path=program_path("valid/arithmetic.py"), program="arithmetic")
-        assert_equal(0, result.return_code)
         assert_equal(b"19\n1.25\n1\n", result.output)
         assert_equal(b"", result.stderr_output)
     
@@ -284,7 +273,7 @@ countup(2)
     
     @istest
     def test_unhandled_exception(self):
-        result = self._run_program_string("raise Exception('Argh!')")
+        result = self._run_program_string("raise Exception('Argh!')", allow_error=True)
         assert_not_equal(0, result.return_code)
         assert_equal(b"", result.output)
         assert_in(b"Exception: Argh!", result.stderr_output)
@@ -292,20 +281,19 @@ countup(2)
     @istest
     def test_assert_true_shows_no_output(self):
         result = self._run_program_string("assert True, 'Argh!'")
-        assert_equal(0, result.return_code)
         assert_equal(b"", result.output)
         assert_equal(b"", result.stderr_output)
     
     @istest
     def test_assert_false_with_message(self):
-        result = self._run_program_string("assert False, 'Argh!'")
+        result = self._run_program_string("assert False, 'Argh!'", allow_error=True)
         assert_not_equal(0, result.return_code)
         assert_equal(b"", result.output)
         assert_in(b"AssertionError: Argh!", result.stderr_output)
     
     @istest
     def test_assert_false_without_message(self):
-        result = self._run_program_string("assert False")
+        result = self._run_program_string("assert False", allow_error=True)
         assert_not_equal(0, result.return_code)
         assert_equal(b"", result.output)
         assert_in(b"AssertionError", result.stderr_output)
@@ -313,23 +301,22 @@ countup(2)
     def _test_program_string(self, program, expected_output):
         result = self._run_program_string(program)
         
-        assert_equal(0, result.return_code)
         assert_equal(expected_output, result.output)
         assert_equal(b"", result.stderr_output)
     
     
-    def _run_program_string(self, program):
+    def _run_program_string(self, program, allow_error=False):
         with tempman.create_temp_dir() as temp_dir:
             with open(os.path.join(temp_dir.path, "main.py"), "w") as main_file:
                 main_file.write("#!/usr/bin/env python\n")
                 main_file.write(program)
             
-            return self._run_program(path=temp_dir.path, program="main")
+            return self._run_program(path=temp_dir.path, program="main", allow_error=allow_error)
         
     
     def _test_expression(self, expression, expected_output):
         self._test_program_string("print({})\n".format(expression), expected_output + b"\n")
         
     
-    def _run_program(self, path, program):
-        return testing.compile_and_run(self.platform, path, program)
+    def _run_program(self, path, program, allow_error=False):
+        return testing.compile_and_run(self.platform, path, program, allow_error=allow_error)
