@@ -7,7 +7,7 @@ from ... import nodes, util, types
 from ...walk import walk_tree
 
 
-def nope_to_nodejs(source_path, source_tree, destination_dir):
+def nope_to_nodejs(source_path, source_tree, destination_dir, optimise=True):
     def handle_dir(path, relative_path):
         os.mkdir(os.path.join(destination_dir, relative_path))
     
@@ -18,6 +18,7 @@ def nope_to_nodejs(source_path, source_tree, destination_dir):
             source_tree.ast(path),
             source_tree.type_lookup(path),
             destination_dir,
+            optimise=optimise,
         )
     
     _write_nope_js(destination_dir)
@@ -53,7 +54,7 @@ def _generate_number_method(generate_operation):
         ])
 
 
-def _convert_file(source_path, relative_path, nope_ast, type_lookup, destination_root):
+def _convert_file(source_path, relative_path, nope_ast, type_lookup, destination_root, optimise):
     destination_dir = os.path.dirname(os.path.join(destination_root, relative_path))
     
     source_filename = os.path.basename(source_path)
@@ -61,7 +62,7 @@ def _convert_file(source_path, relative_path, nope_ast, type_lookup, destination
     dest_path = os.path.join(destination_dir, dest_filename)
     with open(dest_path, "w") as dest_file:
         _generate_prelude(dest_file, nope_ast, relative_path)
-        js.dump(transform(nope_ast, type_lookup), dest_file)
+        js.dump(transform(nope_ast, type_lookup, optimise=optimise), dest_file)
 
 
 def _js_filename(python_filename):
@@ -163,14 +164,15 @@ _main_require = """
 """
 
 
-def transform(nope_node, type_lookup):
-    transformer = Transformer(type_lookup)
+def transform(nope_node, type_lookup, optimise=True):
+    transformer = Transformer(type_lookup, optimise=optimise)
     return transformer.transform(nope_node)
 
 
 class Transformer(object):
-    def __init__(self, type_lookup):
+    def __init__(self, type_lookup, optimise):
         self._type_lookup = type_lookup
+        self._optimise = optimise
         
         self._transformers = {
             nodes.Module: self._module,
@@ -459,7 +461,8 @@ class Transformer(object):
         )
     
     def _binary_operation(self, operation):
-        if (operation.operator in _number_operators and
+        # TODO: split off optimisations
+        if (self._optimise and operation.operator in _number_operators and
                 self._type_of(operation.left) == types.int_type and
                 self._type_of(operation.right) == types.int_type):
             return _number_operators[operation.operator](
@@ -471,7 +474,8 @@ class Transformer(object):
     
     
     def _unary_operation(self, operation):
-        if (operation.operator in _number_operators and
+        # TODO: split off optimisations
+        if (self._optimise and operation.operator in _number_operators and
                 self._type_of(operation.operand) == types.int_type):
             return _number_operators[operation.operator](self.transform(operation.operand))
         else:

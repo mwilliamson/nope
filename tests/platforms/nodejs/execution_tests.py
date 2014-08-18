@@ -7,3 +7,8 @@ from .. import execution
 @istest
 class NodeJsExecutionTests(execution.ExecutionTests):
     platform = NodeJs()
+
+
+@istest
+class UnoptimisedNodeJsExecutionTests(execution.ExecutionTests):
+    platform = NodeJs(optimise=False)

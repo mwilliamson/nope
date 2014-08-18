@@ -21,7 +21,7 @@ var operators = {};
 ["setitem"].forEach(function(operatorName) {
     operators[operatorName] = createMagicTernaryFunction(operatorName);
 });
-["add", "sub", "mul", "truediv", "floordiv", "mod", "divmod", "lshift", "getitem"].forEach(function(operatorName) {
+["add", "sub", "mul", "truediv", "floordiv", "mod", "divmod", "pow", "lshift", "rshift", "and", "or", "xor", "getitem"].forEach(function(operatorName) {
     operators[operatorName] = createMagicBinaryFunction(operatorName);
 });
 

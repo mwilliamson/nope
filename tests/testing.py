@@ -9,12 +9,12 @@ import nope
 _local = spur.LocalShell()
 
 
-def compile_and_run(compiler, path, program, allow_error):
+def compile_and_run(platform, path, program, allow_error):
     with tempman.create_temp_dir() as temp_dir:
         output_dir = temp_dir.path
-        nope.compile(path, output_dir, compiler.name)
-        output_path = "{}.{}".format(program, compiler.extension)
-        return _local.run([compiler.binary, output_path], cwd=output_dir, allow_error=allow_error)
+        nope.compile(path, output_dir, platform)
+        output_path = "{}.{}".format(program, platform.extension)
+        return _local.run([platform.binary, output_path], cwd=output_dir, allow_error=allow_error)
 
 
 def program_path(path):

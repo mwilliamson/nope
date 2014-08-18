@@ -51,13 +51,15 @@ def _check_file(path, source_tree=None):
     return Result(is_valid=True, error=None, value=nope_ast)
 
 
-def compile(source_path, destination_dir, platform_name):
+def compile(source_path, destination_dir, platform):
     source_tree = check(source_path)
     
     if not source_tree.is_valid:
         raise source_tree.error
     
-    platform = platforms.find_platform_by_name(platform_name)
+    if isinstance(platform, str):
+        platform = platforms.find_platform_by_name(platform)
+        
     platform.generate_code(source_path, source_tree.value, destination_dir)
 
 

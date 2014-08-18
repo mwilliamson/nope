@@ -337,7 +337,7 @@ def test_transform_binary_operation():
 
 
 @istest
-def test_normal_js_addition_is_used_if_both_operands_are_ints():
+def test_normal_js_addition_is_used_if_both_operands_are_ints_and_optimise_is_true():
     left = nodes.ref("x")
     right = nodes.ref("y")
     
@@ -346,12 +346,19 @@ def test_normal_js_addition_is_used_if_both_operands_are_ints():
         id(right): types.int_type,
     })
     
-    _assert_transform(
-        nodes.add(left, right),
-        js.binary_operation("+", js.ref("x"), js.ref("y")),
-        type_lookup=type_lookup,
-    )
-
+    def assert_transform(expected_js, optimise):
+        _assert_transform(
+            nodes.add(left, right),
+            expected_js,
+            type_lookup=type_lookup,
+            optimise=optimise,
+        )
+    
+    assert_transform(js.binary_operation("+", js.ref("x"), js.ref("y")), optimise=True)
+    assert_transform(js.call(js.ref("$nope.operators.add"), [js.ref("x"), js.ref("y")]), optimise=False)
+    
+    # Doing this in the same test to make sure all arguments except optimise are the same
+    
 
 @istest
 def test_normal_binary_operation_if_only_one_side_is_int():
@@ -443,8 +450,8 @@ def test_transform_int_expression():
     )
     
 
-def _assert_transform(nope, js, type_lookup=None):
+def _assert_transform(nope, js, type_lookup=None, optimise=True):
     if type_lookup is None:
         type_lookup = types.TypeLookup({})
     
-    assert_equal(js, codegeneration.transform(nope, type_lookup))
+    assert_equal(js, codegeneration.transform(nope, type_lookup, optimise=optimise))
