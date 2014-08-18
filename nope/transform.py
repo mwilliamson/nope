@@ -248,6 +248,7 @@ class Converter(object):
             ast.Div: nodes.truediv,
             ast.FloorDiv: nodes.floordiv,
             ast.Mod: nodes.mod,
+            ast.Pow: nodes.pow,
             ast.LShift: nodes.lshift,
             ast.RShift: nodes.rshift,
             ast.BitAnd: nodes.and_,

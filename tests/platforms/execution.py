@@ -118,6 +118,10 @@ True
         self._test_expression("(0 - 5) % (0 - 3)", b"-2")
     
     @istest
+    def test_pow_int(self):
+        self._test_expression("2 ** 3", b"8")
+    
+    @istest
     def test_lshift_int(self):
         self._test_expression("5 << 3", b"40")
         self._test_expression("-5 << 3", b"-40")

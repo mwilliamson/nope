@@ -184,6 +184,8 @@ function type(value) {
     return value.$nopeType;
 }
 
+var numberPow = Math.pow;
+
 var builtins = {
     str: str,
     getattr: getattr,
@@ -206,5 +208,6 @@ var $nope = module.exports = {
     exports: exports,
     operators: operators,
     builtins: builtins,
-    numberMod: numberMod
+    numberMod: numberMod,
+    numberPow: numberPow
 };
