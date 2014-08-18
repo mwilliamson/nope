@@ -133,6 +133,11 @@ True
         self._test_expression("-25 & 51", b"35")
     
     @istest
+    def test_bitwise_or_int(self):
+        self._test_expression("25 | 51", b"59")
+        self._test_expression("-25 | 51", b"-9")
+    
+    @istest
     def test_neg_int(self):
         self._test_expression("-(1 + 2)", b"-3")
     
