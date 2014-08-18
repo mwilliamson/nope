@@ -228,7 +228,7 @@ class StatementTypeChecker(object):
     
     
     def _check_try(self, node, context):
-        for handler in node.handlers:
+        def infer_handler_exception_type(handler):
             if handler.type:
                 meta_type = self._infer(handler.type, context)
                 if not types.is_meta_type(meta_type) or not types.is_sub_type(types.exception_type, meta_type.type):
@@ -236,9 +236,28 @@ class StatementTypeChecker(object):
                         expected="exception type",
                         actual=meta_type,
                     )
+                return meta_type
+        
+        handler_exception_types = [
+            infer_handler_exception_type(handler)
+            for handler in node.handlers
+        ]
+        
+        def create_except_branch(handler, exception_type):
+            if handler.name:
+                before = lambda branch_context: branch_context.add(handler.name, exception_type)
+            else:
+                before = None
+            return _Branch(handler.body, before=before)
+        
+        
+        except_branches = [
+            create_except_branch(handler, exception_type)
+            for handler, exception_type in zip(node.handlers, handler_exception_types)
+        ]
         
         self._check_branches(
-            [_Branch(node.body)] + [_Branch(handler.body) for handler in node.handlers],
+            [_Branch(node.body)] + except_branches,
             context,
             bind=False,
         )
@@ -343,10 +362,14 @@ class _LoopBranch(object):
         return loop_context
 
 class _Branch(object):
-    def __init__(self, statements):
+    def __init__(self, statements, before=None):
         self.statements = statements
+        self.before = before
         
     def enter_context(self, context):
-        return context.enter_branch()
+        branch_context = context.enter_branch()
+        if self.before is not None:
+            self.before(branch_context)
+        return branch_context
     
 _IfElseBranch = _Branch

@@ -907,6 +907,22 @@ def except_handler_type_must_be_exception_type():
 
 
 @istest
+def except_handler_binds_error_name():
+    node = nodes.try_statement([], handlers=[
+        nodes.except_handler(
+            nodes.ref("Exception"),
+            "error",
+            [nodes.expression_statement(nodes.ref("error"))]
+        ),
+    ])
+    context = bound_context({
+        "error": None,
+        "Exception": types.meta_type(types.exception_type)
+    })
+    update_context(node, context)
+
+
+@istest
 def try_except_handler_body_is_type_checked():
     _assert_statement_is_type_checked(
         lambda bad_statement: nodes.try_statement([], handlers=[
