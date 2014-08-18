@@ -93,6 +93,7 @@ _number_operators = {
     "rshift": lambda left, right: js.binary_operation(">>", left, right),
     "and": lambda left, right: js.binary_operation("&", left, right),
     "or": lambda left, right: js.binary_operation("|", left, right),
+    "xor": lambda left, right: js.binary_operation("^", left, right),
     
     "neg": lambda operand: js.unary_operation("-", operand),
     "pos": lambda operand: js.unary_operation("+", operand),

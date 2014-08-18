@@ -252,6 +252,7 @@ class Converter(object):
             ast.RShift: nodes.rshift,
             ast.BitAnd: nodes.and_,
             ast.BitOr: nodes.or_,
+            ast.BitXor: nodes.xor_,
             
             ast.USub: nodes.neg,
             ast.UAdd: nodes.pos,

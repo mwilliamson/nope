@@ -249,6 +249,7 @@ int_type.attrs.add("__lshift__", func([int_type], int_type), read_only=True)
 int_type.attrs.add("__rshift__", func([int_type], int_type), read_only=True)
 int_type.attrs.add("__and__", func([int_type], int_type), read_only=True)
 int_type.attrs.add("__or__", func([int_type], int_type), read_only=True)
+int_type.attrs.add("__xor__", func([int_type], int_type), read_only=True)
 
 int_type.attrs.add("__neg__", func([], int_type), read_only=True)
 int_type.attrs.add("__pos__", func([], int_type), read_only=True)

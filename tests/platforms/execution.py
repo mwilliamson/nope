@@ -138,6 +138,11 @@ True
         self._test_expression("-25 | 51", b"-9")
     
     @istest
+    def test_bitwise_xor_int(self):
+        self._test_expression("25 ^ 51", b"42")
+        self._test_expression("-25 ^ 51", b"-44")
+    
+    @istest
     def test_neg_int(self):
         self._test_expression("-(1 + 2)", b"-3")
     
