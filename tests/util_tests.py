@@ -63,6 +63,30 @@ def declared_names_includes_names_in_while_loop_bodies():
 
 
 @istest
+def declared_names_includes_names_in_try_bodies():
+    statement = nodes.try_statement(
+        [nodes.assign("x", nodes.none())],
+        handlers=[
+            nodes.except_handler(nodes.ref("Exception"), "error", [nodes.assign("y", nodes.none())]),
+        ],
+        finally_body=[nodes.assign("z", nodes.none())],
+    )
+    assert_equal(["x", "error", "y", "z"], list(util.declared_names(statement)))
+
+
+@istest
+def except_handler_can_have_no_name():
+    statement = nodes.try_statement(
+        [nodes.assign("x", nodes.none())],
+        handlers=[
+            nodes.except_handler(None, None, [nodes.assign("y", nodes.none())]),
+        ],
+        finally_body=[nodes.assign("z", nodes.none())],
+    )
+    assert_equal(["x", "y", "z"], list(util.declared_names(statement)))
+
+
+@istest
 def error_is_raised_if_all_is_not_a_list():
     try:
         all_node = nodes.assign(["__all__"], nodes.none())

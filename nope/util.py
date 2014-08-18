@@ -24,6 +24,15 @@ def declared_names(node):
         return _target_names([node.target]) | declared_locals(node.body)
     elif isinstance(node, nodes.WhileLoop):
         return declared_locals(node.body) | declared_locals(node.else_body)
+    elif isinstance(node, nodes.TryStatement):
+        names = OrderedSet([])
+        names |= declared_locals(node.body)
+        for handler in node.handlers:
+            if handler.name is not None:
+                names.add(handler.name)
+            names |= declared_locals(handler.body)
+        names |= declared_locals(node.finally_body)
+        return names
     else:
         return OrderedSet([])
 
@@ -42,6 +51,9 @@ class OrderedSet(object):
     
     def copy(self):
         return OrderedSet(self._values.keys())
+    
+    def add(self, value):
+        self._values[value] = None
     
     def __or__(self, other):
         values = self.copy()
