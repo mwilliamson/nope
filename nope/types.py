@@ -272,6 +272,11 @@ list_type = generic_class("list", ["T"], [
 def meta_type(name, attrs=None):
     return MetaType(name, _generate_attrs(attrs))
 
+
+def is_meta_type(type_):
+    return isinstance(type_, MetaType)
+
+
 any_type = object_type = scalar_type("object")
 
 bottom_type = scalar_type("bottom")

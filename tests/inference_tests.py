@@ -876,6 +876,37 @@ def assigned_variable_in_try_body_remains_unbound():
 
 
 @istest
+def except_handler_type_must_be_type():
+    type_node = nodes.ref("x")
+    node = nodes.try_statement([], handlers=[
+        nodes.except_handler(type_node, None, []),
+    ])
+    context = bound_context({"x": types.int_type})
+    _assert_type_mismatch(
+        lambda: update_context(node, context),
+        expected="exception type",
+        actual=types.int_type,
+        node=type_node,
+    )
+
+
+@istest
+def except_handler_type_must_be_exception_type():
+    type_node = nodes.ref("int")
+    node = nodes.try_statement([], handlers=[
+        nodes.except_handler(type_node, None, []),
+    ])
+    meta_type = types.meta_type(types.int_type)
+    context = bound_context({"int": meta_type})
+    _assert_type_mismatch(
+        lambda: update_context(node, context),
+        expected="exception type",
+        actual=meta_type,
+        node=type_node,
+    )
+
+
+@istest
 def try_except_handler_body_is_type_checked():
     _assert_statement_is_type_checked(
         lambda bad_statement: nodes.try_statement([], handlers=[

@@ -228,6 +228,15 @@ class StatementTypeChecker(object):
     
     
     def _check_try(self, node, context):
+        for handler in node.handlers:
+            if handler.type:
+                meta_type = self._infer(handler.type, context)
+                if not types.is_meta_type(meta_type) or not types.is_sub_type(types.exception_type, meta_type.type):
+                    raise errors.TypeMismatchError(handler.type,
+                        expected="exception type",
+                        actual=meta_type,
+                    )
+        
         self._check_branches(
             [_Branch(node.body)] + [_Branch(handler.body) for handler in node.handlers],
             context,
