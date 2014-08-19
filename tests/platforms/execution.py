@@ -365,6 +365,34 @@ print("done")
         assert_equal(b"", result.stderr_output)
     
     @istest
+    def test_try_except_with_exception_handles_subexception(self):
+        program = """
+try:
+    print("try-before")
+    raise AssertionError("error")
+    print("try-after")
+except Exception as error:
+    print(str(error))
+        """
+        result = self._run_program_string(program)
+        assert_equal(b"try-before\nerror\n", result.output)
+        assert_equal(b"", result.stderr_output)
+    
+    @istest
+    def test_try_except_with_exception_ignores_superexception(self):
+        program = """
+try:
+    print("try-before")
+    raise Exception("error")
+    print("try-after")
+except AssertionError as error:
+    print(str(error))
+        """
+        result = self._run_program_string(program, allow_error=True)
+        assert_equal(b"try-before\n", result.output)
+        assert_in(b"Exception: error", result.stderr_output)
+    
+    @istest
     def test_assert_true_shows_no_output(self):
         result = self._run_program_string("assert True, 'Argh!'")
         assert_equal(b"", result.output)

@@ -162,9 +162,9 @@ function Exception(message) {
     };
 }
 
-Exception.__name__ = "Exception"
+Exception.__name__ = "Exception";
+Exception.$baseClasses = [];
 
-// TODO: should be a subclass of Exception
 // TODO: convert to pure nope
 function AssertionError(message) {
     return {
@@ -175,7 +175,8 @@ function AssertionError(message) {
     };
 }
 
-AssertionError.__name__ = "AssertionError"
+AssertionError.__name__ = "AssertionError";
+AssertionError.$baseClasses = [Exception];
 
 function str(value) {
     return getattr(value, "__str__")();
@@ -195,9 +196,22 @@ function tuple(values) {
 
 function isinstance(obj, clsinfo) {
     // TODO: support primitives (str, number, etc.)
-    // TODO: support sub-typing
+    return issubclass(obj.$nopeType, clsinfo);
+}
+
+function issubclass(cls, clsinfo) {
     // TODO: support clsinfo being a tuple
-    return obj.$nopeType === clsinfo;
+    if (cls === clsinfo) {
+        return true;
+    }
+    
+    for (var i = 0; i < cls.$baseClasses.length; i++) {
+        if (issubclass(cls.$baseClasses[i], clsinfo)) {
+            return true;
+        }
+    }
+    
+    return false;
 }
 
 var builtins = {

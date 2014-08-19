@@ -327,10 +327,14 @@ def test_transform_try_except_with_no_name():
             try {
                 return x;
             } catch ($exception0) {
-                if ($nope.builtins.isinstance($exception0.$nopeException, $nope.builtins.Exception)) {
-                    return y;
-                } else {
+                if (($exception0.$nopeException) === undefined) {
                     throw $exception0;
+                } else {
+                    if ($nope.builtins.isinstance($exception0.$nopeException, $nope.builtins.Exception)) {
+                        return y;
+                    } else {
+                        throw $exception0;
+                    }
                 }
             }
         """,
@@ -350,10 +354,14 @@ def test_transform_try_except_with_exception_type():
             try {
                 return x;
             } catch ($exception0) {
-                if ($nope.builtins.isinstance($exception0.$nopeException, AssertionError)) {
-                    return y;
-                } else {
+                if (($exception0.$nopeException) === undefined) {
                     throw $exception0;
+                } else {
+                    if ($nope.builtins.isinstance($exception0.$nopeException, AssertionError)) {
+                        return y;
+                    } else {
+                        throw $exception0;
+                    }
                 }
             }
         """,
@@ -373,11 +381,15 @@ def test_transform_try_except_with_exception_type_and_name():
             try {
                 return x;
             } catch ($exception0) {
-                if ($nope.builtins.isinstance($exception0.$nopeException, AssertionError)) {
-                    var error = $exception0.$nopeException;
-                    return y;
-                } else {
+                if (($exception0.$nopeException) === undefined) {
                     throw $exception0;
+                } else {
+                    if ($nope.builtins.isinstance($exception0.$nopeException, AssertionError)) {
+                        var error = $exception0.$nopeException;
+                        return y;
+                    } else {
+                        throw $exception0;
+                    }
                 }
             }
         """,
@@ -398,13 +410,17 @@ def test_transform_try_except_with_multiple_exception_handlers():
             try {
                 return x;
             } catch ($exception0) {
-                if ($nope.builtins.isinstance($exception0.$nopeException, AssertionError)) {
-                    return y;
+                if (($exception0.$nopeException) === undefined) {
+                    throw $exception0;
                 } else {
-                    if ($nope.builtins.isinstance($exception0.$nopeException, Exception)) {
-                        return z;
+                    if ($nope.builtins.isinstance($exception0.$nopeException, AssertionError)) {
+                        return y;
                     } else {
-                        throw $exception0;
+                        if ($nope.builtins.isinstance($exception0.$nopeException, Exception)) {
+                            return z;
+                        } else {
+                            throw $exception0;
+                        }
                     }
                 }
             }

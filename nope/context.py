@@ -133,6 +133,7 @@ module_context = bound_context({
     "str": types.str_meta_type,
     "none": types.meta_type(types.none_type),
     "Exception": types.exception_meta_type,
+    "AssertionError": types.assertion_error_meta_type,
     
     "print": types.func([types.object_type], types.none_type),
     "bool": types.func([types.object_type], types.boolean_type),

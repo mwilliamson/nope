@@ -78,7 +78,7 @@ def _replace_extension(filename, new_extension):
 
 # TODO: should probably yank this from somewhere more general since it's not specific to node.js
 _builtin_names = [
-    "bool", "print", "abs", "divmod", "range", "Exception", "str",
+    "bool", "print", "abs", "divmod", "range", "Exception", "AssertionError", "str",
 ]
 
 _number_operators = {
@@ -431,6 +431,13 @@ class Transformer(object):
                     handler_body,
                     [js_handler],
                 )
+            
+            # TODO: static reference to undefined
+            js_handler = js.if_else(
+                js.binary_operation("===", nope_exception, js.ref("undefined")),
+                [js.throw(js.ref(exception_name))],
+                [js_handler],
+            )
         else:
             js_handler = None
         

@@ -305,6 +305,11 @@ exception_meta_type = meta_type(exception_type, [
     attr("__call__", func([str_type], exception_type)),
 ])
 
+assertion_error_type = scalar_type("AssertionError", base_classes=[exception_type])
+assertion_error_meta_type = meta_type(assertion_error_type, [
+    attr("__call__", func([str_type], assertion_error_type)),
+])
+
 
 tuple2 = generic_class("tuple2", ["A", "B"])
 
