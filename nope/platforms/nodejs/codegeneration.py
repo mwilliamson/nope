@@ -78,7 +78,7 @@ def _replace_extension(filename, new_extension):
 
 # TODO: should probably yank this from somewhere more general since it's not specific to node.js
 _builtin_names = [
-    "bool", "print", "abs", "divmod", "range", "Exception",
+    "bool", "print", "abs", "divmod", "range", "Exception", "str",
 ]
 
 _number_operators = {
@@ -405,16 +405,39 @@ class Transformer(object):
 
 
     def _try_statement(self, statement):
+        exception_name = self._unique_name("exception")
         if statement.handlers:
-            handler, = statement.handlers
-            js_handler = self._transform_all(handler.body)
+            js_handler = js.throw(js.ref(exception_name))
+            
+            for handler in reversed(statement.handlers):
+                if handler.type:
+                    handler_type = self.transform(handler.type)
+                else:
+                    handler_type = js.ref("$nope.builtins.Exception")
+                
+                nope_exception = js.property_access(js.ref(exception_name), "$nopeException")
+                    
+                handler_body = []
+                if handler.name is not None:
+                    handler_body.append(js.var(handler.name, nope_exception))
+                
+                handler_body += self._transform_all(handler.body)
+                
+                js_handler = js.if_else(
+                    js.call(
+                        js.ref("$nope.builtins.isinstance"),
+                        [nope_exception, handler_type]
+                    ),
+                    handler_body,
+                    [js_handler],
+                )
         else:
-            js_handler = []
+            js_handler = None
         
         return js.try_catch(
             self._transform_all(statement.body),
-            self._unique_name("exception"),
-            js_handler,
+            exception_name,
+            [js_handler] if js_handler else None,
             finally_body=self._transform_all(statement.finally_body),
         )
 
@@ -461,6 +484,10 @@ class Transformer(object):
         return js.statements([
             js.var(exception_name, exception_value),
             js.var(error_name, js_error),
+            js.expression_statement(js.assign(
+                js.property_access(js.ref(error_name), "$nopeException"),
+                js.ref(exception_name)
+            )),
             js.throw(js.ref(error_name)),
         ])
         

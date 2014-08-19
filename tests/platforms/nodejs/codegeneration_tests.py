@@ -327,7 +327,86 @@ def test_transform_try_except_with_no_name():
             try {
                 return x;
             } catch ($exception0) {
-                return y;
+                if ($nope.builtins.isinstance($exception0.$nopeException, $nope.builtins.Exception)) {
+                    return y;
+                } else {
+                    throw $exception0;
+                }
+            }
+        """,
+    )
+
+
+@istest
+def test_transform_try_except_with_exception_type():
+    _assert_transform(
+        nodes.try_statement(
+            [nodes.ret(nodes.ref("x"))],
+            handlers=[
+                nodes.except_handler(nodes.ref("AssertionError"), None, [nodes.ret(nodes.ref("y"))]),
+            ],
+        ),
+        """
+            try {
+                return x;
+            } catch ($exception0) {
+                if ($nope.builtins.isinstance($exception0.$nopeException, AssertionError)) {
+                    return y;
+                } else {
+                    throw $exception0;
+                }
+            }
+        """,
+    )
+
+
+@istest
+def test_transform_try_except_with_exception_type_and_name():
+    _assert_transform(
+        nodes.try_statement(
+            [nodes.ret(nodes.ref("x"))],
+            handlers=[
+                nodes.except_handler(nodes.ref("AssertionError"), "error", [nodes.ret(nodes.ref("y"))]),
+            ],
+        ),
+        """
+            try {
+                return x;
+            } catch ($exception0) {
+                if ($nope.builtins.isinstance($exception0.$nopeException, AssertionError)) {
+                    var error = $exception0.$nopeException;
+                    return y;
+                } else {
+                    throw $exception0;
+                }
+            }
+        """,
+    )
+
+
+@istest
+def test_transform_try_except_with_multiple_exception_handlers():
+    _assert_transform(
+        nodes.try_statement(
+            [nodes.ret(nodes.ref("x"))],
+            handlers=[
+                nodes.except_handler(nodes.ref("AssertionError"), None, [nodes.ret(nodes.ref("y"))]),
+                nodes.except_handler(nodes.ref("Exception"), None, [nodes.ret(nodes.ref("z"))]),
+            ],
+        ),
+        """
+            try {
+                return x;
+            } catch ($exception0) {
+                if ($nope.builtins.isinstance($exception0.$nopeException, AssertionError)) {
+                    return y;
+                } else {
+                    if ($nope.builtins.isinstance($exception0.$nopeException, Exception)) {
+                        return z;
+                    } else {
+                        throw $exception0;
+                    }
+                }
             }
         """,
     )

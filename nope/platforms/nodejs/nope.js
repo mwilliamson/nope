@@ -193,6 +193,13 @@ function tuple(values) {
     };
 }
 
+function isinstance(obj, clsinfo) {
+    // TODO: support primitives (str, number, etc.)
+    // TODO: support sub-typing
+    // TODO: support clsinfo being a tuple
+    return obj.$nopeType === clsinfo;
+}
+
 var builtins = {
     str: str,
     getattr: getattr,
@@ -205,7 +212,8 @@ var builtins = {
     next: next,
     Exception: Exception,
     AssertionError: AssertionError,
-    type: type
+    type: type,
+    isinstance: isinstance
 };
 
 function numberMod(left, right) {
