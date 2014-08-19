@@ -113,6 +113,38 @@ Note that not all backends may support all features.
 
 * **continue keyword**: supported.
 
+With statements
+~~~~~~~~~~~~~~~
+
+Consider the following:
+
+.. code-block:: python
+
+    with x:
+        y = f()
+        
+    g(y)
+
+It isn't guaranteed that ``y`` has been assigned a value since ``f()`` could
+raise an exception that is then suppressed by the context manager's ``__exit__`` method.
+Therefore, ``g(y)`` fails to type-check.
+(If the exception isn't suppressed by the ``__exit__`` method, we can safely
+assume treat the variable as assigned since we won't be executing any code after the exception).
+However, in the common case, we'd like to be able to assume that the variable has been assigned,
+and such an assumption is safe in many cases, such as:
+
+.. code-block:: python
+
+    with open(path) as file_:
+        contents = file_.read()
+    
+    print(contents)
+
+We can allow such examples to type-check by inspecting the type of ``__exit__``.
+If its return type is ``none``, then it is guaranteed to return a false value,
+meaning it will never suppress exceptions.
+
+
 Python
 ~~~~~~
 
