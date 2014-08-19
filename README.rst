@@ -92,6 +92,7 @@ Note that not all backends may support all features.
 * **Try statements**: partially supported.
   Tuples of exceptions are not supported when specifying the type in exception handlers.
   Restrictions on ``continue`` in ``finally`` are not enforced.
+  The ``else`` branch is ignored.
 
 * **Assert statements**: supported.
 
