@@ -188,6 +188,7 @@ class Transformer(object):
             nodes.ForLoop: self._for_loop,
             nodes.BreakStatement: self._break_statement,
             nodes.ContinueStatement: self._continue_statement,
+            nodes.TryStatement: self._try_statement,
             nodes.RaiseStatement: self._raise_statement,
             nodes.AssertStatement: self._assert_statement,
             
@@ -401,6 +402,13 @@ class Transformer(object):
     
     def _continue_statement(self, statement):
         return js.continue_statement()
+
+
+    def _try_statement(self, statement):
+        return js.try_catch(
+            self._transform_all(statement.body),
+            finally_body=self._transform_all(statement.finally_body),
+        )
 
     
     def _raise_statement(self, statement):

@@ -316,6 +316,21 @@ countup(2)
         assert_in(b"Exception: Argh!", result.stderr_output)
     
     @istest
+    def test_try_except_finally_with_no_exception(self):
+        program = """
+try:
+    print("try")
+except:
+    print("except")
+finally:
+    print("finally")
+print("done")
+        """
+        result = self._run_program_string(program)
+        assert_equal(b"try\nfinally\ndone\n", result.output)
+        assert_equal(b"", result.stderr_output)
+    
+    @istest
     def test_assert_true_shows_no_output(self):
         result = self._run_program_string("assert True, 'Argh!'")
         assert_equal(b"", result.output)

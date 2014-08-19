@@ -298,6 +298,23 @@ def test_transform_continue():
 
 
 @istest
+def test_transform_try_finally():
+    _assert_transform(
+        nodes.try_statement(
+            [nodes.ret(nodes.ref("x"))],
+            finally_body=[nodes.ret(nodes.ref("y"))],
+        ),
+        """
+            try {
+                return x;
+            } finally {
+                return y;
+            }
+        """,
+    )
+
+
+@istest
 def test_transform_call():
     _assert_transform(
         nodes.call(nodes.ref("f"), [nodes.ref("x"), nodes.ref("y")]),
@@ -465,4 +482,6 @@ def _assert_transform(nope, expected_js, type_lookup=None, optimise=True):
 
 def _assert_equivalent_js(first, second):
     parser = slimit.parser.Parser()
-    assert_equal(parser.parse(first).to_ecma(), parser.parse(second).to_ecma())
+    first_normalised = parser.parse(first).to_ecma()
+    second_normalised = parser.parse(second).to_ecma()
+    assert_equal(first_normalised, second_normalised)
