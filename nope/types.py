@@ -240,6 +240,16 @@ def is_sub_type(super_type, sub_type):
     return super_type == sub_type
 
 
+def meta_type(name, attrs=None):
+    return MetaType(name, _generate_attrs(attrs))
+
+
+def is_meta_type(type_):
+    return isinstance(type_, MetaType)
+
+
+any_type = object_type = scalar_type("object")
+
 none_type = scalar_type("NoneType")
 
 boolean_type = scalar_type("BooleanType")
@@ -269,6 +279,10 @@ int_type.attrs.add("__invert__", func([], int_type), read_only=True)
 str_type = scalar_type("str")
 str_type.attrs.add("find", func([str_type], int_type), read_only=True)
 
+str_meta_type = meta_type(str_type, [
+    attr("__call__", func([any_type], str_type), read_only=True),
+])
+
 # TODO: should be a structural type (with __next__)
 iterator = generic_structural_type("iterator", ["T"])
 iterator.attrs.add("__iter__", lambda T: func([], iterator(T)), read_only=True)
@@ -283,16 +297,6 @@ list_type = generic_class("list", ["T"], [
     attr("__iter__", lambda T: func([], iterator(T)), read_only=True),
     attr("append", lambda T: func([T], none_type), read_only=True),
 ])
-
-def meta_type(name, attrs=None):
-    return MetaType(name, _generate_attrs(attrs))
-
-
-def is_meta_type(type_):
-    return isinstance(type_, MetaType)
-
-
-any_type = object_type = scalar_type("object")
 
 bottom_type = scalar_type("bottom")
 
