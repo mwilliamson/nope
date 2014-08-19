@@ -101,12 +101,15 @@ def _serialize_try_catch(obj, fileobj):
     fileobj.write("try { ")
     for statement in obj.try_body:
         dump(statement, fileobj)
-    fileobj.write(" } catch (")
-    fileobj.write(obj.error_name)
-    fileobj.write(") { ")
-    for statement in obj.catch_body:
-        dump(statement, fileobj)
     fileobj.write(" }")
+    
+    if obj.catch_body:
+        fileobj.write(" catch (")
+        fileobj.write(obj.error_name)
+        fileobj.write(") { ")
+        for statement in obj.catch_body:
+            dump(statement, fileobj)
+        fileobj.write(" }")
     
     if obj.finally_body:
         fileobj.write(" finally { ")

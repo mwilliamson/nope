@@ -160,6 +160,15 @@ def test_serialize_try_catch():
 
 
 @istest
+def test_serialize_try_finally():
+    node = js.try_catch(
+        [js.ret(js.ref("x"))],
+        finally_body=[js.ret(js.ref("z"))],
+    )
+    assert_equal("try { return x; } finally { return z; }", js.dumps(node))
+
+
+@istest
 def test_serialize_try_catch_finally():
     node = js.try_catch(
         [js.ret(js.ref("x"))],
