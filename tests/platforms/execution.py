@@ -393,6 +393,20 @@ except AssertionError as error:
         assert_in(b"Exception: error", result.stderr_output)
     
     @istest
+    def test_first_matching_exception_handler_runs_first(self):
+        program = """
+try:
+    raise AssertionError("error")
+except AssertionError as error:
+    print("handling AssertionError")
+except Exception as error:
+    print("handling Exception")
+        """
+        result = self._run_program_string(program, allow_error=True)
+        assert_equal(b"handling AssertionError\n", result.output)
+        assert_equal(b"", result.stderr_output)
+    
+    @istest
     def test_assert_true_shows_no_output(self):
         result = self._run_program_string("assert True, 'Argh!'")
         assert_equal(b"", result.output)
