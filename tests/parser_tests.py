@@ -498,6 +498,26 @@ def test_parse_assert_extended_form():
     )
 
 
+@istest
+def test_parse_with_statement_single_context_manager_no_target():
+    expected_node = nodes.with_statement(
+        nodes.ref("x"),
+        None,
+        [nodes.ret(nodes.ref("y"))],
+    )
+    _assert_statement_parse(expected_node, "with x:\n  return y")
+
+
+@istest
+def test_parse_with_statement_single_context_manager_with_target():
+    expected_node = nodes.with_statement(
+        nodes.ref("x"),
+        nodes.ref("x2"),
+        [nodes.ret(nodes.ref("y"))],
+    )
+    _assert_statement_parse(expected_node, "with x as x2:\n  return y")
+
+
 
 def _assert_expression_parse(expected, source):
     module = parser.parse(source)

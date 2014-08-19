@@ -32,6 +32,7 @@ class Converter(object):
             ast.ExceptHandler: self._except,
             ast.Raise: self._raise,
             ast.Assert: self._assert,
+            ast.With: self._with,
             
             ast.Str: self._str_literal,
             ast.Num: self._num_literal,
@@ -189,6 +190,21 @@ class Converter(object):
         else:
             message = self.convert(node.msg)
         return nodes.assert_statement(condition, message)
+
+
+    def _with(self, node):
+        item, = node.items
+        
+        if item.optional_vars is None:
+            target = None
+        else:
+            target = self.convert(item.optional_vars)
+        
+        return nodes.with_statement(
+            self.convert(item.context_expr),
+            target,
+            self._mapped(node.body),
+        )
     
 
     def _str_literal(self, node):

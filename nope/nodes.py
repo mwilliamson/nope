@@ -25,6 +25,7 @@ TryStatement = collections.namedtuple("TryStatement", ["body", "handlers", "fina
 ExceptHandler = collections.namedtuple("ExceptHandler", ["type", "name", "body"])
 RaiseStatement = collections.namedtuple("RaiseStatement", ["value"])
 AssertStatement = collections.namedtuple("AssertStatement", ["condition", "message"])
+WithStatement = collections.namedtuple("WithStatement", ["value", "target", "body"])
 
 FunctionDef = collections.namedtuple("FunctionDef", ["name", "args", "return_annotation", "body", "type_params"])
 Arguments = collections.namedtuple("Arguments", ["args"])
@@ -103,11 +104,13 @@ def try_statement(body, *, handlers=None, finally_body=None):
 
 except_handler = ExceptHandler
 
-
 raise_statement = RaiseStatement
 
 def assert_statement(condition, message=None):
     return AssertStatement(condition, message)
+
+
+with_statement = WithStatement
 
 
 def func(name, args, return_annotation, body, type_params=None):
