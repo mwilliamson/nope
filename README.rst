@@ -112,6 +112,13 @@ Note that not all backends may support all features.
 
 * **continue keyword**: supported.
 
+Python
+~~~~~~
+
+Any valid Nope program should be directly executable using Python 3.4.
+The best way to support earlier versions of Python is in the same way as you would
+on a normal Python 3.4 codebase i.e. avoiding features unsupported in earlier versions.
+
 Node.js backend
 ~~~~~~~~~~~~~~~
 
