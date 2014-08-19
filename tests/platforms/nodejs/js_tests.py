@@ -160,6 +160,17 @@ def test_serialize_try_catch():
 
 
 @istest
+def test_serialize_try_catch_finally():
+    node = js.try_catch(
+        [js.ret(js.ref("x"))],
+        "error",
+        [js.ret(js.ref("y"))],
+        [js.ret(js.ref("z"))],
+    )
+    assert_equal("try { return x; } catch (error) { return y; } finally { return z; }", js.dumps(node))
+
+
+@istest
 def test_serialize_while_loop():
     node = js.while_loop(
         js.ref("condition"),

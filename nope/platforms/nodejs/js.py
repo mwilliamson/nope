@@ -107,6 +107,12 @@ def _serialize_try_catch(obj, fileobj):
     for statement in obj.catch_body:
         dump(statement, fileobj)
     fileobj.write(" }")
+    
+    if obj.finally_body:
+        fileobj.write(" finally { ")
+        for statement in obj.finally_body:
+            dump(statement, fileobj)
+        fileobj.write(" }")
 
 
 def _serialize_throw(obj, fileobj):
@@ -220,7 +226,12 @@ def var(name, value=None):
     return VariableDeclaration(name, value)
 
 if_else = IfElse = collections.namedtuple("IfElse", ["condition", "true_body", "false_body"])
-try_catch = TryCatch = collections.namedtuple("TryCatch", ["try_body", "error_name", "catch_body"])
+TryCatch = collections.namedtuple("TryCatch", ["try_body", "error_name", "catch_body", "finally_body"])
+
+def try_catch(try_body, error_name=None, catch_body=None, finally_body=None):
+    return TryCatch(try_body, error_name, catch_body, finally_body)
+    
+
 while_loop = WhileLoop = collections.namedtuple("WhileLoop", ["condition", "body"])
 break_statement = BreakStatement = collections.namedtuple("BreakStatement", [])
 continue_statement = ContinueStatement = collections.namedtuple("ContinueStatement", [])
