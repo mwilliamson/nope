@@ -73,8 +73,9 @@ def _serialize_if_else(obj, fileobj):
     dump(obj.condition, fileobj)
     fileobj.write(") ");
     _serialize_block(obj.true_body, fileobj)
-    fileobj.write(" else ")
-    _serialize_block(obj.false_body, fileobj)
+    if obj.false_body:
+        fileobj.write(" else ")
+        _serialize_block(obj.false_body, fileobj)
 
 
 def _serialize_while_loop(obj, fileobj):
