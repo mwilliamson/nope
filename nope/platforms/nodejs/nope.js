@@ -82,7 +82,7 @@ var arrayMethods = {
                     return self[index++];
                 } else {
                     var error = new Error();
-                    error.nopeType = StopIteration;
+                    error.$nopeException = StopIteration();
                     throw error;
                 }
             }
@@ -111,8 +111,6 @@ function bool(value) {
     return !!value;
 }
 
-var StopIteration = {};
-
 function range(start, end) {
     return {
         __iter__: function() {
@@ -126,7 +124,7 @@ function range(start, end) {
                         return index++;
                     } else {
                         var error = new Error();
-                        error.nopeType = StopIteration;
+                        error.$nopeException = StopIteration();
                         throw error;
                     }
                 }
@@ -145,7 +143,7 @@ function next(iterable, stopValue) {
     try {
         return iterable.__next__();
     } catch (error) {
-        if (error.nopeType === StopIteration) {
+        if (isinstance(error.$nopeException, StopIteration)) {
             return stopValue;
         } else {
             throw error;
@@ -177,6 +175,18 @@ function AssertionError(message) {
 
 AssertionError.__name__ = "AssertionError";
 AssertionError.$baseClasses = [Exception];
+
+function StopIteration(message) {
+    return {
+        $nopeType: StopIteration,
+        __str__: function() {
+            return str(message);
+        }
+    };
+}
+
+StopIteration.__name__ = "StopIteration";
+StopIteration.$baseClasses = [Exception];
 
 function str(value) {
     return getattr(value, "__str__")();
