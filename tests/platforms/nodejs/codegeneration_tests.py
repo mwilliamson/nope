@@ -1,3 +1,4 @@
+import slimit.parser
 from nose.tools import istest, assert_equal
 
 from nope.platforms.nodejs import codegeneration, js
@@ -446,12 +447,22 @@ def test_transform_string_expression():
 def test_transform_int_expression():
     _assert_transform(
         nodes.int(42),
-        js.number(42)
+        js.number(42),
     )
     
 
-def _assert_transform(nope, js, type_lookup=None, optimise=True):
+def _assert_transform(nope, expected_js, type_lookup=None, optimise=True):
     if type_lookup is None:
         type_lookup = types.TypeLookup({})
     
-    assert_equal(js, codegeneration.transform(nope, type_lookup, optimise=optimise))
+    transformed_js = codegeneration.transform(nope, type_lookup, optimise=optimise)
+    
+    if isinstance(expected_js, str):
+        _assert_equivalent_js(expected_js, js.dumps(transformed_js))
+    else:
+        assert_equal(expected_js, transformed_js)
+
+
+def _assert_equivalent_js(first, second):
+    parser = slimit.parser.Parser()
+    assert_equal(parser.parse(first).to_ecma(), parser.parse(second).to_ecma())
