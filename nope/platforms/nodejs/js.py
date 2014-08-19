@@ -71,22 +71,17 @@ def _serialize_variable_declaration(obj, fileobj):
 def _serialize_if_else(obj, fileobj):
     fileobj.write("if (")
     dump(obj.condition, fileobj)
-    fileobj.write(") { ");
-    for statement in obj.true_body:
-        dump(statement, fileobj)
-    fileobj.write(" } else { ")
-    for statement in obj.false_body:
-        dump(statement, fileobj)
-    fileobj.write(" }")
+    fileobj.write(") ");
+    _serialize_block(obj.true_body, fileobj)
+    fileobj.write(" else ")
+    _serialize_block(obj.false_body, fileobj)
 
 
 def _serialize_while_loop(obj, fileobj):
     fileobj.write("while (")
     dump(obj.condition, fileobj)
-    fileobj.write(") { ")
-    for statement in obj.body:
-        dump(statement, fileobj)
-    fileobj.write(" }")
+    fileobj.write(") ")
+    _serialize_block(obj.body, fileobj)
 
 
 def _serialize_break_statement(obj, fileobj):
@@ -98,24 +93,25 @@ def _serialize_continue_statement(obj, fileobj):
 
 
 def _serialize_try_catch(obj, fileobj):
-    fileobj.write("try { ")
-    for statement in obj.try_body:
-        dump(statement, fileobj)
-    fileobj.write(" }")
+    fileobj.write("try ")
+    _serialize_block(obj.try_body, fileobj)
     
     if obj.catch_body:
         fileobj.write(" catch (")
         fileobj.write(obj.error_name)
-        fileobj.write(") { ")
-        for statement in obj.catch_body:
-            dump(statement, fileobj)
-        fileobj.write(" }")
+        fileobj.write(") ")
+        _serialize_block(obj.catch_body, fileobj)
     
     if obj.finally_body:
-        fileobj.write(" finally { ")
-        for statement in obj.finally_body:
-            dump(statement, fileobj)
-        fileobj.write(" }")
+        fileobj.write(" finally ")
+        _serialize_block(obj.finally_body, fileobj)
+
+
+def _serialize_block(statements, fileobj):
+    fileobj.write("{ ")
+    for statement in statements:
+        dump(statement, fileobj)
+    fileobj.write(" }")
 
 
 def _serialize_throw(obj, fileobj):
