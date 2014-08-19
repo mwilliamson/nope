@@ -315,6 +315,25 @@ def test_transform_try_finally():
 
 
 @istest
+def test_transform_try_except_with_no_name():
+    _assert_transform(
+        nodes.try_statement(
+            [nodes.ret(nodes.ref("x"))],
+            handlers=[
+                nodes.except_handler(None, None, [nodes.ret(nodes.ref("y"))]),
+            ],
+        ),
+        """
+            try {
+                return x;
+            } catch ($exception0) {
+                return y;
+            }
+        """,
+    )
+
+
+@istest
 def test_transform_call():
     _assert_transform(
         nodes.call(nodes.ref("f"), [nodes.ref("x"), nodes.ref("y")]),
@@ -481,7 +500,12 @@ def _assert_transform(nope, expected_js, type_lookup=None, optimise=True):
 
 
 def _assert_equivalent_js(first, second):
+    assert_equal(_normalise_js(first), _normalise_js(second))
+
+
+def _normalise_js(js):
     parser = slimit.parser.Parser()
-    first_normalised = parser.parse(first).to_ecma()
-    second_normalised = parser.parse(second).to_ecma()
-    assert_equal(first_normalised, second_normalised)
+    try:
+        return parser.parse(js).to_ecma()
+    except SyntaxError as error:
+        raise SyntaxError("{}\nin:\n{}".format(error, js))

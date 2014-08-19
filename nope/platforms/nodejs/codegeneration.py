@@ -405,8 +405,16 @@ class Transformer(object):
 
 
     def _try_statement(self, statement):
+        if statement.handlers:
+            handler, = statement.handlers
+            js_handler = self._transform_all(handler.body)
+        else:
+            js_handler = []
+        
         return js.try_catch(
             self._transform_all(statement.body),
+            self._unique_name("exception"),
+            js_handler,
             finally_body=self._transform_all(statement.finally_body),
         )
 
