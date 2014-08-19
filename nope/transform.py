@@ -193,18 +193,21 @@ class Converter(object):
 
 
     def _with(self, node):
-        item, = node.items
+        result = self._mapped(node.body)
         
-        if item.optional_vars is None:
-            target = None
-        else:
-            target = self.convert(item.optional_vars)
+        for item in reversed(node.items):
+            if item.optional_vars is None:
+                target = None
+            else:
+                target = self.convert(item.optional_vars)
+            
+            result = [nodes.with_statement(
+                self.convert(item.context_expr),
+                target,
+                result,
+            )]
         
-        return nodes.with_statement(
-            self.convert(item.context_expr),
-            target,
-            self._mapped(node.body),
-        )
+        return result[0]
     
 
     def _str_literal(self, node):

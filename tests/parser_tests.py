@@ -518,6 +518,22 @@ def test_parse_with_statement_single_context_manager_with_target():
     _assert_statement_parse(expected_node, "with x as x2:\n  return y")
 
 
+@istest
+def test_parse_with_statement_with_multiple_context_managers():
+    expected_node = nodes.with_statement(
+        nodes.ref("x"),
+        nodes.ref("x2"),
+        [
+            nodes.with_statement(
+                nodes.ref("y"),
+                None,
+                [nodes.ret(nodes.ref("z"))],
+            )
+        ]
+    )
+    _assert_statement_parse(expected_node, "with x as x2, y:\n    return z")
+
+
 
 def _assert_expression_parse(expected, source):
     module = parser.parse(source)
