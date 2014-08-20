@@ -434,8 +434,11 @@ def test_transform_raise_with_exception_value():
         nodes.raise_statement(nodes.ref("error")),
         """
             var $exception0 = error;
-            var $error1 = new Error((($nope.builtins.getattr($nope.builtins.type($exception0), "__name__")) + ": ") + ($nope.builtins.str($exception0)));
+            var $error1 = new Error();
             $error1.$nopeException = $exception0;
+            $error1.toString = function() {
+                return (($nope.builtins.getattr($nope.builtins.type($exception0), "__name__")) + ": ") + ($nope.builtins.str($exception0));
+            };
             throw $error1;
         """,
     )

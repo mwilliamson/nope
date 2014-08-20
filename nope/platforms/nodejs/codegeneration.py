@@ -485,7 +485,8 @@ class Transformer(object):
         js_error = js.call(
             # TODO: create a proper `new` JS node
             js.ref("new Error"),
-            [error_message]
+            # TODO: set message? Perhaps set as a getter
+            []
         )
         
         return js.statements([
@@ -494,6 +495,10 @@ class Transformer(object):
             js.expression_statement(js.assign(
                 js.property_access(js.ref(error_name), "$nopeException"),
                 js.ref(exception_name)
+            )),
+            js.expression_statement(js.assign(
+                js.property_access(js.ref(error_name), "toString"),
+                js.function_expression([], [js.ret(error_message)])
             )),
             js.throw(js.ref(error_name)),
         ])
