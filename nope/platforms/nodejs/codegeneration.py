@@ -473,7 +473,7 @@ class Transformer(object):
         exception_name = self._unique_name("exception")
         error_name = self._unique_name("error")
         
-        exception_type = js.call(js.ref("$nope.builtins.type"), [exception_value])
+        exception_type = js.call(js.ref("$nope.builtins.type"), [js.ref(exception_name)])
         exception_type_name = js.call(js.ref("$nope.builtins.getattr"), [exception_type, js.string("__name__")])
         error_message = js.binary_operation("+",
             js.binary_operation("+",

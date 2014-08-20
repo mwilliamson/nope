@@ -429,6 +429,19 @@ def test_transform_try_except_with_multiple_exception_handlers():
 
 
 @istest
+def test_transform_raise_with_exception_value():
+    _assert_transform(
+        nodes.raise_statement(nodes.ref("error")),
+        """
+            var $exception0 = error;
+            var $error1 = new Error((($nope.builtins.getattr($nope.builtins.type($exception0), "__name__")) + ": ") + ($nope.builtins.str($exception0)));
+            $error1.$nopeException = $exception0;
+            throw $error1;
+        """,
+    )
+
+
+@istest
 def test_transform_call():
     _assert_transform(
         nodes.call(nodes.ref("f"), [nodes.ref("x"), nodes.ref("y")]),
