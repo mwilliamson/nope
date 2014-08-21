@@ -281,12 +281,9 @@ class StatementTypeChecker(object):
             self._infer(node.message, context)
     
     def _check_with(self, node, context):
-        return_type = self._infer_magic_method_call(node.value, "enter", node.value, [], context)
+        enter_return_type = self._infer_magic_method_call(node.value, "enter", node.value, [], context)
         
-        if node.target is not None:
-            self._assign(node.target, node.target, return_type, context)
-        
-        self._infer_magic_method_call(
+        exit_return_type = self._infer_magic_method_call(
             node.value,
             "exit",
             node.value,
@@ -298,7 +295,17 @@ class StatementTypeChecker(object):
             context,
         )
         
-        self._check_list(node.body, context)
+        def assign_target(branch_context):
+            if node.target is not None:
+                self._assign(node.target, node.target, enter_return_type, branch_context)
+        
+        self._check_branches(
+            [
+                _Branch(node.body, before=assign_target),
+            ],
+            context,
+            bind=exit_return_type == types.none_type,
+        )
 
     def _check_import(self, node, context):
         for alias in node.names:

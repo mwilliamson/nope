@@ -1065,6 +1065,37 @@ def target_cannot_be_strict_subtype_of_return_type_of_enter_method():
 
 
 @istest
+def assigned_variables_in_with_statement_body_are_still_bound_after_exit_if_exit_method_always_returns_none():
+    node = nodes.with_statement(nodes.ref("x"), nodes.ref("y"), [
+        nodes.assign(nodes.ref("z"), nodes.none()),
+    ])
+    
+    context = bound_context({
+        "x": _context_manager_class(types.any_type),
+        "y": types.any_type,
+        "z": None,
+    })
+    _assert_statement_type_checks(node, context)
+    assert_equal(types.none_type, context.lookup("z"))
+
+
+@istest
+def assigned_variables_in_with_statement_body_are_unbound_after_exit_if_exit_method_does_not_return_none():
+    node = nodes.with_statement(nodes.ref("x"), nodes.ref("y"), [
+        nodes.assign(nodes.ref("z"), nodes.none()),
+    ])
+    
+    context = bound_context({
+        "x": _context_manager_class(exit_type=types.any_type),
+        "y": types.any_type,
+        "z": None,
+    })
+    _assert_statement_type_checks(node, context)
+    assert not context.is_bound("z")
+    assert_equal(types.none_type, context.lookup("z", allow_unbound=True))
+
+
+@istest
 def check_generates_type_lookup_for_all_expressions():
     int_ref_node = nodes.ref("a")
     int_node = nodes.int(3)
@@ -1421,21 +1452,23 @@ def _assert_variable_is_bound(create_node):
     assert_equal(types.int_type, context.lookup("x"))
 
 
-def _context_manager_class(type_=None):
+def _context_manager_class(enter_type=None, exit_type=None):
     return types.scalar_type("Manager", [
-        types.attr("__enter__", _enter_method(type_), read_only=True),
-        types.attr("__exit__", _exit_method(), read_only=True),
+        types.attr("__enter__", _enter_method(enter_type), read_only=True),
+        types.attr("__exit__", _exit_method(exit_type), read_only=True),
     ])
 
 
-def _enter_method(type_=None):
-    if type_ is None:
-        type_ = types.none_type
-    return types.func([], type_)
+def _enter_method(return_type=None):
+    if return_type is None:
+        return_type = types.none_type
+    return types.func([], return_type)
 
 
-def _exit_method():
-    return types.func([types.exception_meta_type, types.exception_type, types.traceback_type], types.none_type)
+def _exit_method(return_type=None):
+    if return_type is None:
+        return_type = types.none_type
+    return types.func([types.exception_meta_type, types.exception_type, types.traceback_type], return_type)
 
 
 def _assert_statement_type_checks(statement, context):
