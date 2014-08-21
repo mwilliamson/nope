@@ -449,18 +449,23 @@ def test_transform_with_statement_with_no_target():
     _assert_transform(
         nodes.with_statement(nodes.ref("manager"), None, [nodes.ret(nodes.ref("x"))]),
         """
-            var $exception0 = null;
-            var $traceback1 = null;
-            var $manager2 = manager;
-            var $exit3 = $nope.builtins.getattr($manager2, "__exit__");
-            $nope.builtins.getattr($manager2, "__enter__")();
+            var $manager1 = manager;
+            var $exit2 = $nope.builtins.getattr($manager1, "__exit__");
+            var $hasExited4 = false;
+            $nope.builtins.getattr($manager1, "__enter__")();
             try {
                 return x;
-            } catch ($error4) {
-                $exception0 = $error4.$nopeException;
-                throw $error4;
+            } catch ($error3) {
+                var $exception0 = $error3.$nopeException;
+                $hasExited4 = true;
+                if (!($nope.builtins.bool($exit2($nope.builtins.type($exception0), $exception0, null)))) {
+                    throw $error3;
+                }
+                
             } finally {
-                $exit3($nope.builtins.type($exception0), $exception0, $traceback1);
+                if (!($hasExited4)) {
+                    $exit2(null, null, null);
+                }
             }
         """,
     )
@@ -471,18 +476,23 @@ def test_transform_with_statement_with_target():
     _assert_transform(
         nodes.with_statement(nodes.ref("manager"), nodes.ref("value"), [nodes.ret(nodes.ref("x"))]),
         """
-            var $exception0 = null;
-            var $traceback1 = null;
-            var $manager2 = manager;
-            var $exit3 = $nope.builtins.getattr($manager2, "__exit__");
-            value = $nope.builtins.getattr($manager2, "__enter__")();
+            var $manager1 = manager;
+            var $exit2 = $nope.builtins.getattr($manager1, "__exit__");
+            var $hasExited4 = false;
+            value = $nope.builtins.getattr($manager1, "__enter__")();
             try {
                 return x;
-            } catch ($error4) {
-                $exception0 = $error4.$nopeException;
-                throw $error4;
+            } catch ($error3) {
+                var $exception0 = $error3.$nopeException;
+                $hasExited4 = true;
+                if (!($nope.builtins.bool($exit2($nope.builtins.type($exception0), $exception0, null)))) {
+                    throw $error3;
+                }
+                
             } finally {
-                $exit3($nope.builtins.type($exception0), $exception0, $traceback1);
+                if (!($hasExited4)) {
+                    $exit2(null, null, null);
+                }
             }
         """,
     )

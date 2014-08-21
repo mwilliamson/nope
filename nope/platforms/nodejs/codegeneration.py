@@ -339,9 +339,13 @@ class Transformer(object):
         
     
     def _condition(self, condition):
+        return self._builtins_bool(self.transform(condition))
+    
+    
+    def _builtins_bool(self, js_condition):
         return js.call(
             js.ref("$nope.builtins.bool"),
-            [self.transform(condition)]
+            [js_condition]
         )
     
     
@@ -507,10 +511,10 @@ class Transformer(object):
     
     def _with_statement(self, statement):
         exception_name = self._unique_name("exception")
-        traceback_name = self._unique_name("traceback")
         manager_name = self._unique_name("manager")
         exit_method_var_name = self._unique_name("exit")
         error_name = self._unique_name("error")
+        has_exited_name = self._unique_name("hasExited")
         
         manager_ref = js.ref(manager_name)
         
@@ -521,24 +525,35 @@ class Transformer(object):
             enter_statement = self._create_single_assignment(statement.target, enter_value)
         
         return js.statements([
-            js.var(exception_name, js.null),
-            js.var(traceback_name, js.null),
             js.var(manager_name, self.transform(statement.value)),
             js.var(exit_method_var_name, self._getattr(manager_ref, "__exit__")),
+            js.var(has_exited_name, js.boolean(False)),
             enter_statement,
             js.try_catch(
                 self._transform_all(statement.body),
                 error_name=error_name,
                 catch_body=[
-                    js.assign_statement(js.ref(exception_name), self._get_nope_exception_from_error(js.ref(error_name))),
-                    js.throw(js.ref(error_name)),
+                    js.var(exception_name, self._get_nope_exception_from_error(js.ref(error_name))),
+                    js.assign_statement(js.ref(has_exited_name), js.boolean(True)),
+                    js.if_else(
+                        js.unary_operation("!", self._builtins_bool(js.call(js.ref(exit_method_var_name), [
+                            js.call(js.ref("$nope.builtins.type"), [js.ref(exception_name)]),
+                            js.ref(exception_name),
+                            js.null,
+                        ]))),
+                        [js.throw(js.ref(error_name))],
+                        [],
+                    ),
+                    
                 ],
                 finally_body=[
-                    js.expression_statement(js.call(js.ref(exit_method_var_name), [
-                        js.call(js.ref("$nope.builtins.type"), [js.ref(exception_name)]),
-                        js.ref(exception_name),
-                        js.ref(traceback_name),
-                    ])),
+                    js.if_else(
+                        js.unary_operation("!", js.ref(has_exited_name)),
+                        [
+                            js.expression_statement(js.call(js.ref(exit_method_var_name), [js.null, js.null, js.null])),
+                        ],
+                        [],
+                    ),
                 ],
             ),
         ])
