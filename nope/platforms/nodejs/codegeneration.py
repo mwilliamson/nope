@@ -191,6 +191,7 @@ class Transformer(object):
             nodes.TryStatement: self._try_statement,
             nodes.RaiseStatement: self._raise_statement,
             nodes.AssertStatement: self._assert_statement,
+            nodes.WithStatement: self._with_statement,
             
             nodes.Call: self._call,
             nodes.AttributeAccess: self._attr,
@@ -415,7 +416,7 @@ class Transformer(object):
                 else:
                     handler_type = js.ref("$nope.builtins.Exception")
                 
-                nope_exception = js.property_access(js.ref(exception_name), "$nopeException")
+                nope_exception = self._get_nope_exception_from_error(js.ref(exception_name))
                     
                 handler_body = []
                 if handler.name is not None:
@@ -493,7 +494,7 @@ class Transformer(object):
             js.var(exception_name, exception_value),
             js.var(error_name, js_error),
             js.expression_statement(js.assign(
-                js.property_access(js.ref(error_name), "$nopeException"),
+                self._get_nope_exception_from_error(js.ref(error_name)),
                 js.ref(exception_name)
             )),
             js.expression_statement(js.assign(
@@ -502,7 +503,45 @@ class Transformer(object):
             )),
             js.throw(js.ref(error_name)),
         ])
+    
+    
+    def _with_statement(self, statement):
+        exception_name = self._unique_name("exception")
+        traceback_name = self._unique_name("traceback")
+        manager_name = self._unique_name("manager")
+        exit_method_var_name = self._unique_name("exit")
+        error_name = self._unique_name("error")
         
+        manager_ref = js.ref(manager_name)
+        
+        enter_value = js.call(self._getattr(manager_ref, "__enter__"), [])
+        if statement.target is None:
+            enter_statement = js.expression_statement(enter_value)
+        else:
+            enter_statement = self._create_single_assignment(statement.target, enter_value)
+        
+        return js.statements([
+            js.var(exception_name, js.null),
+            js.var(traceback_name, js.null),
+            js.var(manager_name, self.transform(statement.value)),
+            js.var(exit_method_var_name, self._getattr(manager_ref, "__exit__")),
+            enter_statement,
+            js.try_catch(
+                self._transform_all(statement.body),
+                error_name=error_name,
+                catch_body=[
+                    js.assign_statement(js.ref(exception_name), self._get_nope_exception_from_error(js.ref(error_name))),
+                    js.throw(js.ref(error_name)),
+                ],
+                finally_body=[
+                    js.expression_statement(js.call(js.ref(exit_method_var_name), [
+                        js.call(js.ref("$nope.builtins.type"), [js.ref(exception_name)]),
+                        js.ref(exception_name),
+                        js.ref(traceback_name),
+                    ])),
+                ],
+            ),
+        ])
 
 
     def _call(self, call):
@@ -510,10 +549,7 @@ class Transformer(object):
 
 
     def _attr(self, attr):
-        return js.call(
-            js.ref("$nope.builtins.getattr"),
-            [self.transform(attr.value), js.string(attr.attr)],
-        )
+        return self._getattr(self.transform(attr.value), attr.attr)
     
     def _binary_operation(self, operation):
         # TODO: split off optimisations
@@ -555,6 +591,17 @@ class Transformer(object):
 
     def _list(self, node):
         return js.array(self._transform_all(node.elements))
+    
+    
+    def _getattr(self, value, attr_name):
+        return js.call(
+            js.ref("$nope.builtins.getattr"),
+            [value, js.string(attr_name)],
+        )
+    
+    
+    def _get_nope_exception_from_error(self, error):
+        return js.property_access(error, "$nopeException")
 
 
     def _transform_all(self, nodes):

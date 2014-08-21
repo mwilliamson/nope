@@ -445,6 +445,50 @@ def test_transform_raise_with_exception_value():
 
 
 @istest
+def test_transform_with_statement_with_no_target():
+    _assert_transform(
+        nodes.with_statement(nodes.ref("manager"), None, [nodes.ret(nodes.ref("x"))]),
+        """
+            var $exception0 = null;
+            var $traceback1 = null;
+            var $manager2 = manager;
+            var $exit3 = $nope.builtins.getattr($manager2, "__exit__");
+            $nope.builtins.getattr($manager2, "__enter__")();
+            try {
+                return x;
+            } catch ($error4) {
+                $exception0 = $error4.$nopeException;
+                throw $error4;
+            } finally {
+                $exit3($nope.builtins.type($exception0), $exception0, $traceback1);
+            }
+        """,
+    )
+
+
+@istest
+def test_transform_with_statement_with_target():
+    _assert_transform(
+        nodes.with_statement(nodes.ref("manager"), nodes.ref("value"), [nodes.ret(nodes.ref("x"))]),
+        """
+            var $exception0 = null;
+            var $traceback1 = null;
+            var $manager2 = manager;
+            var $exit3 = $nope.builtins.getattr($manager2, "__exit__");
+            value = $nope.builtins.getattr($manager2, "__enter__")();
+            try {
+                return x;
+            } catch ($error4) {
+                $exception0 = $error4.$nopeException;
+                throw $error4;
+            } finally {
+                $exit3($nope.builtins.type($exception0), $exception0, $traceback1);
+            }
+        """,
+    )
+
+
+@istest
 def test_transform_call():
     _assert_transform(
         nodes.call(nodes.ref("f"), [nodes.ref("x"), nodes.ref("y")]),
