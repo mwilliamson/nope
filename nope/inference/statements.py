@@ -23,6 +23,7 @@ class StatementTypeChecker(object):
             nodes.TryStatement: self._check_try,
             nodes.RaiseStatement: self._check_raise,
             nodes.AssertStatement: self._check_assert,
+            nodes.WithStatement: self._check_with,
             nodes.FunctionDef: self._check_function_def,
             nodes.Import: self._check_import,
             nodes.ImportFrom: self._check_import_from,
@@ -279,6 +280,8 @@ class StatementTypeChecker(object):
         if node.message is not None:
             self._infer(node.message, context)
     
+    def _check_with(self, node, context):
+        self._check_list(node.body, context)
 
     def _check_import(self, node, context):
         for alias in node.names:

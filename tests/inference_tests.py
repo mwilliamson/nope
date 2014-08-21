@@ -999,6 +999,18 @@ def assert_message_is_type_checked():
 
 
 @istest
+def body_of_with_expression_is_type_checked():
+    _assert_statement_is_type_checked(
+        lambda bad_statement: nodes.with_statement(nodes.ref("x"), None, [
+            bad_statement
+        ]),
+        bound_context({
+            "x": _context_manager_class(),
+        })
+    )
+
+
+@istest
 def check_generates_type_lookup_for_all_expressions():
     int_ref_node = nodes.ref("a")
     int_node = nodes.int(3)
@@ -1346,3 +1358,7 @@ def _assert_variable_is_bound(create_node):
     update_context(node, context)
     assert context.is_bound("x")
     assert_equal(types.int_type, context.lookup("x"))
+
+
+def _context_manager_class():
+    return types.scalar_type("Manager", {})
