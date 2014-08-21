@@ -1005,6 +1005,28 @@ def body_of_with_expression_is_type_checked():
 
 
 @istest
+def context_manager_of_with_statement_is_type_checked():
+    _assert_expression_is_type_checked(
+        lambda bad_expr: nodes.with_statement(bad_expr, None, []),
+    )
+
+
+@istest
+def context_manager_of_with_statement_must_have_enter_method():
+    cls = types.scalar_type("Manager", [types.attr("__exit__", _exit_method())])
+    context_manager_node = nodes.ref("x")
+    node = nodes.with_statement(context_manager_node, None, [])
+    
+    context = bound_context({"x": cls})
+    _assert_type_mismatch(
+        lambda: update_context(node, context),
+        expected="object with method '__enter__'",
+        actual=cls,
+        node=context_manager_node,
+    )
+
+
+@istest
 def check_generates_type_lookup_for_all_expressions():
     int_ref_node = nodes.ref("a")
     int_node = nodes.int(3)
@@ -1362,4 +1384,15 @@ def _assert_variable_is_bound(create_node):
 
 
 def _context_manager_class():
-    return types.scalar_type("Manager", {})
+    return types.scalar_type("Manager", [
+        types.attr("__enter__", _enter_method(), read_only=True),
+        types.attr("__exit__", _exit_method(), read_only=True),
+    ])
+
+
+def _enter_method():
+    return types.func([], types.none_type)
+
+
+def _exit_method():
+    return types.func([], types.none_type)

@@ -281,6 +281,8 @@ class StatementTypeChecker(object):
             self._infer(node.message, context)
     
     def _check_with(self, node, context):
+        self._expression_type_inferer.infer_magic_method_call(node.value, "enter", node.value, [], context)
+        
         self._check_list(node.body, context)
 
     def _check_import(self, node, context):
