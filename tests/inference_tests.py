@@ -1027,6 +1027,21 @@ def context_manager_of_with_statement_must_have_enter_method():
 
 
 @istest
+def context_manager_of_with_statement_must_have_exit_method():
+    cls = types.scalar_type("Manager", [types.attr("__enter__", _enter_method())])
+    context_manager_node = nodes.ref("x")
+    node = nodes.with_statement(context_manager_node, None, [])
+    
+    context = bound_context({"x": cls})
+    _assert_type_mismatch(
+        lambda: update_context(node, context),
+        expected="object with method '__exit__'",
+        actual=cls,
+        node=context_manager_node,
+    )
+
+
+@istest
 def check_generates_type_lookup_for_all_expressions():
     int_ref_node = nodes.ref("a")
     int_node = nodes.int(3)
@@ -1395,4 +1410,4 @@ def _enter_method():
 
 
 def _exit_method():
-    return types.func([], types.none_type)
+    return types.func([types.exception_meta_type, types.exception_type, types.traceback_type], types.none_type)

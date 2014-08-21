@@ -281,7 +281,18 @@ class StatementTypeChecker(object):
             self._infer(node.message, context)
     
     def _check_with(self, node, context):
-        self._expression_type_inferer.infer_magic_method_call(node.value, "enter", node.value, [], context)
+        self._infer_magic_method_call(node.value, "enter", node.value, [], context)
+        self._infer_magic_method_call(
+            node.value,
+            "exit",
+            node.value,
+            [
+                # TODO: use ephemeral nodes to represent formal args of __exit__
+                ephemeral.formal_arg_constraint(node.value, type_)
+                for type_ in [types.exception_meta_type, types.exception_type, types.traceback_type]
+            ],
+            context,
+        )
         
         self._check_list(node.body, context)
 
@@ -353,6 +364,9 @@ class StatementTypeChecker(object):
     def _check_list(self, statements, context):
         for statement in statements:
             self.update_context(statement, context)
+    
+    def _infer_magic_method_call(self, *args, **kwargs):
+        return self._expression_type_inferer.infer_magic_method_call(*args, **kwargs)
 
 
 class _LoopBranch(object):
