@@ -83,7 +83,7 @@ Note that not all backends may support all features.
 
 * **If statements**: supported.
 
-* **With statements**: unsupported.
+* **With statements**: supported.
 
 * **Raise statements**: partially supported.
   Only statements in the form ``raise value`` are supported.
