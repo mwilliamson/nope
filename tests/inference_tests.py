@@ -907,7 +907,7 @@ def except_handler_type_must_be_exception_type():
 
 
 @istest
-def except_handler_binds_error_name():
+def except_handler_binds_error_name_in_handler_body_only():
     node = nodes.try_statement([], handlers=[
         nodes.except_handler(
             nodes.ref("Exception"),
@@ -920,6 +920,8 @@ def except_handler_binds_error_name():
         "Exception": types.meta_type(types.exception_type)
     })
     update_context(node, context)
+    # Make sure the name is unbound afterwards
+    assert not context.is_bound("error")
 
 
 @istest
