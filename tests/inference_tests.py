@@ -1071,7 +1071,7 @@ def assigned_variables_in_with_statement_body_are_still_bound_after_exit_if_exit
     ])
     
     context = bound_context({
-        "x": _context_manager_class(types.any_type),
+        "x": _context_manager_class(),
         "z": None,
     })
     _assert_statement_type_checks(node, context)
