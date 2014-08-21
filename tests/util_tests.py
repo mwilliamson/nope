@@ -87,6 +87,26 @@ def except_handler_can_have_no_name():
 
 
 @istest
+def declared_names_includes_names_in_with_bodies():
+    statement = nodes.with_statement(
+        nodes.ref("manager"),
+        None,
+        [nodes.assign("x", nodes.none())],
+    )
+    assert_equal(["x"], list(util.declared_names(statement)))
+
+
+@istest
+def declared_names_includes_target_of_with_statement():
+    statement = nodes.with_statement(
+        nodes.ref("manager"),
+        nodes.ref("value"),
+        [],
+    )
+    assert_equal(["value"], list(util.declared_names(statement)))
+
+
+@istest
 def error_is_raised_if_all_is_not_a_list():
     try:
         all_node = nodes.assign(["__all__"], nodes.none())

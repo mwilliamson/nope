@@ -33,6 +33,8 @@ def declared_names(node):
             names |= declared_locals(handler.body)
         names |= declared_locals(node.finally_body)
         return names
+    elif isinstance(node, nodes.WithStatement):
+        return declared_locals(node.body) | _target_names([node.target])
     else:
         return OrderedSet([])
 
