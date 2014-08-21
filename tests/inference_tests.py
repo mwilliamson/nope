@@ -1066,13 +1066,12 @@ def target_cannot_be_strict_subtype_of_return_type_of_enter_method():
 
 @istest
 def assigned_variables_in_with_statement_body_are_still_bound_after_exit_if_exit_method_always_returns_none():
-    node = nodes.with_statement(nodes.ref("x"), nodes.ref("y"), [
+    node = nodes.with_statement(nodes.ref("x"), None, [
         nodes.assign(nodes.ref("z"), nodes.none()),
     ])
     
     context = bound_context({
         "x": _context_manager_class(types.any_type),
-        "y": types.any_type,
         "z": None,
     })
     _assert_statement_type_checks(node, context)
@@ -1081,13 +1080,12 @@ def assigned_variables_in_with_statement_body_are_still_bound_after_exit_if_exit
 
 @istest
 def assigned_variables_in_with_statement_body_are_unbound_after_exit_if_exit_method_does_not_return_none():
-    node = nodes.with_statement(nodes.ref("x"), nodes.ref("y"), [
+    node = nodes.with_statement(nodes.ref("x"), None, [
         nodes.assign(nodes.ref("z"), nodes.none()),
     ])
     
     context = bound_context({
         "x": _context_manager_class(exit_type=types.any_type),
-        "y": types.any_type,
         "z": None,
     })
     _assert_statement_type_checks(node, context)
