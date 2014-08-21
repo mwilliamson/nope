@@ -281,7 +281,11 @@ class StatementTypeChecker(object):
             self._infer(node.message, context)
     
     def _check_with(self, node, context):
-        self._infer_magic_method_call(node.value, "enter", node.value, [], context)
+        return_type = self._infer_magic_method_call(node.value, "enter", node.value, [], context)
+        
+        if node.target is not None:
+            self._assign(node.target, node.target, return_type, context)
+        
         self._infer_magic_method_call(
             node.value,
             "exit",

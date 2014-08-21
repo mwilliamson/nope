@@ -1042,6 +1042,29 @@ def context_manager_of_with_statement_must_have_exit_method():
 
 
 @istest
+def target_can_be_supertype_of_return_type_of_enter_method():
+    node = nodes.with_statement(nodes.ref("x"), nodes.ref("y"), [])
+    
+    context = bound_context({"x": _context_manager_class(types.int_type), "y": types.any_type})
+    _assert_statement_type_checks(node, context)
+
+
+@istest
+def target_cannot_be_strict_subtype_of_return_type_of_enter_method():
+    target_node = nodes.ref("y")
+    node = nodes.with_statement(nodes.ref("x"), target_node, [])
+    
+    context = bound_context({"x": _context_manager_class(types.any_type), "y": types.int_type})
+    try:
+        update_context(node, context)
+        assert False, "Expected error"
+    except errors.BadAssignmentError as error:
+        assert_equal(target_node, error.node)
+        assert_equal(types.any_type, error.value_type)
+        assert_equal(types.int_type, error.target_type)
+
+
+@istest
 def check_generates_type_lookup_for_all_expressions():
     int_ref_node = nodes.ref("a")
     int_node = nodes.int(3)
@@ -1398,16 +1421,22 @@ def _assert_variable_is_bound(create_node):
     assert_equal(types.int_type, context.lookup("x"))
 
 
-def _context_manager_class():
+def _context_manager_class(type_=None):
     return types.scalar_type("Manager", [
-        types.attr("__enter__", _enter_method(), read_only=True),
+        types.attr("__enter__", _enter_method(type_), read_only=True),
         types.attr("__exit__", _exit_method(), read_only=True),
     ])
 
 
-def _enter_method():
-    return types.func([], types.none_type)
+def _enter_method(type_=None):
+    if type_ is None:
+        type_ = types.none_type
+    return types.func([], type_)
 
 
 def _exit_method():
     return types.func([types.exception_meta_type, types.exception_type, types.traceback_type], types.none_type)
+
+
+def _assert_statement_type_checks(statement, context):
+    update_context(statement, context)
