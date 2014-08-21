@@ -7,6 +7,8 @@ from .. import testing
 from ..testing import program_path
 
 
+# TODO: add tests for with statements (requires class definition support)
+
 @nottest
 class ExecutionTests(object):
     @istest
