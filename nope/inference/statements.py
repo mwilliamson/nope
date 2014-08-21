@@ -119,7 +119,7 @@ class StatementTypeChecker(object):
     def _assign_ref(self, node, target, value_type, context):
         var_type = context.lookup(target.name, allow_unbound=True)
         if var_type is not None and not types.is_sub_type(var_type, value_type):
-            raise errors.TypeMismatchError(node, expected=var_type, actual=value_type)
+            raise errors.BadAssignmentError(node, target_type=var_type, value_type=value_type)
         
         if not context.is_bound(target.name):
             context.add(target.name, value_type)
@@ -129,7 +129,7 @@ class StatementTypeChecker(object):
         target_type = self._infer(target, context)
         
         if not types.is_sub_type(target_type, value_type):
-            raise errors.TypeMismatchError(target, expected=value_type, actual=target_type)
+            raise errors.BadAssignmentError(target, value_type=value_type, target_type=target_type)
         
         obj_type = self._infer(target.value, context)
         if obj_type.attrs.get(target.attr).read_only:

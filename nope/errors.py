@@ -28,6 +28,16 @@ class TypeMismatchError(TypeCheckError):
         return "Expected {0} but was {1}".format(self.expected, self.actual)
 
 
+class BadAssignmentError(TypeCheckError):
+    def __init__(self, node, target_type, value_type):
+        self.node = node
+        self.target_type = target_type
+        self.value_type = value_type
+    
+    def __str__(self):
+        return "Target has type '{}' but value has type '{}'".format(self.target_type, self.value_type)
+
+
 class UnboundLocalError(TypeCheckError):
     def __init__(self, node, name):
         self.node = node

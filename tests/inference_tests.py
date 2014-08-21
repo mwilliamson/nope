@@ -426,10 +426,10 @@ def assignment_to_attribute_does_not_allow_strict_supertype():
     try:
         update_context(node, context)
         assert False, "Expected error"
-    except errors.TypeMismatchError as error:
+    except errors.BadAssignmentError as error:
         assert_equal(attr_node, error.node)
-        assert_equal(types.object_type, error.expected)
-        assert_equal(types.str_type, error.actual)
+        assert_equal(types.object_type, error.value_type)
+        assert_equal(types.str_type, error.target_type)
 
 
 @istest
@@ -454,7 +454,7 @@ def variables_cannot_change_type():
     try:
         update_context(node, context)
         assert False, "Expected error"
-    except errors.TypeMismatchError as error:
+    except errors.BadAssignmentError as error:
         assert_equal(node, error.node)
 
 
@@ -465,7 +465,7 @@ def variables_cannot_change_type_even_if_variable_is_potentially_unbound():
     try:
         update_context(node, context)
         assert False, "Expected error"
-    except errors.TypeMismatchError as error:
+    except errors.BadAssignmentError as error:
         assert_equal(node, error.node)
 
 
