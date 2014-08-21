@@ -1074,7 +1074,7 @@ def assigned_variables_in_with_statement_body_are_still_bound_after_exit_if_exit
         "x": _context_manager_class(exit_type=types.none_type),
         "z": None,
     })
-    _assert_statement_type_checks(node, context)
+    update_context(node, context)
     assert_equal(types.none_type, context.lookup("z"))
 
 
@@ -1088,7 +1088,7 @@ def assigned_variables_in_with_statement_body_are_unbound_after_exit_if_exit_met
         "x": _context_manager_class(exit_type=types.any_type),
         "z": None,
     })
-    _assert_statement_type_checks(node, context)
+    update_context(node, context)
     assert not context.is_bound("z")
     assert_equal(types.none_type, context.lookup("z", allow_unbound=True))
 
