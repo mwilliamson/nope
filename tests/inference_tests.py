@@ -980,22 +980,16 @@ def raise_value_cannot_be_non_subtype_of_exception():
 
 @istest
 def assert_condition_is_type_checked():
-    ref_node = nodes.ref("error")
-    try:
-        update_context(nodes.assert_statement(ref_node), bound_context({}))
-        assert False, "Expected error"
-    except errors.UndefinedNameError as error:
-        assert_equal(ref_node, error.node)
+    _assert_expression_is_type_checked(
+        lambda bad_expr: nodes.assert_statement(bad_expr)
+    )
 
 
 @istest
 def assert_message_is_type_checked():
-    ref_node = nodes.ref("error")
-    try:
-        update_context(nodes.assert_statement(nodes.boolean(False), ref_node), bound_context({}))
-        assert False, "Expected error"
-    except errors.UndefinedNameError as error:
-        assert_equal(ref_node, error.node)
+    _assert_expression_is_type_checked(
+        lambda bad_expr: nodes.assert_statement(nodes.boolean(False), bad_expr)
+    )
 
 
 @istest
@@ -1328,11 +1322,18 @@ def _assert_type_mismatch(func, expected, actual, node):
 
 
 def _assert_statement_is_type_checked(create_node, context=None):
+    _assert_expression_is_type_checked(
+        lambda bad_expression: create_node(nodes.expression_statement(bad_expression)),
+        context
+    )
+
+
+def _assert_expression_is_type_checked(create_node, context=None):
     if context is None:
         context = bound_context({})
     
     bad_ref = nodes.ref("bad")
-    node = create_node(nodes.expression_statement(bad_ref))
+    node = create_node(bad_ref)
     
     try:
         update_context(node, context)
