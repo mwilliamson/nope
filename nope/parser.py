@@ -50,6 +50,9 @@ class CommentSeeker(object):
         )
 
 
+_FunctionSignature = collections.namedtuple("_FunctionSignature", ["type_params", "arg_annotations", "return_annotation"])
+
+
 def _token_type(token_type):
     return some(lambda token: token.type == token_type)
 
@@ -77,7 +80,12 @@ def _make_args(result):
 
 
 def _make_signature(result):
-    return result[0], result[1], result[3]
+    return _FunctionSignature(
+        type_params=result[0],
+        arg_annotations=result[1],
+        return_annotation=result[3],
+    )
+    
 
 
 def _create_signature_rule():
