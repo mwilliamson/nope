@@ -440,7 +440,10 @@ def assignment_to_list_does_not_allow_supertype():
         assert False, "Expected error"
     except errors.TypeMismatchError as error:
         assert_equal(target_sequence_node, ephemeral.root_node(error.node))
-        assert_equal(nodes.attr(target_sequence_node, "__setitem__"), ephemeral.underlying_node(error.node))
+        assert_equal(
+            ephemeral.FormalArg(ephemeral.attr(target_sequence_node, "__setitem__"), 1),
+            ephemeral.underlying_node(error.node)
+        )
         assert_equal(types.object_type, error.expected)
         assert_equal(types.str_type, error.actual)
 
@@ -710,8 +713,10 @@ def for_statement_requires_iterable_getitem_method_to_accept_integers():
         assert False, "Expected error"
     except errors.TypeMismatchError as error:
         assert_equal(ref_node, ephemeral.root_node(error.node))
-        # TODO: use ephemeral node to represent formal argument of __getitem__
-        assert_equal(nodes.attr(ref_node, "__getitem__"), ephemeral.underlying_node(error.node))
+        assert_equal(
+            ephemeral.FormalArg(ephemeral.attr(ref_node, "__getitem__"), 0),
+            ephemeral.underlying_node(error.node)
+        )
         assert_equal(types.int_type, error.expected)
         assert_equal(types.str_type, error.actual)
 
@@ -796,7 +801,10 @@ def for_statement_target_cannot_be_strict_subtype_of_iterable_element_type():
         assert False, "Expected error"
     except errors.TypeMismatchError as error:
         assert_equal(target_sequence_node, ephemeral.root_node(error.node))
-        assert_equal(nodes.attr(target_sequence_node, "__setitem__"), ephemeral.underlying_node(error.node))
+        assert_equal(
+            ephemeral.FormalArg(ephemeral.attr(target_sequence_node, "__setitem__"), 1),
+            ephemeral.underlying_node(error.node)
+        )
         assert_equal(types.object_type, error.expected)
         assert_equal(types.int_type, error.actual)
 

@@ -1,3 +1,5 @@
+import collections
+
 from .. import nodes
 
 
@@ -16,6 +18,15 @@ class EphemeralNode(object):
     
     def __getattr__(self, name):
         return getattr(self._node, name)
+    
+    def __eq__(self, other):
+        if not isinstance(other, EphemeralNode):
+            return False
+        
+        return (self._root_node, self._node) == (other._root_node, other._node)
+    
+    def __neq__(self, other):
+        return not (self == other)
 
 
 def root_node(node):
@@ -40,3 +51,10 @@ class FormalArgumentConstraint(object):
     def __init__(self, formal_arg_node, type_):
         self.formal_arg_node = formal_arg_node
         self.type = type_
+
+
+def formal_arg(func, index):
+    return EphemeralNode(func, FormalArg(func, index))
+    
+
+FormalArg = collections.namedtuple("FormalArg", ["func", "index"])
