@@ -54,6 +54,7 @@ class ExpressionTypeInferer(object):
 
     def _infer_call(self, node, context):
         # TODO: get rid of type_check_args, and use infer_call everywhere instead with ephemeral nodes
+        # TODO: check keyword arguments properly
         call_function_type = self.get_call_type(node.func, context)
         
         formal_arg_types = [
