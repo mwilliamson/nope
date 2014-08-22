@@ -9,7 +9,7 @@ StringExpression = collections.namedtuple("StringExpression", ["value"])
 ListExpression = collections.namedtuple("ListExpression", ["elements"])
 VariableReference = collections.namedtuple("VariableReference", ["name"])
 
-Call = collections.namedtuple("Call", ["func", "args"])
+Call = collections.namedtuple("Call", ["func", "args", "kwargs"])
 AttributeAccess = collections.namedtuple("AttributeAccess", ["value", "attr"])
 TypeApplication = collections.namedtuple("TypeApplication", ["generic_type", "params"])
 
@@ -62,7 +62,12 @@ string = StringExpression
 list = ListExpression
 ref = VariableReference
 
-call = Call
+def call(func, args, kwargs=None):
+    if kwargs is None:
+        kwargs = {}
+    
+    return Call(func, args, kwargs)
+
 attr = AttributeAccess
 type_apply = TypeApplication
 

@@ -243,7 +243,14 @@ class Converter(object):
     
 
     def _call(self, node):
-        return nodes.call(self.convert(node.func), self._mapped(node.args))
+        return nodes.call(
+            self.convert(node.func),
+            self._mapped(node.args),
+            dict(
+                (keyword.arg, self.convert(keyword.value))
+                for keyword in node.keywords
+            ),
+        )
     
     
     def _attr(self, node):

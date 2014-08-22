@@ -345,12 +345,22 @@ def test_parse_variable_reference():
 
 
 @istest
-def test_parse_call():
+def test_parse_call_with_positional_arguments():
     expected = nodes.call(
         nodes.ref("f"),
         [nodes.ref("x"), nodes.ref("y")],
     )
     _assert_expression_parse(expected, "f(x, y)")
+
+
+@istest
+def test_parse_call_with_keyword_arguments():
+    expected = nodes.call(
+        nodes.ref("f"),
+        [],
+        {"person": nodes.ref("bob"), "hat": nodes.ref("fedora")},
+    )
+    _assert_expression_parse(expected, "f(person=bob, hat=fedora)")
 
 
 @istest
