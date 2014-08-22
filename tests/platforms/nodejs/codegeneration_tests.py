@@ -500,10 +500,39 @@ def test_transform_with_statement_with_target():
 
 
 @istest
-def test_transform_call():
+def test_transform_call_with_positional_arguments():
+    func_node = nodes.ref("f")
+    type_lookup = types.TypeLookup({
+        id(func_node): types.func(
+            [types.str_type, types.str_type],
+            types.none_type
+        )
+    })
+    
     _assert_transform(
-        nodes.call(nodes.ref("f"), [nodes.ref("x"), nodes.ref("y")]),
-        js.call(js.ref("f"), [js.ref("x"), js.ref("y")])
+        nodes.call(func_node, [nodes.ref("x"), nodes.ref("y")]),
+        js.call(js.ref("f"), [js.ref("x"), js.ref("y")]),
+        type_lookup=type_lookup,
+    )
+
+
+@istest
+def test_transform_call_with_keyword_arguments():
+    func_node = nodes.ref("f")
+    type_lookup = types.TypeLookup({
+        id(func_node): types.func(
+            [
+                types.func_arg("first", types.str_type),
+                types.func_arg("second", types.str_type),
+            ],
+            types.none_type
+        )
+    })
+    
+    _assert_transform(
+        nodes.call(func_node, [], {"first": nodes.ref("x"), "second": nodes.ref("y")}),
+        js.call(js.ref("f"), [js.ref("x"), js.ref("y")]),
+        type_lookup=type_lookup,
     )
 
 

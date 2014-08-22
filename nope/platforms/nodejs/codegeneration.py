@@ -560,7 +560,25 @@ class Transformer(object):
 
 
     def _call(self, call):
-        return js.call(self.transform(call.func), self._transform_all(call.args))
+        # TODO: proper support for __call__
+        # at the moment, we only support meta-types that are directly callable e.g. str()
+        # a better solution might be have such values have a $call attribute (or similar)
+        # to avoid clashing with actual __call__ attributes
+        args = []
+        
+        call_func_type = self._type_of(call.func)
+        while not types.is_func_type(call_func_type):
+            call_func_type = call_func_type.attrs.type_of("__call__")
+        
+        for index, formal_arg in enumerate(call_func_type.args):
+            if index < len(call.args):
+                actual_arg_node = call.args[index]
+            else:
+                actual_arg_node = call.kwargs[formal_arg.name]
+                
+            args.append(self.transform(actual_arg_node))
+            
+        return js.call(self.transform(call.func), args)
 
 
     def _attr(self, attr):

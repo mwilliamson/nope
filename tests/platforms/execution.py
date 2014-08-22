@@ -30,6 +30,18 @@ class ExecutionTests(object):
         assert_equal(b"", result.stderr_output)
         
     @istest
+    def function_calls(self):
+        program = """
+#:: x: int, y: str -> none
+def f(x, y):
+    print(x)
+    print(y)
+
+f(42, y="blah")
+"""
+        self._test_program_string(program, b"42\nblah\n")
+        
+    @istest
     def fib_program_prints_result_to_stdout(self):
         result = self._run_program(path=program_path("valid/fib.py"), program="fib")
         assert_equal(b"55\n", result.output)
