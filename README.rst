@@ -42,7 +42,7 @@ Note that not all backends may support all features.
   * **name**: supported.
   
   * **arguments**: partially supported.
-    Positional arguments are supported, but nothing else
+    Positional and keyword arguments are supported, but nothing else
     (default values, ``*args``, ``**kwargs``, keyword-only arguments).
     
   * **body**: supported.
@@ -61,6 +61,11 @@ Note that not all backends may support all features.
           return x + 1
       
       #:: int, str -> none
+      def repeated_greeting(repeat, message):
+          for i in range(0, repeat):
+              print(message)
+      
+      #:: repeat: int, message: str -> none
       def repeated_greeting(repeat, message):
           for i in range(0, repeat):
               print(message)
