@@ -54,17 +54,16 @@ class StatementTypeChecker(object):
         return None
     
     def _infer_function_def(self, node, context):
-        def read_annotation(annotation):
-            if annotation is None:
-                return types.none_type
-            else:
-                result = self._infer(annotation, context)
-                return result.type
+        def read_signature_arg(arg):
+            return self._infer(arg.type, context).type
         
-        return_type = read_annotation(node.signature.returns)
+        if node.signature.returns is None:
+            return_type = types.none_type
+        else:
+            return_type = self._infer(node.signature.returns, context).type
             
         return types.func(
-            [read_annotation(arg) for arg in node.signature.args],
+            [read_signature_arg(arg) for arg in node.signature.args],
             return_type
         )
 

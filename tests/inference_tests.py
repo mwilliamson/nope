@@ -315,8 +315,8 @@ def can_infer_type_of_function_with_no_args_and_no_return():
 @istest
 def can_infer_type_of_function_with_args_and_no_return():
     signature = nodes.signature(args=[
-        nodes.ref("int"),
-        nodes.ref("str"),
+        nodes.signature_arg(nodes.ref("int")),
+        nodes.signature_arg(nodes.ref("str")),
     ])
     args = nodes.arguments([
         nodes.argument("x"),
@@ -369,7 +369,10 @@ def type_error_if_return_is_missing():
 
 @istest
 def function_adds_arguments_to_context():
-    signature = nodes.signature(args=[nodes.ref("int")], returns=nodes.ref("int"))
+    signature = nodes.signature(
+        args=[nodes.signature_arg(nodes.ref("int"))],
+        returns=nodes.ref("int")
+    )
     args = nodes.arguments([nodes.argument("x")])
     body = [nodes.ret(nodes.ref("x"))]
     node = nodes.func("f", signature, args, body)
