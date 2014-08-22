@@ -29,6 +29,7 @@ WithStatement = collections.namedtuple("WithStatement", ["value", "target", "bod
 
 FunctionDef = collections.namedtuple("FunctionDef", ["name", "signature", "args", "body"])
 FunctionSignature = collections.namedtuple("FunctionSignature", ["type_params", "args", "returns"])
+SignatureArgument = collections.namedtuple("SignatureArgument", ["name", "type"])
 Arguments = collections.namedtuple("Arguments", ["args"])
 Argument = collections.namedtuple("Argument", ["name"])
 
@@ -129,6 +130,14 @@ def signature(*, type_params=None, args=None, returns=None):
         returns = None
     
     return FunctionSignature(type_params=type_params, args=args, returns=returns)
+
+
+def signature_arg(name, type_=None):
+    if type_ is None:
+        type_ = name
+        name = None
+    
+    return SignatureArgument(name, type_)
 
 args = arguments = Arguments
 arg = argument = Argument

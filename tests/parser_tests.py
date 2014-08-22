@@ -176,7 +176,10 @@ def f(x):
 """
     
     module_node = parser.parse(source)
-    signature = nodes.signature(args=[nodes.ref("int")], returns=nodes.ref("str"))
+    signature = nodes.signature(
+        args=[nodes.signature_arg(nodes.ref("int"))],
+        returns=nodes.ref("str")
+    )
     expected = nodes.func("f", signature, nodes.args([nodes.arg("x")]), [])
     assert_equal(expected, module_node.body[0])
 
@@ -192,7 +195,10 @@ def f(x, y):
     
     module_node = parser.parse(source)
     signature = nodes.signature(
-        args=[nodes.ref("int"), nodes.ref("str")],
+        args=[
+            nodes.signature_arg(nodes.ref("int")),
+            nodes.signature_arg(nodes.ref("str"))
+        ],
         returns=nodes.ref("str")
     )
     args = nodes.args([
@@ -200,6 +206,23 @@ def f(x, y):
         nodes.arg("y"),
     ])
     expected = nodes.func("f", signature, args, [])
+    assert_equal(expected, module_node.body[0])
+
+
+@istest
+def can_parse_signature_comment_with_named_arg():
+    source = """
+#:: x: int -> str
+def f(x):
+    pass
+"""
+    
+    module_node = parser.parse(source)
+    signature = nodes.signature(
+        args=[nodes.signature_arg("x", nodes.ref("int"))],
+        returns=nodes.ref("str"),
+    )
+    expected = nodes.func("f", signature, nodes.args([nodes.arg("x")]), [])
     assert_equal(expected, module_node.body[0])
 
 
@@ -247,7 +270,7 @@ def f(x):
     module_node = parser.parse(source)
     signature = nodes.signature(
         type_params=["T"],
-        args=[nodes.ref("T")],
+        args=[nodes.signature_arg(nodes.ref("T"))],
         returns=nodes.ref("T")
     )
     expected = nodes.func(
