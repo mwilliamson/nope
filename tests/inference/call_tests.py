@@ -118,3 +118,16 @@ def error_if_positional_argument_is_missing():
         assert_equal(1, error.expected)
         assert_equal(0, error.actual)
         assert error.node is node
+
+
+@istest
+def error_if_extra_positional_argument():
+    context = bound_context({"f": types.func([], types.int_type)})
+    node = nodes.call(nodes.ref("f"), [nodes.string("hello")])
+    try:
+        infer(node, context)
+        assert False, "Expected error"
+    except errors.ArgumentsLengthError as error:
+        assert_equal(0, error.expected)
+        assert_equal(1, error.actual)
+        assert error.node is node
