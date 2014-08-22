@@ -139,8 +139,7 @@ class StatementTypeChecker(object):
             node,
             "setitem",
             target.value,
-            # TODO: use ephemeral node to represent formal argument of __setitem__
-            [target.slice, ephemeral.formal_arg_constraint(ephemeral.attr(target.value, "__setitem__"), value_type)],
+            [target.slice, ephemeral.formal_arg_constraint(value_type)],
             context,
         )
     
@@ -207,7 +206,7 @@ class StatementTypeChecker(object):
             element_type, = iterator_type.params
             return element_type
         elif "__getitem__" in iterable_type.attrs:
-            args = [ephemeral.formal_arg_constraint(ephemeral.attr(node.iterable, "__getitem__"), types.int_type)]
+            args = [ephemeral.formal_arg_constraint(types.int_type)]
             return self._expression_type_inferer.infer_magic_method_call(node, "getitem", node.iterable, args, context)
         else:
             raise errors.TypeMismatchError(node.iterable, expected="iterable type", actual=iterable_type)
@@ -286,8 +285,7 @@ class StatementTypeChecker(object):
             "exit",
             node.value,
             [
-                # TODO: use ephemeral nodes to represent formal args of __exit__
-                ephemeral.formal_arg_constraint(node.value, type_)
+                ephemeral.formal_arg_constraint(type_)
                 for type_ in [types.exception_meta_type, types.exception_type, types.traceback_type]
             ],
             context,

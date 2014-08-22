@@ -53,6 +53,13 @@ class ExpressionTypeInferer(object):
         return context.lookup(node.name)
 
     def _infer_call(self, node, context):
+        def read_actual_arg(actual_arg):
+            if isinstance(actual_arg, ephemeral.FormalArgumentConstraint) and actual_arg.formal_arg_node is None:
+                # TODO: introduce a formal arg ephemeral node
+                return ephemeral.formal_arg_constraint(node.func, actual_arg.type)
+            else:
+                return actual_arg
+        
         # TODO: check keyword arguments properly
         call_function_type = self._get_call_type(node.func, context)
         
@@ -61,10 +68,10 @@ class ExpressionTypeInferer(object):
             for arg in call_function_type.args
         ]
         
-        actual_args = node.args.copy()
+        actual_args = [read_actual_arg(arg) for arg in node.args]
         if node.kwargs:
             for formal_arg in call_function_type.args[len(actual_args):]:
-                actual_args.append(node.kwargs[formal_arg.name])
+                actual_args.append(read_actual_arg(node.kwargs[formal_arg.name]))
         
         self._type_check_args(
             node,

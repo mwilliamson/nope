@@ -29,7 +29,10 @@ def underlying_node(node):
     return node._node
 
 
-def formal_arg_constraint(formal_arg_node, type_):
+def formal_arg_constraint(formal_arg_node, type_=None):
+    if type_ is None:
+        type_ = formal_arg_node
+        formal_arg_node = None
     return FormalArgumentConstraint(formal_arg_node, type_)
 
 
