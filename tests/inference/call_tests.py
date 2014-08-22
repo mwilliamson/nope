@@ -1,4 +1,4 @@
-from nose.tools import istest, assert_equal
+from nose.tools import istest, assert_equal, assert_is
 
 from nope import types, nodes, errors
 from nope.inference import infer, ephemeral
@@ -113,10 +113,20 @@ def error_if_positional_argument_is_missing():
     try:
         _infer_function_call(types.func([types.str_type], types.int_type), node)
         assert False, "Expected error"
-    except errors.ArgumentsLengthError as error:
-        assert_equal(1, error.expected)
-        assert_equal(0, error.actual)
-        assert error.node is node
+    except errors.ArgumentsError as error:
+        assert_is(node, error.node)
+        assert_equal("missing 1st positional argument", str(error))
+
+
+@istest
+def if_positional_has_name_then_that_name_is_used_in_missing_argument_message():
+    node = _create_call([])
+    try:
+        _infer_function_call(types.func([types.func_arg("message", types.str_type)], types.int_type), node)
+        assert False, "Expected error"
+    except errors.ArgumentsError as error:
+        assert_is(node, error.node)
+        assert_equal("missing argument 'message'", str(error))
 
 
 @istest
@@ -125,10 +135,36 @@ def error_if_extra_positional_argument():
     try:
         _infer_function_call(types.func([], types.int_type), node)
         assert False, "Expected error"
-    except errors.ArgumentsLengthError as error:
-        assert_equal(0, error.expected)
-        assert_equal(1, error.actual)
-        assert error.node is node
+    except errors.ArgumentsError as error:
+        assert_is(node, error.node)
+        assert_equal("function takes 0 positional arguments but 1 was given", str(error))
+
+
+@istest
+def error_if_extra_keyword_argument():
+    node = _create_call([], {"message": nodes.string("hello")})
+    try:
+        _infer_function_call(types.func([], types.int_type), node)
+        assert False, "Expected error"
+    except errors.ArgumentsError as error:
+        assert_is(node, error.node)
+        assert_equal("unexpected keyword argument 'message'", str(error))
+
+
+@istest
+def error_if_argument_is_passed_both_by_position_and_keyword():
+    node = _create_call([nodes.string("Jim")], {"name": nodes.string("Bob")})
+    
+    func_type = types.func(
+        args=[types.func_arg("name", types.str_type)],
+        return_type=types.boolean_type,
+    )
+    try:
+        _infer_function_call(func_type, node)
+        assert False, "Expected error"
+    except errors.ArgumentsError as error:
+        assert_is(node, error.node)
+        assert_equal("multiple values for argument 'name'", str(error))
 
 
 def _infer_function_call(func_type, call_node):
@@ -136,5 +172,5 @@ def _infer_function_call(func_type, call_node):
     return infer(call_node, context)
 
 
-def _create_call(args):
-    return nodes.call(nodes.ref("f"), args)
+def _create_call(args, kwargs=None):
+    return nodes.call(nodes.ref("f"), args, kwargs)

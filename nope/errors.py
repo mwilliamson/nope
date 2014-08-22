@@ -11,11 +11,13 @@ class UndefinedNameError(TypeCheckError):
         return "name '{0}' is not defined".format(self.name)
 
 
-class ArgumentsLengthError(TypeCheckError):
-    def __init__(self, node, expected, actual):
+class ArgumentsError(TypeCheckError):
+    def __init__(self, node, message):
         self.node = node
-        self.expected = expected
-        self.actual = actual
+        self.message = message
+    
+    def __str__(self):
+        return self.message
 
 
 class TypeMismatchError(TypeCheckError):

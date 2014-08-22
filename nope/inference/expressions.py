@@ -59,18 +59,49 @@ class ExpressionTypeInferer(object):
             else:
                 return actual_arg
         
-        # TODO: check keyword arguments properly
         call_function_type = self._get_call_type(node.func, context)
+        
+        if len(node.args) > len(call_function_type.args):
+            raise errors.ArgumentsError(
+                node,
+                "function takes {} positional arguments but {} was given".format(
+                    len(call_function_type.args),
+                    len(node.args))
+            )
         
         formal_arg_types = [
             arg.type
             for arg in call_function_type.args
         ]
         
-        actual_args = [read_actual_arg(arg, index) for index, arg in enumerate(node.args)]
-        if node.kwargs:
-            for formal_arg in call_function_type.args[len(actual_args):]:
-                actual_args.append(node.kwargs[formal_arg.name])
+        kwarg_nodes = node.kwargs.copy()
+        actual_args = []
+        
+        for index, formal_arg in enumerate(call_function_type.args):
+            positional_arg = None
+            keyword_arg = None
+            
+            if index < len(node.args):
+                positional_arg = node.args[index]
+            if formal_arg.name is not None:
+                keyword_arg = kwarg_nodes.pop(formal_arg.name, None)
+            
+            if positional_arg is not None and keyword_arg is not None:
+                raise errors.ArgumentsError(node, "multiple values for argument '{}'".format(formal_arg.name))
+            elif positional_arg is not None:
+                actual_args.append(read_actual_arg(positional_arg, index))
+            elif keyword_arg is not None:
+                actual_args.append(read_actual_arg(keyword_arg, index))
+            else:
+                if formal_arg.name is None:
+                    message = "missing {} positional argument".format(_ordinal(index + 1))
+                else:
+                    message = "missing argument '{}'".format(formal_arg.name)
+                raise errors.ArgumentsError(node, message)
+        
+        if kwarg_nodes:
+            first_key = next(iter(kwarg_nodes.keys()))
+            raise errors.ArgumentsError(node, "unexpected keyword argument '{}'".format(first_key))
         
         self._type_check_args(
             node,
@@ -133,13 +164,6 @@ class ExpressionTypeInferer(object):
         return self._get_call_type(ephemeral.attr(receiver, method_name), context)
     
     def _type_check_args(self, node, actual_args, formal_arg_types, context):
-        if len(formal_arg_types) != len(actual_args):
-            raise errors.ArgumentsLengthError(
-                node,
-                expected=len(formal_arg_types),
-                actual=len(actual_args)
-            )
-            
         for actual_arg, formal_arg_type in zip(actual_args, formal_arg_types):
             actual_arg_type = self.infer(actual_arg, context)
             if not types.is_sub_type(formal_arg_type, actual_arg_type):
@@ -155,3 +179,14 @@ class ExpressionTypeInferer(object):
                         expected=formal_arg_type,
                         actual=actual_arg_type
                     )
+
+
+_ordinal_suffixes = {1: "st", 2: "nd", 3: "rd"}
+
+def _ordinal(num):
+    if 10 <= num % 100 <= 20:
+        suffix = "th"
+    else:
+        suffix = _ordinal_suffixes.get(num % 10, "th")
+    
+    return "{}{}".format(num, suffix)
