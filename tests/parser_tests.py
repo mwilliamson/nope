@@ -227,6 +227,21 @@ def f(x):
 
 
 @istest
+def syntax_error_if_name_of_argument_does_not_match_name_in_signature():
+    source = """
+#:: y: int -> str
+def f(x):
+    pass
+"""
+    
+    try:
+        module_node = parser.parse(source)
+        assert False, "Expected SyntaxError"
+    except SyntaxError as error:
+        assert_equal("argument 'x' has name 'y' in signature", str(error))
+
+
+@istest
 def can_parse_signature_comment_with_type_application_with_one_generic_parameter():
     source = """
 #:: -> list[str]

@@ -88,6 +88,10 @@ class Converter(object):
             raise SyntaxError("args length mismatch: def has {0}, signature has {1}".format(
                 len(node.args.args), len(signature.args)))
         
+        for def_arg, signature_arg in zip(node.args.args, signature.args):
+            if signature_arg.name is not None and def_arg.arg != signature_arg.name:
+                raise SyntaxError("argument '{}' has name '{}' in signature".format(def_arg.arg, signature_arg.name))
+        
         args = nodes.arguments([
             nodes.argument(arg.arg)
             for arg in node.args.args
