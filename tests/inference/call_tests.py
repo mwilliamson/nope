@@ -75,7 +75,7 @@ def call_attribute_must_be_function():
 
 
 @istest
-def call_positional_arguments_must_match():
+def type_of_positional_arguments_must_match():
     context = bound_context({"f": types.func([types.str_type], types.int_type)})
     arg_node = nodes.int(4)
     node = nodes.call(nodes.ref("f"), [arg_node])
@@ -88,7 +88,7 @@ def call_positional_arguments_must_match():
 
 
 @istest
-def call_keyword_arguments_must_match_type():
+def type_of_keyword_arguments_must_match():
     node = nodes.call(nodes.ref("f"), [], {"name": nodes.string("Bob"), "hats": nodes.int(42)})
     
     context = bound_context({
@@ -108,7 +108,7 @@ def call_keyword_arguments_must_match_type():
 
 
 @istest
-def call_arguments_length_must_match():
+def error_if_positional_argument_is_missing():
     context = bound_context({"f": types.func([types.str_type], types.int_type)})
     node = nodes.call(nodes.ref("f"), [])
     try:
