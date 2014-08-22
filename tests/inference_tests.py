@@ -308,17 +308,21 @@ def can_infer_type_of_subscript_of_list():
 
 @istest
 def can_infer_type_of_function_with_no_args_and_no_return():
-    node = nodes.func("f", args=nodes.Arguments([]), return_annotation=None, body=[])
+    node = nodes.func("f", signature=nodes.signature(), args=nodes.Arguments([]), body=[])
     assert_equal(types.func([], types.none_type), _infer_func_type(node))
 
 
 @istest
 def can_infer_type_of_function_with_args_and_no_return():
-    args = nodes.arguments([
-        nodes.argument("x", nodes.ref("int")),
-        nodes.argument("y", nodes.ref("str")),
+    signature = nodes.signature(args=[
+        nodes.ref("int"),
+        nodes.ref("str"),
     ])
-    node = nodes.func("f", args=args, return_annotation=None, body=[])
+    args = nodes.arguments([
+        nodes.argument("x"),
+        nodes.argument("y"),
+    ])
+    node = nodes.func("f", signature=signature, args=args, body=[])
     assert_equal(types.func([types.int_type, types.str_type], types.none_type), _infer_func_type(node))
 
 
@@ -326,8 +330,8 @@ def can_infer_type_of_function_with_args_and_no_return():
 def can_infer_type_of_function_with_no_args_and_return_annotation():
     node = nodes.func(
         "f",
+        nodes.signature(returns=nodes.ref("int")),
         args=nodes.Arguments([]),
-        return_annotation=nodes.ref("int"),
         body=[
             nodes.ret(nodes.int(4))
         ]
@@ -340,8 +344,8 @@ def type_mismatch_if_return_type_is_incorrect():
     return_node = nodes.ret(nodes.string("!"))
     node = nodes.func(
         "f",
+        nodes.signature(returns=nodes.ref("int")),
         args=nodes.arguments([]),
-        return_annotation=nodes.ref("int"),
         body=[return_node],
     )
     _assert_type_mismatch(lambda: _infer_func_type(node), expected=types.int_type, actual=types.str_type, node=return_node)
@@ -351,8 +355,8 @@ def type_mismatch_if_return_type_is_incorrect():
 def type_error_if_return_is_missing():
     node = nodes.func(
         "f",
+        nodes.signature(returns=nodes.ref("int")),
         args=nodes.arguments([]),
-        return_annotation=nodes.ref("int"),
         body=[],
     )
     try:
@@ -365,11 +369,10 @@ def type_error_if_return_is_missing():
 
 @istest
 def function_adds_arguments_to_context():
-    args = nodes.arguments([
-        nodes.argument("x", nodes.ref("int")),
-    ])
+    signature = nodes.signature(args=[nodes.ref("int")], returns=nodes.ref("int"))
+    args = nodes.arguments([nodes.argument("x")])
     body = [nodes.ret(nodes.ref("x"))]
-    node = nodes.func("f", args=args, return_annotation=nodes.ref("int"), body=body)
+    node = nodes.func("f", signature, args, body)
     assert_equal(types.func([types.int_type], types.int_type), _infer_func_type(node))
 
 
@@ -479,7 +482,7 @@ def variables_can_be_reassigned_if_type_is_consistent():
 
 @istest
 def variables_are_shadowed_in_defs():
-    node = nodes.func("g", nodes.args([]), None, [
+    node = nodes.func("g", nodes.signature(), nodes.args([]), [
         nodes.assign(["x"], nodes.string("Hello")),
         nodes.expression_statement(nodes.call(nodes.ref("f"), [nodes.ref("x")])),
     ])
@@ -497,7 +500,7 @@ def variables_are_shadowed_in_defs():
 @istest
 def local_variables_cannot_be_used_before_assigned():
     usage_node = nodes.ref("x")
-    node = nodes.func("g", nodes.args([]), None, [
+    node = nodes.func("g", nodes.signature(), nodes.args([]), [
         nodes.expression_statement(nodes.call(nodes.ref("f"), [usage_node])),
         nodes.assign("x", nodes.string("Hello")),
     ])
@@ -1103,7 +1106,7 @@ def check_generates_type_lookup_for_all_expressions():
     
     module_node = nodes.module([
         nodes.assign(["a"], int_node),
-        nodes.func("f", nodes.args([]), None, [
+        nodes.func("f", nodes.signature(), nodes.args([]), [
             nodes.assign("b", int_ref_node),
             nodes.assign("c", str_node),
         ]),
@@ -1291,7 +1294,7 @@ def error_is_raised_if_value_in_package_has_same_name_as_module():
 def values_can_have_same_name_as_child_module_if_they_are_not_in_module_scope():
     value_node = nodes.assign("x", nodes.int(1))
     node = nodes.Module([
-        nodes.func("f", nodes.args([]), None, [value_node])
+        nodes.func("f", nodes.signature(), nodes.args([]), [value_node])
     ], is_executable=False)
     source_tree = FakeSourceTree({
         "root/x.py": _module({}),

@@ -27,9 +27,10 @@ RaiseStatement = collections.namedtuple("RaiseStatement", ["value"])
 AssertStatement = collections.namedtuple("AssertStatement", ["condition", "message"])
 WithStatement = collections.namedtuple("WithStatement", ["value", "target", "body"])
 
-FunctionDef = collections.namedtuple("FunctionDef", ["name", "args", "return_annotation", "body", "type_params"])
+FunctionDef = collections.namedtuple("FunctionDef", ["name", "signature", "args", "body"])
+FunctionSignature = collections.namedtuple("FunctionSignature", ["type_params", "args", "returns"])
 Arguments = collections.namedtuple("Arguments", ["args"])
-Argument = collections.namedtuple("Argument", ["name", "annotation"])
+Argument = collections.namedtuple("Argument", ["name"])
 
 Import = collections.namedtuple("Import", ["names"])
 ImportFrom = collections.namedtuple("ImportFrom", ["module", "names"])
@@ -113,13 +114,22 @@ def assert_statement(condition, message=None):
 with_statement = WithStatement
 
 
-def func(name, args, return_annotation, body, type_params=None):
+def func(name, signature, args, body):
+    return FunctionDef(name, signature, args, body)
+
+
+def signature(*, type_params=None, args=None, returns=None):
     if type_params is None:
         type_params = []
     
-    return FunctionDef(name, args, return_annotation, body, type_params)
-
+    if args is None:
+        args = []
     
+    if returns is None:
+        returns = None
+    
+    return FunctionSignature(type_params=type_params, args=args, returns=returns)
+
 args = arguments = Arguments
 arg = argument = Argument
 

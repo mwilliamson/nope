@@ -61,10 +61,10 @@ class StatementTypeChecker(object):
                 result = self._infer(annotation, context)
                 return result.type
         
-        return_type = read_annotation(node.return_annotation)
+        return_type = read_annotation(node.signature.returns)
             
         return types.func(
-            [read_annotation(arg.annotation) for arg in node.args.args],
+            [read_annotation(arg) for arg in node.signature.args],
             return_type
         )
 

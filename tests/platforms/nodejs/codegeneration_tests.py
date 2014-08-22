@@ -3,6 +3,7 @@ from nose.tools import istest, assert_equal
 
 from nope.platforms.nodejs import codegeneration, js
 from nope import nodes, types
+from nope.parser import parse_signature
 
 
 @istest
@@ -165,8 +166,8 @@ def test_transform_function_declaration():
     _assert_transform(
         nodes.func(
             name="f",
-            args=nodes.args([nodes.arg("x", None), nodes.arg("y", None)]),
-            return_annotation=None,
+            signature=parse_signature("object, object -> object"),
+            args=nodes.args([nodes.arg("x"), nodes.arg("y")]),
             body=[nodes.ret(nodes.ref("x"))],
         ),
         js.function_declaration(
@@ -182,8 +183,8 @@ def test_transform_function_declaration_declares_variables_at_top_of_function():
     _assert_transform(
         nodes.func(
             name="f",
+            signature=parse_signature("-> none"),
             args=nodes.args([]),
-            return_annotation=None,
             body=[nodes.assign(["x"], nodes.ref("y"))],
         ),
         js.function_declaration(

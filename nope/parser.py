@@ -35,7 +35,7 @@ class CommentSeeker(object):
                     self._previous_tokens.append((token_type, token_str))
             
             if self._has_signature_comment():
-                return _parse_signature(self._previous_tokens[0][1][len(self._comment_prefix):].strip())
+                return parse_signature(self._previous_tokens[0][1][len(self._comment_prefix):].strip())
             else:
                 return None
         except StopIteration:
@@ -48,9 +48,6 @@ class CommentSeeker(object):
             self._previous_tokens[1][0] == tokenize.NL and
             self._previous_tokens[0][1].startswith(self._comment_prefix)
         )
-
-
-_FunctionSignature = collections.namedtuple("_FunctionSignature", ["type_params", "arg_annotations", "return_annotation"])
 
 
 def _token_type(token_type):
@@ -80,10 +77,10 @@ def _make_args(result):
 
 
 def _make_signature(result):
-    return _FunctionSignature(
+    return nodes.signature(
         type_params=result[0],
-        arg_annotations=result[1],
-        return_annotation=result[3],
+        args=result[1],
+        returns=result[3],
     )
     
 
@@ -104,7 +101,7 @@ def _create_signature_rule():
 _signature = _create_signature_rule()
 
 
-def _parse_signature(sig_str):
+def parse_signature(sig_str):
     tokens = _tokenize_signature(sig_str)
     return _signature.parse(tokens)
     

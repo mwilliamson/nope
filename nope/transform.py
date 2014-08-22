@@ -82,28 +82,22 @@ class Converter(object):
     def _func(self, node):
         signature = self._comment_seeker.seek_signature(node.lineno, node.col_offset)
         if signature is None:
-            type_params = []
-            arg_annotations = []
-            return_annotation = None
-        else:
-            type_params, arg_annotations, return_annotation = signature
+            signature = nodes.signature(type_params=[], args=[], returns=None)
         
-        def _arg(node, annotation):
-            return nodes.argument(node.arg, annotation)
-        
-        if len(node.args.args) != len(arg_annotations):
+        if len(node.args.args) != len(signature.args):
             raise SyntaxError("args length mismatch: def has {0}, signature has {1}".format(
-                len(node.args.args), len(arg_annotations)))
+                len(node.args.args), len(signature.args)))
         
-        args = nodes.arguments(list(map(_arg, node.args.args, arg_annotations)))
-        
+        args = nodes.arguments([
+            nodes.argument(arg.arg)
+            for arg in node.args.args
+        ])
         
         return nodes.func(
             name=node.name,
+            signature=signature,
             args=args,
-            return_annotation=return_annotation,
             body=self._mapped(node.body),
-            type_params=type_params,
         )
 
 

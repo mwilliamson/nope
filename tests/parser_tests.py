@@ -115,12 +115,12 @@ def f():
 """
     
     module_node = parser.parse(source)
-    expected = nodes.func("f", nodes.args([]), None, [])
+    expected = nodes.func("f", nodes.signature(), nodes.args([]), [])
     assert_equal(expected, module_node.body[0])
 
 
 @istest
-def can_parse_signature_comment_with_no_args():
+def can_parse_signature_comment_with_return_type_and_no_args():
     source = """
 #:: -> str
 def f():
@@ -128,7 +128,8 @@ def f():
 """
     
     module_node = parser.parse(source)
-    expected = nodes.func("f", nodes.args([]), nodes.ref("str"), [])
+    signature = nodes.signature(returns=nodes.ref("str"))
+    expected = nodes.func("f", signature, nodes.args([]), [])
     assert_equal(expected, module_node.body[0])
 
 
@@ -143,7 +144,8 @@ def f():
 """
     
     module_node = parser.parse(source)
-    expected = nodes.func("g", nodes.args([]), nodes.ref("int"), [])
+    signature = nodes.signature(returns=nodes.ref("int"))
+    expected = nodes.func("g", signature, nodes.args([]), [])
     assert_equal(expected, module_node.body[0].body[0])
 
 
@@ -160,7 +162,8 @@ def g():
 """
     
     module_node = parser.parse(source)
-    expected = nodes.func("g", nodes.args([]), nodes.ref("int"), [])
+    signature = nodes.signature(returns=nodes.ref("int"))
+    expected = nodes.func("g", signature, nodes.args([]), [])
     assert_equal(expected, module_node.body[1])
 
 
@@ -173,8 +176,8 @@ def f(x):
 """
     
     module_node = parser.parse(source)
-    arg = nodes.arg("x", nodes.ref("int"))
-    expected = nodes.func("f", nodes.args([arg]), nodes.ref("str"), [])
+    signature = nodes.signature(args=[nodes.ref("int")], returns=nodes.ref("str"))
+    expected = nodes.func("f", signature, nodes.args([nodes.arg("x")]), [])
     assert_equal(expected, module_node.body[0])
 
 
@@ -188,11 +191,15 @@ def f(x, y):
 """
     
     module_node = parser.parse(source)
+    signature = nodes.signature(
+        args=[nodes.ref("int"), nodes.ref("str")],
+        returns=nodes.ref("str")
+    )
     args = nodes.args([
-        nodes.arg("x", nodes.ref("int")),
-        nodes.arg("y", nodes.ref("str")),
+        nodes.arg("x"),
+        nodes.arg("y"),
     ])
-    expected = nodes.func("f", args, nodes.ref("str"), [])
+    expected = nodes.func("f", signature, args, [])
     assert_equal(expected, module_node.body[0])
 
 
@@ -205,8 +212,10 @@ def f():
 """
     
     module_node = parser.parse(source)
-    return_node = nodes.type_apply(nodes.ref("list"), [nodes.ref("str")])
-    expected = nodes.func("f", nodes.args([]), return_node, [])
+    signature = nodes.signature(
+        returns=nodes.type_apply(nodes.ref("list"), [nodes.ref("str")])
+    )
+    expected = nodes.func("f", signature, nodes.args([]), [])
     assert_equal(expected, module_node.body[0])
 
 
@@ -220,8 +229,10 @@ def f():
 """
     
     module_node = parser.parse(source)
-    return_node = nodes.type_apply(nodes.ref("dict"), [nodes.ref("str"), nodes.ref("int")])
-    expected = nodes.func("f", nodes.args([]), return_node, [])
+    signature = nodes.signature(
+        returns=nodes.type_apply(nodes.ref("dict"), [nodes.ref("str"), nodes.ref("int")]),
+    )
+    expected = nodes.func("f", signature, nodes.args([]), [])
     assert_equal(expected, module_node.body[0])
 
 
@@ -234,12 +245,16 @@ def f(x):
 """
     
     module_node = parser.parse(source)
+    signature = nodes.signature(
+        type_params=["T"],
+        args=[nodes.ref("T")],
+        returns=nodes.ref("T")
+    )
     expected = nodes.func(
         "f",
-        nodes.args([nodes.arg("x", nodes.ref("T"))]),
-        nodes.ref("T"),
+        signature,
+        nodes.args([nodes.arg("x")]),
         [nodes.ret(nodes.ref("x"))],
-        ["T"],
     )
     assert_equal(expected, module_node.body[0])
 
