@@ -109,10 +109,9 @@ def type_of_keyword_arguments_must_match():
 
 @istest
 def error_if_positional_argument_is_missing():
-    context = bound_context({"f": types.func([types.str_type], types.int_type)})
-    node = nodes.call(nodes.ref("f"), [])
+    node = _create_call([])
     try:
-        infer(node, context)
+        _infer_function_call(types.func([types.str_type], types.int_type), node)
         assert False, "Expected error"
     except errors.ArgumentsLengthError as error:
         assert_equal(1, error.expected)
@@ -122,12 +121,20 @@ def error_if_positional_argument_is_missing():
 
 @istest
 def error_if_extra_positional_argument():
-    context = bound_context({"f": types.func([], types.int_type)})
-    node = nodes.call(nodes.ref("f"), [nodes.string("hello")])
+    node = _create_call([nodes.string("hello")])
     try:
-        infer(node, context)
+        _infer_function_call(types.func([], types.int_type), node)
         assert False, "Expected error"
     except errors.ArgumentsLengthError as error:
         assert_equal(0, error.expected)
         assert_equal(1, error.actual)
         assert error.node is node
+
+
+def _infer_function_call(func_type, call_node):
+    context = bound_context({"f": func_type})
+    return infer(call_node, context)
+
+
+def _create_call(args):
+    return nodes.call(nodes.ref("f"), args)
