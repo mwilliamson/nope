@@ -135,13 +135,12 @@ class StatementTypeChecker(object):
             raise errors.ReadOnlyAttributeError(target, obj_type, target.attr)
     
     def _assign_subscript(self, node, target, value_type, context):
-        setitem_node = ephemeral.attr(target.value, "__setitem__")
-        setitem_type = self._expression_type_inferer.get_call_type(setitem_node, context)
-        self._expression_type_inferer.type_check_args(
+        self._expression_type_inferer.infer_magic_method_call(
             node,
+            "setitem",
+            target.value,
             # TODO: use ephemeral node to represent formal argument of __setitem__
-            [target.slice, ephemeral.formal_arg_constraint(setitem_node, value_type)],
-            [arg.type for arg in setitem_type.args],
+            [target.slice, ephemeral.formal_arg_constraint(ephemeral.attr(target.value, "__setitem__"), value_type)],
             context,
         )
     

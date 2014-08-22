@@ -5,6 +5,10 @@ def attr(value, attr):
     return EphemeralNode(value, nodes.attr(value, attr))
 
 
+def call(root_node, receiver, args):
+    return EphemeralNode(root_node, nodes.call(receiver, args))
+
+
 class EphemeralNode(object):
     def __init__(self, root_node, node):
         self._root_node = root_node

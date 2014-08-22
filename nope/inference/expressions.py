@@ -53,9 +53,8 @@ class ExpressionTypeInferer(object):
         return context.lookup(node.name)
 
     def _infer_call(self, node, context):
-        # TODO: get rid of type_check_args, and use infer_call everywhere instead with ephemeral nodes
         # TODO: check keyword arguments properly
-        call_function_type = self.get_call_type(node.func, context)
+        call_function_type = self._get_call_type(node.func, context)
         
         formal_arg_types = [
             arg.type
@@ -67,7 +66,7 @@ class ExpressionTypeInferer(object):
             for formal_arg in call_function_type.args[len(actual_args):]:
                 actual_args.append(node.kwargs[formal_arg.name])
         
-        self.type_check_args(
+        self._type_check_args(
             node,
             actual_args,
             formal_arg_types,
@@ -75,12 +74,12 @@ class ExpressionTypeInferer(object):
         )
         return call_function_type.return_type
 
-    def get_call_type(self, node, context):
+    def _get_call_type(self, node, context):
         callee_type = self.infer(node, context)
         if types.is_func_type(callee_type):
             return callee_type
         elif "__call__" in callee_type.attrs:
-            return self.get_call_type(ephemeral.attr(node, "__call__"), context)
+            return self._get_call_type(ephemeral.attr(node, "__call__"), context)
         else:
             raise errors.TypeMismatchError(node, expected="callable object", actual=callee_type)
 
@@ -107,15 +106,17 @@ class ExpressionTypeInferer(object):
         method = self._get_method_type(receiver, method_name, context)
         
         formal_arg_types = [arg.type for arg in method.args]
-        formal_return_type = method.return_type
         
         # TODO: check keyword arguments
         if len(formal_arg_types) != len(actual_args):
             raise errors.BadSignatureError(receiver, "{} should have exactly {} argument(s)".format(method_name, len(actual_args)))
         
-        self.type_check_args(node, actual_args, formal_arg_types, context)
-        
-        return formal_return_type
+        call_node = ephemeral.call(
+            node,
+            ephemeral.attr(receiver, method_name),
+            actual_args,
+        )
+        return self._infer_call(call_node, context)
     
     def _get_method_type(self, receiver, method_name, context):
         receiver_type = self.infer(receiver, context)
@@ -123,9 +124,9 @@ class ExpressionTypeInferer(object):
         if method_name not in receiver_type.attrs:
             raise errors.TypeMismatchError(receiver, expected="object with method '{}'".format(method_name), actual=receiver_type)
         
-        return self.get_call_type(ephemeral.attr(receiver, method_name), context)
+        return self._get_call_type(ephemeral.attr(receiver, method_name), context)
     
-    def type_check_args(self, node, actual_args, formal_arg_types, context):
+    def _type_check_args(self, node, actual_args, formal_arg_types, context):
         if len(formal_arg_types) != len(actual_args):
             raise errors.ArgumentsLengthError(
                 node,
