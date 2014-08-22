@@ -53,9 +53,26 @@ class ExpressionTypeInferer(object):
         return context.lookup(node.name)
 
     def _infer_call(self, node, context):
-        call_type = self.get_call_type(node.func, context)
-        self.type_check_args(node, node.args, call_type.args, context)
-        return call_type.return_type
+        # TODO: get rid of type_check_args, and use infer_call everywhere instead with ephemeral nodes
+        call_function_type = self.get_call_type(node.func, context)
+        
+        formal_arg_types = [
+            arg.type
+            for arg in call_function_type.args
+        ]
+        
+        actual_args = node.args.copy()
+        if node.kwargs:
+            for formal_arg in call_function_type.args[len(actual_args):]:
+                actual_args.append(node.kwargs[formal_arg.name])
+        
+        self.type_check_args(
+            node,
+            actual_args,
+            formal_arg_types,
+            context
+        )
+        return call_function_type.return_type
 
     def get_call_type(self, node, context):
         callee_type = self.infer(node, context)
@@ -88,9 +105,10 @@ class ExpressionTypeInferer(object):
         method_name = "__{}__".format(short_name)
         method = self._get_method_type(receiver, method_name, context)
         
-        formal_arg_types = method.args
+        formal_arg_types = [arg.type for arg in method.args]
         formal_return_type = method.return_type
         
+        # TODO: check keyword arguments
         if len(formal_arg_types) != len(actual_args):
             raise errors.BadSignatureError(receiver, "{} should have exactly {} argument(s)".format(method_name, len(actual_args)))
         

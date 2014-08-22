@@ -77,8 +77,8 @@ class StatementTypeChecker(object):
         
         body_context = context.enter_func(return_type, local_names=local_names)
         
-        for arg, arg_type in zip(node.args.args, func_type.args):
-            body_context.add(arg.name, arg_type)
+        for arg, formal_arg in zip(node.args.args, func_type.args):
+            body_context.add(arg.name, formal_arg.type)
             
         self.update_context(node.body, body_context)
         
@@ -141,7 +141,7 @@ class StatementTypeChecker(object):
             node,
             # TODO: use ephemeral node to represent formal argument of __setitem__
             [target.slice, ephemeral.formal_arg_constraint(setitem_node, value_type)],
-            setitem_type.args,
+            [arg.type for arg in setitem_type.args],
             context,
         )
     

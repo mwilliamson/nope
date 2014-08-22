@@ -201,14 +201,48 @@ class _FunctionType(object):
         )
     
     def __eq__(self, other):
+        if not isinstance(other, _FunctionType):
+            return False
+        
         return (self.args, self.return_type) == (other.args, other.return_type)
     
     def __neq__(self, other):
         return not (self == other)
 
 
+class _FunctionTypeArgument(object):
+    def __init__(self, name, type_):
+        self.name = name
+        self.type = type_
+    
+    def substitute_types(self, type_map):
+        return _FunctionTypeArgument(
+            self.name,
+            _substitute_types(self.type, type_map),
+        )
+    
+    def __eq__(self, other):
+        if not isinstance(other, _FunctionTypeArgument):
+            return False
+        
+        return (self.name, self.type) == (other.name, other.type)
+    
+    def __neq__(self, other):
+        return not (self == other)
+
+
 def func(args, return_type):
-    return _FunctionType(args, return_type)
+    def convert_arg(arg):
+        if isinstance(arg, _FunctionTypeArgument):
+            return arg
+        else:
+            return _FunctionTypeArgument(None, arg)
+    
+    return _FunctionType(list(map(convert_arg, args)), return_type)
+
+
+def func_arg(name, type):
+    return _FunctionTypeArgument(name, type)
 
 
 def is_func_type(type_):

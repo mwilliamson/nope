@@ -58,9 +58,21 @@ def empty_list_has_elements_of_type_bottom():
 
 
 @istest
-def can_infer_type_of_call():
+def can_infer_type_of_call_with_positional_arguments():
     context = bound_context({"f": types.func([types.str_type], types.int_type)})
     assert_equal(types.int_type, infer(nodes.call(nodes.ref("f"), [nodes.string("")]), context))
+
+
+@istest
+def can_infer_type_of_call_with_keyword_arguments():
+    context = bound_context({
+        "f": types.func(
+            args=[types.func_arg("name", types.str_type), types.func_arg("hats", types.int_type)],
+            return_type=types.boolean_type,
+        )
+    })
+    node = nodes.call(nodes.ref("f"), [], {"name": nodes.string("Bob"), "hats": nodes.int(42)})
+    assert_equal(types.boolean_type, infer(node, context))
 
 
 @istest
@@ -114,10 +126,30 @@ def call_attribute_must_be_function():
 
 
 @istest
-def call_arguments_must_match():
+def call_positional_arguments_must_match():
     context = bound_context({"f": types.func([types.str_type], types.int_type)})
     arg_node = nodes.int(4)
     node = nodes.call(nodes.ref("f"), [arg_node])
+    _assert_type_mismatch(
+        lambda: infer(node, context),
+        expected=types.str_type,
+        actual=types.int_type,
+        node=arg_node,
+    )
+
+
+@istest
+def call_keyword_arguments_must_match_type():
+    node = nodes.call(nodes.ref("f"), [], {"name": nodes.string("Bob"), "hats": nodes.int(42)})
+    
+    context = bound_context({
+        "f": types.func(
+            args=[types.func_arg("name", types.str_type)],
+            return_type=types.boolean_type,
+        )
+    })
+    arg_node = nodes.int(4)
+    node = nodes.call(nodes.ref("f"), [], {"name": arg_node})
     _assert_type_mismatch(
         lambda: infer(node, context),
         expected=types.str_type,
