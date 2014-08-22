@@ -55,7 +55,10 @@ class StatementTypeChecker(object):
     
     def _infer_function_def(self, node, context):
         def read_signature_arg(arg):
-            return self._infer(arg.type, context).type
+            return types.func_arg(
+                arg.name,
+                self._infer(arg.type, context).type,
+            )
         
         if node.signature.returns is None:
             return_type = types.none_type

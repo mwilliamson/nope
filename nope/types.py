@@ -208,6 +208,13 @@ class _FunctionType(object):
     
     def __neq__(self, other):
         return not (self == other)
+    
+    def __str__(self):
+        args_str = ", ".join(map(str, self.args))
+        return "{} -> {}".format(args_str, self.return_type)
+    
+    def __repr__(self):
+        return str(self)
 
 
 class _FunctionTypeArgument(object):
@@ -229,6 +236,12 @@ class _FunctionTypeArgument(object):
     
     def __neq__(self, other):
         return not (self == other)
+    
+    def __str__(self):
+        if self.name is None:
+            return str(self.type)
+        else:
+            return "{}: {}".format(self.name, self.type)
 
 
 def func(args, return_type):

@@ -41,6 +41,21 @@ def can_infer_type_of_function_with_no_args_and_return_annotation():
 
 
 @istest
+def can_infer_type_of_function_with_named_arg():
+    signature = nodes.signature(args=[
+        nodes.signature_arg("message", nodes.ref("int")),
+    ])
+    args = nodes.arguments([
+        nodes.argument("message"),
+    ])
+    node = nodes.func("f", signature=signature, args=args, body=[])
+    assert_equal(
+        types.func([types.func_arg("message", types.int_type)], types.none_type),
+        _infer_func_type(node)
+    )
+
+
+@istest
 def type_mismatch_if_return_type_is_incorrect():
     return_node = nodes.ret(nodes.string("!"))
     node = nodes.func(
