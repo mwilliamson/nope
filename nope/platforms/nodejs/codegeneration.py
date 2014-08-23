@@ -206,10 +206,21 @@ class Transformer(object):
             nodes.ListExpression: self._list,
         }
         
+        self._optimised_transformers = {
+            nodes.BinaryOperation: self._optimised_binary_operation,
+            nodes.UnaryOperation: self._optimised_unnary_operation,
+        }
+        
         self._unique_name_index = 0
     
     def transform(self, nope_node):
-        return self._transformers[type(nope_node)](nope_node)
+        node_type = type(nope_node)
+        if self._optimise and node_type in self._optimised_transformers:
+            result = self._optimised_transformers[node_type](nope_node)
+            if result is not None:
+                return result
+        
+        return self._transformers[node_type](nope_node)
     
     def _module(self, module):
         body_statements = _generate_vars(module.body) + self._transform_all(module.body)
@@ -589,25 +600,25 @@ class Transformer(object):
         return self._getattr(self.transform(attr.value), attr.attr)
     
     def _binary_operation(self, operation):
-        # TODO: split off optimisations
-        if (self._optimise and operation.operator in _number_operators and
+        return self._operation(operation, [operation.left, operation.right])
+    
+    def _optimised_binary_operation(self, operation):
+        if (operation.operator in _number_operators and
                 self._type_of(operation.left) == types.int_type and
                 self._type_of(operation.right) == types.int_type):
             return _number_operators[operation.operator](
                 self.transform(operation.left),
                 self.transform(operation.right),
             )
-        else:
-            return self._operation(operation, [operation.left, operation.right])
     
     
     def _unary_operation(self, operation):
-        # TODO: split off optimisations
-        if (self._optimise and operation.operator in _number_operators and
+        return self._operation(operation, [operation.operand])
+    
+    def _optimised_unnary_operation(self, operation):
+        if (operation.operator in _number_operators and
                 self._type_of(operation.operand) == types.int_type):
             return _number_operators[operation.operator](self.transform(operation.operand))
-        else:
-            return self._operation(operation, [operation.operand])
     
     def _operation(self, operation, operands):
         operator_func = "$nope.operators.{}".format(operation.operator)
