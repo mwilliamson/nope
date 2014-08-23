@@ -341,7 +341,7 @@ def test_transform_try_except_with_no_name():
             try {
                 return x;
             } catch ($exception0) {
-                if (($exception0.$nopeException) === undefined) {
+                if (($exception0.$nopeException) === ($nope.undefined)) {
                     throw $exception0;
                 } else {
                     if ($nope.builtins.isinstance($exception0.$nopeException, $nope.builtins.Exception)) {
@@ -368,7 +368,7 @@ def test_transform_try_except_with_exception_type():
             try {
                 return x;
             } catch ($exception0) {
-                if (($exception0.$nopeException) === undefined) {
+                if (($exception0.$nopeException) === ($nope.undefined)) {
                     throw $exception0;
                 } else {
                     if ($nope.builtins.isinstance($exception0.$nopeException, AssertionError)) {
@@ -395,7 +395,7 @@ def test_transform_try_except_with_exception_type_and_name():
             try {
                 return x;
             } catch ($exception0) {
-                if (($exception0.$nopeException) === undefined) {
+                if (($exception0.$nopeException) === ($nope.undefined)) {
                     throw $exception0;
                 } else {
                     if ($nope.builtins.isinstance($exception0.$nopeException, AssertionError)) {
@@ -423,7 +423,7 @@ def test_transform_try_with_empty_except_body():
             try {
                 return x;
             } catch ($exception0) {
-                if (($exception0.$nopeException) === undefined) {
+                if (($exception0.$nopeException) === ($nope.undefined)) {
                     throw $exception0;
                 } else {
                     if ($nope.builtins.isinstance($exception0.$nopeException, AssertionError)) {
@@ -451,7 +451,7 @@ def test_transform_try_except_with_multiple_exception_handlers():
             try {
                 return x;
             } catch ($exception0) {
-                if (($exception0.$nopeException) === undefined) {
+                if (($exception0.$nopeException) === ($nope.undefined)) {
                     throw $exception0;
                 } else {
                     if ($nope.builtins.isinstance($exception0.$nopeException, AssertionError)) {
@@ -475,7 +475,7 @@ def test_transform_raise_with_exception_value():
         nodes.raise_statement(nodes.ref("error")),
         """
             var $exception0 = error;
-            var $error1 = new Error();
+            var $error1 = new $nope.Error();
             $error1.$nopeException = $exception0;
             $error1.toString = function() {
                 return (($nope.builtins.getattr($nope.builtins.type($exception0), "__name__")) + ": ") + ($nope.builtins.str($exception0));

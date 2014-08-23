@@ -505,8 +505,7 @@ class Transformer(object):
         )
         js_error = js.call(
             # TODO: create a proper `new` JS node
-            # TODO: Error may be shadowed
-            js.ref("new Error"),
+            js.ref("new $nope.Error"),
             # TODO: set message? Perhaps set as a getter
             []
         )
@@ -660,8 +659,7 @@ class Transformer(object):
         return name
     
     def _is_undefined(self, value):
-        # TODO: undefined may be overridden
-        return js.binary_operation("===", value, js.ref("undefined"))
+        return js.binary_operation("===", value, js.ref("$nope.undefined"))
 
 
 def _call_builtin(name, args):

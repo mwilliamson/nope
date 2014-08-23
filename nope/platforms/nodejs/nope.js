@@ -257,5 +257,7 @@ var $nope = module.exports = {
     numberMod: numberMod,
     numberDivMod: numberDivMod,
     numberPow: numberPow,
-    numberFloor: Math.floor
+    numberFloor: Math.floor,
+    Error: Error,
+    undefined: undefined
 };
