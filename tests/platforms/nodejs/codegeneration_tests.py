@@ -299,6 +299,19 @@ def test_transform_continue():
 
 
 @istest
+def test_transform_try_with_empty_finally_body():
+    _assert_transform(
+        nodes.try_statement(
+            [nodes.ret(nodes.ref("x"))],
+            finally_body=[],
+        ),
+        """
+            return x;
+        """,
+    )
+
+
+@istest
 def test_transform_try_finally():
     _assert_transform(
         nodes.try_statement(
@@ -388,6 +401,33 @@ def test_transform_try_except_with_exception_type_and_name():
                     if ($nope.builtins.isinstance($exception0.$nopeException, AssertionError)) {
                         var error = $exception0.$nopeException;
                         return y;
+                    } else {
+                        throw $exception0;
+                    }
+                }
+            }
+        """,
+    )
+
+
+@istest
+def test_transform_try_with_empty_except_body():
+    _assert_transform(
+        nodes.try_statement(
+            [nodes.ret(nodes.ref("x"))],
+            handlers=[
+                nodes.except_handler(nodes.ref("AssertionError"), "error", []),
+            ],
+        ),
+        """
+            try {
+                return x;
+            } catch ($exception0) {
+                if (($exception0.$nopeException) === undefined) {
+                    throw $exception0;
+                } else {
+                    if ($nope.builtins.isinstance($exception0.$nopeException, AssertionError)) {
+                        var error = $exception0.$nopeException;
                     } else {
                         throw $exception0;
                     }

@@ -445,13 +445,18 @@ class Transformer(object):
         else:
             js_handler = None
         
-        return js.try_catch(
-            self._transform_all(statement.body),
-            exception_name,
-            [js_handler] if js_handler else None,
-            finally_body=self._transform_all(statement.finally_body),
-        )
-
+        body = self._transform_all(statement.body)
+        finally_body = self._transform_all(statement.finally_body)
+        
+        if js_handler or finally_body:
+            return js.try_catch(
+                body,
+                exception_name,
+                [js_handler] if js_handler else None,
+                finally_body=finally_body,
+            )
+        else:
+            return js.statements(body)
     
     def _raise_statement(self, statement):
         exception_value = self.transform(statement.value)
