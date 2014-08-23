@@ -81,15 +81,21 @@ _builtin_names = [
     "bool", "print", "abs", "divmod", "range", "Exception", "AssertionError", "str",
 ]
 
+
+def _call_internal(parts, args):
+    return js.call(js.ref(".".join(["$nope"] + parts)), args)
+
+
 _number_operators = {
     "add": lambda left, right: js.binary_operation("+", left, right),
     "sub": lambda left, right: js.binary_operation("-", left, right),
     "mul": lambda left, right: js.binary_operation("*", left, right),
     "truediv": lambda left, right: js.binary_operation("/", left, right),
+    # TODO: Math may be shadowed
     "floordiv": lambda left, right: js.call(js.ref("Math.floor"), [js.binary_operation("/", left, right)]),
-    "mod": lambda left, right: js.call(js.ref("$nope.numberMod"), [left, right]),
-    "divmod": lambda left, right: js.call(js.ref("$nope.numberDivMod"), [left, right]),
-    "pow": lambda left, right: js.call(js.ref("$nope.numberPow"), [left, right]),
+    "mod": lambda left, right: _call_internal(["numberMod"], [left, right]),
+    "divmod": lambda left, right: _call_internal(["numberDivMod"], [left, right]),
+    "pow": lambda left, right: _call_internal(["numberPow"], [left, right]),
     # TODO: raise error on negative shifts
     "lshift": lambda left, right: js.binary_operation("<<", left, right),
     # TODO: raise error on negative shifts
@@ -204,6 +210,8 @@ class Transformer(object):
             nodes.IntExpression: _int,
             nodes.StringExpression: _str,
             nodes.ListExpression: self._list,
+            
+            ConvertedNode: lambda node: node.js_node,
         }
         
         self._optimised_transformers = {
@@ -312,9 +320,9 @@ class Transformer(object):
     
     def _create_single_assignment(self, target, value):
         if isinstance(target, nodes.Subscript):
-            call = js.call(
-                js.ref("$nope.operators.setitem"),
-                [self.transform(target.value), self.transform(target.slice), value]
+            call = self._operation(
+                "setitem",
+                [target.value, target.slice, ConvertedNode(value)]
             )
             return js.expression_statement(call)
         else:
@@ -354,10 +362,7 @@ class Transformer(object):
     
     
     def _builtins_bool(self, js_condition):
-        return js.call(
-            js.ref("$nope.builtins.bool"),
-            [js_condition]
-        )
+        return _call_builtin("bool", [js_condition])
     
     
     def _for_loop(self, loop):
@@ -367,13 +372,13 @@ class Transformer(object):
         
         condition = js.binary_operation(
             "!==",
-            js.assign(element_name, js.call(js.ref("$nope.builtins.next"), [js.ref(iterator_name), sentinel])),
+            js.assign(element_name, _call_builtin("next", [js.ref(iterator_name), sentinel])),
             sentinel,
         )
         assign_loop_target = self._create_single_assignment(loop.target, js.ref(element_name))
         
         return js.statements([
-            js.var(iterator_name, js.call(js.ref("$nope.builtins.iter"), [self.transform(loop.iterable)])),
+            js.var(iterator_name, _call_builtin("iter", [self.transform(loop.iterable)])),
             js.var(element_name),
             self._loop(loop, condition, at_loop_start=[assign_loop_target]),
         ])
@@ -440,10 +445,7 @@ class Transformer(object):
                 handler_body += self._transform_all(handler.body)
                 
                 js_handler = js.if_else(
-                    js.call(
-                        js.ref("$nope.builtins.isinstance"),
-                        [nope_exception, handler_type]
-                    ),
+                    _call_builtin("isinstance", [nope_exception, handler_type]),
                     handler_body,
                     [js_handler],
                 )
@@ -480,7 +482,7 @@ class Transformer(object):
         else:
             message = self.transform(statement.message)
         
-        exception_value = js.call(js.ref("$nope.builtins.AssertionError"), [message])
+        exception_value = _call_builtin("AssertionError", [message])
         
         return js.if_else(
             self._condition(statement.condition),
@@ -493,17 +495,18 @@ class Transformer(object):
         exception_name = self._unique_name("exception")
         error_name = self._unique_name("error")
         
-        exception_type = js.call(js.ref("$nope.builtins.type"), [js.ref(exception_name)])
-        exception_type_name = js.call(js.ref("$nope.builtins.getattr"), [exception_type, js.string("__name__")])
+        exception_type = _call_builtin("type", [js.ref(exception_name)])
+        exception_type_name = _call_builtin("getattr", [exception_type, js.string("__name__")])
         error_message = js.binary_operation("+",
             js.binary_operation("+",
                 exception_type_name,
                 js.string(": "),
             ),
-            js.call(js.ref("$nope.builtins.str"), [js.ref(exception_name)])
+            _call_builtin("str", [js.ref(exception_name)])
         )
         js_error = js.call(
             # TODO: create a proper `new` JS node
+            # TODO: Error may be shadowed
             js.ref("new Error"),
             # TODO: set message? Perhaps set as a getter
             []
@@ -533,7 +536,7 @@ class Transformer(object):
         
         manager_ref = js.ref(manager_name)
         
-        enter_value = js.call(self._getattr(manager_ref, "__enter__"), [])
+        enter_value = js.call(self._get_magic_method(manager_ref, "enter"), [])
         if statement.target is None:
             enter_statement = js.expression_statement(enter_value)
         else:
@@ -541,7 +544,7 @@ class Transformer(object):
         
         return js.statements([
             js.var(manager_name, self.transform(statement.value)),
-            js.var(exit_method_var_name, self._getattr(manager_ref, "__exit__")),
+            js.var(exit_method_var_name, self._get_magic_method(manager_ref, "exit")),
             js.var(has_exited_name, js.boolean(False)),
             enter_statement,
             js.try_catch(
@@ -552,7 +555,7 @@ class Transformer(object):
                     js.assign_statement(js.ref(has_exited_name), js.boolean(True)),
                     js.if_else(
                         js.unary_operation("!", self._builtins_bool(js.call(js.ref(exit_method_var_name), [
-                            js.call(js.ref("$nope.builtins.type"), [js.ref(exception_name)]),
+                            _call_builtin("type", [js.ref(exception_name)]),
                             js.ref(exception_name),
                             js.null,
                         ]))),
@@ -595,12 +598,11 @@ class Transformer(object):
             
         return js.call(self.transform(call.func), args)
 
-
     def _attr(self, attr):
         return self._getattr(self.transform(attr.value), attr.attr)
     
     def _binary_operation(self, operation):
-        return self._operation(operation, [operation.left, operation.right])
+        return self._operation(operation.operator, [operation.left, operation.right])
     
     def _optimised_binary_operation(self, operation):
         if (operation.operator in _number_operators and
@@ -613,28 +615,25 @@ class Transformer(object):
     
     
     def _unary_operation(self, operation):
-        return self._operation(operation, [operation.operand])
+        return self._operation(operation.operator, [operation.operand])
     
     def _optimised_unnary_operation(self, operation):
         if (operation.operator in _number_operators and
                 self._type_of(operation.operand) == types.int_type):
             return _number_operators[operation.operator](self.transform(operation.operand))
     
-    def _operation(self, operation, operands):
-        operator_func = "$nope.operators.{}".format(operation.operator)
-        return js.call(
-            js.ref(operator_func),
-            [self.transform(operand) for operand in operands]
+    def _operation(self, operator_name, operands):
+        return _call_internal(
+            ["operators", operator_name],
+            [self.transform(operand) for operand in operands],
         )
     
+    def _get_magic_method(self, receiver, name):
+        # TODO: get magic method through the same mechanism as self._call
+        return self._getattr(receiver, "__{}__".format(name))
+    
     def _subscript(self, subscript):
-        js_value = self.transform(subscript.value)
-        js_slice = self.transform(subscript.slice)
-        
-        return js.call(
-            js.ref("$nope.operators.getitem"),
-            [js_value, js_slice]
-        )
+        return self._operation("getitem", [subscript.value, subscript.slice])
 
 
     def _list(self, node):
@@ -642,10 +641,7 @@ class Transformer(object):
     
     
     def _getattr(self, value, attr_name):
-        return js.call(
-            js.ref("$nope.builtins.getattr"),
-            [value, js.string(attr_name)],
-        )
+        return _call_builtin("getattr", [value, js.string(attr_name)])
     
     
     def _get_nope_exception_from_error(self, error):
@@ -667,6 +663,10 @@ class Transformer(object):
     def _is_undefined(self, value):
         # TODO: undefined may be overridden
         return js.binary_operation("===", value, js.ref("undefined"))
+
+
+def _call_builtin(name, args):
+    return _call_internal(["builtins", name], args)
 
 
 def _generate_vars(statements):
@@ -695,3 +695,7 @@ def _int(node):
 def _str(node):
     return js.string(node.value)
 
+
+class ConvertedNode(object):
+    def __init__(self, js_node):
+        self.js_node = js_node
