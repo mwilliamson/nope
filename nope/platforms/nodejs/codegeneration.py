@@ -91,8 +91,7 @@ _number_operators = {
     "sub": lambda left, right: js.binary_operation("-", left, right),
     "mul": lambda left, right: js.binary_operation("*", left, right),
     "truediv": lambda left, right: js.binary_operation("/", left, right),
-    # TODO: Math may be shadowed
-    "floordiv": lambda left, right: js.call(js.ref("Math.floor"), [js.binary_operation("/", left, right)]),
+    "floordiv": lambda left, right: _call_internal(["numberFloor"], [js.binary_operation("/", left, right)]),
     "mod": lambda left, right: _call_internal(["numberMod"], [left, right]),
     "divmod": lambda left, right: _call_internal(["numberDivMod"], [left, right]),
     "pow": lambda left, right: _call_internal(["numberPow"], [left, right]),
