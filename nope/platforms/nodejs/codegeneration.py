@@ -437,9 +437,8 @@ class Transformer(object):
                     [js_handler],
                 )
             
-            # TODO: static reference to undefined
             js_handler = js.if_else(
-                js.binary_operation("===", nope_exception, js.ref("undefined")),
+                self._is_undefined(nope_exception),
                 [js.throw(js.ref(exception_name))],
                 [js_handler],
             )
@@ -648,6 +647,10 @@ class Transformer(object):
         name = "${}{}".format(base, self._unique_name_index)
         self._unique_name_index += 1
         return name
+    
+    def _is_undefined(self, value):
+        # TODO: undefined may be overridden
+        return js.binary_operation("===", value, js.ref("undefined"))
 
 
 def _generate_vars(statements):
