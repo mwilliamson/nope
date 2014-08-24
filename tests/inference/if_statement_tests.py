@@ -5,7 +5,7 @@ from nope.inference import update_context
 from nope.context import bound_context
 
 from .util import (
-    assert_variable_remains_unbound,
+    assert_variable_is_possibly_bound,
     assert_statement_is_type_checked)
 
 
@@ -69,7 +69,7 @@ def type_of_variable_is_unified_if_branches_of_if_else_use_different_types():
 
 @istest
 def variable_remains_unbound_if_only_set_in_one_branch_of_if_else():
-    assert_variable_remains_unbound(lambda assignment: nodes.if_else(
+    assert_variable_is_possibly_bound(lambda assignment: nodes.if_else(
         nodes.int(1),
         [assignment],
         [],

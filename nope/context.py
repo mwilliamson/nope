@@ -3,11 +3,13 @@ import collections
 from . import types, errors
 
 
-# If is_bound is False, a variable *may* still be bound on some execution paths.
-# For instance, if a variable is bound in the true branch of if-else,
-# then is_bound is False, but the variable will still have a type for var_type
-Variable = collections.namedtuple("Variable", ["var_type", "is_bound"])
-Variable.unbound = lambda: Variable(None, is_bound=False)
+Variable = collections.namedtuple("Variable", ["var_type", "boundness"])
+Variable.unbound = lambda: Variable(None, boundness=Boundness.unbound)
+
+# TODO: find a better name
+class Boundness(object):
+    unbound, maybe, bound = range(3)
+
 
 def _create_vars(bindings):
     return dict(
@@ -20,7 +22,11 @@ def _create_var(binding):
     if isinstance(binding, Variable):
         return binding
     else:
-        return Variable(binding, is_bound=binding is not None)
+        if binding is None:
+            boundness = Boundness.unbound
+        else:
+            boundness = Boundness.bound
+        return Variable(binding, boundness=boundness)
 
 
 
@@ -38,22 +44,26 @@ class Context(object):
     def has_name(self, name):
         return name in self._vars
     
+    # TODO: rename to is_definitely_bound
     def is_bound(self, name):
-        return self._vars[name].is_bound
+        return self.boundness(name) == Boundness.bound
+    
+    def boundness(self, name):
+        return self._vars[name].boundness
     
     def add(self, name, var_type):
         # All names should be declared on entering a scope, so if `name` isn't
         # in `self._vars` it's a programming error i.e. a bug in the type checker
         variable = self._vars[name]
-        if variable.is_bound:
+        if variable.boundness != Boundness.unbound:
             # TODO: raise a proper TypeCheckError with a node attribute, or push responsibility into inference.py
             raise Exception("Variable is already bound")
         else:
-            self._vars[name] = Variable(var_type, is_bound=True)
+            self._vars[name] = Variable(var_type, boundness=Boundness.bound)
     
     def lookup(self, name, allow_unbound=False):
         variable = self._vars[name]
-        if allow_unbound or variable.is_bound:
+        if allow_unbound or variable.boundness == Boundness.bound:
             return self._vars[name].var_type
         else:
             raise Exception("Variable is not bound: '{}'".format(name))
@@ -97,8 +107,13 @@ class Context(object):
                 ]
                 if len(var_types) > 0:
                     unified_type = types.unify(var_types)
-                    is_bound = bind and all(variable.is_bound for variable in variables)
-                    self._vars[key] = Variable(unified_type, is_bound)
+                    is_bound = bind and all(variable.boundness == Boundness.bound for variable in variables)
+                    if is_bound:
+                        boundness = Boundness.bound
+                    else:
+                        boundness = Boundness.maybe
+                    
+                    self._vars[key] = Variable(unified_type, boundness)
 
     def _enter_block(self, in_loop=False):
         return Context(

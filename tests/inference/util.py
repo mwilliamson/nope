@@ -1,7 +1,7 @@
 from nose.tools import assert_equal
 
 from nope import types, errors, nodes
-from nope.context import bound_context
+from nope.context import bound_context, Boundness
 from nope.inference import update_context
 
 
@@ -43,6 +43,16 @@ def assert_variable_remains_unbound(create_node):
     context = bound_context({"x": None})
     update_context(node, context)
     assert not context.is_bound("x")
+    assert_equal(types.int_type, context.lookup("x", allow_unbound=True))
+
+
+
+def assert_variable_is_possibly_bound(create_node):
+    assignment = nodes.assign("x", nodes.int(1))
+    node = create_node(assignment)
+    context = bound_context({"x": None})
+    update_context(node, context)
+    assert context.boundness("x") == Boundness.maybe
     assert_equal(types.int_type, context.lookup("x", allow_unbound=True))
 
 
