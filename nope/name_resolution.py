@@ -55,6 +55,10 @@ def _resolve_return(node, context):
         resolve(node.value, context)
 
 
+def _resolve_expression_statement(node, context):
+    resolve(node.value, context)
+
+
 _resolvers = {
     nodes.NoneExpression: _resolve_nothing,
     nodes.BooleanExpression: _resolve_nothing,
@@ -69,6 +73,7 @@ _resolvers = {
     nodes.Subscript: _resolve_subscript,
     
     nodes.ReturnStatement: _resolve_return,
+    nodes.ExpressionStatement: _resolve_expression_statement,
     
     nodes.Assignment: _resolve_assignment,
 }

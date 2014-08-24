@@ -98,6 +98,13 @@ def return_statement_has_child_names_resolved():
 
 
 @istest
+def expression_statement_has_child_names_resolved():
+    _assert_children_resolved(
+        lambda ref: nodes.expression_statement(ref),
+    )
+
+
+@istest
 def assignment_adds_name_to_context():
     context = _new_context()
     definition_node = nodes.ref("x")
