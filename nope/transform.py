@@ -28,7 +28,6 @@ class Converter(object):
             ast.For: self._for,
             ast.Break: self._break,
             ast.Continue: self._continue,
-            ast.Try: self._try,
             ast.ExceptHandler: self._except,
             ast.Raise: self._raise,
             ast.Assert: self._assert,
@@ -45,6 +44,16 @@ class Converter(object):
             ast.Subscript: self._subscript,
             ast.Index: self._index,
         }
+        
+        # Python >= 3.3:
+        if hasattr(ast, "Try"):
+            self._converters[ast.Try] = self._try
+        
+        # Python < 3.3
+        if hasattr(ast, "TryExcept"):
+            self._converters[ast.TryExcept] = self._try
+        if hasattr(ast, "TryFinally"):
+            self._converters[ast.TryFinally] = self._try
         
         # Python >= 3.4 has ast.NameConstant instead of reusing ast.Name
         if hasattr(ast, "NameConstant"):
@@ -159,8 +168,8 @@ class Converter(object):
     def _try(self, node):
         return nodes.try_statement(
             self._mapped(node.body),
-            handlers=self._mapped(node.handlers),
-            finally_body=self._mapped(node.finalbody),
+            handlers=self._mapped(getattr(node, "handlers", [])),
+            finally_body=self._mapped(getattr(node, "finalbody", [])),
         )
     
     
@@ -193,7 +202,13 @@ class Converter(object):
     def _with(self, node):
         result = self._mapped(node.body)
         
-        for item in reversed(node.items):
+        if hasattr(node, "items"):
+            # Python >= 3.3
+            items = reversed(node.items)
+        else:
+            items = [node]
+        
+        for item in items:
             if item.optional_vars is None:
                 target = None
             else:
