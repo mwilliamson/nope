@@ -13,6 +13,49 @@ Call = collections.namedtuple("Call", ["func", "args", "kwargs"])
 AttributeAccess = collections.namedtuple("AttributeAccess", ["value", "attr"])
 TypeApplication = collections.namedtuple("TypeApplication", ["generic_type", "params"])
 
+unary_operation = UnaryOperation = collections.namedtuple("UnaryOperation", ["operator", "operand"])
+
+unary_operators = ["neg", "pos", "invert"]
+
+
+def _create_unary_operators():
+    def _create_unary_operator(operator):
+        def create(operand):
+            return UnaryOperation(operator, operand)
+        
+        name = operator
+        create.__name__ = name
+        setattr(sys.modules[__name__], name, create)
+        
+    for operator in unary_operators:
+        _create_unary_operator(operator)
+
+_create_unary_operators()
+
+
+binary_operation = BinaryOperation = collections.namedtuple("BinaryOperation", ["operator", "left", "right"])
+
+binary_operators = ["add", "sub", "mul", "truediv", "floordiv", "mod", "pow", "lshift", "rshift", "and", "xor", "or"]
+
+
+def _create_binary_operators():
+    def _create_binary_operator(operator):
+        def create(left, right):
+            return BinaryOperation(operator, left, right)
+        
+        name = operator
+        create.__name__ = name
+        setattr(sys.modules[__name__], name, create)
+        setattr(sys.modules[__name__], name + "_", create)
+        
+    for operator in binary_operators:
+        _create_binary_operator(operator)
+
+_create_binary_operators()
+
+subscript = Subscript = collections.namedtuple("Subscript", ["value", "slice"])
+
+
 ReturnStatement = collections.namedtuple("ReturnStatement", ["value"])
 ExpressionStatement = collections.namedtuple("ExpressionStatement", ["value"])
 Assignment = collections.namedtuple("Assignment", ["targets", "value"])
@@ -152,46 +195,3 @@ import_alias = ImportAlias
 
 def module(body, is_executable=False):
     return Module(body, is_executable)
-
-
-unary_operation = UnaryOperation = collections.namedtuple("UnaryOperation", ["operator", "operand"])
-
-unary_operators = ["neg", "pos", "invert"]
-
-
-def _create_unary_operators():
-    def _create_unary_operator(operator):
-        def create(operand):
-            return UnaryOperation(operator, operand)
-        
-        name = operator
-        create.__name__ = name
-        setattr(sys.modules[__name__], name, create)
-        
-    for operator in unary_operators:
-        _create_unary_operator(operator)
-
-_create_unary_operators()
-
-
-binary_operation = BinaryOperation = collections.namedtuple("BinaryOperation", ["operator", "left", "right"])
-
-binary_operators = ["add", "sub", "mul", "truediv", "floordiv", "mod", "pow", "lshift", "rshift", "and", "xor", "or"]
-
-
-def _create_binary_operators():
-    def _create_binary_operator(operator):
-        def create(left, right):
-            return BinaryOperation(operator, left, right)
-        
-        name = operator
-        create.__name__ = name
-        setattr(sys.modules[__name__], name, create)
-        setattr(sys.modules[__name__], name + "_", create)
-        
-    for operator in binary_operators:
-        _create_binary_operator(operator)
-
-_create_binary_operators()
-
-subscript = Subscript = collections.namedtuple("Subscript", ["value", "slice"])
