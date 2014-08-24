@@ -160,7 +160,7 @@ on a normal Python 3.4 codebase i.e. avoiding features unsupported in earlier ve
 Node.js backend
 ~~~~~~~~~~~~~~~
 
-Support builtin functions:
+Supported builtin functions:
 
 * ``abs``: supported
 
