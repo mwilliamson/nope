@@ -50,6 +50,11 @@ def _resolve_subscript(node, context):
     resolve(node.slice, context)
 
 
+def _resolve_return(node, context):
+    if node.value is not None:
+        resolve(node.value, context)
+
+
 _resolvers = {
     nodes.NoneExpression: _resolve_nothing,
     nodes.BooleanExpression: _resolve_nothing,
@@ -62,6 +67,8 @@ _resolvers = {
     nodes.UnaryOperation: _resolve_unary_operation,
     nodes.BinaryOperation: _resolve_binary_operation,
     nodes.Subscript: _resolve_subscript,
+    
+    nodes.ReturnStatement: _resolve_return,
     
     nodes.Assignment: _resolve_assignment,
 }

@@ -90,6 +90,14 @@ def subscript_has_child_names_resolved():
 
 
 @istest
+def return_statement_has_child_names_resolved():
+    _assert_children_resolved(
+        lambda ref: nodes.ret(ref),
+    )
+    _assert_no_references(nodes.ret(None))
+
+
+@istest
 def assignment_adds_name_to_context():
     context = _new_context()
     definition_node = nodes.ref("x")
