@@ -26,12 +26,6 @@ def _resolve_call(node, context):
         resolve(arg, context)
 
 
-def _resolve_assignment(node, context):
-    for target in node.targets:
-        if isinstance(target, nodes.VariableReference):
-            context.define(target.name, target)
-
-
 def _resolve_attribute_access(node, context):
     resolve(node.value, context)
 
@@ -57,6 +51,16 @@ def _resolve_return(node, context):
 
 def _resolve_expression_statement(node, context):
     resolve(node.value, context)
+
+
+def _resolve_assignment(node, context):
+    resolve(node.value, context)
+    
+    for target in node.targets:
+        if isinstance(target, nodes.VariableReference) and not context.is_defined(target.name):
+            context.define(target.name, target)
+        
+        resolve(target, context)
 
 
 _resolvers = {
@@ -89,6 +93,9 @@ class Context(object):
     
     def definition(self, name):
         return self._definitions[name]
+    
+    def is_defined(self, name):
+        return name in self._definitions
     
     def add_reference(self, reference):
         definition = self.definition(reference.name)
