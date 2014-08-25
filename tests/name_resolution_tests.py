@@ -339,8 +339,66 @@ def except_handler_target_is_defined_but_not_definitely_bound():
     assert_equal("error", context.definition("error").name)
     assert_equal(False, context.is_definitely_bound("error"))
 
-# TODO: add test: name should be unbound after being used as a target in a handler,
-# even if it was previously definitely bound. Perhaps just prohibit name reuse for handler targets?
+
+@istest
+def except_handler_target_cannot_use_name_that_is_already_defined():
+    context = _new_context()
+    context.define("error", nodes.ref("error"))
+    target_node = nodes.ref("error")
+    node = nodes.try_statement(
+        [],
+        handlers=[
+            nodes.except_handler(nodes.none(), nodes.ref("error"), [])
+        ],
+    )
+    try:
+        resolve(node, context)
+        assert False, "Expected error"
+    except errors.InvalidReassignmentError as error:
+        assert_equal(target_node, error.node)
+        assert_equal("exception handler target and variable assignment cannot share the same name", str(error))
+
+
+@istest
+def except_handler_target_cannot_be_later_used_as_ordinary_variable():
+    context = _new_context()
+    node = nodes.try_statement(
+        [],
+        handlers=[
+            nodes.except_handler(nodes.none(), nodes.ref("error"), [])
+        ],
+    )
+    resolve(node, context)
+    target_node = nodes.ref("error")
+    try:
+        resolve(nodes.assign([target_node], nodes.none()), context)
+        assert False, "Expected error"
+    except errors.InvalidReassignmentError as error:
+        assert_equal(target_node, error.node)
+        assert_equal("variable assignment and exception handler target cannot share the same name", str(error))
+
+
+@istest
+def name_cannot_be_used_as_variable_assignment_in_one_branch_and_exception_handler_target_in_another():
+    context = _new_context()
+    target_node = nodes.ref("error")
+    node = nodes.if_else(
+        nodes.boolean(True),
+        [nodes.assign([nodes.ref("error")], nodes.none())],
+        [nodes.try_statement(
+            [],
+            handlers=[
+                nodes.except_handler(nodes.none(), target_node, [])
+            ],
+        )]
+    )
+    
+    try:
+        resolve(node, context)
+        assert False, "Expected error"
+    except errors.InvalidReassignmentError as error:
+        assert_equal(target_node, error.node)
+        assert_equal("exception handler target and variable assignment cannot share the same name", str(error))
 
 
 @istest

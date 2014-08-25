@@ -11,6 +11,15 @@ class UndefinedNameError(TypeCheckError):
         return "name '{0}' is not defined".format(self.name)
 
 
+class InvalidReassignmentError(TypeCheckError):
+    def __init__(self, node, message):
+        self.node = node
+        self._message = message
+    
+    def __str__(self):
+        return self._message
+
+
 class ArgumentsError(TypeCheckError):
     def __init__(self, node, message):
         self.node = node

@@ -5,9 +5,9 @@ def resolve(node, context):
     return _resolvers[type(node)](node, context)
 
 
-def _resolve_target(target, context):
+def _resolve_target(target, context, target_type=None):
     if isinstance(target, nodes.VariableReference):
-        context.define(target.name, target)
+        context.define(target.name, target, target_type=target_type)
     
     resolve(target, context)
 
@@ -120,7 +120,7 @@ def _resolve_try(node, context):
             
         def resolve_handler_target(branch_context):
             if handler.target is not None:
-                _resolve_target(handler.target, branch_context)
+                _resolve_target(handler.target, branch_context, target_type=ExceptionHandlerTargetNode)
         
         return _branch(handler.body, before=resolve_handler_target)
     
@@ -205,19 +205,34 @@ class Context(object):
         self._variable_declaration_nodes = variable_declaration_nodes
         self._references = references
     
-    def define(self, name, node, is_definitely_bound=True):
-        declaration_node = self._variable_declaration_node(name)
-        self._definitions[name] = VariableDeclaration(declaration_node, is_definitely_bound=is_definitely_bound)
+    def define(self, name, node, is_definitely_bound=True, target_type=None):
+        if target_type is None:
+            target_type = VariableDeclarationNode
+        
+        declaration_node = self._variable_declaration_node(name, node, target_type)
+        self._definitions[name] = VariableDeclaration(
+            declaration_node,
+            is_definitely_bound=is_definitely_bound,
+        )
         return declaration_node
     
-    def _variable_declaration_node(self, name):
-        if name not in self._variable_declaration_nodes:
-            self._variable_declaration_nodes[name] = VariableDeclarationNode(name)
-        return self._variable_declaration_nodes[name]
+    def _variable_declaration_node(self, name, target_node, target_type):
+        if name in self._variable_declaration_nodes:
+            node = self._variable_declaration_nodes[name]
+            node_type = type(node)
+            if not node_type == target_type:
+                raise errors.InvalidReassignmentError(
+                    target_node,
+                    "{} and {} cannot share the same name".format(target_type.description, type(node).description)
+                )
+        else:
+            node = self._variable_declaration_nodes[name] = target_type(name)
+        
+        return node
     
     def definition(self, name):
         return self._definitions[name].node
-    
+
     def is_defined(self, name):
         return name in self._definitions
     
@@ -247,11 +262,18 @@ class Context(object):
         
         for name in new_names:
             if not self.is_defined(name) or not self.is_definitely_bound(name):
-                declaration_node = self._variable_declaration_node(name)
                 definitions = [
-                    definitions.get(name, VariableDeclaration.unbound(declaration_node))
+                    definitions.get(name, UnboundName())
                     for definitions in new_definitions
                 ]
+                node_types = set(type(definition.node) for definition in definitions if definition.node is not None)
+                # This assertion should never fail since the call to
+                # self._variable_declaration_node in self.define should fail
+                # if the target type is inconsistent
+                assert len(node_types) == 1
+                node_type, = node_types
+                
+                declaration_node = self._variable_declaration_node(name, None, node_type)
                 is_definitely_bound = bind and all(definition.is_definitely_bound for definition in definitions)
                 self._definitions[name] = VariableDeclaration(declaration_node, is_definitely_bound)
 
@@ -261,19 +283,29 @@ class VariableDeclarationNode(object):
     # For variables, we introduce a separate node for declarations since
     # there are multiple candidate nodes to declare the node
     
+    description = "variable assignment"
+    
+    def __init__(self, name):
+        self.name = name
+
+
+class ExceptionHandlerTargetNode(object):
+    description = "exception handler target"
+    
     def __init__(self, name):
         self.name = name
 
 
 class VariableDeclaration(object):
-    @staticmethod
-    def unbound(node):
-        return VariableDeclaration(node, is_definitely_bound=False)
-    
     def __init__(self, node, is_definitely_bound):
         self.node = node
         self.is_definitely_bound = is_definitely_bound
-    
+
+
+class UnboundName(object):
+    node = None
+    is_definitely_bound = False
+
 
 
 class BlockVars(object):
