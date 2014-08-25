@@ -57,6 +57,9 @@ TODO
 * A way of specifying dependencies on a per-platform basis to allow shimming
   of existing libraries into a common interface.
 
+* Allow types of variables to be specified in the same way as functions, such
+  as giving the type of an empty list.
+
 Status
 ------
 
