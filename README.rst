@@ -1,13 +1,19 @@
 The Nope Programming Language
 =============================
 
-Nope is a subset of Python 3 that can be compiled to multiple targets.
+Nope is a statically-typed subset of Python 3 that can be compiled to multiple targets.
 At the moment, only Python and node.js are supported.
 Any valid Nope program can be run directly as a Python 3 program.
 
-Comments are used to provide static typing.
-As well as detecting programming errors more quickly,
-this allows translation to simpler code.
+Static typing is supported for two main reasons:
+
+* Static typing can detect some programming errors more quickly
+
+* Static typing allows optimisations to be applied to the generated code
+
+The static types are expressed using comments. This means that the static typing
+has no effect at runtime, allowing Nope programs to be run directly as Python 3
+programs with any extra dependencies or performance penalty.
 
 TODO
 ----
