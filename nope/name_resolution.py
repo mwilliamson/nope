@@ -282,9 +282,17 @@ class Context(object):
         return Context(BlockVars(self._definitions), self._variable_declaration_nodes, self._references)
     
     def enter_function(self, declared_locals):
-        definitions = self._definitions.copy()
+        definitions = _copy_definitions(self._definitions)
         for name in declared_locals:
             definitions[name] = UnboundName()
+        
+        names_to_delete = [
+            name for name, definition in definitions.items()
+            if isinstance(definition.node, ExceptionHandlerTargetNode)
+        ]
+        for name in names_to_delete:
+            del definitions[name]
+            
         return Context(definitions, {}, self._references)
     
     def unify(self, contexts, bind):
@@ -354,9 +362,17 @@ class UnboundName(object):
 
 
 class BlockVars(object):
-    def __init__(self, definitions):
+    def __init__(self, definitions, new_definitions=None):
+        if new_definitions is None:
+            new_definitions = {}
+        
         self._original_definitions = definitions
-        self._new_definitions = {}
+        self._new_definitions = new_definitions
+    
+    def flattened_copy(self):
+        definitions = self._original_definitions.copy()
+        definitions.update(self._new_definitions)
+        return definitions
     
     def __getitem__(self, key):
         if key in self._new_definitions:
@@ -369,3 +385,10 @@ class BlockVars(object):
     
     def __contains__(self, key):
         return key in self._new_definitions or key in self._original_definitions
+
+
+def _copy_definitions(definitions):
+    if isinstance(definitions, dict):
+        return definitions.copy()
+    else:
+        return definitions.flattened_copy()

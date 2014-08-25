@@ -563,6 +563,27 @@ def function_definition_body_variable_is_unbound_even_if_outer_scope_has_bound_v
 
 
 @istest
+def exception_handler_targets_cannot_be_accessed_from_nested_function():
+    ref = nodes.ref("error")
+    body = [nodes.ret(ref)]
+    func_node = nodes.func("f", None, nodes.arguments([]), body)
+    
+    try_node = nodes.try_statement(
+        [],
+        handlers=[
+            nodes.except_handler(nodes.none(), nodes.ref("error"), [func_node])
+        ],
+    )
+    
+    try:
+        resolve(try_node, _new_context())
+        assert False, "Expected error"
+    except errors.UndefinedNameError as error:
+        assert_is(ref, error.node)
+        assert_is("error", error.name)
+
+
+@istest
 def import_adds_definition_to_context():
     context = _new_context()
     alias_node = nodes.import_alias("x.y", None)
