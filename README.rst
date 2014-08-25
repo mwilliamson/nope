@@ -15,7 +15,7 @@ The static types are expressed using comments, rather than annotations, for
 several reasons:
 
 * This means the static typing has no effect at runtime, allowing Nope programs
-  to be run directly as Python 3 programs with any extra dependencies or
+  to be run directly as Python 3 programs without any extra dependencies or
   performance penalty.
 
 * A separate syntax can be used within the comments to succinctly express types,
