@@ -341,20 +341,45 @@ def except_handler_target_is_defined_but_not_definitely_bound():
 
 
 @istest
-def except_handler_targets_can_share_their_name():
+def except_handler_targets_in_same_try_statement_can_share_their_name():
     # TODO: this isn't true when exception handlers are nested
     # TODO: exception handler targets can't be used in nested functions
     context = _new_context()
     node = nodes.try_statement(
         [],
         handlers=[
-            nodes.except_handler(nodes.none(), nodes.ref("error"), [])
-            nodes.except_handler(nodes.none(), nodes.ref("error"), [])
+            nodes.except_handler(nodes.none(), nodes.ref("error"), []),
+            nodes.except_handler(nodes.none(), nodes.ref("error"), []),
         ],
     )
     resolve(node, context)
     assert_equal("error", context.definition("error").name)
     assert_equal(False, context.is_definitely_bound("error"))
+
+
+@istest
+def except_handler_targets_cannot_share_their_name_when_nested():
+    context = _new_context()
+    target_node = nodes.ref("error")
+    node = nodes.try_statement(
+        [],
+        handlers=[
+            nodes.except_handler(nodes.none(), nodes.ref("error"), [
+                nodes.try_statement(
+                    [],
+                    handlers=[
+                        nodes.except_handler(nodes.none(), target_node, [])
+                    ],
+                )
+            ])
+        ],
+    )
+    try:
+        resolve(node, context)
+        assert False, "Expected error"
+    except errors.InvalidReassignmentError as error:
+        assert_equal(target_node, error.node)
+        assert_equal("cannot reuse the same name for nested exception handler targets", str(error))
 
 
 @istest

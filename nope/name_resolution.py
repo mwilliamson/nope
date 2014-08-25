@@ -225,6 +225,11 @@ class Context(object):
                     target_node,
                     "{} and {} cannot share the same name".format(target_type.description, type(node).description)
                 )
+            if target_type == ExceptionHandlerTargetNode and self.is_defined(name) and self.is_definitely_bound(name):
+                raise errors.InvalidReassignmentError(
+                    target_node,
+                    "cannot reuse the same name for nested exception handler targets"
+                )
         else:
             node = self._variable_declaration_nodes[name] = target_type(name)
         
