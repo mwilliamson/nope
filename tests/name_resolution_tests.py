@@ -342,7 +342,6 @@ def except_handler_target_is_defined_but_not_definitely_bound():
 
 @istest
 def except_handler_targets_in_same_try_statement_can_share_their_name():
-    # TODO: this isn't true when exception handlers are nested
     # TODO: exception handler targets can't be used in nested functions
     context = _new_context()
     node = nodes.try_statement(
