@@ -115,6 +115,12 @@ def _resolve_raise(node, context):
     resolve(node.value, context)
 
 
+def _resolve_assert(node, context):
+    resolve(node.condition, context)
+    if node.message is not None:
+        resolve(node.message, context)
+
+
 def _resolve_branches(branches, context, bind=False):
     branch_contexts = [
         _resolve_branch(branch, context)
@@ -165,6 +171,7 @@ _resolvers = {
     nodes.BreakStatement: _resolve_nothing,
     nodes.ContinueStatement: _resolve_nothing,
     nodes.RaiseStatement: _resolve_raise,
+    nodes.AssertStatement: _resolve_assert,
 }
 
 

@@ -298,6 +298,16 @@ def raise_statement_has_child_names_resolved():
     )
 
 
+@istest
+def assert_statement_has_child_names_resolved():
+    _assert_children_resolved(
+        lambda ref: nodes.assert_statement(ref),
+    )
+    _assert_children_resolved(
+        lambda ref: nodes.assert_statement(nodes.boolean(False), ref),
+    )
+
+
 def _new_context():
     return Context({}, {}, {})
 
