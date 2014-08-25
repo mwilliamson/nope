@@ -65,3 +65,7 @@ However, the following is valid:
             print(saved_error)
 
     f()
+
+(Since this behaviour arises because of the implicit ``del``, the same
+strategy should work if and when statements of the form ``del identifier`` are
+supported.)
