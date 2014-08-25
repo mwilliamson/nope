@@ -195,6 +195,26 @@ def referred_declaration_in_branch_is_same_as_declaration_outside_of_branch():
     assert_is(context.definition("x"), context.resolve(ref_node))
 
 
+@istest
+def while_has_child_names_resolved():
+    _assert_children_resolved(
+        lambda ref: nodes.while_loop(ref, [], []),
+    )
+    _assert_children_resolved(
+        lambda ref: nodes.while_loop(nodes.boolean(True), [nodes.expression_statement(ref)], []),
+    )
+    _assert_children_resolved(
+        lambda ref: nodes.while_loop(nodes.boolean(True), [], [nodes.expression_statement(ref)]),
+    )
+
+
+@istest
+def declarations_in_both_body_and_else_body_of_while_loop_are_not_definitely_bound():
+    _assert_assignment_is_defined_but_unbound(lambda assignment:
+        nodes.while_loop(nodes.boolean(True), [assignment], [assignment])
+    )
+
+
 def _new_context():
     return Context({}, {}, {})
 

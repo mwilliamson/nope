@@ -80,6 +80,16 @@ def _resolve_if_else(node, context):
     )
 
 
+def _resolve_while_loop(node, context):
+    resolve(node.condition, context)
+    
+    _resolve_branches(
+        [_branch(node.body), _branch(node.else_body)],
+        context,
+        bind=False,
+    )
+
+
 def _resolve_branches(branches, context, bind=False):
     branch_contexts = [
         _resolve_branch(branch, context)
@@ -121,6 +131,7 @@ _resolvers = {
     nodes.ExpressionStatement: _resolve_expression_statement,
     nodes.Assignment: _resolve_assignment,
     nodes.IfElse: _resolve_if_else,
+    nodes.WhileLoop: _resolve_while_loop,
 }
 
 
