@@ -342,10 +342,12 @@ def except_handler_target_is_defined_but_not_definitely_bound():
 
 @istest
 def except_handler_targets_can_share_their_name():
+    # TODO: this isn't true when exception handlers are nested
     context = _new_context()
     node = nodes.try_statement(
         [],
         handlers=[
+            nodes.except_handler(nodes.none(), nodes.ref("error"), [])
             nodes.except_handler(nodes.none(), nodes.ref("error"), [])
         ],
     )
