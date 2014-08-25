@@ -148,6 +148,19 @@ def assignment_resolves_target_names_when_variable_is_not_yet_defined():
     assert_is(definition_node, context.resolve(definition_node))
 
 
+@istest
+def if_else_has_child_names_resolved():
+    _assert_children_resolved(
+        lambda ref: nodes.if_else(ref, [], []),
+    )
+    _assert_children_resolved(
+        lambda ref: nodes.if_else(nodes.boolean(True), [nodes.expression_statement(ref)], []),
+    )
+    _assert_children_resolved(
+        lambda ref: nodes.if_else(nodes.boolean(True), [], [nodes.expression_statement(ref)]),
+    )
+
+
 def _new_context():
     return Context()
 

@@ -5,6 +5,11 @@ def resolve(node, context):
     return _resolvers[type(node)](node, context)
 
 
+def _resolve_statements(statements, context):
+    for statement in statements:
+        resolve(statement, context)
+
+
 def _resolve_nothing(node, context):
     pass
 
@@ -65,6 +70,12 @@ def _resolve_assignment(node, context):
         resolve(target, context)
 
 
+def _resolve_if_else(node, context):
+    resolve(node.condition, context)
+    _resolve_statements(node.true_body, context)
+    _resolve_statements(node.false_body, context)
+
+
 _resolvers = {
     nodes.NoneExpression: _resolve_nothing,
     nodes.BooleanExpression: _resolve_nothing,
@@ -80,8 +91,8 @@ _resolvers = {
     
     nodes.ReturnStatement: _resolve_return,
     nodes.ExpressionStatement: _resolve_expression_statement,
-    
     nodes.Assignment: _resolve_assignment,
+    nodes.IfElse: _resolve_if_else,
 }
 
 
