@@ -1,4 +1,4 @@
-from nope import nodes
+from nope import nodes, errors
 
 
 def resolve(node, context):
@@ -10,6 +10,8 @@ def _resolve_nothing(node, context):
 
 
 def _resolve_variable_reference(node, context):
+    if not context.is_defined(node.name):
+        raise errors.UndefinedNameError(node, node.name)
     context.add_reference(node)
 
 

@@ -1,6 +1,6 @@
 from nose.tools import istest, assert_is
 
-from nope import nodes
+from nope import nodes, errors
 from nope.name_resolution import resolve, Context
 
 
@@ -33,6 +33,18 @@ def variable_reference_has_name_resolved():
     resolve(ref, context)
     
     assert_is(definition_node, context.resolve(ref))
+
+
+@istest
+def error_if_name_is_undefined():
+    ref = nodes.ref("x")
+    context = _new_context()
+    try:
+        resolve(ref, context)
+        assert False, "Expected error"
+    except errors.UndefinedNameError as error:
+        assert_is(ref, error.node)
+        assert_is("x", error.name)
 
 
 @istest
