@@ -291,6 +291,13 @@ def continue_has_no_references():
     _assert_no_references(nodes.continue_statement())
 
 
+@istest
+def raise_statement_has_child_names_resolved():
+    _assert_children_resolved(
+        lambda ref: nodes.raise_statement(ref),
+    )
+
+
 def _new_context():
     return Context({}, {}, {})
 

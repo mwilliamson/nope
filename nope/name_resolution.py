@@ -111,6 +111,10 @@ def _resolve_for_loop(node, context):
     )
 
 
+def _resolve_raise(node, context):
+    resolve(node.value, context)
+
+
 def _resolve_branches(branches, context, bind=False):
     branch_contexts = [
         _resolve_branch(branch, context)
@@ -160,6 +164,7 @@ _resolvers = {
     nodes.ForLoop: _resolve_for_loop,
     nodes.BreakStatement: _resolve_nothing,
     nodes.ContinueStatement: _resolve_nothing,
+    nodes.RaiseStatement: _resolve_raise,
 }
 
 
