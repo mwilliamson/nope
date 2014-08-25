@@ -517,6 +517,21 @@ def function_definitions_arguments_shadow_variables_of_same_name_in_outer_scope(
 
 
 @istest
+def function_definitions_assignments_shadow_variables_of_same_name_in_outer_scope():
+    arg = nodes.argument("x")
+    args = nodes.arguments([arg])
+    ref = nodes.ref("x")
+    body = [nodes.assign([ref], nodes.none())]
+    node = nodes.func("f", None, args, body)
+    
+    context = _new_context()
+    context.define("x", nodes.ref("x"))
+    
+    resolve(node, context)
+    assert_is_not(context.definition("x"), context.resolve(ref))
+
+
+@istest
 def function_definition_body_variable_is_unbound_even_if_outer_scope_has_bound_variable_of_same_name():
     args = nodes.arguments([])
     ref = nodes.ref("x")
