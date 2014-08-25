@@ -11,9 +11,18 @@ Static typing is supported for two main reasons:
 
 * Static typing allows optimisations to be applied to the generated code
 
-The static types are expressed using comments. This means that the static typing
-has no effect at runtime, allowing Nope programs to be run directly as Python 3
-programs with any extra dependencies or performance penalty.
+The static types are expressed using comments for several reasons:
+
+* This means the static typing has no effect at runtime, allowing Nope programs
+  to be run directly as Python 3 programs with any extra dependencies or
+  performance penalty.
+
+* A separate syntax can be used within the comments to succinctly express types,
+  rather than (ab)using existing Python syntax.
+
+* It can be useful to decouple the signature of a function from the implementation.
+  For instance, using separate comments makes it easy to type a function such
+  that it only accepts arguments by positions rather than keyword.
 
 Here's an example of calculating Fibonacci numbers using Nope:
 
