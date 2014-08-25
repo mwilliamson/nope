@@ -173,10 +173,44 @@ def declarations_in_exactly_one_if_else_branch_are_defined_but_not_definitely_bo
 
 
 @istest
+def variable_remains_definitely_bound_after_being_reassigned_in_one_branch_of_if_else():
+    context = _new_context()
+    context.define("x", nodes.ref("x"))
+    
+    node = nodes.if_else(
+        nodes.boolean(True),
+        [nodes.assign(nodes.ref("x"), nodes.none())],
+        []
+    )
+
+    resolve(node, context)
+
+    assert_equal("x", context.definition("x").name)
+    assert_equal(True, context.is_definitely_bound("x"))
+
+
+@istest
 def declarations_in_both_if_else_branches_are_defined_and_definitely_bound():
     _assert_assignment_is_defined_and_definitely_bound(lambda create_assignment:
         nodes.if_else(nodes.boolean(True), [create_assignment()], [create_assignment()])
     )
+
+
+@istest
+def potentially_bound_variable_becomes_definitely_bound_after_being_assigned_in_both_branches_of_if_else():
+    context = _new_context()
+    context.define("x", nodes.ref("x"), is_definitely_bound=False)
+    
+    node = nodes.if_else(
+        nodes.boolean(True),
+        [nodes.assign(nodes.ref("x"), nodes.none())],
+        [nodes.assign(nodes.ref("x"), nodes.none())]
+    )
+
+    resolve(node, context)
+
+    assert_equal("x", context.definition("x").name)
+    assert_equal(True, context.is_definitely_bound("x"))
 
 
 @istest

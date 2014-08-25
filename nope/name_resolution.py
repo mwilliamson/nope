@@ -6,7 +6,7 @@ def resolve(node, context):
 
 
 def _resolve_target(target, context):
-    if isinstance(target, nodes.VariableReference) and not context.is_defined(target.name):
+    if isinstance(target, nodes.VariableReference):
         context.define(target.name, target)
     
     resolve(target, context)
@@ -72,10 +72,7 @@ def _resolve_assignment(node, context):
     resolve(node.value, context)
     
     for target in node.targets:
-        if isinstance(target, nodes.VariableReference) and not context.is_defined(target.name):
-            context.define(target.name, target)
-        
-        resolve(target, context)
+        _resolve_target(target, context)
 
 
 def _resolve_if_else(node, context):
@@ -170,9 +167,9 @@ class Context(object):
         self._variable_declaration_nodes = variable_declaration_nodes
         self._references = references
     
-    def define(self, name, node):
+    def define(self, name, node, is_definitely_bound=True):
         declaration_node = self._variable_declaration_node(name)
-        self._definitions[name] = VariableDeclaration(declaration_node, is_definitely_bound=True)
+        self._definitions[name] = VariableDeclaration(declaration_node, is_definitely_bound=is_definitely_bound)
         return declaration_node
     
     def _variable_declaration_node(self, name):
@@ -211,7 +208,7 @@ class Context(object):
         )
         
         for name in new_names:
-            if not self.is_defined(name):
+            if not self.is_defined(name) or not self.is_definitely_bound(name):
                 declaration_node = self._variable_declaration_node(name)
                 definitions = [
                     definitions.get(name, VariableDeclaration.unbound(declaration_node))
