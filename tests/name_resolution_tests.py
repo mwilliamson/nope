@@ -1,4 +1,4 @@
-from nose.tools import istest, assert_is, assert_equal
+from nose.tools import istest, assert_is, assert_is_not, assert_equal
 
 from nope import nodes, errors
 from nope.name_resolution import resolve, Context
@@ -457,6 +457,71 @@ def assert_statement_has_child_names_resolved():
     _assert_children_resolved(
         lambda ref: nodes.assert_statement(nodes.boolean(False), ref),
     )
+
+
+@istest
+def function_definitions_adds_argument_names_to_body_context():
+    arg = nodes.argument("x")
+    args = nodes.arguments([arg])
+    ref = nodes.ref("x")
+    body = [nodes.ret(ref)]
+    node = nodes.func("f", None, args, body)
+    
+    context = _new_context()
+    resolve(node, context)
+    assert not context.is_defined("x")
+    assert_is(context.resolve(arg), context.resolve(ref))
+
+
+@istest
+def function_definitions_bodies_can_access_variables_from_outer_scope():
+    args = nodes.arguments([])
+    ref = nodes.ref("x")
+    body = [nodes.ret(ref)]
+    node = nodes.func("f", None, args, body)
+    
+    context = _new_context()
+    context.define("x", nodes.ref("x"))
+    
+    resolve(node, context)
+    assert_is(context.definition("x"), context.resolve(ref))
+
+
+@istest
+def function_definitions_arguments_shadow_variables_of_same_name_in_outer_scope():
+    arg = nodes.argument("x")
+    args = nodes.arguments([arg])
+    ref = nodes.ref("x")
+    body = [nodes.ret(ref)]
+    node = nodes.func("f", None, args, body)
+    
+    context = _new_context()
+    context.define("x", nodes.ref("x"))
+    
+    resolve(node, context)
+    assert_is(context.resolve(arg), context.resolve(ref))
+    assert_is_not(context.definition("x"), context.resolve(ref))
+
+# TODO:
+#~ @istest
+def function_definition_body_variable_is_unbound_even_if_outer_scope_has_bound_variable_of_same_name():
+    args = nodes.arguments([])
+    ref = nodes.ref("x")
+    body = [
+        nodes.expression_statement(ref),
+        nodes.assign(nodes.ref("x"), nodes.none()),
+    ]
+    node = nodes.func("f", None, args, body)
+    
+    context = _new_context()
+    context.define("x", nodes.ref("x"))
+    
+    try:
+        resolve(ref, context)
+        assert False, "Expected error"
+    except errors.UnboundLocalError as error:
+        assert_is(ref, error.node)
+        assert_is("x", error.name)
 
 
 @istest

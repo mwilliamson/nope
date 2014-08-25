@@ -144,6 +144,15 @@ def _resolve_assert(node, context):
         resolve(node.message, context)
 
 
+def _resolve_function_def(node, context):
+    body_context = context.enter_function()
+    for arg in node.args.args:
+        body_context.define(arg.name, arg)
+        body_context.add_reference(arg, arg.name)
+    
+    _resolve_statements(node.body, body_context)
+
+
 def _resolve_import(node, context):
     for alias in node.names:
         context.define(alias.value_name, alias, target_type=ImportDeclarationNode)
@@ -203,6 +212,7 @@ _resolvers = {
     nodes.TryStatement: _resolve_try,
     nodes.RaiseStatement: _resolve_raise,
     nodes.AssertStatement: _resolve_assert,
+    nodes.FunctionDef: _resolve_function_def,
     
     nodes.Import: _resolve_import,
     nodes.ImportFrom: _resolve_import,
@@ -263,6 +273,11 @@ class Context(object):
     
     def enter_branch(self):
         return Context(BlockVars(self._definitions), self._variable_declaration_nodes, self._references)
+    
+    def enter_function(self):
+        # TODO: test that shadowed variables are unbound even if outer scope
+        # has bound variable of the same name
+        return Context(self._definitions.copy(), {}, self._references)
     
     def unify(self, contexts, bind):
         new_definitions = [
