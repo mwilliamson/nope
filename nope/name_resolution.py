@@ -102,7 +102,9 @@ class Context(object):
         self._references = {}
     
     def define(self, name, node):
-        self._definitions[name] = node
+        declaration = VariableDeclarationNode(name)
+        self._definitions[name] = declaration
+        return declaration
     
     def definition(self, name):
         return self._definitions[name]
@@ -116,3 +118,10 @@ class Context(object):
     
     def resolve(self, node):
         return self._references[id(node)]
+
+
+class VariableDeclarationNode(object):
+    # For variables, we introduce a separate node for declarations since
+    # there are multiple candidate nodes to declare the node
+    def __init__(self, name):
+        self.name = name

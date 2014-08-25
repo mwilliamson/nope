@@ -1,4 +1,4 @@
-from nose.tools import istest, assert_is
+from nose.tools import istest, assert_is, assert_equal
 
 from nope import nodes, errors
 from nope.name_resolution import resolve, Context
@@ -29,10 +29,10 @@ def variable_reference_has_name_resolved():
     definition_node = nodes.ref("x")
     ref = nodes.ref("x")
     context = _new_context()
-    context.define("x", definition_node)
+    declaration = context.define("x", definition_node)
     resolve(ref, context)
     
-    assert_is(definition_node, context.resolve(ref))
+    assert_is(declaration, context.resolve(ref))
 
 
 @istest
@@ -122,7 +122,7 @@ def assignment_adds_definition_to_context():
     definition_node = nodes.ref("x")
     node = nodes.assign([definition_node], nodes.none())
     resolve(node, context)
-    assert_is(definition_node, context.definition("x"))
+    assert_equal("x", context.definition("x").name)
 
 
 @istest
@@ -145,7 +145,7 @@ def assignment_resolves_target_names_when_variable_is_not_yet_defined():
     definition_node = nodes.ref("x")
     node = nodes.assign([definition_node], nodes.none())
     resolve(node, context)
-    assert_is(definition_node, context.resolve(definition_node))
+    assert_is(context.definition("x"), context.resolve(definition_node))
 
 
 @istest
@@ -170,10 +170,9 @@ def _assert_no_references(node):
 
 
 def _assert_children_resolved(create_node):
-    definition_node = nodes.ref("x")
     ref = nodes.ref("x")
     context = _new_context()
-    context.define("x", definition_node)
+    declaration = context.define("x", nodes.ref("x"))
     resolve(create_node(ref), context)
     
-    assert_is(definition_node, context.resolve(ref))
+    assert_is(declaration, context.resolve(ref))
