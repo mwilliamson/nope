@@ -114,12 +114,18 @@ def _resolve_for_loop(node, context):
 def _resolve_try(node, context):
     branches = [_branch(node.body), _branch(node.finally_body)]
     
-    for handler in node.handlers:
+    def create_handler_branch(handler):
         if handler.type is not None:
             resolve(handler.type, context)
+            
+        def resolve_handler_target(branch_context):
+            if handler.target is not None:
+                _resolve_target(handler.target, branch_context)
         
-        # TODO: resolve target    
-        branches.append(_branch(handler.body))
+        return _branch(handler.body, before=resolve_handler_target)
+    
+    for handler in node.handlers:
+        branches.append(create_handler_branch(handler))
     
     _resolve_branches(
         branches,

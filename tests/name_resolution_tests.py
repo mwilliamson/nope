@@ -325,6 +325,20 @@ def declarations_in_body_and_handler_body_and_finally_body_of_try_statement_are_
         )
     )
 
+
+@istest
+def except_handler_target_is_defined_but_not_definitely_bound():
+    context = _new_context()
+    node = nodes.try_statement(
+        [],
+        handlers=[
+            nodes.except_handler(nodes.none(), nodes.ref("error"), [])
+        ],
+    )
+    resolve(node, context)
+    assert_equal("error", context.definition("error").name)
+    assert_equal(False, context.is_definitely_bound("error"))
+
 # TODO: add test: name should be unbound after being used as a target in a handler,
 # even if it was previously definitely bound. Perhaps just prohibit name reuse for handler targets?
 
