@@ -245,8 +245,8 @@ class StatementTypeChecker(object):
         ]
         
         def create_except_branch(handler, exception_type):
-            if handler.name:
-                before = lambda branch_context: branch_context.add(handler.name, exception_type)
+            if handler.target is not None:
+                before = lambda branch_context: branch_context.add(handler.target.name, exception_type)
             else:
                 before = None
             return _Branch(handler.body, before=before)

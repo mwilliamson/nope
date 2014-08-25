@@ -28,8 +28,8 @@ def declared_names(node):
         names = OrderedSet([])
         names |= declared_locals(node.body)
         for handler in node.handlers:
-            if handler.name is not None:
-                names.add(handler.name)
+            if handler.target is not None:
+                names |= _target_names([handler.target])
             names |= declared_locals(handler.body)
         names |= declared_locals(node.finally_body)
         return names

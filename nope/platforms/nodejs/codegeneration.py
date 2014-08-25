@@ -438,8 +438,8 @@ class Transformer(object):
                 nope_exception = self._get_nope_exception_from_error(js.ref(exception_name))
                     
                 handler_body = []
-                if handler.name is not None:
-                    handler_body.append(js.var(handler.name, nope_exception))
+                if handler.target is not None:
+                    handler_body.append(js.var(handler.target.name, nope_exception))
                 
                 handler_body += self._transform_all(handler.body)
                 

@@ -65,7 +65,7 @@ ForLoop = collections.namedtuple("ForLoop", ["target", "iterable", "body", "else
 BreakStatement = collections.namedtuple("BreakStatement", [])
 ContinueStatement = collections.namedtuple("ContinueStatement", [])
 TryStatement = collections.namedtuple("TryStatement", ["body", "handlers", "finally_body"])
-ExceptHandler = collections.namedtuple("ExceptHandler", ["type", "name", "body"])
+ExceptHandler = collections.namedtuple("ExceptHandler", ["type", "target", "body"])
 RaiseStatement = collections.namedtuple("RaiseStatement", ["value"])
 AssertStatement = collections.namedtuple("AssertStatement", ["condition", "message"])
 WithStatement = collections.namedtuple("WithStatement", ["value", "target", "body"])
@@ -152,7 +152,11 @@ def try_statement(body, *, handlers=None, finally_body=None):
     return TryStatement(body, handlers, finally_body)
 
 
-except_handler = ExceptHandler
+def except_handler(type, target, body):
+    if isinstance(target, str):
+        target = ref(target)
+    
+    return ExceptHandler(type, target, body)
 
 raise_statement = RaiseStatement
 
