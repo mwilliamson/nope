@@ -292,6 +292,44 @@ def continue_has_no_references():
 
 
 @istest
+def try_statement_has_child_names_resolved():
+    _assert_children_resolved(
+        lambda ref: nodes.try_statement([nodes.expression_statement(ref)]),
+    )
+    _assert_children_resolved(
+        lambda ref: nodes.try_statement([], handlers=[
+            nodes.except_handler(None, None, [nodes.expression_statement(ref)])
+        ]),
+    )
+    _assert_children_resolved(
+        lambda ref: nodes.try_statement([], handlers=[
+            nodes.except_handler(ref, None, [])
+        ]),
+    )
+    _assert_children_resolved(
+        lambda ref: nodes.try_statement([], finally_body=[
+            nodes.expression_statement(ref)
+        ]),
+    )
+
+
+@istest
+def declarations_in_body_and_handler_body_and_finally_body_of_try_statement_are_not_definitely_bound():
+    _assert_assignment_is_defined_but_unbound(lambda assignment:
+        nodes.try_statement(
+            [assignment],
+            handlers=[
+                nodes.except_handler(None, None, [assignment])
+            ],
+            finally_body=[assignment],
+        )
+    )
+
+# TODO: add test: name should be unbound after being used as a target in a handler,
+# even if it was previously definitely bound. Perhaps just prohibit name reuse for handler targets?
+
+
+@istest
 def raise_statement_has_child_names_resolved():
     _assert_children_resolved(
         lambda ref: nodes.raise_statement(ref),

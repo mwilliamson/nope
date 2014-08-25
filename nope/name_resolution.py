@@ -111,6 +111,23 @@ def _resolve_for_loop(node, context):
     )
 
 
+def _resolve_try(node, context):
+    branches = [_branch(node.body), _branch(node.finally_body)]
+    
+    for handler in node.handlers:
+        if handler.type is not None:
+            resolve(handler.type, context)
+        
+        # TODO: resolve target    
+        branches.append(_branch(handler.body))
+    
+    _resolve_branches(
+        branches,
+        context,
+        bind=False,
+    )
+
+
 def _resolve_raise(node, context):
     resolve(node.value, context)
 
@@ -170,6 +187,7 @@ _resolvers = {
     nodes.ForLoop: _resolve_for_loop,
     nodes.BreakStatement: _resolve_nothing,
     nodes.ContinueStatement: _resolve_nothing,
+    nodes.TryStatement: _resolve_try,
     nodes.RaiseStatement: _resolve_raise,
     nodes.AssertStatement: _resolve_assert,
 }
