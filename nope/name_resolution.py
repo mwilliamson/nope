@@ -125,22 +125,23 @@ _resolvers = {
 
 
 class Context(object):
-    def __init__(self, definitions=None, references=None):
-        if definitions is None:
-            definitions = {}
-        if references is None:
-            references = {}
-        
+    def __init__(self, definitions, variable_declaration_nodes, references):
         self._definitions = definitions
+        self._variable_declaration_nodes = variable_declaration_nodes
         self._references = references
     
     def define(self, name, node):
-        declaration = VariableDeclarationNode(name, is_definitely_bound=True)
-        self._definitions[name] = declaration
-        return declaration
+        declaration_node = self._variable_declaration_node(name)
+        self._definitions[name] = VariableDeclaration(declaration_node, is_definitely_bound=True)
+        return declaration_node
+    
+    def _variable_declaration_node(self, name):
+        if name not in self._variable_declaration_nodes:
+            self._variable_declaration_nodes[name] = VariableDeclarationNode(name)
+        return self._variable_declaration_nodes[name]
     
     def definition(self, name):
-        return self._definitions[name]
+        return self._definitions[name].node
     
     def is_defined(self, name):
         return name in self._definitions
@@ -156,7 +157,7 @@ class Context(object):
         return self._references[id(node)]
     
     def enter_branch(self):
-        return Context(BlockVars(self._definitions), self._references)
+        return Context(BlockVars(self._definitions), self._variable_declaration_nodes, self._references)
     
     def unify(self, contexts, bind):
         new_definitions = [
@@ -171,12 +172,13 @@ class Context(object):
         
         for name in new_names:
             if not self.is_defined(name):
+                declaration_node = self._variable_declaration_node(name)
                 definitions = [
-                    definitions.get(name, VariableDeclarationNode.unbound(name))
+                    definitions.get(name, VariableDeclaration.unbound(declaration_node))
                     for definitions in new_definitions
                 ]
                 is_definitely_bound = bind and all(definition.is_definitely_bound for definition in definitions)
-                self._definitions[name] = VariableDeclarationNode(name, is_definitely_bound)
+                self._definitions[name] = VariableDeclaration(declaration_node, is_definitely_bound)
 
 
 
@@ -184,13 +186,19 @@ class VariableDeclarationNode(object):
     # For variables, we introduce a separate node for declarations since
     # there are multiple candidate nodes to declare the node
     
-    @staticmethod
-    def unbound(name):
-        return VariableDeclarationNode(name, is_definitely_bound=False)
-    
-    def __init__(self, name, is_definitely_bound):
+    def __init__(self, name):
         self.name = name
+
+
+class VariableDeclaration(object):
+    @staticmethod
+    def unbound(node):
+        return VariableDeclaration(node, is_definitely_bound=False)
+    
+    def __init__(self, node, is_definitely_bound):
+        self.node = node
         self.is_definitely_bound = is_definitely_bound
+    
 
 
 class BlockVars(object):

@@ -179,8 +179,24 @@ def declarations_in_both_if_else_branches_are_defined_and_definitely_bound():
     )
 
 
+@istest
+def referred_declaration_in_branch_is_same_as_declaration_outside_of_branch():
+    context = _new_context()
+    ref_node = nodes.ref("x")
+    node = nodes.if_else(
+        nodes.boolean(True),
+        [
+            nodes.assign([nodes.ref("x")], nodes.none()),
+            ref_node,
+        ],
+        []
+    )
+    resolve(node, context)
+    assert_is(context.definition("x"), context.resolve(ref_node))
+
+
 def _new_context():
-    return Context()
+    return Context({}, {}, {})
 
 
 def _assert_no_references(node):
