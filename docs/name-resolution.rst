@@ -52,3 +52,16 @@ compiler:
             print(error)
     
     f()
+
+However, the following is valid:
+
+.. code-block:: python
+
+    try:
+        assert False
+    except Exception as error:
+        saved_error = error
+        def f():
+            print(saved_error)
+
+    f()
