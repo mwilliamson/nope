@@ -25,7 +25,7 @@ def _resolve_nothing(node, context):
 def _resolve_variable_reference(node, context):
     if not context.is_defined(node.name):
         raise errors.UndefinedNameError(node, node.name)
-    context.add_reference(node)
+    context.add_reference(node, node.name)
 
 
 def _resolve_list_expression(node, context):
@@ -144,6 +144,13 @@ def _resolve_assert(node, context):
         resolve(node.message, context)
 
 
+def _resolve_import(node, context):
+    for alias in node.names:
+        context.define(alias.value_name, alias, target_type=ImportDeclarationNode)
+        context.add_reference(alias, alias.value_name)
+    
+
+
 def _resolve_branches(branches, context, bind=False):
     branch_contexts = [
         _resolve_branch(branch, context)
@@ -196,6 +203,8 @@ _resolvers = {
     nodes.TryStatement: _resolve_try,
     nodes.RaiseStatement: _resolve_raise,
     nodes.AssertStatement: _resolve_assert,
+    
+    nodes.Import: _resolve_import,
 }
 
 
@@ -244,8 +253,8 @@ class Context(object):
     def is_definitely_bound(self, name):
         return self._definitions[name].is_definitely_bound
     
-    def add_reference(self, reference):
-        definition = self.definition(reference.name)
+    def add_reference(self, reference, name):
+        definition = self.definition(name)
         self._references[id(reference)] = definition
     
     def resolve(self, node):
@@ -296,6 +305,13 @@ class VariableDeclarationNode(object):
 
 class ExceptionHandlerTargetNode(object):
     description = "exception handler target"
+    
+    def __init__(self, name):
+        self.name = name
+
+
+class ImportDeclarationNode(object):
+    description = "import statement"
     
     def __init__(self, name):
         self.name = name

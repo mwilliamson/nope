@@ -459,6 +459,41 @@ def assert_statement_has_child_names_resolved():
     )
 
 
+@istest
+def import_adds_definition_to_context():
+    context = _new_context()
+    alias_node = nodes.import_alias("x.y", None)
+    node = nodes.Import([alias_node])
+    resolve(node, context)
+    assert_equal("x", context.definition("x").name)
+    assert_equal(True, context.is_definitely_bound("x"))
+
+
+@istest
+def multiple_aliases_using_same_name_resolve_to_same_node():
+    context = _new_context()
+    first_alias_node = nodes.import_alias("x.y", None)
+    second_alias_node = nodes.import_alias("x", None)
+    node = nodes.Import([first_alias_node, second_alias_node])
+    resolve(node, context)
+    assert_is(context.resolve(first_alias_node), context.resolve(second_alias_node))
+
+
+@istest
+def cannot_assign_to_imported_name():
+    context = _new_context()
+    import_node = nodes.Import([nodes.import_alias("x.y", None)])
+    resolve(import_node, context)
+    
+    ref_node = nodes.ref("x")
+    try:
+        resolve(nodes.assign([ref_node], nodes.none()), context)
+        assert False, "Expected error"
+    except errors.InvalidReassignmentError as error:
+        assert_equal(ref_node, error.node)
+        assert_equal("variable assignment and import statement cannot share the same name", str(error))
+
+
 def _new_context():
     return Context({}, {}, {})
 
