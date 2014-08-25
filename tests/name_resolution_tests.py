@@ -48,6 +48,19 @@ def error_if_name_is_undefined():
 
 
 @istest
+def error_if_name_is_unbound():
+    ref = nodes.ref("x")
+    context = _new_context()
+    context.define("x", ref, is_definitely_bound=False)
+    try:
+        resolve(ref, context)
+        assert False, "Expected error"
+    except errors.UnboundLocalError as error:
+        assert_is(ref, error.node)
+        assert_is("x", error.name)
+
+
+@istest
 def list_expression_has_names_in_elements_resolved():
     _assert_children_resolved(
         lambda ref: nodes.list([ref]),
@@ -502,8 +515,8 @@ def function_definitions_arguments_shadow_variables_of_same_name_in_outer_scope(
     assert_is(context.resolve(arg), context.resolve(ref))
     assert_is_not(context.definition("x"), context.resolve(ref))
 
-# TODO:
-#~ @istest
+
+@istest
 def function_definition_body_variable_is_unbound_even_if_outer_scope_has_bound_variable_of_same_name():
     args = nodes.arguments([])
     ref = nodes.ref("x")
@@ -517,7 +530,7 @@ def function_definition_body_variable_is_unbound_even_if_outer_scope_has_bound_v
     context.define("x", nodes.ref("x"))
     
     try:
-        resolve(ref, context)
+        resolve(node, context)
         assert False, "Expected error"
     except errors.UnboundLocalError as error:
         assert_is(ref, error.node)

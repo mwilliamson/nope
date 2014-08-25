@@ -1,4 +1,4 @@
-from nope import nodes, errors
+from nope import nodes, errors, util
 
 
 def resolve(node, context):
@@ -25,6 +25,10 @@ def _resolve_nothing(node, context):
 def _resolve_variable_reference(node, context):
     if not context.is_defined(node.name):
         raise errors.UndefinedNameError(node, node.name)
+    
+    if not context.is_definitely_bound(node.name):
+        raise errors.UnboundLocalError(node, node.name)
+    
     context.add_reference(node, node.name)
 
 
@@ -145,7 +149,7 @@ def _resolve_assert(node, context):
 
 
 def _resolve_function_def(node, context):
-    body_context = context.enter_function()
+    body_context = context.enter_function(util.declared_locals(node.body))
     for arg in node.args.args:
         body_context.define(arg.name, arg)
         body_context.add_reference(arg, arg.name)
@@ -274,10 +278,11 @@ class Context(object):
     def enter_branch(self):
         return Context(BlockVars(self._definitions), self._variable_declaration_nodes, self._references)
     
-    def enter_function(self):
-        # TODO: test that shadowed variables are unbound even if outer scope
-        # has bound variable of the same name
-        return Context(self._definitions.copy(), {}, self._references)
+    def enter_function(self, declared_locals):
+        definitions = self._definitions.copy()
+        for name in declared_locals:
+            definitions[name] = UnboundName()
+        return Context(definitions, {}, self._references)
     
     def unify(self, contexts, bind):
         new_definitions = [
