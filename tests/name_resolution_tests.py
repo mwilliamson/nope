@@ -341,6 +341,20 @@ def except_handler_target_is_defined_but_not_definitely_bound():
 
 
 @istest
+def except_handler_targets_can_share_their_name():
+    context = _new_context()
+    node = nodes.try_statement(
+        [],
+        handlers=[
+            nodes.except_handler(nodes.none(), nodes.ref("error"), [])
+        ],
+    )
+    resolve(node, context)
+    assert_equal("error", context.definition("error").name)
+    assert_equal(False, context.is_definitely_bound("error"))
+
+
+@istest
 def except_handler_target_cannot_use_name_that_is_already_defined():
     context = _new_context()
     context.define("error", nodes.ref("error"))
