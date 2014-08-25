@@ -15,6 +15,20 @@ The static types are expressed using comments. This means that the static typing
 has no effect at runtime, allowing Nope programs to be run directly as Python 3
 programs with any extra dependencies or performance penalty.
 
+Here's an example of calculating Fibonacci numbers using Nope:
+
+.. code-block:: python
+
+    #:: int -> int
+    def fib(n):
+        seq = [0, 1]
+        for i in range(2, n + 1):
+            seq.append(seq[i - 1] + seq[i - 2])
+        
+        return seq[n]
+
+    print(fib(10))
+
 TODO
 ----
 
