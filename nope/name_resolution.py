@@ -158,6 +158,8 @@ _resolvers = {
     nodes.IfElse: _resolve_if_else,
     nodes.WhileLoop: _resolve_while_loop,
     nodes.ForLoop: _resolve_for_loop,
+    nodes.BreakStatement: _resolve_nothing,
+    nodes.ContinueStatement: _resolve_nothing,
 }
 
 

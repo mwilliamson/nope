@@ -281,6 +281,16 @@ def declarations_in_both_body_and_else_body_of_for_loop_are_not_definitely_bound
     )
 
 
+@istest
+def break_has_no_references():
+    _assert_no_references(nodes.break_statement())
+
+
+@istest
+def continue_has_no_references():
+    _assert_no_references(nodes.continue_statement())
+
+
 def _new_context():
     return Context({}, {}, {})
 
