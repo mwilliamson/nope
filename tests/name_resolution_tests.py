@@ -470,6 +470,16 @@ def assert_statement_has_child_names_resolved():
     _assert_children_resolved(
         lambda ref: nodes.assert_statement(nodes.boolean(False), ref),
     )
+    
+
+@istest
+def function_definitions_adds_function_name_to_context():
+    node = nodes.func("f", None, nodes.arguments([]), [])
+    
+    context = _new_context()
+    resolve(node, context)
+    assert context.is_defined("f")
+    assert_is(context.definition("f"), context.resolve(node))
 
 
 @istest

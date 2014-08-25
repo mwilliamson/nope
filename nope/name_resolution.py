@@ -149,6 +149,9 @@ def _resolve_assert(node, context):
 
 
 def _resolve_function_def(node, context):
+    context.define(node.name, node)
+    context.add_reference(node, node.name)
+    
     body_context = context.enter_function(util.declared_locals(node.body))
     for arg in node.args.args:
         body_context.define(arg.name, arg)
