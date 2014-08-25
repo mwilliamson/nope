@@ -72,8 +72,36 @@ def _resolve_assignment(node, context):
 
 def _resolve_if_else(node, context):
     resolve(node.condition, context)
-    _resolve_statements(node.true_body, context)
-    _resolve_statements(node.false_body, context)
+    
+    _resolve_branches(
+        [_branch(node.true_body), _branch(node.false_body)],
+        context,
+        bind=True,
+    )
+
+
+def _resolve_branches(branches, context, bind=False):
+    branch_contexts = [
+        _resolve_branch(branch, context)
+        for branch in branches
+    ]
+    return context.unify(branch_contexts, bind=bind)
+
+
+def _resolve_branch(branch, context):
+    branch_context = branch.enter_context(context)
+    _resolve_statements(branch.statements, branch_context)
+    return branch_context
+
+
+class _Branch(object):
+    def __init__(self, statements):
+        self.statements = statements
+    
+    def enter_context(self, context):
+        return context.enter_branch()
+
+_branch = _Branch
 
 
 _resolvers = {
@@ -97,12 +125,17 @@ _resolvers = {
 
 
 class Context(object):
-    def __init__(self):
-        self._definitions = {}
-        self._references = {}
+    def __init__(self, definitions=None, references=None):
+        if definitions is None:
+            definitions = {}
+        if references is None:
+            references = {}
+        
+        self._definitions = definitions
+        self._references = references
     
     def define(self, name, node):
-        declaration = VariableDeclarationNode(name)
+        declaration = VariableDeclarationNode(name, is_definitely_bound=True)
         self._definitions[name] = declaration
         return declaration
     
@@ -112,16 +145,67 @@ class Context(object):
     def is_defined(self, name):
         return name in self._definitions
     
+    def is_definitely_bound(self, name):
+        return self._definitions[name].is_definitely_bound
+    
     def add_reference(self, reference):
         definition = self.definition(reference.name)
         self._references[id(reference)] = definition
     
     def resolve(self, node):
         return self._references[id(node)]
+    
+    def enter_branch(self):
+        return Context(BlockVars(self._definitions), self._references)
+    
+    def unify(self, contexts, bind):
+        new_definitions = [
+            context._definitions._new_definitions
+            for context in contexts
+        ]
+        new_names = set(
+            name
+            for definitions in new_definitions
+            for name in definitions
+        )
+        
+        for name in new_names:
+            if not self.is_defined(name):
+                definitions = [
+                    definitions.get(name, VariableDeclarationNode.unbound(name))
+                    for definitions in new_definitions
+                ]
+                is_definitely_bound = bind and all(definition.is_definitely_bound for definition in definitions)
+                self._definitions[name] = VariableDeclarationNode(name, is_definitely_bound)
+
 
 
 class VariableDeclarationNode(object):
     # For variables, we introduce a separate node for declarations since
     # there are multiple candidate nodes to declare the node
-    def __init__(self, name):
+    
+    @staticmethod
+    def unbound(name):
+        return VariableDeclarationNode(name, is_definitely_bound=False)
+    
+    def __init__(self, name, is_definitely_bound):
         self.name = name
+        self.is_definitely_bound = is_definitely_bound
+
+
+class BlockVars(object):
+    def __init__(self, definitions):
+        self._original_definitions = definitions
+        self._new_definitions = {}
+    
+    def __getitem__(self, key):
+        if key in self._new_definitions:
+            return self._new_definitions[key]
+        else:
+            return self._original_definitions[key]
+    
+    def __setitem__(self, key, value):
+        self._new_definitions[key] = value
+    
+    def __contains__(self, key):
+        return key in self._new_definitions or key in self._original_definitions

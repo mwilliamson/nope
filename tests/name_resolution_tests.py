@@ -123,6 +123,7 @@ def assignment_adds_definition_to_context():
     node = nodes.assign([definition_node], nodes.none())
     resolve(node, context)
     assert_equal("x", context.definition("x").name)
+    assert_equal(True, context.is_definitely_bound("x"))
 
 
 @istest
@@ -161,6 +162,23 @@ def if_else_has_child_names_resolved():
     )
 
 
+@istest
+def declarations_in_exactly_one_if_else_branch_are_defined_but_not_definitely_bound():
+    _assert_assignment_is_defined_but_unbound(lambda assignment:
+        nodes.if_else(nodes.boolean(True), [assignment], [])
+    )
+    _assert_assignment_is_defined_but_unbound(lambda assignment:
+        nodes.if_else(nodes.boolean(True), [], [assignment])
+    )
+
+
+@istest
+def declarations_in_both_if_else_branches_are_defined_and_definitely_bound():
+    _assert_assignment_is_defined_and_definitely_bound(lambda create_assignment:
+        nodes.if_else(nodes.boolean(True), [create_assignment()], [create_assignment()])
+    )
+
+
 def _new_context():
     return Context()
 
@@ -176,3 +194,22 @@ def _assert_children_resolved(create_node):
     resolve(create_node(ref), context)
     
     assert_is(declaration, context.resolve(ref))
+
+
+def _assert_assignment_is_defined_but_unbound(create_node):
+    context = _new_context()
+    node = create_node(nodes.assign([nodes.ref("x")], nodes.none()))
+    resolve(node, context)
+    assert_equal("x", context.definition("x").name)
+    assert_equal(False, context.is_definitely_bound("x"))
+    
+
+def _assert_assignment_is_defined_and_definitely_bound(create_node):
+    def create_assignment():
+        return nodes.assign([nodes.ref("x")], nodes.none())
+    
+    context = _new_context()
+    node = create_node(create_assignment)
+    resolve(node, context)
+    assert_equal("x", context.definition("x").name)
+    assert_equal(True, context.is_definitely_bound("x"))
