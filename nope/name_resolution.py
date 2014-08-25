@@ -5,6 +5,14 @@ def resolve(node, context):
     return _resolvers[type(node)](node, context)
 
 
+def _resolve_target(target, context):
+    if isinstance(target, nodes.VariableReference) and not context.is_defined(target.name):
+        context.define(target.name, target)
+    
+    resolve(target, context)
+
+
+
 def _resolve_statements(statements, context):
     for statement in statements:
         resolve(statement, context)
@@ -90,6 +98,22 @@ def _resolve_while_loop(node, context):
     )
 
 
+def _resolve_for_loop(node, context):
+    resolve(node.iterable, context)
+    
+    def resolve_for_loop_target(branch_context):
+        _resolve_target(node.target, branch_context)
+    
+    _resolve_branches(
+        [
+            _branch(node.body, before=resolve_for_loop_target),
+            _branch(node.else_body)
+        ],
+        context,
+        bind=False,
+    )
+
+
 def _resolve_branches(branches, context, bind=False):
     branch_contexts = [
         _resolve_branch(branch, context)
@@ -105,11 +129,15 @@ def _resolve_branch(branch, context):
 
 
 class _Branch(object):
-    def __init__(self, statements):
+    def __init__(self, statements, before=None):
         self.statements = statements
+        self._before = before
     
     def enter_context(self, context):
-        return context.enter_branch()
+        branch_context = context.enter_branch()
+        if self._before is not None:
+            self._before(branch_context)
+        return branch_context
 
 _branch = _Branch
 
@@ -132,6 +160,7 @@ _resolvers = {
     nodes.Assignment: _resolve_assignment,
     nodes.IfElse: _resolve_if_else,
     nodes.WhileLoop: _resolve_while_loop,
+    nodes.ForLoop: _resolve_for_loop,
 }
 
 

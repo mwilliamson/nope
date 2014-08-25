@@ -196,7 +196,7 @@ def referred_declaration_in_branch_is_same_as_declaration_outside_of_branch():
 
 
 @istest
-def while_has_child_names_resolved():
+def while_loop_has_child_names_resolved():
     _assert_children_resolved(
         lambda ref: nodes.while_loop(ref, [], []),
     )
@@ -212,6 +212,38 @@ def while_has_child_names_resolved():
 def declarations_in_both_body_and_else_body_of_while_loop_are_not_definitely_bound():
     _assert_assignment_is_defined_but_unbound(lambda assignment:
         nodes.while_loop(nodes.boolean(True), [assignment], [assignment])
+    )
+
+
+@istest
+def for_loop_target_is_defined_but_not_definitely_bound():
+    context = _new_context()
+    node = nodes.for_loop(nodes.ref("target"), nodes.list([]), [], [])
+    resolve(node, context)
+    assert_equal("target", context.definition("target").name)
+    assert_equal(False, context.is_definitely_bound("target"))
+
+
+@istest
+def for_loop_has_child_names_resolved():
+    _assert_children_resolved(
+        lambda ref: nodes.for_loop(ref, nodes.list([]), [], []),
+    )
+    _assert_children_resolved(
+        lambda ref: nodes.for_loop(nodes.ref("target"), ref, [], []),
+    )
+    _assert_children_resolved(
+        lambda ref: nodes.for_loop(nodes.ref("target"), nodes.list([]), [nodes.expression_statement(ref)], []),
+    )
+    _assert_children_resolved(
+        lambda ref: nodes.for_loop(nodes.ref("target"), nodes.list([]), [], [nodes.expression_statement(ref)]),
+    )
+
+
+@istest
+def declarations_in_both_body_and_else_body_of_for_loop_are_not_definitely_bound():
+    _assert_assignment_is_defined_but_unbound(lambda assignment:
+        nodes.for_loop(nodes.ref("target"), nodes.list([]), [assignment], [assignment])
     )
 
 
