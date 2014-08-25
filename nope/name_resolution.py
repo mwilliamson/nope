@@ -205,6 +205,7 @@ _resolvers = {
     nodes.AssertStatement: _resolve_assert,
     
     nodes.Import: _resolve_import,
+    nodes.ImportFrom: _resolve_import,
 }
 
 

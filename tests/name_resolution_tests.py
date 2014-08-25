@@ -494,6 +494,16 @@ def cannot_assign_to_imported_name():
         assert_equal("variable assignment and import statement cannot share the same name", str(error))
 
 
+@istest
+def import_from_adds_definition_to_context():
+    context = _new_context()
+    alias_node = nodes.import_alias("x", None)
+    node = nodes.import_from(["."], [alias_node])
+    resolve(node, context)
+    assert_equal("x", context.definition("x").name)
+    assert_equal(True, context.is_definitely_bound("x"))
+
+
 def _new_context():
     return Context({}, {}, {})
 
