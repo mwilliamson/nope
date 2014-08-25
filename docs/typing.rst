@@ -28,5 +28,11 @@ An empty list literal has the type ``list[bottom]``.
 A non-empty list literal has the type ``list[T]``, where ``T`` is the
 unification of the types of the elements of the list.
 
+Attribute references
+~~~~~~~~~~~~~~~~~~~~
+
+The attribute reference ``a.b`` has the type ``T`` if the type of ``a`` has an
+attribute ``b`` of type ``T``.
+
 Statements
 ----------
