@@ -1,4 +1,4 @@
-from nope import nodes, errors, util, visit
+from nope import nodes, errors, util, visit, name_declaration
 
 
 def update_bindings(node, context):
@@ -105,12 +105,12 @@ def _update_try(visitor, node, context):
 
 def _update_function_definition(visitor, node, context):
     context.bind(node)
-    #~ body_context = context.enter_function(util.declared_locals(node.body))
+    body_context = context.enter_function()
     for arg in node.args.args:
-        visitor.visit(arg, context)
+        visitor.visit(arg, body_context)
     
     for statement in node.body:
-        visitor.visit(statement, context)
+        visitor.visit(statement, body_context)
 
 
 def _update_argument(visitor, node, context):
@@ -190,19 +190,12 @@ class Context(object):
     def enter_branch(self):
         return Context(self._declarations, DiffingDict(self._is_definitely_bound), self._exception_handler_target_names)
     
-    def enter_function(self, declared_locals):
-        definitions = _copy_definitions(self._definitions)
-        for name in declared_locals:
-            definitions[name] = UnboundName()
-        
-        names_to_delete = [
-            name for name, definition in definitions.items()
-            if isinstance(definition.node, ExceptionHandlerTargetNode)
-        ]
-        for name in names_to_delete:
-            del definitions[name]
-            
-        return Context(definitions, {}, self._references)
+    def enter_function(self):
+        is_definitely_bound = _copy_dict(self._is_definitely_bound)
+        for declaration in is_definitely_bound:
+            if isinstance(declaration, name_declaration.ExceptionHandlerTargetNode):
+                is_definitely_bound[declaration] = False
+        return Context(self._declarations, is_definitely_bound, set())
     
     def unify(self, contexts):
         is_definitely_bound_mappings = [
@@ -250,8 +243,8 @@ class DiffingDict(object):
         return key in self._new or key in self._original
 
 
-def _copy_definitions(definitions):
-    if isinstance(definitions, dict):
-        return definitions.copy()
+def _copy_dict(values):
+    if isinstance(values, dict):
+        return values.copy()
     else:
-        return definitions.flattened_copy()
+        return values.flattened_copy()

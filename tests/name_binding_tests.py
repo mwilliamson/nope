@@ -277,7 +277,7 @@ def except_handler_targets_cannot_share_their_name_when_nested():
     first_target_node = nodes.ref("error")
     second_target_node = nodes.ref("error")
     
-    declaration = name_declaration.VariableDeclarationNode("error")
+    declaration = name_declaration.ExceptionHandlerTargetNode("error")
     declarations = {
         id(first_target_node): declaration,
         id(second_target_node): declaration,
@@ -331,6 +331,21 @@ def body_of_function_is_checked():
 
 
 @istest
+def variables_from_outer_scope_remain_bound():
+    ref = nodes.ref("x")
+    func_node = nodes.func("f", None, nodes.arguments([]), [nodes.expression_statement(ref)])
+    declaration = name_declaration.VariableDeclarationNode("x")
+    
+    context = _new_context({
+        id(func_node): name_declaration.VariableDeclarationNode("f"),
+        id(ref): declaration,
+    })
+    context.bind(ref)
+    
+    update_bindings(func_node, context)
+
+
+@istest
 def arguments_of_function_are_definitely_bound():
     arg = nodes.arg("x")
     arg_ref = nodes.ref("x")
@@ -346,25 +361,32 @@ def arguments_of_function_are_definitely_bound():
     update_bindings(func_node, context)
 
 
-# TODO
-#~ @istest
+@istest
 def exception_handler_targets_cannot_be_accessed_from_nested_function():
-    ref = nodes.ref("error")
-    body = [nodes.ret(ref)]
+    target_node = nodes.ref("error")
+    ref_node = nodes.ref("error")
+    body = [nodes.ret(ref_node)]
     func_node = nodes.func("f", None, nodes.arguments([]), body)
-    
     try_node = nodes.try_statement(
         [],
         handlers=[
-            nodes.except_handler(nodes.none(), nodes.ref("error"), [func_node])
+            nodes.except_handler(nodes.none(), target_node, [func_node])
         ],
     )
     
+    declaration = name_declaration.ExceptionHandlerTargetNode("error")
+    declarations = {
+        id(target_node): declaration,
+        id(ref_node): declaration,
+        id(func_node): name_declaration.VariableDeclarationNode("f"),
+    }
+    
+    context = _new_context(declarations)
     try:
-        resolve(try_node, _new_context())
+        update_bindings(try_node, context)
         assert False, "Expected error"
-    except errors.UndefinedNameError as error:
-        assert_is(ref, error.node)
+    except errors.UnboundLocalError as error:
+        assert_equal(ref_node, error.node)
         assert_is("error", error.name)
 
 
