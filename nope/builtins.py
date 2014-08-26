@@ -1,4 +1,5 @@
 from . import types, name_declaration, name_resolution, name_binding, context
+from .identity_dict import IdentityDict
 
 
 _builtin_types = {
@@ -33,7 +34,7 @@ _setup()
 def references():
     return name_resolution.Context(
         declarations=_builtin_declarations,
-        references={},
+        references=IdentityDict(),
     )
 
 def module_context(references):

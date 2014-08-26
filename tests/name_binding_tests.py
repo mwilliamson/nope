@@ -2,14 +2,15 @@ from nose.tools import istest, assert_equal, assert_is
 
 from nope import nodes, errors, name_declaration
 from nope.name_binding import update_bindings, Context
+from nope.identity_dict import IdentityDict
 
 
 @istest
 def variable_is_definitely_bound_after_assignment():
     target_node = nodes.ref("x")
-    context = _new_context({
-        id(target_node): name_declaration.VariableDeclarationNode("x"),
-    })
+    context = _new_context(IdentityDict([
+        (target_node, name_declaration.VariableDeclarationNode("x")),
+    ]))
     
     node = nodes.assign([target_node], nodes.none())
     update_bindings(node, context)
@@ -21,10 +22,10 @@ def value_is_evaluated_before_target_is_bound():
     target_node = nodes.ref("x")
     ref_node = nodes.ref("x")
     declaration = name_declaration.VariableDeclarationNode("x")
-    context = _new_context({
-        id(target_node): declaration,
-        id(ref_node): declaration,
-    })
+    context = _new_context(IdentityDict([
+        (target_node, declaration),
+        (ref_node, declaration),
+    ]))
     
     node = nodes.assign([target_node], ref_node)
     try:
@@ -39,10 +40,10 @@ def targets_are_evaluated_left_to_right():
     target_node = nodes.ref("x")
     ref_node = nodes.ref("x")
     declaration = name_declaration.VariableDeclarationNode("x")
-    context = _new_context({
-        id(target_node): declaration,
-        id(ref_node): declaration,
-    })
+    context = _new_context(IdentityDict([
+        (target_node, declaration),
+        (ref_node, declaration),
+    ]))
     
     node = nodes.assign([nodes.attr(ref_node, "blah"), target_node], nodes.none())
     try:
@@ -55,9 +56,9 @@ def targets_are_evaluated_left_to_right():
 @istest
 def error_if_name_is_unbound():
     ref = nodes.ref("x")
-    context = _new_context({
-        id(ref): name_declaration.VariableDeclarationNode("x"),
-    })
+    context = _new_context(IdentityDict([
+        (ref, name_declaration.VariableDeclarationNode("x")),
+    ]))
     
     try:
         update_bindings(ref, context)
@@ -73,10 +74,10 @@ def no_error_if_name_is_definitely_bound():
     target = nodes.ref("x")
     declaration = name_declaration.VariableDeclarationNode("x")
     
-    context = _new_context({
-        id(ref): declaration,
-        id(target): declaration,
-    })
+    context = _new_context(IdentityDict([
+        (ref, declaration),
+        (target, declaration),
+    ]))
     context.bind(target)
     update_bindings(ref, context)
 
@@ -95,9 +96,9 @@ def declarations_in_exactly_one_if_else_branch_are_not_definitely_bound():
 def variable_remains_definitely_bound_after_being_reassigned_in_one_branch_of_if_else():
     declaration = name_declaration.VariableDeclarationNode("x")
     target_node = nodes.ref("x")
-    context = _new_context({
-        id(target_node): declaration
-    })
+    context = _new_context(IdentityDict([
+        (target_node, declaration)
+    ]))
     context.bind(target_node)
     node = nodes.if_else(
         nodes.boolean(True),
@@ -119,9 +120,9 @@ def declarations_in_both_if_else_branches_are_definitely_bound():
 def potentially_bound_variable_becomes_definitely_bound_after_being_assigned_in_both_branches_of_if_else():
     declaration = name_declaration.VariableDeclarationNode("x")
     target_node = nodes.ref("x")
-    context = _new_context({
-        id(target_node): declaration
-    })
+    context = _new_context(IdentityDict([
+        (target_node, declaration)
+    ]))
     node = nodes.if_else(
         nodes.boolean(True),
         [nodes.assign([target_node], nodes.none())],
@@ -278,10 +279,10 @@ def except_handler_targets_cannot_share_their_name_when_nested():
     second_target_node = nodes.ref("error")
     
     declaration = name_declaration.ExceptionHandlerTargetNode("error")
-    declarations = {
-        id(first_target_node): declaration,
-        id(second_target_node): declaration,
-    }
+    declarations = IdentityDict([
+        (first_target_node, declaration),
+        (second_target_node, declaration),
+    ])
     
     context = _new_context(declarations)
     node = nodes.try_statement(
@@ -310,7 +311,7 @@ def function_name_is_definitely_bound_after_function_definition():
     node = nodes.func("f", None, nodes.arguments([]), [])
     declaration = name_declaration.VariableDeclarationNode("f")
     
-    context = _new_context({id(node): declaration})
+    context = _new_context(IdentityDict([(node, declaration)]))
     
     update_bindings(node, context)
     assert_equal(True, context.is_definitely_bound(node))
@@ -336,10 +337,10 @@ def variables_from_outer_scope_remain_bound():
     func_node = nodes.func("f", None, nodes.arguments([]), [nodes.expression_statement(ref)])
     declaration = name_declaration.VariableDeclarationNode("x")
     
-    context = _new_context({
-        id(func_node): name_declaration.VariableDeclarationNode("f"),
-        id(ref): declaration,
-    })
+    context = _new_context(IdentityDict([
+        (func_node, name_declaration.VariableDeclarationNode("f")),
+        (ref, declaration),
+    ]))
     context.bind(ref)
     
     update_bindings(func_node, context)
@@ -352,11 +353,11 @@ def arguments_of_function_are_definitely_bound():
     func_node = nodes.func("f", None, nodes.arguments([arg]), [nodes.expression_statement(arg_ref)])
     arg_declaration = name_declaration.VariableDeclarationNode("x")
     
-    context = _new_context({
-        id(func_node): name_declaration.VariableDeclarationNode("f"),
-        id(arg): arg_declaration,
-        id(arg_ref): arg_declaration,
-    })
+    context = _new_context(IdentityDict([
+        (func_node, name_declaration.VariableDeclarationNode("f")),
+        (arg, arg_declaration),
+        (arg_ref, arg_declaration),
+    ]))
     
     update_bindings(func_node, context)
 
@@ -375,11 +376,11 @@ def exception_handler_targets_cannot_be_accessed_from_nested_function():
     )
     
     declaration = name_declaration.ExceptionHandlerTargetNode("error")
-    declarations = {
-        id(target_node): declaration,
-        id(ref_node): declaration,
-        id(func_node): name_declaration.VariableDeclarationNode("f"),
-    }
+    declarations = IdentityDict([
+        (target_node, declaration),
+        (ref_node, declaration),
+        (func_node, name_declaration.VariableDeclarationNode("f")),
+    ])
     
     context = _new_context(declarations)
     try:
@@ -396,7 +397,7 @@ def import_name_is_definitely_bound_after_import_statement():
     node = nodes.Import([alias_node])
     declaration = name_declaration.VariableDeclarationNode("x")
     
-    context = _new_context({id(alias_node): declaration})
+    context = _new_context(IdentityDict([(alias_node, declaration)]))
     
     update_bindings(node, context)
     assert_equal(True, context.is_definitely_bound(alias_node))
@@ -408,7 +409,7 @@ def import_name_is_definitely_bound_after_import_from_statement():
     node = nodes.import_from(["."], [alias_node])
     declaration = name_declaration.VariableDeclarationNode("x")
     
-    context = _new_context({id(alias_node): declaration})
+    context = _new_context(IdentityDict([(alias_node, declaration)]))
     
     update_bindings(node, context)
     assert_equal(True, context.is_definitely_bound(alias_node))
@@ -424,12 +425,12 @@ def _assert_name_is_not_definitely_bound(create_node, other_refs=None):
     
     declaration = name_declaration.VariableDeclarationNode("x")
     target_node = nodes.ref("x")
-    declarations = {
-        id(target_node): declaration
-    }
+    declarations = IdentityDict([
+        (target_node, declaration)
+    ])
     
     for other_ref in other_refs:
-        declarations[id(other_ref)] = name_declaration.VariableDeclarationNode(other_ref.name)
+        declarations[other_ref] = name_declaration.VariableDeclarationNode(other_ref.name)
         
     context = _new_context(declarations)
     
@@ -441,11 +442,11 @@ def _assert_name_is_not_definitely_bound(create_node, other_refs=None):
 def _assert_name_is_definitely_bound(create_node):
     declaration = name_declaration.VariableDeclarationNode("x")
     ref_node = nodes.ref("x")
-    declarations = {id(ref_node): declaration}
+    declarations = IdentityDict([(ref_node, declaration)])
     
     def create_assignment():
         target_node = nodes.ref("x")
-        declarations[id(target_node)] = declaration
+        declarations[target_node] = declaration
         return nodes.assign([target_node], nodes.none())
     
     node = create_node(create_assignment)
@@ -467,11 +468,11 @@ def _assert_child_expression_is_checked(create_node, other_refs=None):
         other_refs = []
     
     ref = nodes.ref("x")
-    declarations = {
-        id(ref): name_declaration.VariableDeclarationNode("x"),
-    }
+    declarations = IdentityDict([
+        (ref, name_declaration.VariableDeclarationNode("x")),
+    ])
     for other_ref in other_refs:
-        declarations[id(other_ref)] = name_declaration.VariableDeclarationNode(other_ref.name)
+        declarations[other_ref] = name_declaration.VariableDeclarationNode(other_ref.name)
     context = _new_context(declarations)
     
     try:
@@ -485,11 +486,13 @@ def _assert_child_expression_is_checked(create_node, other_refs=None):
 def _assert_target_is_not_definitely_bound(create_node):
     declaration = name_declaration.VariableDeclarationNode("x")
     target_node = nodes.ref("x")
-    declarations = {id(target_node): declaration}
+    declarations = IdentityDict([
+        (target_node, declaration)
+    ])
     
     def create_target():
         target_node = nodes.ref("x")
-        declarations[id(target_node)] = declaration
+        declarations[target_node] = declaration
         return target_node
         
     node = create_node(create_target)

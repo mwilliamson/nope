@@ -1,4 +1,5 @@
 from nope import nodes, errors, name_declaration, visit
+from nope.identity_dict import IdentityDict
 
 
 def resolve(node, context):
@@ -49,6 +50,8 @@ def _resolve_module(visitor, node, context):
 
 class Context(object):
     def __init__(self, declarations, references):
+        assert isinstance(references, IdentityDict)
+        
         self._declarations = declarations
         self._references = references
     
@@ -61,11 +64,11 @@ class Context(object):
     
     def add_reference(self, reference, name):
         definition = self.definition(name)
-        self._references[id(reference)] = definition
+        self._references[reference] = definition
     
     def resolve(self, node):
-        if id(node) in self._references:
-            return self._references[id(node)]
+        if node in self._references:
+            return self._references[node]
         else:
             raise KeyError("Could not resolve {}".format(node))
     

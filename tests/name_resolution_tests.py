@@ -3,6 +3,7 @@ from nose.tools import istest, assert_is, assert_is_not, assert_equal
 from nope import nodes, errors
 from nope.name_declaration import VariableDeclarationNode
 from nope.name_resolution import resolve, Context
+from nope.identity_dict import IdentityDict
 
 
 @istest
@@ -353,7 +354,7 @@ def _new_context(names):
     declarations = {}
     for name in names:
         declarations[name] = VariableDeclarationNode(name)
-    return Context(declarations, {})
+    return Context(declarations, IdentityDict())
 
 
 def _assert_no_references(node):

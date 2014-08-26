@@ -171,11 +171,11 @@ class Context(object):
         self._exception_handler_target_names = exception_handler_target_names
     
     def is_definitely_bound(self, node):
-        declaration = self._declarations[id(node)]
+        declaration = self._declarations[node]
         return self._is_definitely_bound.get(declaration, False)
     
     def bind(self, node):
-        declaration = self._declarations[id(node)]
+        declaration = self._declarations[node]
         self._is_definitely_bound[declaration] = True
     
     def add_exception_handler_target(self, node):
