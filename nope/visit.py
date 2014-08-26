@@ -30,6 +30,8 @@ class Visitor(object):
             nodes.RaiseStatement: self._visit_raise,
             nodes.AssertStatement: self._visit_assert,
             #~ nodes.FunctionDef: self._visit_function_def,
+            nodes.FunctionSignature: self._visit_function_signature,
+            nodes.SignatureArgument: self._visit_signature_argument,
             nodes.Argument: self._visit_nothing,
             
             nodes.Import: self._visit_nothing,
@@ -56,10 +58,12 @@ class Visitor(object):
         if node_type in self._before:
             self._before[node_type](self, node, *args)
             
-        self._visitors[node_type](node, *args)
+        result = self._visitors[node_type](node, *args)
         
         if node_type in self._after:
             self._after[node_type](self, node, *args)
+        
+        return result
 
     def _visit_statements(self, statements, *args):
         for statement in statements:
@@ -154,6 +158,18 @@ class Visitor(object):
         self.visit(node.condition, *args)
         if node.message is not None:
             self.visit(node.message, *args)
+    
+    
+    def _visit_function_signature(self, node, *args):
+        for arg in node.args:
+            self.visit(arg, *args)
+        
+        if node.returns is not None:
+            self.visit(node.returns, *args)
+    
+    
+    def _visit_signature_argument(self, node, *args):
+        self.visit(node.type, *args)
     
     
     def _visit_module(self, node, *args):

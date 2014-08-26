@@ -32,19 +32,6 @@ class StatementTypeChecker(object):
 
     def update_context(self, statement, context):
         self._checkers[type(statement)](statement, context)
-        
-        if self._is_package() and context.is_module_scope:
-            self._check_for_package_value_and_module_name_clashes(statement, context)
-
-    def _is_package(self):
-        return self._module_path and os.path.basename(self._module_path) == "__init__.py"
-
-    def _check_for_package_value_and_module_name_clashes(self, statement, context):
-        for declared_name in util.declared_names(statement):
-            submodule = self._find_submodule(declared_name)
-            if submodule is not None:
-                if context.lookup(declared_name) is not submodule:
-                    raise errors.ImportedValueRedeclaration(statement, declared_name)
 
     def _find_submodule(self, name):
         for path in self._possible_module_paths([".", name]):
@@ -74,21 +61,17 @@ class StatementTypeChecker(object):
         func_type = self._infer_function_def(node, context)
         return_type = func_type.return_type
         
-        arg_names = [arg.name for arg in node.args.args]
-        
-        local_names = arg_names + list(util.declared_locals(node.body))
-        
-        body_context = context.enter_func(return_type, local_names=local_names)
+        body_context = context.enter_func(return_type)
         
         for arg, formal_arg in zip(node.args.args, func_type.args):
-            body_context.add(arg.name, formal_arg.type)
+            body_context.update_type(arg, formal_arg.type)
             
         self.update_context(node.body, body_context)
         
         if return_type != types.none_type and not returns.has_unconditional_return(node.body):
             raise errors.MissingReturnError(node, return_type)
         
-        context.add(node.name, func_type)
+        context.update_type(node, func_type)
 
 
     def _check_expression_statement(self, node, context):
@@ -119,12 +102,25 @@ class StatementTypeChecker(object):
     
     
     def _assign_ref(self, node, target, value_type, context):
-        var_type = context.lookup(target.name, allow_unbound=True)
+        var_type = context.lookup(target, allow_unbound=True)
         if var_type is not None and not types.is_sub_type(var_type, value_type):
             raise errors.BadAssignmentError(node, target_type=var_type, value_type=value_type)
         
-        if not context.is_bound(target.name):
-            context.add(target.name, value_type)
+        # TODO: add test demonstrating necessity of `if var_type is None`
+        if var_type is None:
+            context.update_type(target, value_type)
+        
+        if self._is_package() and context.is_module_scope:
+            self._check_for_package_value_and_module_name_clashes(target, value_type)
+
+    def _is_package(self):
+        return self._module_path and os.path.basename(self._module_path) == "__init__.py"
+
+    def _check_for_package_value_and_module_name_clashes(self, target, value_type):
+        submodule = self._find_submodule(target.name)
+        if submodule is not None:
+            if value_type is not submodule:
+                raise errors.ImportedValueRedeclaration(target, target.name)
 
 
     def _assign_attr(self, node, target, value_type, context):
@@ -149,54 +145,21 @@ class StatementTypeChecker(object):
     
     def _check_if_else(self, node, context):
         self._infer(node.condition, context)
-        
-        self._check_branches(
-            [
-                _IfElseBranch(node.true_body),
-                _IfElseBranch(node.false_body),
-            ],
-            context,
-            bind=True,
-        )
+        self._check_list(node.true_body, context)
+        self._check_list(node.false_body, context)
 
 
     def _check_while_loop(self, node, context):
         self._infer(node.condition, context)
-        self._check_branches(
-            [
-                _LoopBranch(node.body),
-                _LoopBranch(node.else_body),
-            ],
-            context,
-            bind=False,
-        )
+        self._check_list(node.body, context)
+        self._check_list(node.else_body, context)
     
     
     def _check_for_loop(self, node, context):
         element_type = self._infer_for_loop_element_type(node, context)
-        
-        def assign_loop_target(body_context):
-            self._assign(node, node.target, element_type, body_context)
-        
-        self._check_branches(
-            [
-                _LoopBranch(node.body, before=assign_loop_target),
-                _LoopBranch(node.else_body),
-            ],
-            context,
-            bind=False,
-        )
-    
-    
-    def _check_branches(self, branches, context, bind):
-        def check_branch(branch):
-            branch_context = branch.enter_context(context)
-            self.update_context(branch.statements, branch_context)
-            return branch_context
-        
-        contexts = list(map(check_branch, branches))
-        
-        context.unify(contexts, bind=bind)
+        self._assign(node, node.target, element_type, context)
+        self._check_list(node.body, context)
+        self._check_list(node.else_body, context)
     
     
     def _infer_for_loop_element_type(self, node, context):
@@ -224,40 +187,26 @@ class StatementTypeChecker(object):
     
     
     def _check_try(self, node, context):
-        def infer_handler_exception_type(handler):
-            if handler.type:
-                meta_type = self._infer(handler.type, context)
-                if not types.is_meta_type(meta_type) or not types.is_sub_type(types.exception_type, meta_type.type):
-                    raise errors.TypeMismatchError(handler.type,
-                        expected="exception type",
-                        actual=meta_type,
-                    )
-                return meta_type
+        self._check_list(node.body, context)
         
-        handler_exception_types = [
-            infer_handler_exception_type(handler)
-            for handler in node.handlers
-        ]
-        
-        def create_except_branch(handler, exception_type):
+        for handler in node.handlers:
+            exception_type = self._infer_handler_exception_type(handler, context)
             if handler.target is not None:
-                before = lambda branch_context: branch_context.add(handler.target.name, exception_type)
-            else:
-                before = None
-            return _Branch(handler.body, before=before)
+                self._assign(handler, handler.target, exception_type, context)
+            self._check_list(handler.body, context)
         
+        self._check_list(node.finally_body, context)
+
         
-        except_branches = [
-            create_except_branch(handler, exception_type)
-            for handler, exception_type in zip(node.handlers, handler_exception_types)
-        ]
-        
-        self._check_branches(
-            [_Branch(node.body)] + except_branches,
-            context,
-            bind=False,
-        )
-        self.update_context(node.finally_body, context)
+    def _infer_handler_exception_type(self, handler, context):
+        if handler.type:
+            meta_type = self._infer(handler.type, context)
+            if not types.is_meta_type(meta_type) or not types.is_sub_type(types.exception_type, meta_type.type):
+                raise errors.TypeMismatchError(handler.type,
+                    expected="exception type",
+                    actual=meta_type,
+                )
+            return meta_type.type
     
     
     def _check_raise(self, node, context):
@@ -289,17 +238,10 @@ class StatementTypeChecker(object):
             context,
         )
         
-        def assign_target(branch_context):
-            if node.target is not None:
-                self._assign(node.target, node.target, enter_return_type, branch_context)
+        if node.target is not None:
+            self._assign(node.target, node.target, enter_return_type, context)
         
-        self._check_branches(
-            [
-                _Branch(node.body, before=assign_target),
-            ],
-            context,
-            bind=exit_return_type == types.none_type,
-        )
+        self._check_list(node.body, context)
 
     def _check_import(self, node, context):
         for alias in node.names:
@@ -310,7 +252,7 @@ class StatementTypeChecker(object):
                     this_module = self._find_module(node, parts[:index + 1])
                     
                     if index == 0:
-                        context.add(part, this_module)
+                        context.update_type(alias, this_module)
                     else:
                         # TODO: set readonly
                         last_module.attrs.add(part, this_module)
@@ -319,7 +261,7 @@ class StatementTypeChecker(object):
                 
             else:
                 module = self._find_module(node, alias.name_parts)
-                context.add(alias.value_name, module)
+                context.update_type(alias, module)
 
 
     def _check_import_from(self, node, context):
@@ -327,12 +269,12 @@ class StatementTypeChecker(object):
         for alias in node.names:
             module_value = module.attrs.type_of(alias.name)
             if module_value is not None:
-                context.add(alias.value_name, module_value)
+                context.update_type(alias, module_value)
             else:
                 submodule = self._find_module(node, node.module + [alias.name])
                 # TODO: set readonly
                 module.attrs.add(alias.value_name, submodule)
-                context.add(alias.value_name, submodule)
+                context.update_type(alias, submodule)
 
     
     def _find_module(self, node, names):
@@ -372,28 +314,3 @@ class StatementTypeChecker(object):
     
     def _infer_magic_method_call(self, *args, **kwargs):
         return self._expression_type_inferer.infer_magic_method_call(*args, **kwargs)
-
-
-class _LoopBranch(object):
-    def __init__(self, statements, before=None):
-        self.statements = statements
-        self.before = before
-    
-    def enter_context(self, context):
-        loop_context = context.enter_loop()
-        if self.before is not None:
-            self.before(loop_context)
-        return loop_context
-
-class _Branch(object):
-    def __init__(self, statements, before=None):
-        self.statements = statements
-        self.before = before
-        
-    def enter_context(self, context):
-        branch_context = context.enter_branch()
-        if self.before is not None:
-            self.before(branch_context)
-        return branch_context
-    
-_IfElseBranch = _Branch

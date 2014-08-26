@@ -1,10 +1,9 @@
 from nose.tools import istest, assert_equal
 
 from nope import types, nodes, errors
-from nope.inference import update_context
-from nope.context import new_module_context
+from nope.context import Context
 
-from .util import assert_type_mismatch
+from .util import assert_type_mismatch, update_context, SingleScopeReferences
 
 
 @istest
@@ -96,6 +95,8 @@ def function_adds_arguments_to_context():
 
 
 def _infer_func_type(func_node):
-    context = new_module_context({func_node.name: None})
+    context = Context(SingleScopeReferences(), {}).enter_module()
+    context.update_type(nodes.ref("int"), types.meta_type(types.int_type))
+    context.update_type(nodes.ref("str"), types.meta_type(types.str_type))
     update_context(func_node, context)
-    return context.lookup(func_node.name)
+    return context.lookup(func_node)

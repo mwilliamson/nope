@@ -1,12 +1,11 @@
 from nose.tools import istest, assert_equal
 
 from nope import types, nodes, errors
-from nope.inference import update_context
-from nope.context import bound_context
 
 from .util import (
     assert_variable_remains_unbound,
-    assert_statement_is_type_checked)
+    assert_statement_is_type_checked,
+    create_context, update_context)
 
 
 @istest
@@ -15,7 +14,7 @@ def if_statement_has_condition_type_checked():
     node = nodes.if_else(ref_node, [], [])
     
     try:
-        update_context(node, bound_context({}))
+        update_context(node, create_context({}))
         assert False, "Expected error"
     except errors.TypeCheckError as error:
         assert_equal(ref_node, error.node)
@@ -50,27 +49,18 @@ def assignment_in_both_branches_of_if_statement_is_added_to_context():
         [nodes.assign("x", nodes.int(1))],
         [nodes.assign("x", nodes.int(2))],
     )
-    context = bound_context({"x": None})
+    context = create_context()
     update_context(node, context)
-    assert_equal(types.int_type, context.lookup("x"))
+    assert_equal(types.int_type, context.lookup_name("x"))
 
 
 @istest
-def type_of_variable_is_unified_if_branches_of_if_else_use_different_types():
+def type_of_variable_uses_type_of_first_assignment():
     node = nodes.if_else(
         nodes.int(1),
-        [nodes.assign("x", nodes.int(1))],
+        [nodes.assign("x", nodes.ref("y"))],
         [nodes.assign("x", nodes.string("blah"))],
     )
-    context = bound_context({"x": None})
+    context = create_context({"y": types.object_type})
     update_context(node, context)
-    assert_equal(types.object_type, context.lookup("x"))
-
-
-@istest
-def variable_remains_unbound_if_only_set_in_one_branch_of_if_else():
-    assert_variable_remains_unbound(lambda assignment: nodes.if_else(
-        nodes.int(1),
-        [assignment],
-        [],
-    ))
+    assert_equal(types.object_type, context.lookup_name("x"))

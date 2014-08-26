@@ -77,6 +77,9 @@ class VariableDeclarationNode(object):
     
     def __init__(self, name):
         self.name = name
+    
+    def __repr__(self):
+        return "VariableDeclarationNode({})".format(self.name)
 
 
 class ExceptionHandlerTargetNode(object):
@@ -105,6 +108,15 @@ def declarations_in_function(node):
     
     for arg in node.args.args:
         declare(arg, context)
+    
+    for statement in node.body:
+        declare(statement, context)
+        
+    return context._declarations
+
+
+def declarations_in_module(node):
+    context = Context({})
     
     for statement in node.body:
         declare(statement, context)

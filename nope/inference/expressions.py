@@ -44,13 +44,7 @@ class ExpressionTypeInferer(object):
         return types.list_type(types.unify(element_types))
 
     def _infer_ref(self, node, context):
-        if not context.has_name(node.name):
-            raise errors.UndefinedNameError(node, node.name)
-            
-        if not context.is_bound(node.name):
-            raise errors.UnboundLocalError(node, node.name)
-            
-        return context.lookup(node.name)
+        return context.lookup(node)
 
     def _infer_call(self, node, context):
         def read_actual_arg(actual_arg, index):

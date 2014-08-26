@@ -58,8 +58,8 @@ def module_exports_default_to_values_without_leading_underscore_if_all_is_not_sp
 
 @istest
 def error_is_raised_if_value_in_package_has_same_name_as_module():
-    value_node = nodes.assign("x", nodes.int(1))
-    node = nodes.Module([value_node], is_executable=False)
+    target_node = nodes.ref("x")
+    node = nodes.Module([nodes.assign([target_node], nodes.int(1))], is_executable=False)
     source_tree = FakeSourceTree({
         "root/x.py": module({}),
     })
@@ -68,7 +68,7 @@ def error_is_raised_if_value_in_package_has_same_name_as_module():
         inference.check(node, source_tree, module_path="root/__init__.py")
         assert False, "Expected error"
     except errors.ImportedValueRedeclaration as error:
-        assert_equal(value_node, error.node)
+        assert_equal(target_node, error.node)
         assert_equal("Cannot declare value 'x' in module scope due to child module with the same name", str(error))
 
 

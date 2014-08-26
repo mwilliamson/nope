@@ -1,12 +1,78 @@
 from nose.tools import assert_equal
 
-from nope import types, errors, nodes
-from nope.context import bound_context
-from nope.inference import update_context
+from nope import types, errors, nodes, inference, name_declaration
+from nope.context import Context
 
 
-def update_blank_context(node, *args, declared_names=[], **kwargs):
-    context = bound_context(dict((name, None) for name in declared_names))
+def update_context(statement, context=None, source_tree=None, module_path=None, is_executable=False):
+    if context is None:
+        context = create_context()
+    checker = _create_type_checker(module_path=module_path, source_tree=source_tree, is_executable=is_executable)
+    checker.update_context(statement, context)
+    
+    return context
+
+
+def infer(expression, context=None):
+    if context is None:
+        context = create_context()
+    
+    checker = _create_type_checker()
+    return checker.infer(expression, context)
+    
+
+def _create_type_checker(source_tree=None, module_path=None, is_executable=False):
+    return inference._TypeChecker(
+        source_tree=source_tree,
+        module_path=module_path,
+        is_executable=is_executable,
+    )
+
+
+class SingleScopeReferences(object):
+    def __init__(self):
+        self._references = {}
+    
+    def resolve(self, node):
+        if isinstance(node, (nodes.VariableReference, nodes.Argument, nodes.FunctionDef)):
+            name = node.name
+        elif isinstance(node, nodes.ImportAlias):
+            name = node.value_name
+        else:
+            raise Exception("Name not implemented for {}".format(type(node)))
+        
+        if name not in self._references:
+            self._references[name] = name_declaration.VariableDeclarationNode(name)
+        
+        return self._references[name]
+
+
+def create_context(types=None):
+    if types is None:
+        types = {}
+        
+    context = SingleScopeContext()
+    
+    for name, type_ in types.items():
+        context.update_type(nodes.ref(name), type_)
+    
+    return context
+
+
+class SingleScopeContext(object):
+    def __init__(self):
+        self._context = Context(SingleScopeReferences(), {})
+    
+    def __getattr__(self, key):
+        return getattr(self._context, key)
+    
+    def lookup_name(self, name):
+        return self.lookup(nodes.ref(name))
+    
+
+
+def update_blank_context(node, *args, **kwargs):
+    context = create_context()
     update_context(node, context, *args, **kwargs)
     return context
 
@@ -59,7 +125,7 @@ def assert_statement_is_type_checked(create_node, context=None):
 
 def assert_expression_is_type_checked(create_node, context=None):
     if context is None:
-        context = bound_context({})
+        context = create_context()
     
     bad_ref = nodes.ref("bad")
     node = create_node(bad_ref)

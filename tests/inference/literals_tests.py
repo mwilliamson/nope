@@ -1,12 +1,9 @@
 from nose.tools import istest, assert_equal
 
 from nope import types, nodes
-from nope.inference import infer as _infer
-from nope.context import Context
 
+from .util import infer
 
-def infer(node):
-    return _infer(node, Context({}))
 
 
 @istest

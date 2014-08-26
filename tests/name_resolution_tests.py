@@ -1,6 +1,7 @@
 from nose.tools import istest, assert_is, assert_is_not, assert_equal
 
 from nope import nodes, errors
+from nope.name_declaration import VariableDeclarationNode
 from nope.name_resolution import resolve, Context
 
 
@@ -28,8 +29,7 @@ def str_has_no_references():
 def variable_reference_has_name_resolved():
     definition_node = nodes.ref("x")
     ref = nodes.ref("x")
-    context = _new_context()
-    context.define("x")
+    context = _new_context(["x"])
     resolve(ref, context)
     
     assert_is(context.definition("x"), context.resolve(ref))
@@ -38,7 +38,7 @@ def variable_reference_has_name_resolved():
 @istest
 def error_if_name_is_undefined():
     ref = nodes.ref("x")
-    context = _new_context()
+    context = _new_context([])
     try:
         resolve(ref, context)
         assert False, "Expected error"
@@ -232,13 +232,28 @@ def assert_statement_has_child_names_resolved():
     
 
 @istest
+def function_definition_signature_has_names_resolved():
+    int_ref = nodes.ref("int")
+    str_ref = nodes.ref("str")
+    
+    signature = nodes.signature(
+        args=[nodes.signature_arg(int_ref)],
+        returns=str_ref,
+    )
+    node = nodes.func("f", signature, nodes.arguments([]), [])
+    
+    context = _new_context(["f", "int", "str"])
+    resolve(node, context)
+    assert_is(context.definition("int"), context.resolve(int_ref))
+    assert_is(context.definition("str"), context.resolve(str_ref))
+    
+
+@istest
 def function_definitions_adds_function_name_to_context():
     node = nodes.func("f", None, nodes.arguments([]), [])
     
-    context = _new_context()
-    context.define("f")
+    context = _new_context(["f"])
     resolve(node, context)
-    assert context.is_defined("f")
     assert_is(context.definition("f"), context.resolve(node))
 
 
@@ -250,8 +265,7 @@ def function_definitions_adds_argument_names_to_body_context():
     body = [nodes.ret(ref)]
     node = nodes.func("f", None, args, body)
     
-    context = _new_context()
-    context.define("f")
+    context = _new_context(["f"])
     resolve(node, context)
     assert not context.is_defined("x")
     assert_is(context.resolve(arg), context.resolve(ref))
@@ -264,9 +278,7 @@ def function_definitions_bodies_can_access_variables_from_outer_scope():
     body = [nodes.ret(ref)]
     node = nodes.func("f", None, args, body)
     
-    context = _new_context()
-    context.define("x")
-    context.define("f")
+    context = _new_context(["x", "f"])
     
     resolve(node, context)
     assert_is(context.definition("x"), context.resolve(ref))
@@ -280,9 +292,7 @@ def function_definitions_arguments_shadow_variables_of_same_name_in_outer_scope(
     body = [nodes.ret(ref)]
     node = nodes.func("f", None, args, body)
     
-    context = _new_context()
-    context.define("x")
-    context.define("f")
+    context = _new_context(["x", "f"])
     
     resolve(node, context)
     assert_is(context.resolve(arg), context.resolve(ref))
@@ -297,9 +307,7 @@ def function_definitions_assignments_shadow_variables_of_same_name_in_outer_scop
     body = [nodes.assign([ref], nodes.none())]
     node = nodes.func("f", None, args, body)
     
-    context = _new_context()
-    context.define("x")
-    context.define("f")
+    context = _new_context(["x", "f"])
     
     resolve(node, context)
     assert_is_not(context.definition("x"), context.resolve(ref))
@@ -307,8 +315,7 @@ def function_definitions_assignments_shadow_variables_of_same_name_in_outer_scop
 
 @istest
 def import_multiple_aliases_using_same_name_resolve_to_same_node():
-    context = _new_context()
-    context.define("x")
+    context = _new_context(["x"])
     first_alias_node = nodes.import_alias("x.y", None)
     second_alias_node = nodes.import_alias("x", None)
     node = nodes.Import([first_alias_node, second_alias_node])
@@ -318,16 +325,35 @@ def import_multiple_aliases_using_same_name_resolve_to_same_node():
 
 @istest
 def import_from_aliases_are_resolved():
-    context = _new_context()
-    context.define("x")
+    context = _new_context(["x"])
     alias_node = nodes.import_alias("x", None)
     node = nodes.import_from(["."], [alias_node])
     resolve(node, context)
     assert_equal(context.definition("x"), context.resolve(alias_node))
 
 
-def _new_context():
-    return Context({}, {})
+@istest
+def names_in_module_are_defined_and_resolved():
+    target_node = nodes.ref("x")
+    ref_node = nodes.ref("x")
+    
+    node = nodes.module([
+        nodes.assign([target_node], nodes.none()),
+        nodes.expression_statement(ref_node),
+    ])
+    
+    context = _new_context(["x"])
+    
+    resolve(node, context)
+    assert_is(context.resolve(ref_node), context.resolve(target_node))
+    
+
+
+def _new_context(names):
+    declarations = {}
+    for name in names:
+        declarations[name] = VariableDeclarationNode(name)
+    return Context(declarations, {})
 
 
 def _assert_no_references(node):
@@ -338,12 +364,9 @@ def _assert_children_resolved(create_node, other_names=None):
     if other_names is None:
         other_names = []
     
-    context = _new_context()
-    for name in other_names:
-        context.define(name)
+    context = _new_context(["x"] + other_names)
     
     ref = nodes.ref("x")
-    context.define("x")
     resolve(create_node(ref), context)
     
     assert_is(context.definition("x"), context.resolve(ref))

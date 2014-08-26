@@ -1,21 +1,19 @@
-from .. import types, util
-from ..context import new_module_context
+from .. import nodes, types, name_declaration, name_resolution, name_binding, builtins, util
 from .expressions import ExpressionTypeInferer
 from .statements import StatementTypeChecker
 
 
+def _resolve_references(node):
+    references = builtins.references()
+    return name_resolution.resolve(node, references)
+
+
 def check(module, source_tree=None, module_path=None):
+    references = _resolve_references(module)
+    
     checker = _TypeChecker(source_tree, module_path, module.is_executable)
-    module_type = checker.check(module)
+    module_type = checker.check(module, references)
     return module_type, checker.type_lookup()
-
-def infer(expression, context, source_tree=None, module_path=None):
-    checker = _TypeChecker(source_tree, module_path, False)
-    return checker.infer(expression, context)
-
-def update_context(statement, context, source_tree=None, module_path=None, is_executable=False):
-    checker = _TypeChecker(source_tree, module_path, is_executable)
-    return checker.update_context(statement, context)
 
 
 class _TypeChecker(object):
@@ -35,16 +33,25 @@ class _TypeChecker(object):
     def update_context(self, statement, context):
         self._statement_type_checker.update_context(statement, context)
 
-    def check(self, module):
-        context = new_module_context(util.declared_locals(module.body))
+    def check(self, module, references):
+        context = builtins.module_context(references)
         for statement in module.body:
             self.update_context(statement, context)
         
+        exported_names = util.exported_names(module)
+        exported_declarations = [
+            references.definition(name)
+            for name in exported_names
+        ]
+        
+        bindings = builtins.module_bindings(references)
+        name_binding.update_bindings(module, bindings)
+        
         return types.module(self._module_path, [
             # TODO: set read_only as appropriate
-            types.attr(name, context.lookup(name))
-            for name in util.exported_names(module)
-            if context.is_bound(name)
+            types.attr(declaration.name, context.lookup_declaration(declaration))
+            for declaration in exported_declarations
+            #~ if context.is_bound(name)
         ])
         
 

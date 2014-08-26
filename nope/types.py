@@ -9,6 +9,9 @@ class _Attribute(object):
     
     def substitute_types(self, type_map):
         return _Attribute(self.name, _substitute_types(self.type, type_map), self.read_only)
+    
+    def __repr__(self):
+        return "_Attribute({}, {}, {})".format(self.name, self.type, self.read_only)
 
 
 attr = _Attribute
@@ -101,7 +104,7 @@ class _GenericType(object):
         return isinstance(other, InstantiatedType) and other.generic_type == self
     
     def __str__(self):
-        return self.name
+        return self.underlying_type.name
         
     def __repr__(self):
         return str(self)
