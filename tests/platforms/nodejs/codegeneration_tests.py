@@ -4,6 +4,7 @@ from nose.tools import istest, assert_equal
 from nope.platforms.nodejs import codegeneration, js
 from nope import nodes, types
 from nope.parser import parse_signature
+from nope.identity_dict import IdentityDict
 
 
 @istest
@@ -137,7 +138,7 @@ def test_multiple_imports_use_different_names():
         codegeneration.transform(nodes.module([
             nodes.import_from([".", "x1"], [nodes.import_alias("y1", None)]),
             nodes.import_from([".", "x2"], [nodes.import_alias("y2", None)]),
-        ]), type_lookup=types.TypeLookup({})).statements[:4],
+        ]), type_lookup=types.TypeLookup(IdentityDict())).statements[:4],
         [
             js.var("y1"),
             js.var("y2"),
@@ -542,12 +543,12 @@ def test_transform_with_statement_with_target():
 @istest
 def test_transform_call_with_positional_arguments():
     func_node = nodes.ref("f")
-    type_lookup = types.TypeLookup({
-        id(func_node): types.func(
+    type_lookup = types.TypeLookup(IdentityDict([
+        (func_node, types.func(
             [types.str_type, types.str_type],
             types.none_type
-        )
-    })
+        ))
+    ]))
     
     _assert_transform(
         nodes.call(func_node, [nodes.ref("x"), nodes.ref("y")]),
@@ -559,15 +560,15 @@ def test_transform_call_with_positional_arguments():
 @istest
 def test_transform_call_with_keyword_arguments():
     func_node = nodes.ref("f")
-    type_lookup = types.TypeLookup({
-        id(func_node): types.func(
+    type_lookup = types.TypeLookup(IdentityDict([
+        (func_node, types.func(
             [
                 types.func_arg("first", types.str_type),
                 types.func_arg("second", types.str_type),
             ],
             types.none_type
-        )
-    })
+        ))
+    ]))
     
     _assert_transform(
         nodes.call(func_node, [], {"first": nodes.ref("x"), "second": nodes.ref("y")}),
@@ -613,10 +614,10 @@ def test_normal_js_addition_is_used_if_both_operands_are_ints_and_optimise_is_tr
     left = nodes.ref("x")
     right = nodes.ref("y")
     
-    type_lookup = types.TypeLookup({
-        id(left): types.int_type,
-        id(right): types.int_type,
-    })
+    type_lookup = types.TypeLookup(IdentityDict([
+        (left, types.int_type),
+        (right, types.int_type),
+    ]))
     
     def assert_transform(expected_js, optimise):
         _assert_transform(
@@ -637,10 +638,10 @@ def test_normal_binary_operation_if_only_one_side_is_int():
     x = nodes.ref("x")
     y = nodes.ref("y")
     
-    type_lookup = types.TypeLookup({
-        id(x): types.int_type,
-        id(y): types.object_type,
-    })
+    type_lookup = types.TypeLookup(IdentityDict([
+        (x, types.int_type),
+        (y, types.object_type),
+    ]))
     
     _assert_transform(
         nodes.add(x, y),
@@ -667,9 +668,9 @@ def test_transform_unary_operation():
 def test_normal_javascript_negation_is_used_if_operand_is_int():
     x = nodes.ref("x")
     
-    type_lookup = types.TypeLookup({
-        id(x): types.int_type,
-    })
+    type_lookup = types.TypeLookup(IdentityDict([
+        (x, types.int_type),
+    ]))
     
     _assert_transform(
         nodes.neg(x),
@@ -724,7 +725,7 @@ def test_transform_int_expression():
 
 def _assert_transform(nope, expected_js, type_lookup=None, optimise=True):
     if type_lookup is None:
-        type_lookup = types.TypeLookup({})
+        type_lookup = types.TypeLookup(IdentityDict())
     
     transformed_js = codegeneration.transform(nope, type_lookup, optimise=optimise)
     

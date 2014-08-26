@@ -1,5 +1,7 @@
 import collections
 
+from .identity_dict import IdentityDict
+
 
 class _Attribute(object):
     def __init__(self, name, type_, read_only=False):
@@ -393,7 +395,9 @@ def module(name, attrs):
 
 class TypeLookup(object):
     def __init__(self, types):
+        assert isinstance(types, IdentityDict)
+        
         self._types = types
     
     def type_of(self, node):
-        return self._types.get(id(node))
+        return self._types.get(node)

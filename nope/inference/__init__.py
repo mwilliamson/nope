@@ -1,6 +1,7 @@
 from .. import nodes, types, name_declaration, name_resolution, name_binding, builtins, util
 from .expressions import ExpressionTypeInferer
 from .statements import StatementTypeChecker
+from ..identity_dict import IdentityDict
 
 
 def _resolve_references(node):
@@ -20,7 +21,7 @@ class _TypeChecker(object):
     def __init__(self, source_tree, module_path, is_executable):
         self._source_tree = source_tree
         self._module_path = module_path
-        self._type_lookup = {}
+        self._type_lookup = IdentityDict()
         self._expression_type_inferer = ExpressionTypeInferer(self._type_lookup)
         self._statement_type_checker = StatementTypeChecker(self._expression_type_inferer, source_tree, module_path, is_executable)
     

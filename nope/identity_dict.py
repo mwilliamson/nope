@@ -20,3 +20,6 @@ class IdentityDict(object):
     
     def __contains__(self, key):
         return id(key) in self._values
+    
+    def get(self, key, default=None):
+        return self._values.get(id(key), default)

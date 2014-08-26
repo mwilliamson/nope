@@ -24,7 +24,7 @@ class ExpressionTypeInferer(object):
     
     def infer(self, expression, context):
         expression_type = self._inferers[type(expression)](expression, context)
-        self._type_lookup[id(expression)] = expression_type
+        self._type_lookup[expression] = expression_type
         return expression_type
     
     def _infer_none(self, node, context):
