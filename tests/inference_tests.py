@@ -54,6 +54,24 @@ def module_exports_default_to_values_without_leading_underscore_if_all_is_not_sp
     assert_equal(types.int_type, module.attrs.type_of("z"))
 
 
+@istest
+def only_values_that_are_definitely_bound_are_exported():
+    module_node = nodes.module([
+        nodes.if_else(
+            nodes.boolean(True),
+            [
+                nodes.assign(["x"], nodes.string("one")),
+                nodes.assign(["y"], nodes.string("two")),
+            ],
+            [
+                nodes.assign(["y"], nodes.string("three")),
+            ]
+        )
+    ])
+    
+    module, type_lookup = inference.check(module_node)
+    assert_equal(None, module.attrs.get("x"))
+    assert_equal(types.str_type, module.attrs.type_of("y"))
 
 
 @istest

@@ -52,8 +52,7 @@ class _TypeChecker(object):
             # TODO: set read_only as appropriate
             types.attr(declaration.name, context.lookup_declaration(declaration))
             for declaration in exported_declarations
-            # TODO: only use bound names
-            #~ if context.is_bound(name)
+            if bindings.is_declaration_definitely_bound(declaration)
         ])
         
 

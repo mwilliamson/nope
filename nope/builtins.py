@@ -39,4 +39,5 @@ def module_context(references):
 
 
 def module_bindings(references):
-    return name_binding.Context(references._references, _builtin_definition_types.copy(), set())
+    is_definitely_bound = dict((declaration, True) for declaration in _builtin_declarations.values())
+    return name_binding.Context(references._references, is_definitely_bound, set())

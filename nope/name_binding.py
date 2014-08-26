@@ -172,6 +172,9 @@ class Context(object):
     
     def is_definitely_bound(self, node):
         declaration = self._declarations[node]
+        return self.is_declaration_definitely_bound(declaration)
+    
+    def is_declaration_definitely_bound(self, declaration):
         return self._is_definitely_bound.get(declaration, False)
     
     def bind(self, node):
