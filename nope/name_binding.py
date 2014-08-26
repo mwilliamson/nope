@@ -81,8 +81,17 @@ def _update_try(visitor, node, context):
         def update_handler_target(branch_context):
             if handler.target is not None:
                 _update_target(visitor, handler.target, branch_context)
+                branch_context.add_exception_handler_target(handler.target)
         
-        return _branch(handler.body, before=update_handler_target)
+        def delete_handler_target(branch_context):
+            if handler.target is not None:
+                context.delete_exception_handler_target(handler.target)
+        
+        return _branch(
+            handler.body,
+            before=update_handler_target,
+            after=delete_handler_target,
+        )
     
     for handler in node.handlers:
         branches.append(create_handler_branch(handler))
@@ -126,6 +135,7 @@ def _update_branches(branches, context, bind=False):
 def _update_branch(branch, context):
     branch_context = branch.enter_context(context)
     _update_statements(branch.statements, branch_context)
+    branch.exit_context(context)
     return branch_context
 
 
@@ -136,26 +146,29 @@ def _update_statements(statements, context):
 
 
 class _Branch(object):
-    def __init__(self, statements, before=None):
+    def __init__(self, statements, before=None, after=None):
         self.statements = statements
         self._before = before
+        self._after = after
     
     def enter_context(self, context):
         branch_context = context.enter_branch()
         if self._before is not None:
             self._before(branch_context)
         return branch_context
+    
+    def exit_context(self, context):
+        if self._after is not None:
+            self._after(context)
 
 _branch = _Branch
 
 
 class Context(object):
-    def __init__(self, declarations, is_definitely_bound=None):
-        if is_definitely_bound is None:
-            is_definitely_bound = {}
-        
+    def __init__(self, declarations, is_definitely_bound, exception_handler_target_names):
         self._declarations = declarations
         self._is_definitely_bound = is_definitely_bound
+        self._exception_handler_target_names = exception_handler_target_names
     
     def is_definitely_bound(self, node):
         declaration = self._declarations[id(node)]
@@ -165,8 +178,17 @@ class Context(object):
         declaration = self._declarations[id(node)]
         self._is_definitely_bound[declaration] = True
     
+    def add_exception_handler_target(self, node):
+        if node.name in self._exception_handler_target_names:
+            raise errors.InvalidReassignmentError(node, "cannot reuse the same name for nested exception handler targets")
+            
+        self._exception_handler_target_names.add(node.name)
+    
+    def delete_exception_handler_target(self, node):
+        self._exception_handler_target_names.remove(node.name)
+    
     def enter_branch(self):
-        return Context(self._declarations, DiffingDict(self._is_definitely_bound))
+        return Context(self._declarations, DiffingDict(self._is_definitely_bound), self._exception_handler_target_names)
     
     def enter_function(self, declared_locals):
         definitions = _copy_definitions(self._definitions)

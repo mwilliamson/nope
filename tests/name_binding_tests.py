@@ -271,8 +271,8 @@ def except_handler_targets_in_same_try_statement_can_share_their_name():
         )
     )
 
-# TODO
-#~ @istest
+
+@istest
 def except_handler_targets_cannot_share_their_name_when_nested():
     first_target_node = nodes.ref("error")
     second_target_node = nodes.ref("error")
@@ -393,7 +393,7 @@ def import_name_is_definitely_bound_after_import_from_statement():
 
 
 def _new_context(declarations):
-    return Context(declarations)
+    return Context(declarations, {}, set())
 
 
 def _assert_name_is_not_definitely_bound(create_node, other_refs=None):
