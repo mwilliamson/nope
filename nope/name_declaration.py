@@ -1,7 +1,7 @@
 from nope import nodes, errors, util, visit
 
 
-def declare(node, context):
+def declare(node, declarations):
     visitor = visit.Visitor()
     visitor.before(nodes.Assignment, _declare_assignment)
     visitor.before(nodes.ForLoop, _declare_for_loop)
@@ -11,43 +11,43 @@ def declare(node, context):
     visitor.before(nodes.Import, _declare_import)
     visitor.before(nodes.ImportFrom, _declare_import)
     
-    return visitor.visit(node, context)
+    return visitor.visit(node, declarations)
 
 
-def _declare_target(target, context, target_type):
+def _declare_target(target, declarations, target_type):
     if isinstance(target, nodes.VariableReference):
-        context.declare(target.name, target, target_type=target_type)
+        declarations.declare(target.name, target, target_type=target_type)
 
 
-def _declare_assignment(visitor, node, context):
+def _declare_assignment(visitor, node, declarations):
     for target in node.targets:
-        _declare_target(target, context, target_type=VariableDeclarationNode)
+        _declare_target(target, declarations, target_type=VariableDeclarationNode)
 
 
-def _declare_for_loop(visitor, node, context):
-    _declare_target(node.target, context, target_type=VariableDeclarationNode)
+def _declare_for_loop(visitor, node, declarations):
+    _declare_target(node.target, declarations, target_type=VariableDeclarationNode)
 
 
-def _declare_try(visitor, node, context):
+def _declare_try(visitor, node, declarations):
     for handler in node.handlers:
         if handler.target is not None:
-            _declare_target(handler.target, context, target_type=ExceptionHandlerTargetNode)
+            _declare_target(handler.target, declarations, target_type=ExceptionHandlerTargetNode)
 
 
-def _declare_function_def(visitor, node, context):
-    context.declare(node.name, node, target_type=FunctionDeclarationNode)
+def _declare_function_def(visitor, node, declarations):
+    declarations.declare(node.name, node, target_type=FunctionDeclarationNode)
 
 
-def _declare_argument(visitor, node, context):
-    context.declare(node.name, node, target_type=VariableDeclarationNode)
+def _declare_argument(visitor, node, declarations):
+    declarations.declare(node.name, node, target_type=VariableDeclarationNode)
 
 
-def _declare_import(visitor, node, context):
+def _declare_import(visitor, node, declarations):
     for alias in node.names:
-        context.declare(alias.value_name, alias, target_type=ImportDeclarationNode)
+        declarations.declare(alias.value_name, alias, target_type=ImportDeclarationNode)
 
 
-class Context(object):
+class Declarations(object):
     def __init__(self, declarations):
         self._declarations = declarations
     
@@ -104,21 +104,21 @@ class ImportDeclarationNode(object):
 
 
 def declarations_in_function(node):
-    context = Context({})
+    declarations = Declarations({})
     
     for arg in node.args.args:
-        declare(arg, context)
+        declare(arg, declarations)
     
     for statement in node.body:
-        declare(statement, context)
+        declare(statement, declarations)
         
-    return context._declarations
+    return declarations._declarations
 
 
 def declarations_in_module(node):
-    context = Context({})
+    declarations = Declarations({})
     
     for statement in node.body:
-        declare(statement, context)
+        declare(statement, declarations)
         
-    return context._declarations
+    return declarations._declarations
