@@ -2,7 +2,27 @@ from nope import nodes, errors, name_declaration, visit
 from nope.identity_dict import IdentityDict
 
 
-def resolve(node, context):
+class NameResolver(object):
+    def __init__(self, declaration_finder):
+        self._declaration_finder = declaration_finder
+    
+    def resolve(self, node, declarations, references=None):
+        if references is None:
+            references = IdentityDict()
+        context = _Context(self._declaration_finder, declarations, references)
+        _resolve(node, context)
+        return References(references)
+
+
+class References(object):
+    def __init__(self, references):
+        self._references = references
+    
+    def referenced_declaration(self, reference):
+        return self._references[reference]
+
+
+def _resolve(node, context):
     visitor = visit.Visitor()
     visitor.replace(nodes.VariableReference, _resolve_variable_reference)
     visitor.replace(nodes.FunctionDef, _resolve_function_def)
@@ -14,7 +34,7 @@ def resolve(node, context):
 
 
 def _resolve_variable_reference(visitor, node, context):
-    if not context.is_defined(node.name):
+    if not context.is_declared(node.name):
         raise errors.UndefinedNameError(node, node.name)
     
     context.add_reference(node, node.name)
@@ -44,44 +64,28 @@ def _resolve_module(visitor, node, context):
     
     for statement in node.body:
         visitor.visit(statement, module_context)
-    
-    return module_context
 
 
-class Context(object):
-    def __init__(self, declarations, references):
+class _Context(object):
+    def __init__(self, declaration_finder, declarations, references):
         assert isinstance(references, IdentityDict)
         
+        self._declaration_finder = declaration_finder
         self._declarations = declarations
         self._references = references
     
-    # TODO: rename definition to declaration
-    def definition(self, name):
-        return self._declarations[name]
-
-    def is_defined(self, name):
-        return name in self._declarations
+    def is_declared(self, name):
+        return self._declarations.is_declared(name)
     
     def add_reference(self, reference, name):
-        definition = self.definition(name)
-        self._references[reference] = definition
-    
-    def resolve(self, node):
-        if node in self._references:
-            return self._references[node]
-        else:
-            raise KeyError("Could not resolve {}".format(node))
+        self._references[reference] = self._declarations.declaration(name)
     
     def enter_function(self, node):
-        declarations = name_declaration.declarations_in_function(node)
-        return self._enter(declarations)
-    
+        function_declarations = self._declaration_finder.declarations_in_function(node)
+        declarations = self._declarations.enter(function_declarations)
+        return _Context(self._declaration_finder, declarations, self._references)
+
     def enter_module(self, node):
-        declarations = name_declaration.declarations_in_module(node)
-        return self._enter(declarations)
-    
-    
-    def _enter(self, new_declarations):
-        declarations = self._declarations.copy()
-        declarations.update(new_declarations)
-        return Context(declarations, self._references)
+        module_declarations = self._declaration_finder.declarations_in_module(node)
+        declarations = self._declarations.enter(module_declarations)
+        return _Context(self._declaration_finder, declarations, self._references)

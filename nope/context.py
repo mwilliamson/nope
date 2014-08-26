@@ -11,7 +11,7 @@ class Context(object):
         self.is_module_scope = is_module_scope
     
     def update_type(self, node, type_):
-        definition = self._references.resolve(node)
+        definition = self._references.referenced_declaration(node)
         if definition in self._definition_types:
             # TODO: raise a proper TypeCheckError with a node attribute, or push responsibility into inference.py
             raise Exception("definition already has a type")
@@ -19,7 +19,7 @@ class Context(object):
             self._definition_types[definition] = type_
     
     def lookup(self, node, allow_unbound=False):
-        definition = self._references.resolve(node)
+        definition = self._references.referenced_declaration(node)
         if definition in self._definition_types or allow_unbound:
             return self._definition_types.get(definition)
         else:

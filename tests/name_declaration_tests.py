@@ -1,7 +1,7 @@
 from nose.tools import istest, assert_is, assert_is_not, assert_equal
 
 from nope import nodes, errors, name_declaration
-from nope.name_declaration import declare, declarations_in_function, Declarations
+from nope.name_declaration import Declarations, DeclarationFinder, _declare as declare
 
 
 @istest
@@ -128,8 +128,8 @@ def declarations_in_function_include_declarations_in_body():
     ])
     
     declarations = declarations_in_function(node)
-    assert isinstance(declarations["x"], name_declaration.VariableDeclarationNode)
-    assert "f" not in declarations
+    assert isinstance(declarations.declaration("x"), name_declaration.VariableDeclarationNode)
+    assert not declarations.is_declared("f")
 
 
 @istest
@@ -137,9 +137,12 @@ def declarations_in_function_include_argument_declarations():
     node = nodes.func("f", None, nodes.arguments([nodes.arg("x")]), [])
     
     declarations = declarations_in_function(node)
-    assert isinstance(declarations["x"], name_declaration.VariableDeclarationNode)
-    assert "f" not in declarations
+    assert isinstance(declarations.declaration("x"), name_declaration.VariableDeclarationNode)
+    assert not declarations.is_declared("f")
     
 
 def _new_declarations():
     return Declarations({})
+
+_finder = DeclarationFinder()
+declarations_in_function = _finder.declarations_in_function

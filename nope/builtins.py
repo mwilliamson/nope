@@ -31,11 +31,8 @@ def _setup():
 _setup()
 
 
-def references():
-    return name_resolution.Context(
-        declarations=_builtin_declarations,
-        references=IdentityDict(),
-    )
+def declarations():
+    return name_declaration.Declarations(_builtin_declarations)
 
 def module_context(references):
     return context.Context(references, _builtin_definition_types).enter_module()

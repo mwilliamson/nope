@@ -33,7 +33,7 @@ class SingleScopeReferences(object):
     def __init__(self):
         self._references = {}
     
-    def resolve(self, node):
+    def referenced_declaration(self, node):
         if isinstance(node, (nodes.VariableReference, nodes.Argument, nodes.FunctionDef)):
             name = node.name
         elif isinstance(node, nodes.ImportAlias):

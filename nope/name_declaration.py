@@ -1,7 +1,8 @@
 from nope import nodes, errors, util, visit
+from nope.identity_dict import IdentityDict
 
 
-def declare(node, declarations):
+def _declare(node, declarations):
     visitor = visit.Visitor()
     visitor.before(nodes.Assignment, _declare_assignment)
     visitor.before(nodes.ForLoop, _declare_for_loop)
@@ -70,6 +71,15 @@ class Declarations(object):
     
     def is_declared(self, name):
         return name in self._declarations
+    
+    def enter(self, new_declarations):
+        declarations = self._declarations.copy()
+        declarations.update(new_declarations._declarations)
+        return Declarations(declarations)
+    
+    def __repr__(self):
+        return "Declarations({})".format(self._declarations)
+
 
 
 class VariableDeclarationNode(object):
@@ -103,22 +113,40 @@ class ImportDeclarationNode(object):
         self.name = name
 
 
-def declarations_in_function(node):
+
+class DeclarationFinder(object):
+    def __init__(self):
+        self._node_to_declarations = IdentityDict()
+
+    def declarations_in_function(self, node):
+        if node not in self._node_to_declarations:
+            self._node_to_declarations[node] = _declarations_in_function(node)
+        
+        return self._node_to_declarations[node]
+        
+    def declarations_in_module(self, node):
+        if node not in self._node_to_declarations:
+            self._node_to_declarations[node] = _declarations_in_module(node)
+        
+        return self._node_to_declarations[node]
+        
+        
+def _declarations_in_function(node):
     declarations = Declarations({})
     
     for arg in node.args.args:
-        declare(arg, declarations)
+        _declare(arg, declarations)
     
     for statement in node.body:
-        declare(statement, declarations)
+        _declare(statement, declarations)
         
-    return declarations._declarations
+    return declarations
 
 
-def declarations_in_module(node):
+def _declarations_in_module(node):
     declarations = Declarations({})
     
     for statement in node.body:
-        declare(statement, declarations)
+        _declare(statement, declarations)
         
-    return declarations._declarations
+    return declarations
