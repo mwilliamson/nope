@@ -34,6 +34,8 @@ class Visitor(object):
             
             nodes.Import: self._visit_nothing,
             nodes.ImportFrom: self._visit_nothing,
+            
+            nodes.Module: self._visit_module,
         }
         self._visitors = self._default_visitors.copy()
         self._before = {}
@@ -152,3 +154,7 @@ class Visitor(object):
         self.visit(node.condition, *args)
         if node.message is not None:
             self.visit(node.message, *args)
+    
+    
+    def _visit_module(self, node, *args):
+        self._visit_statements(node.body, *args)

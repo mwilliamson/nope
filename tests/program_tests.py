@@ -1,5 +1,8 @@
-from nose.tools import istest
+import os
+
+from nose.tools import istest, assert_equal
 import spur
+import tempman
 
 import nope
 from .testing import program_path
@@ -52,3 +55,20 @@ def cannot_import_from_executable_module():
 @istest
 def can_import_from_local_package():
     assert nope.check(path=program_path("valid/import_value_from_local_package")).is_valid
+
+
+@istest
+def test_loop_control_module_is_run():
+    result = _check_program_string("break")
+    assert not result.is_valid
+    assert_equal("'break' outside loop", str(result.error))
+        
+
+def _check_program_string(program):
+    with tempman.create_temp_dir() as temp_dir:
+        path = os.path.join(temp_dir.path, "main.py")
+        with open(path, "w") as main_file:
+            main_file.write("#!/usr/bin/env python\n")
+            main_file.write(program)
+        return nope.check(path=path)
+    

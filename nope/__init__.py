@@ -1,7 +1,7 @@
 import collections
 import os
 
-from . import inference, parser, platforms, errors
+from . import inference, parser, platforms, errors, loop_control
 
 
 def check(path):
@@ -66,6 +66,11 @@ def compile(source_path, destination_dir, platform):
 Result = collections.namedtuple("Result", ["is_valid", "error", "value"])
 
 
+def _check(ast, source_tree, path):
+    loop_control.check_loop_control(ast, in_loop=False)
+    return inference.check(ast, source_tree, path)
+
+
 class SourceTree(object):
     def __init__(self, asts):
         self._asts = asts
@@ -75,7 +80,7 @@ class SourceTree(object):
         )
     
     def _checker(self, ast, path):
-        return lambda: inference.check(ast, self, os.path.abspath(path))
+        return lambda: _check(ast, self, path)
     
     def __contains__(self, value):
         return value in self._asts

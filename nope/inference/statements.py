@@ -216,16 +216,11 @@ class StatementTypeChecker(object):
     
     
     def _check_break(self, node, context):
-        self._check_loop_control_statement("break", node, context)
+        pass
     
     
     def _check_continue(self, node, context):
-        self._check_loop_control_statement("continue", node, context)
-    
-        
-    def _check_loop_control_statement(self, name, node, context):
-        if not context.in_loop:
-            raise errors.InvalidStatementError(node, "'{}' outside loop".format(name))
+        pass
     
     
     def _check_try(self, node, context):

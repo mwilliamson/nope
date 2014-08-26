@@ -29,11 +29,10 @@ def bound_context(bindings):
 
 
 class Context(object):
-    def __init__(self, bindings, return_type=None, is_module_scope=False, in_loop=False):
+    def __init__(self, bindings, return_type=None, is_module_scope=False):
         self._vars = bindings
         self.return_type = return_type
         self.is_module_scope = is_module_scope
-        self.in_loop = in_loop
     
     def has_name(self, name):
         return name in self._vars
@@ -71,10 +70,10 @@ class Context(object):
         return Context(module_vars, return_type=None, is_module_scope=True)
     
     def enter_loop(self):
-        return self._enter_block(in_loop=True)
+        return self._enter_block()
     
     def enter_branch(self):
-        return self._enter_block(in_loop=self.in_loop)
+        return self._enter_block()
 
     def unify(self, contexts, bind):
         new_bindings = [
@@ -100,12 +99,11 @@ class Context(object):
                     is_bound = bind and all(variable.is_bound for variable in variables)
                     self._vars[key] = Variable(unified_type, is_bound)
 
-    def _enter_block(self, in_loop=False):
+    def _enter_block(self):
         return Context(
             BlockVars(self._vars),
             return_type=self.return_type,
             is_module_scope=self.is_module_scope,
-            in_loop=in_loop,
         )
 
 
