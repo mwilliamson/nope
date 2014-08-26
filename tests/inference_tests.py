@@ -106,3 +106,5 @@ def module_can_have_value_with_same_name_as_sibling_module():
     })
     
     inference.check(node, source_tree, module_path="root/y.py")
+
+# TODO: test that name bindings are checked
