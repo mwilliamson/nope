@@ -45,7 +45,7 @@ class _TypeChecker(object):
             for name in exported_names
         ]
         
-        bindings = builtins.module_bindings(references)
+        bindings = builtins.module_bindings(references, self.type_lookup())
         name_binding.update_bindings(module, bindings)
         
         return types.module(self._module_path, [

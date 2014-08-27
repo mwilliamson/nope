@@ -8,7 +8,8 @@ from .util import (
     assert_statement_is_type_checked,
     assert_expression_is_type_checked,
     update_context,
-    create_context)
+    create_context,
+    context_manager_class, enter_method, exit_method)
 
 
 @istest
@@ -18,7 +19,7 @@ def body_of_with_expression_is_type_checked():
             bad_statement
         ]),
         create_context({
-            "x": _context_manager_class(),
+            "x": context_manager_class(),
         })
     )
 
@@ -32,7 +33,7 @@ def context_manager_of_with_statement_is_type_checked():
 
 @istest
 def context_manager_of_with_statement_must_have_enter_method():
-    cls = types.scalar_type("Manager", [types.attr("__exit__", _exit_method())])
+    cls = types.scalar_type("Manager", [types.attr("__exit__", exit_method())])
     context_manager_node = nodes.ref("x")
     node = nodes.with_statement(context_manager_node, None, [])
     
@@ -47,7 +48,7 @@ def context_manager_of_with_statement_must_have_enter_method():
 
 @istest
 def context_manager_of_with_statement_must_have_exit_method():
-    cls = types.scalar_type("Manager", [types.attr("__enter__", _enter_method())])
+    cls = types.scalar_type("Manager", [types.attr("__enter__", enter_method())])
     context_manager_node = nodes.ref("x")
     node = nodes.with_statement(context_manager_node, None, [])
     
@@ -64,7 +65,7 @@ def context_manager_of_with_statement_must_have_exit_method():
 def target_can_be_supertype_of_return_type_of_enter_method():
     node = nodes.with_statement(nodes.ref("x"), nodes.ref("y"), [])
     
-    context = create_context({"x": _context_manager_class(types.int_type), "y": types.any_type})
+    context = create_context({"x": context_manager_class(types.int_type), "y": types.any_type})
     assert_statement_type_checks(node, context)
 
 
@@ -73,7 +74,7 @@ def target_cannot_be_strict_subtype_of_return_type_of_enter_method():
     target_node = nodes.ref("y")
     node = nodes.with_statement(nodes.ref("x"), target_node, [])
     
-    context = create_context({"x": _context_manager_class(types.any_type), "y": types.int_type})
+    context = create_context({"x": context_manager_class(types.any_type), "y": types.int_type})
     try:
         update_context(node, context)
         assert False, "Expected error"
@@ -81,53 +82,3 @@ def target_cannot_be_strict_subtype_of_return_type_of_enter_method():
         assert_equal(target_node, error.node)
         assert_equal(types.any_type, error.value_type)
         assert_equal(types.int_type, error.target_type)
-
-
-# TODO
-#~ @istest
-def assigned_variables_in_with_statement_body_are_still_bound_after_exit_if_exit_method_always_returns_none():
-    node = nodes.with_statement(nodes.ref("x"), None, [
-        nodes.assign(nodes.ref("z"), nodes.none()),
-    ])
-    
-    context = create_context({
-        "x": _context_manager_class(exit_type=types.none_type),
-        "z": None,
-    })
-    update_context(node, context)
-    assert_equal(types.none_type, context.lookup("z"))
-
-
-# TODO
-#~ @istest
-def assigned_variables_in_with_statement_body_are_unbound_after_exit_if_exit_method_does_not_return_none():
-    node = nodes.with_statement(nodes.ref("x"), None, [
-        nodes.assign(nodes.ref("z"), nodes.none()),
-    ])
-    
-    context = create_context({
-        "x": _context_manager_class(exit_type=types.any_type),
-        "z": None,
-    })
-    update_context(node, context)
-    assert not context.is_bound("z")
-    assert_equal(types.none_type, context.lookup("z", allow_unbound=True))
-
-
-def _context_manager_class(enter_type=None, exit_type=None):
-    return types.scalar_type("Manager", [
-        types.attr("__enter__", _enter_method(enter_type), read_only=True),
-        types.attr("__exit__", _exit_method(exit_type), read_only=True),
-    ])
-
-
-def _enter_method(return_type=None):
-    if return_type is None:
-        return_type = types.none_type
-    return types.func([], return_type)
-
-
-def _exit_method(return_type=None):
-    if return_type is None:
-        return_type = types.none_type
-    return types.func([types.exception_meta_type, types.exception_type, types.traceback_type], return_type)

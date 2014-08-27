@@ -16,7 +16,7 @@ class IdentityDict(object):
         try:
             return self._values[id(key)]
         except KeyError:
-            raise KeyError("id({})".format(repr(key)))
+            raise KeyError("id({}) == {}".format(repr(key), id(key)))
     
     def __contains__(self, key):
         return id(key) in self._values

@@ -145,3 +145,23 @@ def assert_variable_is_bound(create_node):
     update_context(node, context)
     assert context.is_bound("x")
     assert_equal(types.int_type, context.lookup("x"))
+
+
+
+def context_manager_class(enter_type=None, exit_type=None):
+    return types.scalar_type("Manager", [
+        types.attr("__enter__", enter_method(enter_type), read_only=True),
+        types.attr("__exit__", exit_method(exit_type), read_only=True),
+    ])
+
+
+def enter_method(return_type=None):
+    if return_type is None:
+        return_type = types.none_type
+    return types.func([], return_type)
+
+
+def exit_method(return_type=None):
+    if return_type is None:
+        return_type = types.none_type
+    return types.func([types.exception_meta_type, types.exception_type, types.traceback_type], return_type)

@@ -1,4 +1,4 @@
-from nope import nodes, errors, util, visit, name_declaration
+from nope import nodes, errors, util, visit, name_declaration, types
 
 
 def update_bindings(node, context):
@@ -9,6 +9,7 @@ def update_bindings(node, context):
     visitor.replace(nodes.WhileLoop, _update_while_loop)
     visitor.replace(nodes.ForLoop, _update_for_loop)
     visitor.replace(nodes.TryStatement, _update_try)
+    visitor.replace(nodes.WithStatement, _update_with)
     visitor.replace(nodes.FunctionDef, _update_function_definition)
     visitor.before(nodes.Argument, _update_argument)
     visitor.before(nodes.Import, _update_import)
@@ -103,6 +104,23 @@ def _update_try(visitor, node, context):
     )
 
 
+def _update_with(visitor, node, context):
+    visitor.visit(node.value, context)
+    if node.target is not None:
+        visitor.visit(node.target, context)
+    
+    exit_type = context.type_of(node.value).attrs.type_of("__exit__")
+    # TODO: this is duplicated in codegeneration
+    while not types.is_func_type(exit_type):
+        exit_type = exit_type.attrs.type_of("__call__")
+    
+    _update_branches(
+        [_branch(node.body)],
+        context,
+        bind=exit_type.return_type == types.none_type,
+    )
+
+
 def _update_function_definition(visitor, node, context):
     context.bind(node)
     body_context = context.enter_function()
@@ -165,10 +183,11 @@ _branch = _Branch
 
 
 class Context(object):
-    def __init__(self, declarations, is_definitely_bound, exception_handler_target_names):
+    def __init__(self, declarations, is_definitely_bound, exception_handler_target_names, type_lookup):
         self._declarations = declarations
         self._is_definitely_bound = is_definitely_bound
         self._exception_handler_target_names = exception_handler_target_names
+        self._type_lookup = type_lookup
     
     def is_definitely_bound(self, node):
         declaration = self._declarations[node]
@@ -191,14 +210,14 @@ class Context(object):
         self._exception_handler_target_names.remove(node.name)
     
     def enter_branch(self):
-        return Context(self._declarations, DiffingDict(self._is_definitely_bound), self._exception_handler_target_names)
+        return Context(self._declarations, DiffingDict(self._is_definitely_bound), self._exception_handler_target_names, self._type_lookup)
     
     def enter_function(self):
         is_definitely_bound = _copy_dict(self._is_definitely_bound)
         for declaration in is_definitely_bound:
             if isinstance(declaration, name_declaration.ExceptionHandlerTargetNode):
                 is_definitely_bound[declaration] = False
-        return Context(self._declarations, is_definitely_bound, set())
+        return Context(self._declarations, is_definitely_bound, set(), self._type_lookup)
     
     def unify(self, contexts):
         is_definitely_bound_mappings = [
@@ -215,6 +234,9 @@ class Context(object):
                     mapping.get(declaration, False)
                     for mapping in is_definitely_bound_mappings
                 )
+    
+    def type_of(self, node):
+        return self._type_lookup.type_of(node)
 
 
 class DiffingDict(object):
