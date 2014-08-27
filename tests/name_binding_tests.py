@@ -85,11 +85,11 @@ def no_error_if_name_is_definitely_bound():
 
 @istest
 def declarations_in_exactly_one_if_else_branch_are_not_definitely_bound():
-    _assert_name_is_not_definitely_bound(lambda assignment:
-        nodes.if_else(nodes.boolean(True), [assignment()], [])
+    _assert_name_is_not_definitely_bound(lambda generate:
+        nodes.if_else(nodes.boolean(True), [generate.assignment()], [])
     )
-    _assert_name_is_not_definitely_bound(lambda assignment:
-        nodes.if_else(nodes.boolean(True), [], [assignment()])
+    _assert_name_is_not_definitely_bound(lambda generate:
+        nodes.if_else(nodes.boolean(True), [], [generate.assignment()])
     )
 
 
@@ -112,8 +112,8 @@ def variable_remains_definitely_bound_after_being_reassigned_in_one_branch_of_if
 
 @istest
 def declarations_in_both_if_else_branches_are_definitely_bound():
-    _assert_name_is_definitely_bound(lambda create_assignment:
-        nodes.if_else(nodes.boolean(True), [create_assignment()], [create_assignment()])
+    _assert_name_is_definitely_bound(lambda generate:
+        nodes.if_else(nodes.boolean(True), [generate.assignment()], [generate.assignment()])
     )
 
 
@@ -168,8 +168,8 @@ def children_of_while_loop_are_checked():
 
 @istest
 def declarations_in_both_body_and_else_body_of_while_loop_are_not_definitely_bound():
-    _assert_name_is_not_definitely_bound(lambda assignment:
-        nodes.while_loop(nodes.boolean(True), [assignment()], [assignment()])
+    _assert_name_is_not_definitely_bound(lambda generate:
+        nodes.while_loop(nodes.boolean(True), [generate.assignment()], [generate.assignment()])
     )
 
 
@@ -194,16 +194,16 @@ def children_of_for_loop_are_checked():
 
 @istest
 def for_loop_target_is_defined_but_not_definitely_bound():
-    _assert_target_is_not_definitely_bound(lambda target:
-        nodes.for_loop(target(), nodes.list([]), [], [])
+    _assert_name_is_not_definitely_bound(lambda generate:
+        nodes.for_loop(generate.target(), nodes.list([]), [], [])
     )
 
 
 @istest
 def declarations_in_both_body_and_else_body_of_for_loop_are_not_definitely_bound():
     target_node = nodes.ref("target")
-    _assert_name_is_not_definitely_bound(lambda assignment:
-        nodes.for_loop(target_node, nodes.list([]), [assignment()], [assignment()]),
+    _assert_name_is_not_definitely_bound(lambda generate:
+        nodes.for_loop(target_node, nodes.list([]), [generate.assignment()], [generate.assignment()]),
         other_refs=[target_node],
     )
 
@@ -237,24 +237,24 @@ def children_of_try_statement_are_checked():
 
 @istest
 def declarations_in_body_and_handler_body_and_finally_body_of_try_statement_are_not_definitely_bound():
-    _assert_name_is_not_definitely_bound(lambda assignment:
+    _assert_name_is_not_definitely_bound(lambda generate:
         nodes.try_statement(
-            [assignment()],
+            [generate.assignment()],
             handlers=[
-                nodes.except_handler(None, None, [assignment()])
+                nodes.except_handler(None, None, [generate.assignment()])
             ],
-            finally_body=[assignment()],
+            finally_body=[generate.assignment()],
         )
     )
 
 
 @istest
 def except_handler_target_is_defined_but_not_definitely_bound():
-    _assert_target_is_not_definitely_bound(lambda target:
+    _assert_name_is_not_definitely_bound(lambda generate:
         nodes.try_statement(
             [],
             handlers=[
-                nodes.except_handler(nodes.none(), target(), [])
+                nodes.except_handler(nodes.none(), generate.target(), [])
             ],
         )
     )
@@ -262,12 +262,12 @@ def except_handler_target_is_defined_but_not_definitely_bound():
 
 @istest
 def except_handler_targets_in_same_try_statement_can_share_their_name():
-    _assert_target_is_not_definitely_bound(lambda target:
+    _assert_name_is_not_definitely_bound(lambda generate:
         nodes.try_statement(
             [],
             handlers=[
-                nodes.except_handler(nodes.none(), target(), []),
-                nodes.except_handler(nodes.none(), target(), []),
+                nodes.except_handler(nodes.none(), generate.target(), []),
+                nodes.except_handler(nodes.none(), generate.target(), []),
             ],
         )
     )
@@ -330,8 +330,8 @@ def children_of_with_statement_are_checked():
 @istest
 def assigned_variables_in_with_statement_body_are_still_bound_after_exit_if_exit_method_always_returns_none():
     manager_ref = nodes.ref("manager")
-    _assert_name_is_definitely_bound(lambda assignment:
-        nodes.with_statement(manager_ref, None, [assignment()]),
+    _assert_name_is_definitely_bound(lambda generate:
+        nodes.with_statement(manager_ref, None, [generate.assignment()]),
         other_refs=[manager_ref],
         types={"manager": context_manager_class(exit_type=types.none_type)},
     )
@@ -340,8 +340,8 @@ def assigned_variables_in_with_statement_body_are_still_bound_after_exit_if_exit
 @istest
 def assigned_variables_in_with_statement_body_are_unbound_after_exit_if_exit_method_does_not_return_none():
     manager_ref = nodes.ref("manager")
-    _assert_name_is_not_definitely_bound(lambda assignment:
-        nodes.with_statement(manager_ref, None, [assignment()]),
+    _assert_name_is_not_definitely_bound(lambda generate:
+        nodes.with_statement(manager_ref, None, [generate.assignment()]),
         other_refs=[manager_ref],
         types={"manager": context_manager_class(exit_type=types.boolean_type)},
     )
@@ -462,39 +462,36 @@ def _new_context(declarations, is_definitely_bound=None, type_lookup=None):
     return Context(declarations, is_definitely_bound, set(), type_lookup)
 
 
-def _assert_name_is_not_definitely_bound(create_node, other_refs=None, types=None):
+def _updated_context(create_node, other_refs=None, types=None):
     declaration = name_declaration.VariableDeclarationNode("x")
     ref_node = nodes.ref("x")
     declarations = IdentityDict([
         (ref_node, declaration)
     ])
     
-    def create_assignment():
-        target_node = nodes.ref("x")
-        declarations[target_node] = declaration
-        return nodes.assign([target_node], nodes.none())
+    class NodeGenerator(object):
+        def target(self):
+            target_node = nodes.ref("x")
+            declarations[target_node] = declaration
+            return target_node
         
-    node = create_node(create_assignment)
+        def assignment(self):
+            return nodes.assign([self.target()], nodes.none())
+        
+    node = create_node(NodeGenerator())
         
     context = _create_test_context(declarations, other_refs, variable_types=types)
     update_bindings(node, context)
+    return ref_node, context
+
+
+def _assert_name_is_not_definitely_bound(create_node, other_refs=None, types=None):
+    ref_node, context = _updated_context(create_node, other_refs, types)
     assert not context.is_definitely_bound(ref_node)
     
 
 def _assert_name_is_definitely_bound(create_node, other_refs=None, types=None):
-    declaration = name_declaration.VariableDeclarationNode("x")
-    ref_node = nodes.ref("x")
-    declarations = IdentityDict([(ref_node, declaration)])
-    
-    def create_assignment():
-        target_node = nodes.ref("x")
-        declarations[target_node] = declaration
-        return nodes.assign([target_node], nodes.none())
-    
-    node = create_node(create_assignment)
-    
-    context = _create_test_context(declarations, other_refs, variable_types=types)
-    update_bindings(node, context)
+    ref_node, context = _updated_context(create_node, other_refs, types)
     assert_equal(True, context.is_definitely_bound(ref_node))
 
 
@@ -518,25 +515,6 @@ def _assert_child_expression_is_checked(create_node, other_refs=None, types=None
     except errors.UnboundLocalError as error:
         assert_is(ref, error.node)
         assert_is("x", error.name)
-
-
-def _assert_target_is_not_definitely_bound(create_node, other_refs=None):
-    declaration = name_declaration.VariableDeclarationNode("x")
-    target_node = nodes.ref("x")
-    declarations = IdentityDict([
-        (target_node, declaration)
-    ])
-    
-    def create_target():
-        target_node = nodes.ref("x")
-        declarations[target_node] = declaration
-        return target_node
-        
-    node = create_node(create_target)
-    
-    context = _create_test_context(declarations)
-    update_bindings(node, context)
-    assert not context.is_definitely_bound(target_node)
 
 
 def _create_test_context(declarations, other_refs=None, variable_types=None):
