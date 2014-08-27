@@ -56,6 +56,12 @@ def break_is_not_valid_in_function_in_while_loop_body():
 
 
 @istest
+def break_is_valid_in_try_finally_body():
+    node = nodes.try_statement([], finally_body=[nodes.break_statement()])
+    check_loop_control(node, True)
+
+
+@istest
 def continue_is_not_valid_in_module():
     node = nodes.continue_statement()
     try:
@@ -65,3 +71,20 @@ def continue_is_not_valid_in_module():
         assert_equal(node, error.node)
         assert_equal("'continue' outside loop", str(error))
 
+
+@istest
+def continue_is_valid_in_try_body():
+    node = nodes.try_statement([nodes.continue_statement()])
+    check_loop_control(node, True)
+
+
+@istest
+def continue_is_not_valid_in_try_finally_body():
+    continue_statement = nodes.continue_statement()
+    node = nodes.try_statement([], finally_body=[continue_statement])
+    try:
+        check_loop_control(node, True)
+        assert False, "Expected error"
+    except errors.TypeCheckError as error:
+        assert_equal(continue_statement, error.node)
+        assert_equal("'continue' not supported inside 'finally' clause", str(error))
