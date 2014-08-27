@@ -138,7 +138,6 @@ class ExpressionTypeInferer(object):
         
         formal_arg_types = [arg.type for arg in method.args]
         
-        # TODO: check keyword arguments
         if len(formal_arg_types) != len(actual_args):
             raise errors.BadSignatureError(receiver, "{} should have exactly {} argument(s)".format(method_name, len(actual_args)))
         
