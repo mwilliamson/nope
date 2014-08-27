@@ -3,6 +3,7 @@ from nose.tools import istest, assert_equal, assert_is
 from nope import nodes, errors, name_declaration, types
 from nope.name_binding import update_bindings, Context
 from nope.identity_dict import IdentityDict
+from nope.name_resolution import References
 from .inference.util import context_manager_class
 
 
@@ -459,7 +460,7 @@ def import_name_is_definitely_bound_after_import_from_statement():
 def _new_context(declarations, is_definitely_bound=None, type_lookup=None):
     if is_definitely_bound is None:
         is_definitely_bound = {}
-    return Context(declarations, is_definitely_bound, set(), type_lookup)
+    return Context(References(declarations), is_definitely_bound, set(), type_lookup)
 
 
 def _updated_context(create_node, other_refs=None, types=None):

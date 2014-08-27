@@ -190,14 +190,14 @@ class Context(object):
         self._type_lookup = type_lookup
     
     def is_definitely_bound(self, node):
-        declaration = self._declarations[node]
+        declaration = self._declarations.referenced_declaration(node)
         return self.is_declaration_definitely_bound(declaration)
     
     def is_declaration_definitely_bound(self, declaration):
         return self._is_definitely_bound.get(declaration, False)
     
     def bind(self, node):
-        declaration = self._declarations[node]
+        declaration = self._declarations.referenced_declaration(node)
         self._is_definitely_bound[declaration] = True
     
     def add_exception_handler_target(self, node):
