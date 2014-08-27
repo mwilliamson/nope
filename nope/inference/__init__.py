@@ -45,8 +45,13 @@ class _TypeChecker(object):
             for name in exported_names
         ]
         
-        bindings = builtins.module_bindings(references, self.type_lookup())
-        name_binding.update_bindings(module, bindings)
+        builtin_is_definitely_bound = builtins.module_bindings(references)
+        bindings = name_binding.check_bindings(
+            module,
+            references=references,
+            type_lookup=self.type_lookup(),
+            is_definitely_bound=builtin_is_definitely_bound,
+        )
         
         return types.module(self._module_path, [
             # TODO: set read_only as appropriate

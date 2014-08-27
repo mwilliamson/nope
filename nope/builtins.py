@@ -38,7 +38,5 @@ def module_context(references):
     return context.Context(references, _builtin_definition_types).enter_module()
 
 
-def module_bindings(references, type_lookup):
-    # TODO: should not expose name_binding.Context publicly
-    is_definitely_bound = dict((declaration, True) for declaration in _builtin_declarations.values())
-    return name_binding.Context(references, is_definitely_bound, set(), type_lookup)
+def module_bindings(references):
+    return dict((declaration, True) for declaration in _builtin_declarations.values())

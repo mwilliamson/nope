@@ -1,166 +1,184 @@
 from nope import nodes, errors, util, visit, name_declaration, types
+from nope.identity_dict import IdentityDict
 
 
-def update_bindings(node, context):
-    visitor = visit.Visitor()
-    visitor.before(nodes.VariableReference, _check_variable_reference)
-    visitor.replace(nodes.Assignment, _update_assignment_binding)
-    visitor.replace(nodes.IfElse, _update_if_else)
-    visitor.replace(nodes.WhileLoop, _update_while_loop)
-    visitor.replace(nodes.ForLoop, _update_for_loop)
-    visitor.replace(nodes.TryStatement, _update_try)
-    visitor.replace(nodes.WithStatement, _update_with)
-    visitor.replace(nodes.FunctionDef, _update_function_definition)
-    visitor.before(nodes.Argument, _update_argument)
-    visitor.before(nodes.Import, _update_import)
-    visitor.before(nodes.ImportFrom, _update_import)
+def check_bindings(node, references, type_lookup, is_definitely_bound):
+    context = _Context(references, is_definitely_bound, set())
+    checker = _BindingChecker(type_lookup)
+    checker.update_bindings(node, context)
+    return Bindings(references, context._is_definitely_bound)
+
+
+class _BindingChecker(object):
+    def __init__(self, type_lookup):
+        self._type_lookup = type_lookup
     
-    return visitor.visit(node, context)
-
-
-def _check_variable_reference(visitor, node, context):
-    if not context.is_definitely_bound(node):
-        raise errors.UnboundLocalError(node, node.name)
-
-
-def _update_target(visitor, target, context):
-    if isinstance(target, nodes.VariableReference):
-        context.bind(target)
-    visitor.visit(target, context)
-
-
-def _update_assignment_binding(visitor, node, context):
-    visitor.visit(node.value, context)
-    
-    for target in node.targets:
-        _update_target(visitor, target, context)
-
-
-def _update_if_else(visitor, node, context):
-    visitor.visit(node.condition, context)
-    
-    _update_branches(
-        [_branch(node.true_body), _branch(node.false_body)],
-        context,
-        bind=True,
-    )
-
-
-def _update_while_loop(visitor, node, context):
-    visitor.visit(node.condition, context)
-    
-    _update_branches(
-        [_branch(node.body), _branch(node.else_body)],
-        context,
-        bind=False,
-    )
-
-
-def _update_for_loop(visitor, node, context):
-    visitor.visit(node.iterable, context)
-    
-    def update_for_loop_target(branch_context):
-        _update_target(visitor, node.target, branch_context)
-    
-    _update_branches(
-        [
-            _branch(node.body, before=update_for_loop_target),
-            _branch(node.else_body)
-        ],
-        context,
-        bind=False,
-    )
-
-
-def _update_try(visitor, node, context):
-    branches = [_branch(node.body), _branch(node.finally_body)]
-    
-    def create_handler_branch(handler):
-        if handler.type is not None:
-            visitor.visit(handler.type, context)
-            
-        def update_handler_target(branch_context):
-            if handler.target is not None:
-                _update_target(visitor, handler.target, branch_context)
-                branch_context.add_exception_handler_target(handler.target)
+    def update_bindings(self, node, context):
+        visitor = visit.Visitor()
+        visitor.before(nodes.VariableReference, self._check_variable_reference)
+        visitor.replace(nodes.Assignment, self._update_assignment_binding)
+        visitor.replace(nodes.IfElse, self._update_if_else)
+        visitor.replace(nodes.WhileLoop, self._update_while_loop)
+        visitor.replace(nodes.ForLoop, self._update_for_loop)
+        visitor.replace(nodes.TryStatement, self._update_try)
+        visitor.replace(nodes.WithStatement, self._update_with)
+        visitor.replace(nodes.FunctionDef, self._update_function_definition)
+        visitor.before(nodes.Argument, self._update_argument)
+        visitor.before(nodes.Import, self._update_import)
+        visitor.before(nodes.ImportFrom, self._update_import)
         
-        def delete_handler_target(branch_context):
-            if handler.target is not None:
-                context.delete_exception_handler_target(handler.target)
+        return visitor.visit(node, context)
+
+
+    def _check_variable_reference(self, visitor, node, context):
+        if not context.is_definitely_bound(node):
+            raise errors.UnboundLocalError(node, node.name)
+
+
+    def _update_target(self, visitor, target, context):
+        if isinstance(target, nodes.VariableReference):
+            context.bind(target)
+        visitor.visit(target, context)
+
+
+    def _update_assignment_binding(self, visitor, node, context):
+        visitor.visit(node.value, context)
         
-        return _branch(
-            handler.body,
-            before=update_handler_target,
-            after=delete_handler_target,
+        for target in node.targets:
+            self._update_target(visitor, target, context)
+
+
+    def _update_if_else(self, visitor, node, context):
+        visitor.visit(node.condition, context)
+        
+        self._update_branches(
+            visitor,
+            [_branch(node.true_body), _branch(node.false_body)],
+            context,
+            bind=True,
         )
+
+
+    def _update_while_loop(self, visitor, node, context):
+        visitor.visit(node.condition, context)
+        
+        self._update_branches(
+            visitor,
+            [_branch(node.body), _branch(node.else_body)],
+            context,
+            bind=False,
+        )
+
+
+    def _update_for_loop(self, visitor, node, context):
+        visitor.visit(node.iterable, context)
+        
+        def update_for_loop_target(branch_context):
+            self._update_target(visitor, node.target, branch_context)
+        
+        self._update_branches(
+            visitor,
+            [
+                _branch(node.body, before=update_for_loop_target),
+                _branch(node.else_body)
+            ],
+            context,
+            bind=False,
+        )
+
+
+    def _update_try(self, visitor, node, context):
+        branches = [_branch(node.body), _branch(node.finally_body)]
+        
+        def create_handler_branch(handler):
+            if handler.type is not None:
+                visitor.visit(handler.type, context)
+                
+            def update_handler_target(branch_context):
+                if handler.target is not None:
+                    self._update_target(visitor, handler.target, branch_context)
+                    branch_context.add_exception_handler_target(handler.target)
+            
+            def delete_handler_target(branch_context):
+                if handler.target is not None:
+                    context.delete_exception_handler_target(handler.target)
+            
+            return _branch(
+                handler.body,
+                before=update_handler_target,
+                after=delete_handler_target,
+            )
+        
+        for handler in node.handlers:
+            branches.append(create_handler_branch(handler))
+        
+        self._update_branches(
+            visitor,
+            branches,
+            context,
+            bind=False,
+        )
+
+
+    def _update_with(self, visitor, node, context):
+        visitor.visit(node.value, context)
+        if node.target is not None:
+            visitor.visit(node.target, context)
+        
+        exit_type = self._type_of(node.value).attrs.type_of("__exit__")
+        # TODO: this is duplicated in codegeneration
+        while not types.is_func_type(exit_type):
+            exit_type = exit_type.attrs.type_of("__call__")
+        
+        self._update_branches(
+            visitor,
+            [_branch(node.body)],
+            context,
+            bind=exit_type.return_type == types.none_type,
+        )
+
+
+    def _update_function_definition(self, visitor, node, context):
+        context.bind(node)
+        body_context = context.enter_function()
+        for arg in node.args.args:
+            visitor.visit(arg, body_context)
+        
+        for statement in node.body:
+            visitor.visit(statement, body_context)
+
+
+    def _update_argument(self, visitor, node, context):
+        context.bind(node)
+
+
+    def _update_import(self, visitor, node, context):
+        for alias in node.names:
+            context.bind(alias)
+        
+
+    def _update_branches(self, visitor, branches, context, bind=False):
+        branch_contexts = [
+            self._update_branch(visitor, branch, context)
+            for branch in branches
+        ]
+        if bind:
+            context.unify(branch_contexts)
+
+
+    def _update_branch(self, visitor, branch, context):
+        branch_context = branch.enter_context(context)
+        self._update_statements(visitor, branch.statements, branch_context)
+        branch.exit_context(context)
+        return branch_context
+
+
+    def _update_statements(self, visitor, statements, context):
+        for statement in statements:
+            visitor.visit(statement, context)
     
-    for handler in node.handlers:
-        branches.append(create_handler_branch(handler))
-    
-    _update_branches(
-        branches,
-        context,
-        bind=False,
-    )
-
-
-def _update_with(visitor, node, context):
-    visitor.visit(node.value, context)
-    if node.target is not None:
-        visitor.visit(node.target, context)
-    
-    exit_type = context.type_of(node.value).attrs.type_of("__exit__")
-    # TODO: this is duplicated in codegeneration
-    while not types.is_func_type(exit_type):
-        exit_type = exit_type.attrs.type_of("__call__")
-    
-    _update_branches(
-        [_branch(node.body)],
-        context,
-        bind=exit_type.return_type == types.none_type,
-    )
-
-
-def _update_function_definition(visitor, node, context):
-    context.bind(node)
-    body_context = context.enter_function()
-    for arg in node.args.args:
-        visitor.visit(arg, body_context)
-    
-    for statement in node.body:
-        visitor.visit(statement, body_context)
-
-
-def _update_argument(visitor, node, context):
-    context.bind(node)
-
-
-def _update_import(visitor, node, context):
-    for alias in node.names:
-        context.bind(alias)
-    
-
-
-def _update_branches(branches, context, bind=False):
-    branch_contexts = [
-        _update_branch(branch, context)
-        for branch in branches
-    ]
-    if bind:
-        context.unify(branch_contexts)
-
-
-def _update_branch(branch, context):
-    branch_context = branch.enter_context(context)
-    _update_statements(branch.statements, branch_context)
-    branch.exit_context(context)
-    return branch_context
-
-
-def _update_statements(statements, context):
-    for statement in statements:
-        # TODO: use visitor.visit instead
-        update_bindings(statement, context)
+    def _type_of(self, node):
+        return self._type_lookup.type_of(node)
 
 
 class _Branch(object):
@@ -182,12 +200,11 @@ class _Branch(object):
 _branch = _Branch
 
 
-class Context(object):
-    def __init__(self, declarations, is_definitely_bound, exception_handler_target_names, type_lookup):
+class _Context(object):
+    def __init__(self, declarations, is_definitely_bound, exception_handler_target_names):
         self._declarations = declarations
         self._is_definitely_bound = is_definitely_bound
         self._exception_handler_target_names = exception_handler_target_names
-        self._type_lookup = type_lookup
     
     def is_definitely_bound(self, node):
         declaration = self._declarations.referenced_declaration(node)
@@ -210,14 +227,14 @@ class Context(object):
         self._exception_handler_target_names.remove(node.name)
     
     def enter_branch(self):
-        return Context(self._declarations, DiffingDict(self._is_definitely_bound), self._exception_handler_target_names, self._type_lookup)
+        return _Context(self._declarations, DiffingDict(self._is_definitely_bound), self._exception_handler_target_names)
     
     def enter_function(self):
         is_definitely_bound = _copy_dict(self._is_definitely_bound)
         for declaration in is_definitely_bound:
             if isinstance(declaration, name_declaration.ExceptionHandlerTargetNode):
                 is_definitely_bound[declaration] = False
-        return Context(self._declarations, is_definitely_bound, set(), self._type_lookup)
+        return _Context(self._declarations, is_definitely_bound, set())
     
     def unify(self, contexts):
         is_definitely_bound_mappings = [
@@ -234,9 +251,19 @@ class Context(object):
                     mapping.get(declaration, False)
                     for mapping in is_definitely_bound_mappings
                 )
+
+
+class Bindings(object):
+    def __init__(self, references, is_definitely_bound):
+        self._references = references
+        self._is_definitely_bound = is_definitely_bound
     
-    def type_of(self, node):
-        return self._type_lookup.type_of(node)
+    def is_definitely_bound(self, node):
+        declaration = self._references.referenced_declaration(node)
+        return self.is_declaration_definitely_bound(declaration)
+    
+    def is_declaration_definitely_bound(self, declaration):
+        return self._is_definitely_bound.get(declaration, False)
 
 
 class DiffingDict(object):

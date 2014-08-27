@@ -1,4 +1,11 @@
 class IdentityDict(object):
+    @staticmethod
+    def create(values):
+        if not isinstance(values, IdentityDict):
+            return IdentityDict(values)
+        else:
+            return values
+    
     def __init__(self, values=None):
         if values is None:
             values = []

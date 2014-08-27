@@ -16,7 +16,7 @@ class NameResolver(object):
 
 class References(object):
     def __init__(self, references):
-        self._references = references
+        self._references = IdentityDict.create(references)
     
     def referenced_declaration(self, reference):
         return self._references[reference]
