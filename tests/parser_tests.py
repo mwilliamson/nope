@@ -544,6 +544,14 @@ def test_parse_try_except_with_specific_type_and_identifier():
 
 
 @istest
+def test_error_if_trying_to_parse_try_statement_with_else_block():
+    _assert_syntax_error(
+        "'else' clause in 'try' statement is unsupported",
+        "try:\n  pass\nexcept AssertionError as error:\n  pass\nelse:\n  pass"
+    )
+
+
+@istest
 def test_parse_raise():
     _assert_statement_parse(nodes.raise_statement(nodes.ref("x")), "raise x")
 
@@ -613,3 +621,11 @@ def _assert_statement_parse(expected, source):
     assert isinstance(module, nodes.Module)
     
     assert_equal(expected, module.body[0])
+
+
+def _assert_syntax_error(description, source):
+    try:
+        parser.parse(source)
+        assert False, "Expected SyntaxError"
+    except SyntaxError as error:
+        assert_equal(description, str(error))
