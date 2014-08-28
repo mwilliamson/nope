@@ -22,5 +22,5 @@ def type_error_if_attribute_does_not_exist():
         infer(node, context)
         assert False, "Expected error"
     except errors.NoSuchAttributeError as error:
-        assert_equal("str object has no attribute swizzlify", str(error))
+        assert_equal("'str' object has no attribute 'swizzlify'", str(error))
         assert error.node is node

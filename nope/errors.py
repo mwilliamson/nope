@@ -36,7 +36,7 @@ class TypeMismatchError(TypeCheckError):
         self.node = node
         
     def __str__(self):
-        return "Expected {0} but was {1}".format(self.expected, self.actual)
+        return "Expected '{0}' but was '{1}'".format(self.expected, self.actual)
 
 
 class BadAssignmentError(TypeCheckError):
@@ -55,7 +55,7 @@ class UnboundLocalError(TypeCheckError):
         self.name = name
     
     def __str__(self):
-        return "local variable {0} referenced before assignment".format(self.name)
+        return "local variable '{0}' referenced before assignment".format(self.name)
 
 
 class NoSuchAttributeError(TypeCheckError):
@@ -65,7 +65,7 @@ class NoSuchAttributeError(TypeCheckError):
         self._attr_name = attr_name
     
     def __str__(self):
-        return "{} object has no attribute {}".format(self._obj_type, self._attr_name)
+        return "'{}' object has no attribute '{}'".format(self._obj_type, self._attr_name)
 
 
 class ReadOnlyAttributeError(TypeCheckError):

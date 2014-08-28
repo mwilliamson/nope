@@ -18,4 +18,4 @@ def type_error_if_ref_to_undefined_variable():
         assert False, "Expected error"
     except errors.UnboundLocalError as error:
         assert_equal(node, error.node)
-        assert_equal("local variable x referenced before assignment", str(error))
+        assert_equal("local variable 'x' referenced before assignment", str(error))
