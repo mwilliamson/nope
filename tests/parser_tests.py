@@ -242,6 +242,17 @@ def f(x):
 
 
 @istest
+def function_decorators_are_not_supported():
+    source = """
+#:: -> str
+@test
+def f():
+    pass
+"""
+    _assert_syntax_error("function decorators are not supported", source)
+
+
+@istest
 def keyword_only_arguments_are_not_supported():
     source = """
 #:: -> str

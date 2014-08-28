@@ -93,6 +93,9 @@ class Converter(object):
         if signature is None:
             signature = nodes.signature(type_params=[], args=[], returns=None)
         
+        if node.decorator_list:
+            raise SyntaxError("function decorators are not supported")
+        
         if node.args.kwonlyargs:
             raise SyntaxError("keyword-only arguments are not supported")
         
