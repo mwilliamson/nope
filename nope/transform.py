@@ -93,6 +93,15 @@ class Converter(object):
         if signature is None:
             signature = nodes.signature(type_params=[], args=[], returns=None)
         
+        if node.args.kwonlyargs:
+            raise SyntaxError("keyword-only arguments are not supported")
+        
+        if node.args.vararg is not None:
+            raise SyntaxError("arguments in the form '*{}' are not supported".format(node.args.vararg.arg))
+        
+        if node.args.kwarg is not None:
+            raise SyntaxError("arguments in the form '**{}' are not supported".format(node.args.kwarg.arg))
+        
         if len(node.args.args) != len(signature.args):
             raise SyntaxError("args length mismatch: def has {0}, signature has {1}".format(
                 len(node.args.args), len(signature.args)))

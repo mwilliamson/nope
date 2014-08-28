@@ -242,6 +242,36 @@ def f(x):
 
 
 @istest
+def keyword_only_arguments_are_not_supported():
+    source = """
+#:: -> str
+def f(*, x):
+    pass
+"""
+    _assert_syntax_error("keyword-only arguments are not supported", source)
+
+
+@istest
+def var_args_are_not_supported():
+    source = """
+#:: -> str
+def f(*args):
+    pass
+"""
+    _assert_syntax_error("arguments in the form '*args' are not supported", source)
+
+
+@istest
+def keyword_var_args_are_not_supported():
+    source = """
+#:: -> str
+def f(**kwargs):
+    pass
+"""
+    _assert_syntax_error("arguments in the form '**kwargs' are not supported", source)
+
+
+@istest
 def can_parse_signature_comment_with_type_application_with_one_generic_parameter():
     source = """
 #:: -> list[str]
