@@ -1,19 +1,20 @@
-import collections
 import sys
 
+import dodge
 
-NoneExpression = collections.namedtuple("NoneExpression", [])
-BooleanExpression = collections.namedtuple("BooleanExpression", ["value"])
-IntExpression = collections.namedtuple("IntExpression", ["value"])
-StringExpression = collections.namedtuple("StringExpression", ["value"])
-ListExpression = collections.namedtuple("ListExpression", ["elements"])
-VariableReference = collections.namedtuple("VariableReference", ["name"])
 
-Call = collections.namedtuple("Call", ["func", "args", "kwargs"])
-AttributeAccess = collections.namedtuple("AttributeAccess", ["value", "attr"])
-TypeApplication = collections.namedtuple("TypeApplication", ["generic_type", "params"])
+NoneExpression = dodge.data_class("NoneExpression", [])
+BooleanExpression = dodge.data_class("BooleanExpression", ["value"])
+IntExpression = dodge.data_class("IntExpression", ["value"])
+StringExpression = dodge.data_class("StringExpression", ["value"])
+ListExpression = dodge.data_class("ListExpression", ["elements"])
+VariableReference = dodge.data_class("VariableReference", ["name"])
 
-unary_operation = UnaryOperation = collections.namedtuple("UnaryOperation", ["operator", "operand"])
+Call = dodge.data_class("Call", ["func", "args", "kwargs"])
+AttributeAccess = dodge.data_class("AttributeAccess", ["value", "attr"])
+TypeApplication = dodge.data_class("TypeApplication", ["generic_type", "params"])
+
+unary_operation = UnaryOperation = dodge.data_class("UnaryOperation", ["operator", "operand"])
 
 unary_operators = ["neg", "pos", "invert"]
 
@@ -33,7 +34,7 @@ def _create_unary_operators():
 _create_unary_operators()
 
 
-binary_operation = BinaryOperation = collections.namedtuple("BinaryOperation", ["operator", "left", "right"])
+binary_operation = BinaryOperation = dodge.data_class("BinaryOperation", ["operator", "left", "right"])
 
 binary_operators = ["add", "sub", "mul", "truediv", "floordiv", "mod", "pow", "lshift", "rshift", "and", "xor", "or"]
 
@@ -53,32 +54,32 @@ def _create_binary_operators():
 
 _create_binary_operators()
 
-subscript = Subscript = collections.namedtuple("Subscript", ["value", "slice"])
+subscript = Subscript = dodge.data_class("Subscript", ["value", "slice"])
 
 
-ReturnStatement = collections.namedtuple("ReturnStatement", ["value"])
-ExpressionStatement = collections.namedtuple("ExpressionStatement", ["value"])
-Assignment = collections.namedtuple("Assignment", ["targets", "value"])
-IfElse = collections.namedtuple("IfElse", ["condition", "true_body", "false_body"])
-WhileLoop = collections.namedtuple("WhileLoop", ["condition", "body", "else_body"])
-ForLoop = collections.namedtuple("ForLoop", ["target", "iterable", "body", "else_body"])
-BreakStatement = collections.namedtuple("BreakStatement", [])
-ContinueStatement = collections.namedtuple("ContinueStatement", [])
-TryStatement = collections.namedtuple("TryStatement", ["body", "handlers", "finally_body"])
-ExceptHandler = collections.namedtuple("ExceptHandler", ["type", "target", "body"])
-RaiseStatement = collections.namedtuple("RaiseStatement", ["value"])
-AssertStatement = collections.namedtuple("AssertStatement", ["condition", "message"])
-WithStatement = collections.namedtuple("WithStatement", ["value", "target", "body"])
+ReturnStatement = dodge.data_class("ReturnStatement", ["value"])
+ExpressionStatement = dodge.data_class("ExpressionStatement", ["value"])
+Assignment = dodge.data_class("Assignment", ["targets", "value"])
+IfElse = dodge.data_class("IfElse", ["condition", "true_body", "false_body"])
+WhileLoop = dodge.data_class("WhileLoop", ["condition", "body", "else_body"])
+ForLoop = dodge.data_class("ForLoop", ["target", "iterable", "body", "else_body"])
+BreakStatement = dodge.data_class("BreakStatement", [])
+ContinueStatement = dodge.data_class("ContinueStatement", [])
+TryStatement = dodge.data_class("TryStatement", ["body", "handlers", "finally_body"])
+ExceptHandler = dodge.data_class("ExceptHandler", ["type", "target", "body"])
+RaiseStatement = dodge.data_class("RaiseStatement", ["value"])
+AssertStatement = dodge.data_class("AssertStatement", ["condition", "message"])
+WithStatement = dodge.data_class("WithStatement", ["value", "target", "body"])
 
-FunctionDef = collections.namedtuple("FunctionDef", ["name", "signature", "args", "body"])
-FunctionSignature = collections.namedtuple("FunctionSignature", ["type_params", "args", "returns"])
-SignatureArgument = collections.namedtuple("SignatureArgument", ["name", "type"])
-Arguments = collections.namedtuple("Arguments", ["args"])
-Argument = collections.namedtuple("Argument", ["name"])
+FunctionDef = dodge.data_class("FunctionDef", ["name", "signature", "args", "body"])
+FunctionSignature = dodge.data_class("FunctionSignature", ["type_params", "args", "returns"])
+SignatureArgument = dodge.data_class("SignatureArgument", ["name", "type"])
+Arguments = dodge.data_class("Arguments", ["args"])
+Argument = dodge.data_class("Argument", ["name"])
 
-Import = collections.namedtuple("Import", ["names"])
-ImportFrom = collections.namedtuple("ImportFrom", ["module", "names"])
-class ImportAlias(collections.namedtuple("ImportAlias", ["name", "asname"])):
+Import = dodge.data_class("Import", ["names"])
+ImportFrom = dodge.data_class("ImportFrom", ["module", "names"])
+class ImportAlias(dodge.data_class("ImportAlias", ["name", "asname"])):
     @property
     def value_name(self):
         if self.asname is None:
@@ -90,7 +91,7 @@ class ImportAlias(collections.namedtuple("ImportAlias", ["name", "asname"])):
     def name_parts(self):
         return self.name.split(".")
 
-Module = collections.namedtuple("Module", ["body", "is_executable"])
+Module = dodge.data_class("Module", ["body", "is_executable"])
 
 
 def none():

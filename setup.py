@@ -20,6 +20,7 @@ setup(
     scripts=['scripts/nope'],
     install_requires=[
         "funcparserlib==0.3.6",
+        "dodge>=0.1.5,<0.2"
     ],
     keywords="nope static type",
     classifiers=[
