@@ -38,7 +38,7 @@ _commands = [
 
 def _print_error(error):
     if isinstance(error, SyntaxError):
-        print("File '{}', line {}".format(error.filename, error.lineno))
+        print("File '{}', line {}, col {}".format(error.filename, error.lineno, error.offset))
         print("{}: {}".format(type(error).__name__, error.msg))
     else:
         print(error)
