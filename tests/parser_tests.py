@@ -234,11 +234,7 @@ def f(x):
     pass
 """
     
-    try:
-        module_node = parser.parse(source)
-        assert False, "Expected SyntaxError"
-    except SyntaxError as error:
-        assert_equal("argument 'x' has name 'y' in signature", str(error))
+    _assert_syntax_error("argument 'x' has name 'y' in signature", source)
 
 
 @istest
@@ -346,11 +342,7 @@ def f(x):
     return x
 """
     
-    try:
-        parser.parse(source)
-        assert False, "Expected SyntaxError"
-    except SyntaxError as error:
-        assert_equal("args length mismatch: def has 1, signature has 2", str(error))
+    _assert_syntax_error("args length mismatch: def has 1, signature has 2", source)
 
 
 @istest
@@ -654,6 +646,20 @@ def test_parse_with_statement_with_multiple_context_managers():
     _assert_statement_parse(expected_node, "with x as x2, y:\n    return z")
 
 
+@istest
+def custom_syntax_errors_have_position():
+    source = """
+def f(x):
+    return x
+"""
+    try:
+        parser.parse(source)
+        assert False, "Expected SyntaxError"
+    except SyntaxError as error:
+        assert_equal(2, error.lineno)
+        assert_equal(0, error.offset)
+
+
 
 def _assert_expression_parse(expected, source):
     module = parser.parse(source)
@@ -677,4 +683,4 @@ def _assert_syntax_error(description, source):
         parser.parse(source)
         assert False, "Expected SyntaxError"
     except SyntaxError as error:
-        assert_equal(description, str(error))
+        assert_equal(description, error.msg)

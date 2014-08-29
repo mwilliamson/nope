@@ -61,7 +61,15 @@ class Converter(object):
 
     
     def convert(self, node):
-        return self._converters[type(node)](node)
+        try:
+            return self._converters[type(node)](node)
+        except SyntaxError as error:
+            if error.lineno is None:
+                error.lineno = node.lineno
+            if error.offset is None:
+                error.offset = node.col_offset
+            
+            raise
     
     def _module(self, node):
         return nodes.module(self._mapped(node.body), is_executable=self._is_executable)
