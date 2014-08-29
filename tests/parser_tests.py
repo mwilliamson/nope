@@ -453,6 +453,14 @@ def test_parse_single_comparison():
 
 
 @istest
+def test_parse_compound_comparisons():
+    _assert_expression_parse(
+        _parse_expression("x < y and y < z"),
+        "x < y < z"
+    )
+
+
+@istest
 def test_parse_simple_boolean_operators():
     x = nodes.ref("x")
     y = nodes.ref("y")

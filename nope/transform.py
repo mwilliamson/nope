@@ -321,9 +321,20 @@ class Converter(object):
     
     
     def _compare(self, node):
-        op, = node.ops
-        right, = node.comparators
-        return self._operator(op)(self.convert(node.left), self.convert(right))
+        operands = [node.left] + node.comparators
+        compare_node = None
+        
+        for op, left, right in zip(node.ops, operands, operands[1:]):
+            comparison = self._create_comparison(op, left, right)
+            if compare_node is None:
+                compare_node = comparison
+            else:
+                compare_node = nodes.bool_and(compare_node, comparison)
+            
+        return compare_node
+    
+    def _create_comparison(self, op, left, right):
+        return self._operator(op)(self.convert(left), self.convert(right))
     
     def _operator(self, operator):
         operators = {
