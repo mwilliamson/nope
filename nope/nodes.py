@@ -16,7 +16,7 @@ TypeApplication = dodge.data_class("TypeApplication", ["generic_type", "params"]
 
 unary_operation = UnaryOperation = dodge.data_class("UnaryOperation", ["operator", "operand"])
 
-unary_operators = ["neg", "pos", "invert"]
+unary_operators = ["neg", "pos", "invert", "bool_not"]
 
 
 def _create_unary_operators():
@@ -40,6 +40,7 @@ binary_operators = [
     "add", "sub", "mul", "truediv", "floordiv", "mod", "pow",
     "lshift", "rshift", "and", "xor", "or",
     "eq", "ne", "lt", "le", "gt", "ge",
+    "bool_and", "bool_or",
 ]
 
 
@@ -59,9 +60,6 @@ def _create_binary_operators():
 _create_binary_operators()
 
 subscript = Subscript = dodge.data_class("Subscript", ["value", "slice"])
-bool_and = dodge.data_class("BooleanAnd", ["left", "right"])
-bool_or = dodge.data_class("BooleanOr", ["left", "right"])
-bool_not = dodge.data_class("BooleanNot", ["value"])
 
 ReturnStatement = dodge.data_class("ReturnStatement", ["value"])
 ExpressionStatement = dodge.data_class("ExpressionStatement", ["value"])
