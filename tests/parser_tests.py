@@ -453,18 +453,6 @@ def test_parse_single_comparison():
 
 
 @istest
-def test_parse_compound_comparison():
-    x = nodes.ref("x")
-    y = nodes.ref("y")
-    _assert_expression_parse(nodes.eq(x, y), "x == y")
-    _assert_expression_parse(nodes.ne(x, y), "x != y")
-    _assert_expression_parse(nodes.lt(x, y), "x < y")
-    _assert_expression_parse(nodes.le(x, y), "x <= y")
-    _assert_expression_parse(nodes.gt(x, y), "x > y")
-    _assert_expression_parse(nodes.ge(x, y), "x >= y")
-
-
-@istest
 def test_parse_expression_statement():
     expected = nodes.expression_statement(nodes.ref("x"))
     _assert_statement_parse(expected, "x")
