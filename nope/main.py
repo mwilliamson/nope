@@ -1,6 +1,7 @@
 import argparse
 
 import nope
+from nope import textseek
 
 
 def main():
@@ -39,6 +40,11 @@ _commands = [
 def _print_error(error):
     if isinstance(error, SyntaxError):
         print("File '{}', line {}, col {}".format(error.filename, error.lineno, error.offset))
+        print()
+        with open(error.filename) as source_file:
+            print("  " + textseek.seek_line(source_file, error.lineno))
+        print(" " * (2 + error.offset) + "^")
+        print()
         print("{}: {}".format(type(error).__name__, error.msg))
     else:
         print(error)
