@@ -2,7 +2,7 @@ from nose.tools import istest, assert_equal
 
 from nope import types, nodes, errors
 
-from .util import infer, create_context
+from .util import infer, create_context, assert_subexpression_is_type_checked
 
 
 @istest
@@ -148,3 +148,29 @@ def can_infer_type_of_subscript_of_list():
     context = create_context({"x": types.list_type(types.str_type)})
     node = nodes.subscript(nodes.ref("x"), nodes.int(4))
     assert_equal(types.str_type, infer(node, context))
+
+
+@istest
+def type_of_boolean_and_operation_is_unification_of_operand_types():
+    context = create_context({"x": types.int_type, "y": types.int_type})
+    operation = nodes.bool_and(nodes.ref("x"), nodes.ref("y"))
+    assert_equal(types.int_type, infer(operation, context))
+
+
+@istest
+def type_of_boolean_or_operation_is_unification_of_operand_types():
+    context = create_context({"x": types.int_type, "y": types.int_type})
+    operation = nodes.bool_or(nodes.ref("x"), nodes.ref("y"))
+    assert_equal(types.int_type, infer(operation, context))
+
+
+@istest
+def type_of_boolean_not_operation_is_boolean():
+    context = create_context({"x": types.int_type})
+    operation = nodes.bool_not(nodes.ref("x"))
+    assert_equal(types.boolean_type, infer(operation, context))
+
+
+@istest
+def value_of_boolean_not_operation_is_type_checked():
+    assert_subexpression_is_type_checked(lambda bad_ref: nodes.bool_not(bad_ref))

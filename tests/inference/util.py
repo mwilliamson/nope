@@ -138,6 +138,19 @@ def assert_expression_is_type_checked(create_node, context=None):
         assert_equal("bad", error.name)
 
 
+def assert_subexpression_is_type_checked(create_node):
+    bad_ref = nodes.ref("bad")
+    node = create_node(bad_ref)
+    
+    try:
+        infer(node, create_context())
+        assert False, "Expected error"
+    except errors.TypeCheckError as error:
+        assert_equal(bad_ref, error.node)
+        assert_equal("bad", error.name)
+    
+
+
 def assert_variable_is_bound(create_node):
     assignment = nodes.assign("x", nodes.int(1))
     node = create_node(assignment)

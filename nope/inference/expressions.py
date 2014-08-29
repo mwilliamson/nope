@@ -124,10 +124,20 @@ class ExpressionTypeInferer(object):
 
 
     def _infer_binary_operation(self, node, context):
-        return self.infer_magic_method_call(node, node.operator, node.left, [node.right], context)
+        if node.operator in ["bool_and", "bool_or"]:
+            return types.unify([
+                self.infer(node.left, context),
+                self.infer(node.right, context),
+            ])
+        else:
+            return self.infer_magic_method_call(node, node.operator, node.left, [node.right], context)
     
     def _infer_unary_operation(self, node, context):
-        return self.infer_magic_method_call(node, node.operator, node.operand, [], context)
+        if node.operator == "bool_not":
+            self.infer(node.operand, context)
+            return types.boolean_type
+        else:
+            return self.infer_magic_method_call(node, node.operator, node.operand, [], context)
     
     def _infer_subscript(self, node, context):
         return self.infer_magic_method_call(node, "getitem", node.value, [node.slice], context)
