@@ -10,12 +10,17 @@ from funcparserlib.parser import (some, many, maybe, finished, forward_decl, ski
 from . import transform, nodes
 
 
-def parse(source):
-    tokens = tokenize.generate_tokens(io.StringIO(source).readline)
-    comment_seeker = CommentSeeker(tokens)
-    python_ast = ast.parse(source)
-    is_executable = source.startswith("#!/")
-    return transform.python_to_nope(python_ast, comment_seeker, is_executable=is_executable)
+def parse(source, filename=None):
+    try:
+        tokens = tokenize.generate_tokens(io.StringIO(source).readline)
+        comment_seeker = CommentSeeker(tokens)
+        python_ast = ast.parse(source)
+        is_executable = source.startswith("#!/")
+        return transform.python_to_nope(python_ast, comment_seeker, is_executable=is_executable)
+    except SyntaxError as error:
+        if error.filename is None:
+            error.filename = filename
+        raise error
 
 
 class CommentSeeker(object):

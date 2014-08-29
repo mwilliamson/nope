@@ -28,10 +28,17 @@ class CheckCommand(object):
     def execute(args):
         result = nope.check(args.path)
         if not result.is_valid:
-            print(result.error)
+            _print_error(result.error)
             return 1
 
 
 _commands = [
     CheckCommand
 ]
+
+def _print_error(error):
+    if isinstance(error, SyntaxError):
+        print("File '{}', line {}".format(error.filename, error.lineno))
+        print("{}: {}".format(type(error).__name__, error.msg))
+    else:
+        print(error)

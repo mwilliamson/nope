@@ -18,7 +18,7 @@ def check(path):
 def _parse_source_tree(tree_path):
     def read_ast(path):
         with open(path) as source_file:
-            return parser.parse(source_file.read())
+            return parser.parse(source_file.read(), filename=path)
     
     return SourceTree(dict(
         (path, read_ast(path))

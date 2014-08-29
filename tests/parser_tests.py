@@ -653,9 +653,10 @@ def f(x):
     return x
 """
     try:
-        parser.parse(source)
+        parser.parse(source, filename="breathing-underwater.py")
         assert False, "Expected SyntaxError"
     except SyntaxError as error:
+        assert_equal("breathing-underwater.py", error.filename)
         assert_equal(2, error.lineno)
         assert_equal(0, error.offset)
 
