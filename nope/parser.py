@@ -16,7 +16,7 @@ def parse(source, filename=None):
         comment_seeker = CommentSeeker(tokens)
         python_ast = ast.parse(source)
         is_executable = source.startswith("#!/")
-        return transform.python_to_nope(python_ast, comment_seeker, is_executable=is_executable)
+        return transform.python_to_nope(python_ast, comment_seeker, is_executable=is_executable, filename=filename)
     except SyntaxError as error:
         if error.filename is None:
             error.filename = filename

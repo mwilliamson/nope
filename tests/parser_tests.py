@@ -685,15 +685,28 @@ def f(x):
         assert_equal(0, error.offset)
 
 
+@istest
+def nodes_have_position():
+    node = _parse_expression("\nNone", filename="take-it-easy.py")
+    
+    assert_equal("take-it-easy.py", node.filename)
+    assert_equal(2, node.lineno)
+    assert_equal(0, node.offset)
+
+
 
 def _assert_expression_parse(expected, source):
-    module = parser.parse(source)
+    assert_equal(expected, _parse_expression(source))
+
+
+def _parse_expression(source, filename=None):
+    module = parser.parse(source, filename=filename)
     assert isinstance(module, nodes.Module)
     
     expression_statement = module.body[0]
     assert isinstance(expression_statement, nodes.ExpressionStatement)
     
-    assert_equal(expected, expression_statement.value)
+    return expression_statement.value
 
 
 def _assert_statement_parse(expected, source):

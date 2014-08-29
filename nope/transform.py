@@ -3,14 +3,15 @@ import ast
 from . import nodes
 
 
-def python_to_nope(python_ast, comment_seeker, is_executable):
-    converter = Converter(comment_seeker, is_executable)
+def python_to_nope(python_ast, comment_seeker, is_executable, filename=None):
+    converter = Converter(comment_seeker, is_executable, filename=filename)
     return converter.convert(python_ast)
 
 class Converter(object):
-    def __init__(self, comment_seeker, is_executable):
+    def __init__(self, comment_seeker, is_executable, filename):
         self._comment_seeker = comment_seeker
         self._is_executable = is_executable
+        self._filename = filename
 
         self._converters = {
             ast.Module: self._module,
@@ -63,7 +64,7 @@ class Converter(object):
     
     def convert(self, node):
         try:
-            return self._converters[type(node)](node)
+            nope_node = self._converters[type(node)](node)
         except SyntaxError as error:
             if error.lineno is None:
                 error.lineno = node.lineno
@@ -71,6 +72,15 @@ class Converter(object):
                 error.offset = node.col_offset
             
             raise
+        
+        if hasattr(node, "lineno"):
+            nope_node.lineno = node.lineno
+        if hasattr(node, "col_offset"):
+            nope_node.offset = node.col_offset
+            
+        nope_node.filename = self._filename
+        
+        return nope_node
     
     def _module(self, node):
         return nodes.module(self._mapped(node.body), is_executable=self._is_executable)
