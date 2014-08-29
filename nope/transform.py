@@ -41,6 +41,7 @@ class Converter(object):
             ast.Attribute: self._attr,
             ast.BinOp: self._bin_op,
             ast.UnaryOp: self._unary_op,
+            ast.Compare: self._compare,
             ast.Subscript: self._subscript,
             ast.Index: self._index,
         }
@@ -307,6 +308,12 @@ class Converter(object):
     def _unary_op(self, node):
         return self._operator(node.op)(self.convert(node.operand))
     
+    
+    def _compare(self, node):
+        op, = node.ops
+        right, = node.comparators
+        return self._operator(op)(self.convert(node.left), self.convert(right))
+    
     def _operator(self, operator):
         operators = {
             ast.Add: nodes.add,
@@ -325,6 +332,13 @@ class Converter(object):
             ast.USub: nodes.neg,
             ast.UAdd: nodes.pos,
             ast.Invert: nodes.invert,
+            
+            ast.Eq: nodes.eq,
+            ast.NotEq: nodes.ne,
+            ast.Lt: nodes.lt,
+            ast.LtE: nodes.le,
+            ast.Gt: nodes.gt,
+            ast.GtE: nodes.ge,
         }
         return operators[type(operator)]
     

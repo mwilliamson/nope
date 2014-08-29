@@ -36,7 +36,11 @@ _create_unary_operators()
 
 binary_operation = BinaryOperation = dodge.data_class("BinaryOperation", ["operator", "left", "right"])
 
-binary_operators = ["add", "sub", "mul", "truediv", "floordiv", "mod", "pow", "lshift", "rshift", "and", "xor", "or"]
+binary_operators = [
+    "add", "sub", "mul", "truediv", "floordiv", "mod", "pow",
+    "lshift", "rshift", "and", "xor", "or",
+    "eq", "ne", "lt", "le", "gt", "ge",
+]
 
 
 def _create_binary_operators():
