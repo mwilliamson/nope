@@ -46,7 +46,6 @@ class NodeJsExecutionTests(execution.ExecutionTests):
     
     test_bool_and = None
     test_bool_or = None
-    test_bool_not = None
 
 
 @istest
@@ -55,4 +54,3 @@ class UnoptimisedNodeJsExecutionTests(execution.ExecutionTests):
     
     test_bool_and = None
     test_bool_or = None
-    test_bool_not = None

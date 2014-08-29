@@ -613,7 +613,10 @@ class Transformer(object):
     
     
     def _unary_operation(self, operation):
-        return self._operation(operation.operator, [operation.operand])
+        if operation.operator == "bool_not":
+            return js.unary_operation("!", self._condition(operation.operand))
+        else:
+            return self._operation(operation.operator, [operation.operand])
     
     def _optimised_unnary_operation(self, operation):
         if (operation.operator in _number_operators and

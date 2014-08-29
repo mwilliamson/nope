@@ -95,10 +95,17 @@ var arrayMethods = {
     }
 };
 
+var booleanMethods = {
+    "__str__": function() {
+        return this.valueOf() ? "True" : "False";
+    }
+};
+
 var builtinMethods = {
     "[object Number]": numberMethods,
     "[object String]": stringMethods,
-    "[object Array]": arrayMethods
+    "[object Array]": arrayMethods,
+    "[object Boolean]": booleanMethods
 };
 
 function bool(value) {

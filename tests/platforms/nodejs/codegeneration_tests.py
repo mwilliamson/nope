@@ -680,6 +680,14 @@ def test_normal_javascript_negation_is_used_if_operand_is_int():
 
 
 @istest
+def test_transform_boolean_not():
+    _assert_transform(
+        nodes.bool_not(nodes.ref("x")),
+        js.unary_operation("!", js.call(js.ref("$nope.builtins.bool"), [js.ref("x")]))
+    )
+
+
+@istest
 def test_transform_variable_reference():
     _assert_transform(
         nodes.ref("x"),
