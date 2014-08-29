@@ -186,6 +186,41 @@ True
     def test_invert_int(self):
         self._test_expression("~10", b"-11")
         self._test_expression("~-10", b"9")
+        
+    @istest
+    def test_eq_int(self):
+        self._test_expression("1 == 1", b"True")
+        self._test_expression("1 == -1", b"False")
+        
+    @istest
+    def test_ne_int(self):
+        self._test_expression("1 != 1", b"False")
+        self._test_expression("1 != -1", b"True")
+        
+    @istest
+    def test_lt_int(self):
+        self._test_expression("1 < 2", b"True")
+        self._test_expression("1 < 1", b"False")
+        self._test_expression("2 < 1", b"False")
+        
+    @istest
+    def test_le_int(self):
+        self._test_expression("1 <= 2", b"True")
+        self._test_expression("1 <= 1", b"True")
+        self._test_expression("2 <= 1", b"False")
+        
+    @istest
+    def test_gt_int(self):
+        self._test_expression("1 > 2", b"False")
+        self._test_expression("1 > 1", b"False")
+        self._test_expression("2 > 1", b"True")
+        
+    @istest
+    def test_ge_int(self):
+        self._test_expression("1 >= 2", b"False")
+        self._test_expression("1 >= 1", b"True")
+        self._test_expression("2 >= 1", b"True")
+        
     
     @istest
     def test_bool_and(self):

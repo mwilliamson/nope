@@ -108,6 +108,13 @@ _number_operators = {
     "abs": lambda operand: js.call(js.ref("Math.abs"), [operand]),
     "invert": lambda operand: js.unary_operation("~", operand),
     
+    "eq": lambda left, right: js.binary_operation("==", left, right),
+    "ne": lambda left, right: js.binary_operation("!=", left, right),
+    "lt": lambda left, right: js.binary_operation("<", left, right),
+    "le": lambda left, right: js.binary_operation("<=", left, right),
+    "gt": lambda left, right: js.binary_operation(">", left, right),
+    "ge": lambda left, right: js.binary_operation(">=", left, right),
+    
     "str": lambda operand: js.call(js.property_access(operand, "toString"), []),
 }
 

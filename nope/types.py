@@ -328,6 +328,13 @@ int_type.attrs.add("__pos__", func([], int_type), read_only=True)
 int_type.attrs.add("__abs__", func([], int_type), read_only=True)
 int_type.attrs.add("__invert__", func([], int_type), read_only=True)
 
+int_type.attrs.add("__eq__", func([int_type], boolean_type), read_only=True)
+int_type.attrs.add("__ne__", func([int_type], boolean_type), read_only=True)
+int_type.attrs.add("__lt__", func([int_type], boolean_type), read_only=True)
+int_type.attrs.add("__le__", func([int_type], boolean_type), read_only=True)
+int_type.attrs.add("__gt__", func([int_type], boolean_type), read_only=True)
+int_type.attrs.add("__ge__", func([int_type], boolean_type), read_only=True)
+
 str_type = scalar_type("str")
 str_type.attrs.add("find", func([str_type], int_type), read_only=True)
 
