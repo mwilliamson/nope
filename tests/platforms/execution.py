@@ -188,6 +188,25 @@ True
         self._test_expression("~-10", b"9")
     
     @istest
+    def test_bool_and(self):
+        self._test_expression("4 and 2", b"2")
+        self._test_expression("1 and 0", b"0")
+        self._test_expression("0 and 1", b"0")
+        self._test_expression("0 and 0", b"0")
+    
+    @istest
+    def test_bool_or(self):
+        self._test_expression("4 or 2", b"4")
+        self._test_expression("1 or 0", b"1")
+        self._test_expression("0 or 1", b"1")
+        self._test_expression("0 or 0", b"0")
+    
+    @istest
+    def test_bool_not(self):
+        self._test_expression("not 0", b"True")
+        self._test_expression("not 1", b"False")
+    
+    @istest
     def test_getitem_list(self):
         self._test_expression("[42, 53, 75][1]", b"53")
     
