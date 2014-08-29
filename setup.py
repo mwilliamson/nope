@@ -17,6 +17,7 @@ setup(
     author_email='mike@zwobble.org',
     url='http://github.com/mwilliamson/nope',
     packages=['nope'],
+    scripts=['scripts/nope'],
     install_requires=[
         "funcparserlib==0.3.6",
     ],
