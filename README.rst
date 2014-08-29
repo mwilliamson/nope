@@ -202,6 +202,25 @@ Supported builtin functions:
 
 * ``print``: only a single argument is accepted.
 
+Unimplemented optimisations:
+
+* If the result of boolean operations ('and' or 'or') is only used as a
+  condition, such as the condition of an 'if' statement or 'while' loop,
+  then the value can simply be true or false rather than the actual value
+  of the operation. In other words, ``x and y`` can be optimised to
+  ``bool(x) && bool(y)``.
+
+* Unless ``bool()`` has been explicitly invoked, booleans, strings and integers
+  can be used directly if only used for their truth value e.g. in if statement
+  conditions.
+
+* Avoid re-evaluating bool(value) if boolean operations are used directly in
+  conditions. For instance, in ``if x and y``, ``bool(x)`` only needs to be
+  evaluated once, even if ``bool(x)`` is ``True``. (A naive implementation
+  evalutes ``bool(x)`` once for the ``and`` operation, which would have the
+  value of ``x``, causing ``bool(x)`` to be evaluated again as the condition
+  of the ``if`` statement.)
+
 
 Differences from Python 3
 -------------------------

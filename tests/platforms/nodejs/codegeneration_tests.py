@@ -688,6 +688,22 @@ def test_transform_boolean_not():
 
 
 @istest
+def test_transform_boolean_and():
+    _assert_transform(
+        nodes.bool_and(nodes.ref("x"), nodes.ref("y")),
+        js.call(js.ref("$nope.booleanAnd"), [js.ref("x"), js.ref("y")]),
+    )
+
+
+@istest
+def test_transform_boolean_or():
+    _assert_transform(
+        nodes.bool_or(nodes.ref("x"), nodes.ref("y")),
+        js.call(js.ref("$nope.booleanOr"), [js.ref("x"), js.ref("y")]),
+    )
+
+
+@istest
 def test_transform_variable_reference():
     _assert_transform(
         nodes.ref("x"),

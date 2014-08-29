@@ -43,14 +43,8 @@ def sanity_check_optimised_and_unoptimised_compilers_produce_different_output():
 @istest
 class NodeJsExecutionTests(execution.ExecutionTests):
     platform = _optimised_node_js
-    
-    test_bool_and = None
-    test_bool_or = None
 
 
 @istest
 class UnoptimisedNodeJsExecutionTests(execution.ExecutionTests):
     platform = _unoptimised_node_js
-    
-    test_bool_and = None
-    test_bool_or = None

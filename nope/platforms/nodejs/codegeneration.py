@@ -600,7 +600,18 @@ class Transformer(object):
         return self._getattr(self.transform(attr.value), attr.attr)
     
     def _binary_operation(self, operation):
-        return self._operation(operation.operator, [operation.left, operation.right])
+        if operation.operator == "bool_and":
+            return _call_internal(
+                ["booleanAnd"],
+                [self.transform(operation.left), self.transform(operation.right)]
+            )
+        elif operation.operator == "bool_or":
+            return _call_internal(
+                ["booleanOr"],
+                [self.transform(operation.left), self.transform(operation.right)]
+            )
+        else:
+            return self._operation(operation.operator, [operation.left, operation.right])
     
     def _optimised_binary_operation(self, operation):
         if (operation.operator in _number_operators and

@@ -257,14 +257,27 @@ function numberDivMod(left, right) {
 
 var numberPow = Math.pow;
 
+function booleanAnd(left, right) {
+    return bool(left) ? right : left;
+}
+
+function booleanOr(left, right) {
+    return bool(left) ? left : right;
+}
+
 var $nope = module.exports = {
     exports: exports,
     operators: operators,
     builtins: builtins,
+    
     numberMod: numberMod,
     numberDivMod: numberDivMod,
     numberPow: numberPow,
     numberFloor: Math.floor,
+    
+    booleanAnd: booleanAnd,
+    booleanOr: booleanOr,
+    
     Error: Error,
     undefined: undefined
 };
