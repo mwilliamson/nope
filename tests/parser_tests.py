@@ -353,6 +353,14 @@ def f(x):
         assert_equal("args length mismatch: def has 1, signature has 2", str(error))
 
 
+@istest
+def error_if_type_signature_is_missing_from_function_with_args():
+    source = """
+def f(x):
+    return x
+"""
+    _assert_syntax_error("signature is missing from function definition", source)
+
 
 @istest
 def test_parse_none():

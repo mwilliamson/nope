@@ -89,10 +89,6 @@ class Converter(object):
 
 
     def _func(self, node):
-        signature = self._comment_seeker.seek_signature(node.lineno, node.col_offset)
-        if signature is None:
-            signature = nodes.signature(type_params=[], args=[], returns=None)
-        
         if node.decorator_list:
             raise SyntaxError("function decorators are not supported")
         
@@ -104,6 +100,15 @@ class Converter(object):
         
         if node.args.kwarg is not None:
             raise SyntaxError("arguments in the form '**{}' are not supported".format(node.args.kwarg.arg))
+        
+        
+        signature = self._comment_seeker.seek_signature(node.lineno, node.col_offset)
+        if signature is None:
+            if len(node.args.args) == 0:
+                signature = nodes.signature(type_params=[], args=[], returns=None)
+            else:
+                raise SyntaxError("signature is missing from function definition")
+        
         
         if len(node.args.args) != len(signature.args):
             raise SyntaxError("args length mismatch: def has {0}, signature has {1}".format(
