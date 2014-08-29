@@ -45,6 +45,7 @@ class Converter(object):
             ast.Compare: self._compare,
             ast.Subscript: self._subscript,
             ast.Index: self._index,
+            ast.BoolOp: self._bool_op,
         }
         
         # Python >= 3.3:
@@ -349,6 +350,10 @@ class Converter(object):
             ast.LtE: nodes.le,
             ast.Gt: nodes.gt,
             ast.GtE: nodes.ge,
+            
+            ast.And: nodes.bool_and,
+            ast.Or: nodes.bool_or,
+            ast.Not: nodes.bool_not,
         }
         return operators[type(operator)]
     
@@ -357,6 +362,15 @@ class Converter(object):
     
     def _index(self, node):
         return self.convert(node.value)
+
+    def _bool_op(self, node):
+        values = [self.convert(value) for value in node.values]
+        create_node = self._operator(node.op)
+        
+        node = create_node(values[0], values[1])
+        for value in values[2:]:
+            node = create_node(node, value)
+        return node
 
     def _mapped(self, nodes):
         return [

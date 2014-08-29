@@ -59,7 +59,9 @@ def _create_binary_operators():
 _create_binary_operators()
 
 subscript = Subscript = dodge.data_class("Subscript", ["value", "slice"])
-
+bool_and = dodge.data_class("BooleanAnd", ["left", "right"])
+bool_or = dodge.data_class("BooleanOr", ["left", "right"])
+bool_not = dodge.data_class("BooleanNot", ["value"])
 
 ReturnStatement = dodge.data_class("ReturnStatement", ["value"])
 ExpressionStatement = dodge.data_class("ExpressionStatement", ["value"])

@@ -453,6 +453,26 @@ def test_parse_single_comparison():
 
 
 @istest
+def test_parse_simple_boolean_operators():
+    x = nodes.ref("x")
+    y = nodes.ref("y")
+    _assert_expression_parse(nodes.bool_and(x, y), "x and y")
+    _assert_expression_parse(nodes.bool_or(x, y), "x or y")
+    _assert_expression_parse(nodes.bool_not(x), "not x")
+
+
+@istest
+def test_parse_chained_boolean_operators():
+    _assert_expression_parse(
+        nodes.bool_and(
+            nodes.bool_and(nodes.ref("a"), nodes.ref("b")),
+            nodes.ref("c"),
+        ),
+        "a and b and c"
+    )
+
+
+@istest
 def test_parse_expression_statement():
     expected = nodes.expression_statement(nodes.ref("x"))
     _assert_statement_parse(expected, "x")
