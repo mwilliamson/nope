@@ -41,6 +41,7 @@ binary_operators = [
     "lshift", "rshift", "and", "xor", "or",
     "eq", "ne", "lt", "le", "gt", "ge",
     "bool_and", "bool_or",
+    "is",
 ]
 
 

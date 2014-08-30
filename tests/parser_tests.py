@@ -481,6 +481,11 @@ def test_parse_chained_boolean_operators():
 
 
 @istest
+def test_parse_is_operation():
+    _assert_expression_parse(nodes.is_(nodes.ref("x"), nodes.ref("y")), "x is y")
+
+
+@istest
 def test_parse_expression_statement():
     expected = nodes.expression_statement(nodes.ref("x"))
     _assert_statement_parse(expected, "x")

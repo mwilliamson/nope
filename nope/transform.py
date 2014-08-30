@@ -365,6 +365,8 @@ class Converter(object):
             ast.And: nodes.bool_and,
             ast.Or: nodes.bool_or,
             ast.Not: nodes.bool_not,
+            
+            ast.Is: nodes.is_,
         }
         return operators[type(operator)]
     
