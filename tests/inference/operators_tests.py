@@ -174,3 +174,16 @@ def type_of_boolean_not_operation_is_boolean():
 @istest
 def value_of_boolean_not_operation_is_type_checked():
     assert_subexpression_is_type_checked(lambda bad_ref: nodes.bool_not(bad_ref))
+
+
+@istest
+def type_of_is_operation_is_boolean():
+    context = create_context({"x": types.object_type, "y": types.str_type})
+    operation = nodes.is_(nodes.ref("x"), nodes.ref("y"))
+    assert_equal(types.boolean_type, infer(operation, context))
+
+
+@istest
+def operands_of_is_operation_are_type_checked():
+    assert_subexpression_is_type_checked(lambda bad_ref: nodes.is_(bad_ref, nodes.int(1)))
+    assert_subexpression_is_type_checked(lambda bad_ref: nodes.is_(nodes.int(1), bad_ref))

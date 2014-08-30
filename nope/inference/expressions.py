@@ -129,6 +129,10 @@ class ExpressionTypeInferer(object):
                 self.infer(node.left, context),
                 self.infer(node.right, context),
             ])
+        elif node.operator == "is":
+            self.infer(node.left, context)
+            self.infer(node.right, context)
+            return types.boolean_type
         else:
             return self.infer_magic_method_call(node, node.operator, node.left, [node.right], context)
     
