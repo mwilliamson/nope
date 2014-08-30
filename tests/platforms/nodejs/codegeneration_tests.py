@@ -704,6 +704,14 @@ def test_transform_boolean_or():
 
 
 @istest
+def test_transform_is_operation():
+    _assert_transform(
+        nodes.is_(nodes.ref("x"), nodes.ref("y")),
+        js.binary_operation("===", js.ref("x"), js.ref("y"))
+    )
+
+
+@istest
 def test_transform_variable_reference():
     _assert_transform(
         nodes.ref("x"),
