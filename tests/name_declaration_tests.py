@@ -59,17 +59,6 @@ def names_in_function_are_not_declared():
 
 
 @istest
-def names_in_function_are_not_declared():
-    node = nodes.func("f", None, nodes.arguments([]), [
-        nodes.assign([nodes.ref("x")], nodes.none())
-    ])
-    
-    declarations = _new_declarations()
-    declare(node, declarations)
-    assert not declarations.is_declared("x")
-
-
-@istest
 def argument_adds_declaration_to_declarations():
     declarations = _new_declarations()
     node = nodes.arg("x")
