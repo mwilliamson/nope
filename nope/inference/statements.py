@@ -5,11 +5,11 @@ from . import ephemeral
 
 
 class StatementTypeChecker(object):
-    def __init__(self, expression_type_inferer, module_types, module_path, is_executable):
+    def __init__(self, expression_type_inferer, module_resolver, module_types, module):
         self._expression_type_inferer = expression_type_inferer
+        self._module_resolver = module_resolver
         self._module_types = module_types
-        self._module_path = module_path
-        self._is_executable = is_executable
+        self._module = module
         
         self._checkers = {
             nodes.ExpressionStatement: self._check_expression_statement,
@@ -35,11 +35,10 @@ class StatementTypeChecker(object):
         self._checkers[type(statement)](statement, context)
 
     def _find_submodule(self, name):
-        for path in self._possible_module_paths([".", name]):
-            if self._module_types.is_module_path(path):
-                return self._module_types.type_of_module(path)
-        
-        return None
+        try:
+            return self._module_resolver.resolve_import(self._module, [".", name])
+        except errors.ModuleNotFoundError:
+            return None
     
     def _infer_function_def(self, node, context):
         def read_signature_arg(arg):
@@ -120,7 +119,7 @@ class StatementTypeChecker(object):
             self._check_for_package_value_and_module_name_clashes(target, value_type)
 
     def _is_package(self):
-        return self._module_path and os.path.basename(self._module_path) == "__init__.py"
+        return self._module.path and os.path.basename(self._module.path) == "__init__.py"
 
     def _check_for_package_value_and_module_name_clashes(self, target, value_type):
         submodule = self._find_submodule(target.name)
@@ -284,27 +283,15 @@ class StatementTypeChecker(object):
 
     
     def _find_module(self, node, names):
-        # TODO: handle absolute imports
-        if names[0] not in [".", ".."] and not self._is_executable:
-            raise errors.ImportError(node, "Absolute imports not yet implemented")
-            
-        package_path, module_path = self._possible_module_paths(names)
-        
-        package_value = self._type_of_module(package_path)
-        module_value = self._type_of_module(module_path)
-        
-        if package_value is not None and module_value is not None:
-            raise errors.ImportError(node,
-                "Import is ambiguous: the module '{0}.py' and the package '{0}/__init__.py' both exist".format(
-                    names[-1])
-            )
-        elif package_value is None and module_value is None:
-            raise errors.ModuleNotFoundError(node, "Could not find module '{}'".format(".".join(names)))
-        else:
-            return package_value or module_value
+        try:
+            module = self._module_resolver.resolve_import(self._module, names)
+        except errors.TypeCheckError as error:
+            error.node = node
+            raise error
+        return self._module_types.type_of_module(module)
 
     def _possible_module_paths(self, names):
-        import_path = os.path.normpath(os.path.join(os.path.dirname(self._module_path), *names))
+        import_path = os.path.normpath(os.path.join(os.path.dirname(self._module.path), *names))
         
         return (
             os.path.join(import_path, "__init__.py"),

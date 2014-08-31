@@ -1,7 +1,7 @@
 import collections
 import os
 
-from . import inference, parser, platforms, errors, loop_control
+from . import inference, parser, platforms, errors, loop_control, module_resolution
 
 
 def check(path):
@@ -67,12 +67,8 @@ class Checker(object):
             self._check_results[module] = self._uncached_check(module)
         return self._check_results[module]
     
-    def is_module_path(self, path):
-        return path in self._source_tree
-    
-    def type_of_module(self, path):
-        # TODO: pass in module instead?
-        module_type, type_lookup = self._check_result(self._source_tree.module(path))
+    def type_of_module(self, module):
+        module_type, type_lookup = self._check_result(module)
         return module_type
     
     def type_lookup(self, module):
@@ -81,8 +77,10 @@ class Checker(object):
     
     def _uncached_check(self, module):
         loop_control.check_loop_control(module.node, in_loop=False)
-        return inference.check(module.node, self, module.path)
-        
+        return inference.check(module, self, self)
+    
+    def resolve_import(self, module, names):
+        return module_resolution.resolve_import(module, names, source_tree=self._source_tree)
 
 
 class SourceTree(object):
@@ -103,7 +101,10 @@ class SourceTree(object):
         return self._asts.keys()
     
     def module(self, path):
-        return Module(path, self._asts[path])
+        if path in self._asts:
+            return Module(path, self._asts[path])
+        else:
+            return None
     
     def modules(self):
         return [Module(path, node) for path, node in self._asts.items()]

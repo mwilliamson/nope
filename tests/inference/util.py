@@ -1,13 +1,13 @@
 from nose.tools import assert_equal
 
-from nope import types, errors, nodes, inference, name_declaration
+from nope import types, errors, nodes, inference, name_declaration, Module
 from nope.context import Context
 
 
-def update_context(statement, context=None, source_tree=None, module_path=None, is_executable=False):
+def update_context(statement, context=None, module_resolver=None, module_types=None, module_path=None, is_executable=False):
     if context is None:
         context = create_context()
-    checker = _create_type_checker(module_path=module_path, source_tree=source_tree, is_executable=is_executable)
+    checker = _create_type_checker(module_path=module_path, module_resolver=module_resolver, module_types=module_types, is_executable=is_executable)
     checker.update_context(statement, context)
     
     return context
@@ -21,11 +21,11 @@ def infer(expression, context=None):
     return checker.infer(expression, context)
     
 
-def _create_type_checker(source_tree=None, module_path=None, is_executable=False):
+def _create_type_checker(module_types=None, module_resolver=None, module_path=None, is_executable=False):
     return inference._TypeChecker(
-        source_tree=source_tree,
-        module_path=module_path,
-        is_executable=is_executable,
+        module_resolver=module_resolver,
+        module_types=module_types,
+        module=Module(module_path, nodes.module([], is_executable=is_executable)),
     )
 
 
@@ -87,9 +87,17 @@ class FakeModuleTypes(object):
     
     def type_of_module(self, path):
         return self._modules.get(path)
+
+
+class FakeModuleResolver(object):
+    def __init__(self, modules):
+        self._modules = modules
     
-    def is_module_path(self, path):
-        return path in self._modules
+    def resolve_import(self, module, names):
+        try:
+            return self._modules[tuple(names)]
+        except KeyError:
+            raise errors.ModuleNotFoundError(None, str(names))
 
 
 def assert_type_mismatch(func, expected, actual, node):

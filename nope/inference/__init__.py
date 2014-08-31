@@ -4,19 +4,19 @@ from .statements import StatementTypeChecker
 from ..identity_dict import IdentityDict
 
 
-def check(module, source_tree=None, module_path=None):
-    checker = _TypeChecker(source_tree, module_path, module.is_executable)
+def check(module, module_resolver=None, module_types=None):
+    # TODO: don't construct the type checker with a module
+    checker = _TypeChecker(module_types, module_resolver, module)
     module_type = checker.check(module)
     return module_type, checker.type_lookup()
 
 
 class _TypeChecker(object):
-    def __init__(self, source_tree, module_path, is_executable):
-        self._source_tree = source_tree
-        self._module_path = module_path
+    def __init__(self, module_types, module_resolver, module):
+        self._module_path = module.path
         self._type_lookup = IdentityDict()
         self._expression_type_inferer = ExpressionTypeInferer(self._type_lookup)
-        self._statement_type_checker = StatementTypeChecker(self._expression_type_inferer, source_tree, module_path, is_executable)
+        self._statement_type_checker = StatementTypeChecker(self._expression_type_inferer, module_resolver, module_types, module)
     
     def type_lookup(self):
         return types.TypeLookup(self._type_lookup)
@@ -32,14 +32,14 @@ class _TypeChecker(object):
         
         declaration_finder = name_declaration.DeclarationFinder()
         name_resolver = name_resolution.NameResolver(declaration_finder, declarations)
-        references = name_resolver.resolve(module)
+        references = name_resolver.resolve(module.node)
     
         context = builtins.module_context(references)
-        for statement in module.body:
+        for statement in module.node.body:
             self.update_context(statement, context)
         
-        module_declarations = declaration_finder.declarations_in_module(module)
-        exported_names = util.exported_names(module)
+        module_declarations = declaration_finder.declarations_in_module(module.node)
+        exported_names = util.exported_names(module.node)
         exported_declarations = [
             module_declarations.declaration(name)
             for name in exported_names
@@ -47,13 +47,13 @@ class _TypeChecker(object):
         
         builtin_is_definitely_bound = builtins.module_bindings(references)
         bindings = name_binding.check_bindings(
-            module,
+            module.node,
             references=references,
             type_lookup=self.type_lookup(),
             is_definitely_bound=builtin_is_definitely_bound,
         )
         
-        return types.module(self._module_path, [
+        return types.module(module.path, [
             # TODO: set read_only as appropriate
             types.attr(declaration.name, context.lookup_declaration(declaration))
             for declaration in exported_declarations

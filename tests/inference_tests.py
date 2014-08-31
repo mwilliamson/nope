@@ -1,8 +1,8 @@
 from nose.tools import istest, assert_equal
 
-from nope import types, nodes, inference, errors
+from nope import types, nodes, inference, errors, Module
 
-from .inference.util import FakeModuleTypes, module
+from .inference.util import FakeModuleTypes, FakeModuleResolver, module
 
 
 @istest
@@ -19,7 +19,7 @@ def check_generates_type_lookup_for_all_expressions():
         ]),
     ])
     
-    module, type_lookup = inference.check(module_node)
+    module, type_lookup = inference.check(Module(None, module_node))
     assert_equal(types.int_type, type_lookup.type_of(int_node))
     assert_equal(types.int_type, type_lookup.type_of(int_ref_node))
     assert_equal(types.str_type, type_lookup.type_of(str_node))
@@ -34,7 +34,7 @@ def module_exports_are_specified_using_all():
         nodes.assign(["z"], nodes.int(3)),
     ])
     
-    module, type_lookup = inference.check(module_node)
+    module, type_lookup = inference.check(Module(None, module_node))
     assert_equal(types.str_type, module.attrs.type_of("x"))
     assert_equal(None, module.attrs.get("y"))
     assert_equal(types.int_type, module.attrs.type_of("z"))
@@ -48,7 +48,7 @@ def module_exports_default_to_values_without_leading_underscore_if_all_is_not_sp
         nodes.assign(["z"], nodes.int(3)),
     ])
     
-    module, type_lookup = inference.check(module_node)
+    module, type_lookup = inference.check(Module(None, module_node))
     assert_equal(types.str_type, module.attrs.type_of("x"))
     assert_equal(None, module.attrs.get("_y"))
     assert_equal(types.int_type, module.attrs.type_of("z"))
@@ -69,7 +69,7 @@ def only_values_that_are_definitely_bound_are_exported():
         )
     ])
     
-    module, type_lookup = inference.check(module_node)
+    module, type_lookup = inference.check(Module(None, module_node))
     assert_equal(None, module.attrs.get("x"))
     assert_equal(types.str_type, module.attrs.type_of("y"))
 
@@ -77,13 +77,12 @@ def only_values_that_are_definitely_bound_are_exported():
 @istest
 def error_is_raised_if_value_in_package_has_same_name_as_module():
     target_node = nodes.ref("x")
-    node = nodes.Module([nodes.assign([target_node], nodes.int(1))], is_executable=False)
-    source_tree = FakeModuleTypes({
-        "root/x.py": module({}),
-    })
+    node = nodes.module([nodes.assign([target_node], nodes.int(1))], is_executable=False)
     
     try:
-        inference.check(node, source_tree, module_path="root/__init__.py")
+        _check_module(Module("root/__init__.py", node), {
+            (".", "x"): module({}),
+        })
         assert False, "Expected error"
     except errors.ImportedValueRedeclaration as error:
         assert_equal(target_node, error.node)
@@ -92,37 +91,39 @@ def error_is_raised_if_value_in_package_has_same_name_as_module():
 
 @istest
 def values_can_have_same_name_as_child_module_if_they_are_not_in_module_scope():
-    value_node = nodes.assign("x", nodes.int(1))
-    node = nodes.Module([
+    value_node = nodes.assign([nodes.ref("x")], nodes.int(1))
+    node = nodes.module([
         nodes.func("f", nodes.signature(), nodes.args([]), [value_node])
     ], is_executable=False)
-    source_tree = FakeModuleTypes({
-        "root/x.py": module({}),
-    })
     
-    inference.check(node, source_tree, module_path="root/__init__.py")
+    _check_module(Module("root/__init__.py", node), {
+        (".", "x"): module({}),
+    })
 
 
 @istest
 def value_in_package_can_have_same_name_as_module_if_it_is_that_module():
     value_node = nodes.import_from(["."], [nodes.import_alias("x", None)])
-    node = nodes.Module([value_node], is_executable=False)
-    source_tree = FakeModuleTypes({
-        "root/__init__.py": module({}),
-        "root/x.py": module({}),
-    })
+    node = nodes.module([value_node], is_executable=False)
     
-    inference.check(node, source_tree, module_path="root/__init__.py")
-
-
-@istest
-def module_can_have_value_with_same_name_as_sibling_module():
-    value_node = nodes.assign("x", nodes.int(1))
-    node = nodes.Module([value_node], is_executable=False)
-    source_tree = FakeModuleTypes({
-        "root/x.py": module([]),
+    _check_module(Module("root/__init__.py", node), {
+        (".",): module({}),
+        (".", "x"): module({}),
     })
-    
-    inference.check(node, source_tree, module_path="root/y.py")
 
 # TODO: test that name bindings are checked
+
+def _check_module(module, path_to_module_types):
+    modules = {}
+    module_types = {}
+    
+    for path, module_type in path_to_module_types.items():
+        other_module = Module(path, nodes.module([]))
+        modules[path] = other_module
+        module_types[other_module] = module_type
+    
+    inference.check(
+        module,
+        module_resolver=FakeModuleResolver(modules),
+        module_types=FakeModuleTypes(module_types)
+    )
