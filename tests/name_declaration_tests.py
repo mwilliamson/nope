@@ -59,6 +59,27 @@ def names_in_function_are_not_declared():
 
 
 @istest
+def class_definition_is_declared():
+    node = nodes.class_def("User", [])
+    
+    declarations = _new_declarations()
+    declare(node, declarations)
+    assert_equal("User", declarations.declaration("User").name)
+    assert isinstance(declarations.declaration("User"), name_declaration.ClassDeclarationNode)
+
+
+@istest
+def names_in_class_are_not_declared():
+    node = nodes.class_def("User", [
+        nodes.assign([nodes.ref("x")], nodes.none())
+    ])
+    
+    declarations = _new_declarations()
+    declare(node, declarations)
+    assert not declarations.is_declared("x")
+
+
+@istest
 def argument_adds_declaration_to_declarations():
     declarations = _new_declarations()
     node = nodes.arg("x")
