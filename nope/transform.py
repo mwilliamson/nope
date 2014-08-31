@@ -269,6 +269,12 @@ class Converter(object):
     
     
     def _class_def(self, node):
+        if node.bases or node.starargs:
+            raise SyntaxError("base classes are not supported")
+        if node.keywords or node.kwargs:
+            raise SyntaxError("class keyword arguments are not supported")
+        if node.decorator_list:
+            raise SyntaxError("class decorators are not supported")
         return nodes.class_def(node.name, self._mapped(node.body))
     
 

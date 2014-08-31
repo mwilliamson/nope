@@ -727,6 +727,31 @@ def test_parse_class_with_body():
     _assert_statement_parse(expected_node, "class User:\n  x = 1")
 
 
+@istest
+def test_error_when_parsing_class_base_classes():
+    _assert_syntax_error("base classes are not supported", "class User(Person):\n  pass")
+
+
+@istest
+def test_error_when_parsing_class_vararg_base_classes():
+    _assert_syntax_error("base classes are not supported", "class User(*bases):\n  pass")
+
+
+@istest
+def test_error_when_parsing_class_keywords():
+    _assert_syntax_error("class keyword arguments are not supported", "class User(metaclass=Person):\n  pass")
+
+
+@istest
+def test_error_when_parsing_class_kwargs():
+    _assert_syntax_error("class keyword arguments are not supported", "class User(**kwargs):\n  pass")
+
+
+@istest
+def test_error_when_parsing_class_decorators():
+    _assert_syntax_error("class decorators are not supported", "@wraps\nclass User:\n  pass")
+
+
 
 def _assert_expression_parse(expected, source):
     assert_equal(expected, _parse_expression(source))
