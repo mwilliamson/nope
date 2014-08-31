@@ -346,6 +346,20 @@ def class_definitions_assignments_shadow_variables_of_same_name_in_outer_scope()
 
 
 @istest
+def class_definition_functions_ignore_class_scope_when_resolving_references():
+    ref = nodes.ref("x")
+    node = nodes.class_def("User", [
+        nodes.assign([nodes.ref("x")], nodes.none()),
+        nodes.func("f", None, nodes.args([]), [nodes.ret(ref)]),
+    ])
+    
+    declarations = _create_declarations(["x", "User"])
+    
+    references = resolve(node, declarations)
+    assert_is(declarations.declaration("x"), references.referenced_declaration(ref))
+
+
+@istest
 def import_multiple_aliases_using_same_name_resolve_to_same_node():
     declarations = _create_declarations(["x"])
     first_alias_node = nodes.import_alias("x.y", None)

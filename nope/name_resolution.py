@@ -77,11 +77,15 @@ def _resolve_module(visitor, node, context):
 
 
 class _Context(object):
-    def __init__(self, declaration_finder, declarations, references):
+    def __init__(self, declaration_finder, declarations, references, declarations_for_functions=None):
         assert isinstance(references, IdentityDict)
+        
+        if declarations_for_functions is None:
+            declarations_for_functions = declarations
         
         self._declaration_finder = declaration_finder
         self._declarations = declarations
+        self._declarations_for_functions = declarations_for_functions
         self._references = references
     
     def is_declared(self, name):
@@ -92,17 +96,15 @@ class _Context(object):
     
     def enter_function(self, node):
         function_declarations = self._declaration_finder.declarations_in_function(node)
-        return self._enter(function_declarations)
+        declarations = self._declarations_for_functions.enter(function_declarations)
+        return _Context(self._declaration_finder, declarations, self._references)
     
     def enter_class(self, node):
         class_declarations = self._declaration_finder.declarations_in_class(node)
-        return self._enter(class_declarations)
+        declarations = self._declarations.enter(class_declarations)
+        return _Context(self._declaration_finder, declarations, self._references, declarations_for_functions=self._declarations)
     
     def enter_module(self, node):
         module_declarations = self._declaration_finder.declarations_in_module(node)
-        return self._enter(module_declarations)
-    
-    def _enter(self, declarations_in_scope):
-        declarations = self._declarations.enter(declarations_in_scope)
+        declarations = self._declarations.enter(module_declarations)
         return _Context(self._declaration_finder, declarations, self._references)
-        

@@ -60,9 +60,6 @@ TODO
 * Allow types of variables to be specified in the same way as functions, such
   as giving the type of an empty list.
 
-* Fix: variable references in class methods should not be resolved to class
-  variables.
-
 Status
 ------
 
