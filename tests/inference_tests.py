@@ -2,7 +2,7 @@ from nose.tools import istest, assert_equal
 
 from nope import types, nodes, inference, errors
 
-from .inference.util import FakeSourceTree, module
+from .inference.util import FakeModuleTypes, module
 
 
 @istest
@@ -78,7 +78,7 @@ def only_values_that_are_definitely_bound_are_exported():
 def error_is_raised_if_value_in_package_has_same_name_as_module():
     target_node = nodes.ref("x")
     node = nodes.Module([nodes.assign([target_node], nodes.int(1))], is_executable=False)
-    source_tree = FakeSourceTree({
+    source_tree = FakeModuleTypes({
         "root/x.py": module({}),
     })
     
@@ -96,7 +96,7 @@ def values_can_have_same_name_as_child_module_if_they_are_not_in_module_scope():
     node = nodes.Module([
         nodes.func("f", nodes.signature(), nodes.args([]), [value_node])
     ], is_executable=False)
-    source_tree = FakeSourceTree({
+    source_tree = FakeModuleTypes({
         "root/x.py": module({}),
     })
     
@@ -107,7 +107,7 @@ def values_can_have_same_name_as_child_module_if_they_are_not_in_module_scope():
 def value_in_package_can_have_same_name_as_module_if_it_is_that_module():
     value_node = nodes.import_from(["."], [nodes.import_alias("x", None)])
     node = nodes.Module([value_node], is_executable=False)
-    source_tree = FakeSourceTree({
+    source_tree = FakeModuleTypes({
         "root/__init__.py": module({}),
         "root/x.py": module({}),
     })
@@ -119,7 +119,7 @@ def value_in_package_can_have_same_name_as_module_if_it_is_that_module():
 def module_can_have_value_with_same_name_as_sibling_module():
     value_node = nodes.assign("x", nodes.int(1))
     node = nodes.Module([value_node], is_executable=False)
-    source_tree = FakeSourceTree({
+    source_tree = FakeModuleTypes({
         "root/x.py": module([]),
     })
     

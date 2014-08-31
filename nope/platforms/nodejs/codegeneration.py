@@ -7,16 +7,17 @@ from ... import nodes, util, types, name_declaration
 from ...walk import walk_tree
 
 
-def nope_to_nodejs(source_path, source_tree, destination_dir, optimise=True):
+def nope_to_nodejs(source_path, source_tree, checker, destination_dir, optimise=True):
     def handle_dir(path, relative_path):
         os.mkdir(os.path.join(destination_dir, relative_path))
     
     def handle_file(path, relative_path):
+        module = source_tree.module(path)
         _convert_file(
             path,
             relative_path,
-            source_tree.ast(path),
-            source_tree.type_lookup(path),
+            module.node,
+            checker.type_lookup(module),
             destination_dir,
             optimise=optimise,
         )

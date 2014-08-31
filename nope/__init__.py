@@ -7,12 +7,13 @@ from . import inference, parser, platforms, errors, loop_control
 def check(path):
     try:
         source_tree = _parse_source_tree(path)
-        for path in source_tree.paths():
-            source_tree.check(path)
+        checker = Checker(source_tree)
+        for module in source_tree.modules():
+            checker.check(module)
     except (errors.TypeCheckError, SyntaxError) as error:
         return Result(is_valid=False, error=error, value=None)
     
-    return Result(is_valid=True, error=None, value=source_tree)
+    return Result(is_valid=True, error=None, value=(source_tree, checker))
 
 
 def _parse_source_tree(tree_path):
@@ -35,40 +36,53 @@ def _source_paths(path):
                 yield os.path.abspath(os.path.join(root, filename))
 
 
-def _check_file(path, source_tree=None):
-    with open(path) as source_file:
-        source = source_file.read()
-        try:
-            nope_ast = parser.parse(source)
-        except SyntaxError as error:
-            return Result(is_valid=False, error=error, value=None)
-    
-    try:
-        inference.check(nope_ast)
-    except errors.TypeCheckError as error:
-        return Result(is_valid=False, error=error, value=None)
-    
-    return Result(is_valid=True, error=None, value=nope_ast)
-
-
 def compile(source_path, destination_dir, platform):
-    source_tree = check(source_path)
+    result = check(source_path)
     
-    if not source_tree.is_valid:
+    if not result.is_valid:
         raise source_tree.error
+    
+    source_tree, checker = result.value
     
     if isinstance(platform, str):
         platform = platforms.find_platform_by_name(platform)
         
-    platform.generate_code(source_path, source_tree.value, destination_dir)
+    platform.generate_code(source_path, source_tree, checker, destination_dir)
 
 
 Result = collections.namedtuple("Result", ["is_valid", "error", "value"])
 
 
-def _check(ast, source_tree, path):
-    loop_control.check_loop_control(ast, in_loop=False)
-    return inference.check(ast, source_tree, path)
+class Checker(object):
+    def __init__(self, source_tree):
+        self._source_tree = source_tree
+        self._check_results = {}
+    
+    def check(self, module):
+        self._check_result(module)
+    
+    def _check_result(self, module):
+        # TODO: circular import detection
+        if module not in self._check_results:
+            self._check_results[module] = self._uncached_check(module)
+        return self._check_results[module]
+    
+    def is_module_path(self, path):
+        return path in self._source_tree
+    
+    def type_of_module(self, path):
+        # TODO: pass in module instead?
+        module_type, type_lookup = self._check_result(self._source_tree.module(path))
+        return module_type
+    
+    def type_lookup(self, module):
+        module_type, type_lookup = self._check_result(module) 
+        return type_lookup
+    
+    def _uncached_check(self, module):
+        loop_control.check_loop_control(module.node, in_loop=False)
+        return inference.check(module.node, self, module.path)
+        
 
 
 class SourceTree(object):
@@ -88,39 +102,18 @@ class SourceTree(object):
     def paths(self):
         return self._asts.keys()
     
-    def ast(self, path):
-        return self._asts[path]
+    def module(self, path):
+        return Module(path, self._asts[path])
     
-    def type_lookup(self, path):
-        module, type_lookup = self._type_check_module(path)
-        return type_lookup
-    
-    def check(self, path):
-        self._type_check_module(path)
-    
-    def import_module(self, path):
-        if path not in self._asts:
-            return None
-        if self._asts[path].is_executable:
-            raise errors.ImportError(None, "Cannot import executable modules")
-        module, type_lookup = self._type_check_module(path)
-        return module
-        
-    def _type_check_module(self, path):
-        if path not in self._module_checkers:
-            return None
-        checker = self._module_checkers[path]
-        self._module_checkers[path] = self._circular_import
-        result = checker()
-        self._module_checkers[path] = lambda: result
-        return result
-        
-        
-    
-    def _circular_import(self):
-        # TODO: test circular import detection
-        raise CircularImportError("Circular import detected")
+    def modules(self):
+        return [Module(path, node) for path, node in self._asts.items()]
 
 
 class CircularImportError(Exception):
     pass
+
+
+class Module(object):
+    def __init__(self, path, node):
+        self.path = path
+        self.node = node

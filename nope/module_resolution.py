@@ -23,7 +23,7 @@ def resolve_import(names, is_executable, module_path, source_tree):
         raise errors.ModuleNotFoundError(None, "Could not find module '{}'".format(".".join(names)))
     else:
         module = package_value or module_value
-        if module.is_executable:
+        if module.node.is_executable:
             raise errors.ImportError(None, "Cannot import executable modules")
         else:
             return module

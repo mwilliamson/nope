@@ -81,15 +81,15 @@ def module(attrs):
     return types.module("generic_module_name", attrs)
 
 
-class FakeSourceTree(object):
+class FakeModuleTypes(object):
     def __init__(self, modules):
         self._modules = modules
     
-    def import_module(self, path):
+    def type_of_module(self, path):
         return self._modules.get(path)
     
-    def __contains__(self, value):
-        return value in self._modules
+    def is_module_path(self, path):
+        return path in self._modules
 
 
 def assert_type_mismatch(func, expected, actual, node):

@@ -5,9 +5,9 @@ from . import ephemeral
 
 
 class StatementTypeChecker(object):
-    def __init__(self, expression_type_inferer, source_tree, module_path, is_executable):
+    def __init__(self, expression_type_inferer, module_types, module_path, is_executable):
         self._expression_type_inferer = expression_type_inferer
-        self._source_tree = source_tree
+        self._module_types = module_types
         self._module_path = module_path
         self._is_executable = is_executable
         
@@ -36,8 +36,8 @@ class StatementTypeChecker(object):
 
     def _find_submodule(self, name):
         for path in self._possible_module_paths([".", name]):
-            if path in self._source_tree:
-                return self._source_tree.import_module(path)
+            if self._module_types.is_module_path(path):
+                return self._module_types.type_of_module(path)
         
         return None
     
@@ -290,8 +290,8 @@ class StatementTypeChecker(object):
             
         package_path, module_path = self._possible_module_paths(names)
         
-        package_value = self._source_tree.import_module(package_path)
-        module_value = self._source_tree.import_module(module_path)
+        package_value = self._type_of_module(package_path)
+        module_value = self._type_of_module(module_path)
         
         if package_value is not None and module_value is not None:
             raise errors.ImportError(node,
@@ -320,3 +320,9 @@ class StatementTypeChecker(object):
     
     def _infer_magic_method_call(self, *args, **kwargs):
         return self._expression_type_inferer.infer_magic_method_call(*args, **kwargs)
+    
+    def _type_of_module(self, path):
+        if self._module_types.is_module_path(path):
+            return self._module_types.type_of_module(path)
+        else:
+            return None

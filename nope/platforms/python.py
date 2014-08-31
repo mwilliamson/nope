@@ -9,7 +9,7 @@ class Python2(object):
     binary = "python2"
     extension = "py"
     
-    def generate_code(self, source_path, source_tree, destination_dir):
+    def generate_code(self, source_path, checker, source_tree, destination_dir):
         def handle_dir(path, relative_path):
             os.mkdir(os.path.join(destination_dir, relative_path))
         
@@ -38,7 +38,7 @@ class Python3(object):
     binary = "python3"
     extension = "py"
     
-    def generate_code(self, source, source_tree, destination_dir):
+    def generate_code(self, source, source_tree, checker, destination_dir):
         _copy_recursive(source, destination_dir)
 
 

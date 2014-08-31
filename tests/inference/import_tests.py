@@ -1,14 +1,14 @@
 from nose.tools import istest, assert_equal, assert_raises
 
 from nope import types, nodes, errors
-from .util import FakeSourceTree, update_blank_context, module
+from .util import FakeModuleTypes, update_blank_context, module
 
 
 @istest
 def can_import_local_module_using_plain_import_syntax():
     node = nodes.Import([nodes.import_alias("message", None)])
     
-    source_tree = FakeSourceTree({
+    source_tree = FakeModuleTypes({
         "root/message.py": module([types.attr("value", types.str_type)])
     })
     
@@ -23,7 +23,7 @@ def can_import_local_module_using_plain_import_syntax():
 def can_import_local_package_using_plain_import_syntax():
     node = nodes.Import([nodes.import_alias("message", None)])
     
-    source_tree = FakeSourceTree({
+    source_tree = FakeModuleTypes({
         "root/message/__init__.py": module([types.attr("value", types.str_type)])
     })
     
@@ -40,7 +40,7 @@ def importing_module_in_package_mutates_that_package():
     messagesmodule = module([])
     hellomodule = module([types.attr("value", types.str_type)])
     
-    source_tree = FakeSourceTree({
+    source_tree = FakeModuleTypes({
         "root/messages/__init__.py": messagesmodule,
         "root/messages/hello.py": hellomodule,
     })
@@ -56,7 +56,7 @@ def importing_module_in_package_mutates_that_package():
 def can_use_aliases_with_plain_import_syntax():
     node = nodes.Import([nodes.import_alias("message", "m")])
     
-    source_tree = FakeSourceTree({
+    source_tree = FakeModuleTypes({
         "root/message.py": module([types.attr("value", types.str_type)])
     })
     
@@ -72,7 +72,7 @@ def can_use_aliases_with_plain_import_syntax():
 def cannot_import_local_packages_if_not_in_executable():
     node = nodes.Import([nodes.import_alias("message", None)])
     
-    source_tree = FakeSourceTree({
+    source_tree = FakeModuleTypes({
         "root/message/__init__.py": module([types.attr("value", types.str_type)]),
     })
     
@@ -89,7 +89,7 @@ def cannot_import_local_packages_if_not_in_executable():
 def error_is_raised_if_import_is_ambiguous():
     node = nodes.Import([nodes.import_alias("message", None)])
     
-    source_tree = FakeSourceTree({
+    source_tree = FakeModuleTypes({
         "root/message/__init__.py": module([types.attr("value", types.str_type)]),
         "root/message.py": module([types.attr("value", types.str_type)]),
     })
@@ -107,7 +107,7 @@ def error_is_raised_if_import_is_ambiguous():
 @istest
 def error_is_raised_if_import_cannot_be_resolved():
     node = nodes.Import([nodes.import_alias("message.value", None)])
-    source_tree = FakeSourceTree({
+    source_tree = FakeModuleTypes({
         "root/message/__init__.py": module([]),
     })
     
@@ -125,7 +125,7 @@ def error_is_raised_if_import_cannot_be_resolved():
 def can_import_value_from_relative_module_using_import_from_syntax():
     node = nodes.import_from([".", "message"], [nodes.import_alias("value", None)])
     
-    source_tree = FakeSourceTree({
+    source_tree = FakeModuleTypes({
         "root/message.py": module([types.attr("value", types.str_type)])
     })
     
@@ -142,7 +142,7 @@ def can_import_relative_module_using_import_from_syntax():
     rootmodule = module([])
     messagemodule = module([types.attr("value", types.str_type)])
     
-    source_tree = FakeSourceTree({
+    source_tree = FakeModuleTypes({
         "root/__init__.py": rootmodule,
         "root/message.py": messagemodule,
     })
@@ -158,7 +158,7 @@ def can_import_relative_module_using_import_from_syntax():
 def can_import_relative_module_using_import_from_syntax_with_alias():
     node = nodes.import_from([".", "message"], [nodes.import_alias("value", "v")])
     
-    source_tree = FakeSourceTree({
+    source_tree = FakeModuleTypes({
         "root/message.py": module([types.attr("value", types.str_type)]),
     })
     
