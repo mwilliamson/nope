@@ -302,8 +302,7 @@ def function_definitions_arguments_shadow_variables_of_same_name_in_outer_scope(
 
 @istest
 def function_definitions_assignments_shadow_variables_of_same_name_in_outer_scope():
-    arg = nodes.argument("x")
-    args = nodes.arguments([arg])
+    args = nodes.arguments([])
     ref = nodes.ref("x")
     body = [nodes.assign([ref], nodes.none())]
     node = nodes.func("f", None, args, body)
