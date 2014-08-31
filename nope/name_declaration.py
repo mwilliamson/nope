@@ -1,4 +1,4 @@
-from nope import nodes, errors, util, visit
+from nope import nodes, errors, visit
 from nope.identity_dict import IdentityDict
 
 
@@ -56,6 +56,9 @@ def _declare_import(visitor, node, declarations):
 class Declarations(object):
     def __init__(self, declarations):
         self._declarations = declarations
+    
+    def names(self):
+        return self._declarations.keys()
     
     def declare(self, name, target_node, target_type):
         if name in self._declarations:

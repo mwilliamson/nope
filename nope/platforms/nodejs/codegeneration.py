@@ -3,7 +3,7 @@ import shutil
 import inspect
 
 from . import js
-from ... import nodes, util, types
+from ... import nodes, util, types, name_declaration
 from ...walk import walk_tree
 
 
@@ -184,6 +184,7 @@ def transform(nope_node, type_lookup, optimise=True):
 class Transformer(object):
     def __init__(self, type_lookup, optimise):
         self._type_lookup = type_lookup
+        self._declarations = name_declaration.DeclarationFinder()
         self._optimise = optimise
         
         self._transformers = {
@@ -237,7 +238,11 @@ class Transformer(object):
         return self._transformers[node_type](nope_node)
     
     def _module(self, module):
-        body_statements = _generate_vars(module.body) + self._transform_all(module.body)
+        var_statements = [
+            js.var(name)
+            for name in sorted(self._declarations.declarations_in_module(module).names())
+        ]
+        body_statements = var_statements + self._transform_all(module.body)
         export_names = util.exported_names(module)
                 
         export_statements = [
@@ -336,11 +341,15 @@ class Transformer(object):
         
 
     def _function_def(self, func):
-        body = _generate_vars(func.body) + self._transform_all(func.body)
+        declared_names = set(self._declarations.declarations_in_function(func).names())
+        arg_names = [arg.name for arg in func.args.args]
+        declared_names.difference_update(arg_names)
+        
+        body = [js.var(name) for name in declared_names] + self._transform_all(func.body)
         
         return js.function_declaration(
             name=func.name,
-            args=[arg.name for arg in func.args.args],
+            args=arg_names,
             body=body,
         )
         

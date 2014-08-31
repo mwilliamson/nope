@@ -200,6 +200,25 @@ def test_transform_function_declaration_declares_variables_at_top_of_function():
 
 
 @istest
+def test_transform_function_declaration_does_not_redeclare_variables_with_same_name_as_argument():
+    _assert_transform(
+        nodes.func(
+            name="f",
+            signature=parse_signature("-> none"),
+            args=nodes.args([nodes.arg("x")]),
+            body=[nodes.assign(["x"], nodes.ref("y"))],
+        ),
+        js.function_declaration(
+            name="f",
+            args=["x"],
+            body=[
+                js.expression_statement(js.assign("x", js.ref("y"))),
+            ],
+        )
+    )
+
+
+@istest
 def test_transform_single_assignment():
     _assert_transform(
         nodes.assign(["x"], nodes.ref("z")),
