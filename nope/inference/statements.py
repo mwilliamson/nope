@@ -25,6 +25,7 @@ class StatementTypeChecker(object):
             nodes.AssertStatement: self._check_assert,
             nodes.WithStatement: self._check_with,
             nodes.FunctionDef: self._check_function_def,
+            nodes.ClassDefinition: self._check_class_definition,
             nodes.Import: self._check_import,
             nodes.ImportFrom: self._check_import_from,
             list: self._check_list,
@@ -72,6 +73,11 @@ class StatementTypeChecker(object):
             raise errors.MissingReturnError(node, return_type)
         
         context.update_type(node, func_type)
+    
+    
+    def _check_class_definition(self, node, context):
+        class_type = types.scalar_type(node.name)
+        context.update_type(node, types.meta_type(class_type))
 
 
     def _check_expression_statement(self, node, context):

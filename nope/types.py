@@ -292,8 +292,8 @@ def is_sub_type(super_type, sub_type):
     return super_type == sub_type
 
 
-def meta_type(name, attrs=None):
-    return MetaType(name, _generate_attrs(attrs))
+def meta_type(type_, attrs=None):
+    return MetaType(type_, _generate_attrs(attrs))
 
 
 def is_meta_type(type_):
