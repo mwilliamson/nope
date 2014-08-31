@@ -4,12 +4,12 @@ from . import errors
 from .identity_dict import IdentityDict
 
 
-def resolve_import(names, is_executable, module_path, source_tree):
+def resolve_import(module, names, source_tree):
     # TODO: handle absolute imports
-    if names[0] not in [".", ".."] and not is_executable:
+    if names[0] not in [".", ".."] and not module.node.is_executable:
         raise errors.ImportError(None, "Absolute imports not yet implemented")
         
-    package_path, module_path = _possible_module_paths(module_path, names)
+    package_path, module_path = _possible_module_paths(module.path, names)
     
     package_value = source_tree.module(package_path)
     module_value = source_tree.module(module_path)
