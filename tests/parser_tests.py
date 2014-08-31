@@ -715,6 +715,18 @@ def nodes_have_position():
     assert_equal(0, node.offset)
 
 
+@istest
+def test_parse_empty_class():
+    expected_node = nodes.class_def("User", [])
+    _assert_statement_parse(expected_node, "class User:\n  pass")
+
+
+@istest
+def test_parse_class_with_body():
+    expected_node = nodes.class_def("User", [nodes.assign([nodes.ref("x")], nodes.int(1))])
+    _assert_statement_parse(expected_node, "class User:\n  x = 1")
+
+
 
 def _assert_expression_parse(expected, source):
     assert_equal(expected, _parse_expression(source))

@@ -82,6 +82,8 @@ SignatureArgument = dodge.data_class("SignatureArgument", ["name", "type"])
 Arguments = dodge.data_class("Arguments", ["args"])
 Argument = dodge.data_class("Argument", ["name"])
 
+ClassDef = dodge.data_class("ClassDef", ["name", "body"])
+
 Import = dodge.data_class("Import", ["names"])
 ImportFrom = dodge.data_class("ImportFrom", ["module", "names"])
 class ImportAlias(dodge.data_class("ImportAlias", ["name", "asname"])):
@@ -175,6 +177,9 @@ with_statement = WithStatement
 
 def func(name, signature, args, body):
     return FunctionDef(name, signature, args, body)
+
+
+class_def = ClassDef
 
 
 def signature(*, type_params=None, args=None, returns=None):

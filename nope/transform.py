@@ -33,6 +33,7 @@ class Converter(object):
             ast.Raise: self._raise,
             ast.Assert: self._assert,
             ast.With: self._with,
+            ast.ClassDef: self._class_def,
             
             ast.Str: self._str_literal,
             ast.Num: self._num_literal,
@@ -265,6 +266,10 @@ class Converter(object):
             )]
         
         return result[0]
+    
+    
+    def _class_def(self, node):
+        return nodes.class_def(node.name, self._mapped(node.body))
     
 
     def _str_literal(self, node):
