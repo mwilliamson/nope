@@ -131,14 +131,17 @@ class DeclarationFinder(object):
         self._node_to_declarations = IdentityDict()
 
     def declarations_in_function(self, node):
-        if node not in self._node_to_declarations:
-            self._node_to_declarations[node] = _declarations_in_function(node)
-        
-        return self._node_to_declarations[node]
+        return self._declarations(node, _declarations_in_function)
+
+    def declarations_in_class(self, node):
+        return self._declarations(node, _declarations_in_class)
         
     def declarations_in_module(self, node):
+        return self._declarations(node, _declarations_in_module)
+    
+    def _declarations(self, node, generator):
         if node not in self._node_to_declarations:
-            self._node_to_declarations[node] = _declarations_in_module(node)
+            self._node_to_declarations[node] = generator(node)
         
         return self._node_to_declarations[node]
         
@@ -148,6 +151,15 @@ def _declarations_in_function(node):
     
     for arg in node.args.args:
         _declare(arg, declarations)
+    
+    for statement in node.body:
+        _declare(statement, declarations)
+        
+    return declarations
+        
+        
+def _declarations_in_class(node):
+    declarations = Declarations({})
     
     for statement in node.body:
         _declare(statement, declarations)

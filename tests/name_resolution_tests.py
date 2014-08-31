@@ -311,6 +311,38 @@ def function_definitions_assignments_shadow_variables_of_same_name_in_outer_scop
     
     references = resolve(node, declarations)
     assert_is_not(declarations.declaration("x"), references.referenced_declaration(ref))
+    
+
+@istest
+def class_definition_is_resolved_to_class_declaration():
+    node = nodes.class_def("User", [])
+    
+    declarations = _create_declarations(["User"])
+    references = resolve(node, declarations)
+    assert_is(declarations.declaration("User"), references.referenced_declaration(node))
+
+
+@istest
+def class_definition_bodies_can_access_variables_from_outer_scope():
+    ref = nodes.ref("x")
+    node = nodes.class_def("User", [nodes.expression_statement(ref)])
+    
+    declarations = _create_declarations(["x", "User"])
+    
+    references = resolve(node, declarations)
+    assert_is(declarations.declaration("x"), references.referenced_declaration(ref))
+
+
+@istest
+def class_definitions_assignments_shadow_variables_of_same_name_in_outer_scope():
+    ref = nodes.ref("x")
+    body = [nodes.assign([ref], nodes.none())]
+    node = nodes.class_def("User", body)
+    
+    declarations = _create_declarations(["x", "User"])
+    
+    references = resolve(node, declarations)
+    assert_is_not(declarations.declaration("x"), references.referenced_declaration(ref))
 
 
 @istest

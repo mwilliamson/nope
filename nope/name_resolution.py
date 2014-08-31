@@ -26,6 +26,7 @@ def _resolve(node, context):
     visitor = visit.Visitor()
     visitor.replace(nodes.VariableReference, _resolve_variable_reference)
     visitor.replace(nodes.FunctionDef, _resolve_function_def)
+    visitor.replace(nodes.ClassDefinition, _resolve_class_definition)
     visitor.replace(nodes.Import, _resolve_import)
     visitor.replace(nodes.ImportFrom, _resolve_import)
     visitor.replace(nodes.Module, _resolve_module)
@@ -49,6 +50,15 @@ def _resolve_function_def(visitor, node, context):
     body_context = context.enter_function(node)
     for arg in node.args.args:
         body_context.add_reference(arg, arg.name)
+    
+    for statement in node.body:
+        visitor.visit(statement, body_context)
+
+
+def _resolve_class_definition(visitor, node, context):
+    context.add_reference(node, node.name)
+    
+    body_context = context.enter_class(node)
     
     for statement in node.body:
         visitor.visit(statement, body_context)
@@ -82,10 +92,17 @@ class _Context(object):
     
     def enter_function(self, node):
         function_declarations = self._declaration_finder.declarations_in_function(node)
-        declarations = self._declarations.enter(function_declarations)
-        return _Context(self._declaration_finder, declarations, self._references)
-
+        return self._enter(function_declarations)
+    
+    def enter_class(self, node):
+        class_declarations = self._declaration_finder.declarations_in_class(node)
+        return self._enter(class_declarations)
+    
     def enter_module(self, node):
         module_declarations = self._declaration_finder.declarations_in_module(node)
-        declarations = self._declarations.enter(module_declarations)
+        return self._enter(module_declarations)
+    
+    def _enter(self, declarations_in_scope):
+        declarations = self._declarations.enter(declarations_in_scope)
         return _Context(self._declaration_finder, declarations, self._references)
+        
