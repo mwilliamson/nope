@@ -404,8 +404,8 @@ def _create_declarations(names):
 
 def resolve(node, declarations):
     declaration_finder = DeclarationFinder()
-    resolver = NameResolver(declaration_finder)
-    return resolver.resolve(node, declarations)
+    resolver = NameResolver(declaration_finder, declarations)
+    return resolver.resolve(node)
 
 
 def _assert_no_references(node):

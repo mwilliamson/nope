@@ -3,13 +3,13 @@ from nope.identity_dict import IdentityDict
 
 
 class NameResolver(object):
-    def __init__(self, declaration_finder):
+    def __init__(self, declaration_finder, initial_declarations):
         self._declaration_finder = declaration_finder
+        self._initial_declarations = initial_declarations
     
-    def resolve(self, node, declarations, references=None):
-        if references is None:
-            references = IdentityDict()
-        context = _Context(self._declaration_finder, declarations, references)
+    def resolve(self, node):
+        references = IdentityDict()
+        context = _Context(self._declaration_finder, self._initial_declarations, references)
         _resolve(node, context)
         return References(references)
 

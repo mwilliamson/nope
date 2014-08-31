@@ -31,8 +31,8 @@ class _TypeChecker(object):
         declarations = builtins.declarations()
         
         declaration_finder = name_declaration.DeclarationFinder()
-        name_resolver = name_resolution.NameResolver(declaration_finder)
-        references = name_resolver.resolve(module, declarations)
+        name_resolver = name_resolution.NameResolver(declaration_finder, declarations)
+        references = name_resolver.resolve(module)
     
         context = builtins.module_context(references)
         for statement in module.body:
