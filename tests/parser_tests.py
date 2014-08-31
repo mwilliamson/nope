@@ -728,6 +728,14 @@ def test_parse_class_with_body():
 
 
 @istest
+def test_error_when_class_body_is_not_assignment_nor_function_definition():
+    _assert_syntax_error(
+        "IfElse node is not supported in current context",
+        "class User:\n  if x:\n    y = 1\n  else:\n    y = 2"
+    )
+
+
+@istest
 def test_error_when_parsing_class_base_classes():
     _assert_syntax_error("base classes are not supported", "class User(Person):\n  pass")
 

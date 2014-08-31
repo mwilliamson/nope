@@ -64,9 +64,11 @@ class Converter(object):
             self._converters[ast.NameConstant] = self._name_constant
 
     
-    def convert(self, node):
+    def convert(self, node, allowed=None):
         try:
             nope_node = self._converters[type(node)](node)
+            if allowed is not None and not isinstance(nope_node, allowed):
+                raise SyntaxError("{} node is not supported in current context".format(type(nope_node).__name__))
         except SyntaxError as error:
             if error.lineno is None:
                 error.lineno = node.lineno
@@ -275,7 +277,8 @@ class Converter(object):
             raise SyntaxError("class keyword arguments are not supported")
         if node.decorator_list:
             raise SyntaxError("class decorators are not supported")
-        return nodes.class_def(node.name, self._mapped(node.body))
+            
+        return nodes.class_def(node.name, self._mapped(node.body, allowed=(nodes.Assignment, nodes.FunctionDef)))
     
 
     def _str_literal(self, node):
@@ -400,9 +403,9 @@ class Converter(object):
             node = create_node(node, value)
         return node
 
-    def _mapped(self, nodes):
+    def _mapped(self, nodes, allowed=None):
         return [
-            self.convert(node)
+            self.convert(node, allowed=allowed)
             for node in nodes
             if not isinstance(node, ast.Pass)
         ]
