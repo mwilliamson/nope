@@ -116,10 +116,14 @@ class Converter(object):
             raise SyntaxError("keyword-only arguments are not supported")
         
         if node.args.vararg is not None:
-            raise SyntaxError("arguments in the form '*{}' are not supported".format(node.args.vararg.arg))
+            # vararg changed from identifier? to arg? in Python 3.4
+            name = getattr(node.args.vararg, "arg", node.args.vararg)
+            raise SyntaxError("arguments in the form '*{}' are not supported".format(name))
         
         if node.args.kwarg is not None:
-            raise SyntaxError("arguments in the form '**{}' are not supported".format(node.args.kwarg.arg))
+            # kwarg changed from identifier? to arg? in Python 3.4
+            name = getattr(node.args.kwarg, "arg", node.args.kwarg)
+            raise SyntaxError("arguments in the form '**{}' are not supported".format(name))
         
         
         signature = self._comment_seeker.seek_signature(node.lineno, node.col_offset)
