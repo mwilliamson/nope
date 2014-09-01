@@ -76,7 +76,9 @@ class StatementTypeChecker(object):
     
     def _check_class_definition(self, node, context):
         class_type = types.scalar_type(node.name)
-        context.update_type(node, types.meta_type(class_type))
+        meta_type = types.meta_type(class_type)
+        meta_type.attrs.add("__call__", types.func([], class_type), read_only=True)
+        context.update_type(node, meta_type)
 
 
     def _check_expression_statement(self, node, context):

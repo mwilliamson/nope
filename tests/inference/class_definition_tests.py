@@ -14,6 +14,7 @@ def empty_class_definition_updates_type_to_meta_class_of_scalar_class():
     class_type = meta_type.type
     assert isinstance(class_type, types._ScalarType)
     assert_equal("User", class_type.name)
+    assert_equal(types.func([], class_type), meta_type.attrs.type_of("__call__"))
     
 
 
