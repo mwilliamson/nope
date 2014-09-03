@@ -5,7 +5,7 @@ from nope import types, nodes
 from .util import (
     assert_type_mismatch, assert_variable_remains_unbound,
     assert_statement_is_type_checked, assert_variable_is_bound,
-    create_context, update_context)
+    update_context)
 
 
 @istest
@@ -21,9 +21,8 @@ def except_handler_type_must_be_type():
     node = nodes.try_statement([], handlers=[
         nodes.except_handler(type_node, None, []),
     ])
-    context = create_context({"x": types.int_type})
     assert_type_mismatch(
-        lambda: update_context(node, context),
+        lambda: update_context(node, type_bindings={"x": types.int_type}),
         expected="exception type",
         actual=types.int_type,
         node=type_node,
@@ -37,9 +36,8 @@ def except_handler_type_must_be_exception_type():
         nodes.except_handler(type_node, None, []),
     ])
     meta_type = types.meta_type(types.int_type)
-    context = create_context({"int": meta_type})
     assert_type_mismatch(
-        lambda: update_context(node, context),
+        lambda: update_context(node, type_bindings={"int": meta_type}),
         expected="exception type",
         actual=meta_type,
         node=type_node,
@@ -55,10 +53,10 @@ def except_handler_updates_type_of_error_target():
             [nodes.expression_statement(nodes.ref("error"))]
         ),
     ])
-    context = create_context({
+    type_bindings = {
         "Exception": types.meta_type(types.exception_type)
-    })
-    update_context(node, context)
+    }
+    context = update_context(node, type_bindings=type_bindings)
     assert_equal(types.exception_type, context.lookup_name("error"))
 
 

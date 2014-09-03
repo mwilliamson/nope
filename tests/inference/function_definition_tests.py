@@ -95,8 +95,8 @@ def function_adds_arguments_to_context():
 
 
 def _infer_func_type(func_node):
-    context = Context(SingleScopeReferences(), {}).enter_module()
-    context.update_type(nodes.ref("int"), types.meta_type(types.int_type))
-    context.update_type(nodes.ref("str"), types.meta_type(types.str_type))
-    update_context(func_node, context)
+    context = update_context(func_node, type_bindings={
+        "int": types.meta_type(types.int_type),
+        "str": types.meta_type(types.str_type)
+    })
     return context.lookup(func_node)

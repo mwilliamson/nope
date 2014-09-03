@@ -2,25 +2,25 @@ from nose.tools import istest, assert_equal, assert_is
 
 from nope import types, nodes, errors
 from nope.inference import ephemeral
-from .util import assert_type_mismatch, create_context, infer
+from .util import assert_type_mismatch, infer
 
 
 @istest
 def can_infer_type_of_call_with_positional_arguments():
-    context = create_context({"f": types.func([types.str_type], types.int_type)})
-    assert_equal(types.int_type, infer(nodes.call(nodes.ref("f"), [nodes.string("")]), context))
+    type_bindings = {"f": types.func([types.str_type], types.int_type)}
+    assert_equal(types.int_type, infer(nodes.call(nodes.ref("f"), [nodes.string("")]), type_bindings=type_bindings))
 
 
 @istest
 def can_infer_type_of_call_with_keyword_arguments():
-    context = create_context({
+    type_bindings = {
         "f": types.func(
             args=[types.func_arg("name", types.str_type), types.func_arg("hats", types.int_type)],
             return_type=types.boolean_type,
         )
-    })
+    }
     node = nodes.call(nodes.ref("f"), [], {"name": nodes.string("Bob"), "hats": nodes.int(42)})
-    assert_equal(types.boolean_type, infer(node, context))
+    assert_equal(types.boolean_type, infer(node, type_bindings=type_bindings))
 
 
 @istest
@@ -28,8 +28,8 @@ def object_can_be_called_if_it_has_call_magic_method():
     cls = types.scalar_type("Blah", [
         types.attr("__call__", types.func([types.str_type], types.int_type)),
     ])
-    context = create_context({"f": cls})
-    assert_equal(types.int_type, infer(nodes.call(nodes.ref("f"), [nodes.string("")]), context))
+    type_bindings = {"f": cls}
+    assert_equal(types.int_type, infer(nodes.call(nodes.ref("f"), [nodes.string("")]), type_bindings=type_bindings))
 
 
 @istest
@@ -40,17 +40,17 @@ def object_can_be_called_if_it_has_call_magic_method_that_returns_callable():
     first_cls = types.scalar_type("First", [
         types.attr("__call__", second_cls),
     ])
-    context = create_context({"f": first_cls})
-    assert_equal(types.int_type, infer(nodes.call(nodes.ref("f"), [nodes.string("")]), context))
+    type_bindings = {"f": first_cls}
+    assert_equal(types.int_type, infer(nodes.call(nodes.ref("f"), [nodes.string("")]), type_bindings=type_bindings))
 
 
 @istest
 def callee_must_be_function_or_have_call_magic_method():
     cls = types.scalar_type("Blah", {})
-    context = create_context({"f": cls})
+    type_bindings = {"f": cls}
     callee_node = nodes.ref("f")
     try:
-        infer(nodes.call(callee_node, []), context)
+        infer(nodes.call(callee_node, []), type_bindings=type_bindings)
         assert False, "Expected error"
     except errors.TypeMismatchError as error:
         assert_equal(callee_node, error.node)
@@ -61,10 +61,10 @@ def callee_must_be_function_or_have_call_magic_method():
 @istest
 def call_attribute_must_be_function():
     cls = types.scalar_type("Blah", [types.attr("__call__", types.int_type)])
-    context = create_context({"f": cls})
+    type_bindings = {"f": cls}
     callee_node = nodes.ref("f")
     try:
-        infer(nodes.call(callee_node, []), context)
+        infer(nodes.call(callee_node, []), type_bindings=type_bindings)
         assert False, "Expected error"
     except errors.TypeMismatchError as error:
         assert_equal(callee_node, ephemeral.root_node(error.node))
@@ -75,11 +75,11 @@ def call_attribute_must_be_function():
 
 @istest
 def type_of_positional_arguments_must_match():
-    context = create_context({"f": types.func([types.str_type], types.int_type)})
+    type_bindings = {"f": types.func([types.str_type], types.int_type)}
     arg_node = nodes.int(4)
     node = nodes.call(nodes.ref("f"), [arg_node])
     assert_type_mismatch(
-        lambda: infer(node, context),
+        lambda: infer(node, type_bindings=type_bindings),
         expected=types.str_type,
         actual=types.int_type,
         node=arg_node,
@@ -90,16 +90,16 @@ def type_of_positional_arguments_must_match():
 def type_of_keyword_arguments_must_match():
     node = nodes.call(nodes.ref("f"), [], {"name": nodes.string("Bob"), "hats": nodes.int(42)})
     
-    context = create_context({
+    type_bindings = {
         "f": types.func(
             args=[types.func_arg("name", types.str_type)],
             return_type=types.boolean_type,
         )
-    })
+    }
     arg_node = nodes.int(4)
     node = nodes.call(nodes.ref("f"), [], {"name": arg_node})
     assert_type_mismatch(
-        lambda: infer(node, context),
+        lambda: infer(node, type_bindings=type_bindings),
         expected=types.str_type,
         actual=types.int_type,
         node=arg_node,
@@ -167,8 +167,7 @@ def error_if_argument_is_passed_both_by_position_and_keyword():
 
 
 def _infer_function_call(func_type, call_node):
-    context = create_context({"f": func_type})
-    return infer(call_node, context)
+    return infer(call_node, type_bindings={"f": func_type})
 
 
 def _create_call(args, kwargs=None):

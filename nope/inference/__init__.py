@@ -6,17 +6,18 @@ from ..identity_dict import IdentityDict
 
 def check(module, module_resolver=None, module_types=None):
     # TODO: don't construct the type checker with a module
-    checker = _TypeChecker(module_types, module_resolver, module)
+    checker = _TypeChecker(name_declaration.DeclarationFinder(), module_types, module_resolver, module)
     module_type = checker.check(module)
     return module_type, checker.type_lookup()
 
 
 class _TypeChecker(object):
-    def __init__(self, module_types, module_resolver, module):
+    def __init__(self, declaration_finder, module_types, module_resolver, module):
+        self._declaration_finder = declaration_finder
         self._module_path = module.path
         self._type_lookup = IdentityDict()
         self._expression_type_inferer = ExpressionTypeInferer(self._type_lookup)
-        self._statement_type_checker = StatementTypeChecker(self._expression_type_inferer, module_resolver, module_types, module)
+        self._statement_type_checker = StatementTypeChecker(declaration_finder, self._expression_type_inferer, module_resolver, module_types, module)
     
     def type_lookup(self):
         return types.TypeLookup(self._type_lookup)
@@ -30,15 +31,14 @@ class _TypeChecker(object):
     def check(self, module):
         declarations = builtins.declarations()
         
-        declaration_finder = name_declaration.DeclarationFinder()
-        name_resolver = name_resolution.NameResolver(declaration_finder, declarations)
+        name_resolver = name_resolution.NameResolver(self._declaration_finder, declarations)
         references = name_resolver.resolve(module.node)
     
         context = builtins.module_context(references)
         for statement in module.node.body:
             self.update_context(statement, context)
         
-        module_declarations = declaration_finder.declarations_in_module(module.node)
+        module_declarations = self._declaration_finder.declarations_in_module(module.node)
         exported_names = util.exported_names(module.node)
         exported_declarations = [
             module_declarations.declaration(name)

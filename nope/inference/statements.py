@@ -1,11 +1,12 @@
 import os
 
-from .. import nodes, types, util, returns, errors
+from .. import nodes, types, util, returns, errors, name_declaration
 from . import ephemeral
 
 
 class StatementTypeChecker(object):
-    def __init__(self, expression_type_inferer, module_resolver, module_types, module):
+    def __init__(self, declaration_finder, expression_type_inferer, module_resolver, module_types, module):
+        self._declaration_finder = declaration_finder
         self._expression_type_inferer = expression_type_inferer
         self._module_resolver = module_resolver
         self._module_types = module_types
@@ -76,6 +77,16 @@ class StatementTypeChecker(object):
     
     def _check_class_definition(self, node, context):
         class_type = types.scalar_type(node.name)
+
+        body_context = context.enter_class()
+        self.update_context(node.body, body_context)
+        
+        class_declarations = self._declaration_finder.declarations_in_class(node)
+        member_names = class_declarations.names()
+        
+        for member_name in member_names:
+            class_type.attrs.add(member_name, body_context.lookup_declaration(class_declarations.declaration(member_name)))
+        
         meta_type = types.meta_type(class_type)
         meta_type.attrs.add("__call__", types.func([], class_type), read_only=True)
         context.update_type(node, meta_type)

@@ -2,7 +2,7 @@ from nose.tools import istest, assert_equal
 
 from nope import types, nodes, errors
 
-from .util import assert_statement_is_type_checked, update_context, create_context
+from .util import assert_statement_is_type_checked, update_context
 
 
 
@@ -12,7 +12,7 @@ def while_loop_has_condition_type_checked():
     node = nodes.while_loop(condition_node, [])
     
     try:
-        update_context(node, create_context({}))
+        update_context(node)
         assert False, "Expected error"
     except errors.TypeCheckError as error:
         assert_equal(condition_node, error.node)

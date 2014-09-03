@@ -5,7 +5,7 @@ from nope import types, nodes, errors
 from .util import (
     assert_variable_remains_unbound,
     assert_statement_is_type_checked,
-    create_context, update_context)
+    update_context)
 
 
 @istest
@@ -14,7 +14,7 @@ def if_statement_has_condition_type_checked():
     node = nodes.if_else(ref_node, [], [])
     
     try:
-        update_context(node, create_context({}))
+        update_context(node)
         assert False, "Expected error"
     except errors.TypeCheckError as error:
         assert_equal(ref_node, error.node)
@@ -49,8 +49,7 @@ def assignment_in_both_branches_of_if_statement_is_added_to_context():
         [nodes.assign("x", nodes.int(1))],
         [nodes.assign("x", nodes.int(2))],
     )
-    context = create_context()
-    update_context(node, context)
+    context = update_context(node, type_bindings={"y": types.object_type})
     assert_equal(types.int_type, context.lookup_name("x"))
 
 
@@ -61,6 +60,5 @@ def type_of_variable_uses_type_of_first_assignment():
         [nodes.assign("x", nodes.ref("y"))],
         [nodes.assign("x", nodes.string("blah"))],
     )
-    context = create_context({"y": types.object_type})
-    update_context(node, context)
+    context = update_context(node, type_bindings={"y": types.object_type})
     assert_equal(types.object_type, context.lookup_name("x"))

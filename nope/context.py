@@ -32,5 +32,8 @@ class Context(object):
     def enter_func(self, return_type):
         return Context(self._references, self._definition_types, return_type=return_type, is_module_scope=False)
     
+    def enter_class(self):
+        return Context(self._references, self._definition_types, return_type=None, is_module_scope=False)
+    
     def enter_module(self):
         return Context(self._references, self._definition_types, return_type=None, is_module_scope=True)

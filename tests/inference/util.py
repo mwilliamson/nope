@@ -2,27 +2,37 @@ from nose.tools import assert_equal
 
 from nope import types, errors, nodes, inference, name_declaration, Module
 from nope.context import Context
+from nope.name_declaration import Declarations
 
 
-def update_context(statement, context=None, module_resolver=None, module_types=None, module_path=None, is_executable=False):
-    if context is None:
-        context = create_context()
-    checker = _create_type_checker(module_path=module_path, module_resolver=module_resolver, module_types=module_types, is_executable=is_executable)
+def update_context(statement, *, type_bindings=None, module_resolver=None, module_types=None, module_path=None, is_executable=False, declared_names_in_node=None):
+    if type_bindings is None:
+        type_bindings = {}
+    declaration_finder, context = _create_context(type_bindings, declared_names_in_node)
+    checker = _create_type_checker(
+        declaration_finder=declaration_finder,
+        module_path=module_path,
+        module_resolver=module_resolver,
+        module_types=module_types,
+        is_executable=is_executable,
+    )
     checker.update_context(statement, context)
     
     return context
 
 
-def infer(expression, context=None):
-    if context is None:
-        context = create_context()
+def infer(expression, type_bindings=None):
+    if type_bindings is None:
+        type_bindings = {}
     
-    checker = _create_type_checker()
+    declaration_finder, context = _create_context(type_bindings)
+    checker = _create_type_checker(declaration_finder=declaration_finder)
     return checker.infer(expression, context)
     
 
-def _create_type_checker(module_types=None, module_resolver=None, module_path=None, is_executable=False):
+def _create_type_checker(declaration_finder=None, module_types=None, module_resolver=None, module_path=None, is_executable=False):
     return inference._TypeChecker(
+        declaration_finder=declaration_finder,
         module_resolver=module_resolver,
         module_types=module_types,
         module=Module(module_path, nodes.module([], is_executable=is_executable)),
@@ -41,27 +51,45 @@ class SingleScopeReferences(object):
         else:
             raise Exception("Name not implemented for {}".format(type(node)))
         
+        return self.declaration(name)
+    
+    def declaration(self, name):
         if name not in self._references:
             self._references[name] = name_declaration.VariableDeclarationNode(name)
         
         return self._references[name]
 
 
-def create_context(types=None):
+class FakeDeclarationFinder(object):
+    def __init__(self, references, declared_names_in_node):
+        self._references = references
+        self._declared_names_in_node = declared_names_in_node
+    
+    def declarations_in_class(self, node):
+        names = self._declared_names_in_node[node]
+        return Declarations(dict(
+            (name, self._references.declaration(name))
+            for name in names
+        ))
+
+
+def _create_context(types=None, declared_names_in_node=None):
     if types is None:
         types = {}
-        
-    context = SingleScopeContext()
+    
+    references = SingleScopeReferences()
+    context = SingleScopeContext(references)
+    declaration_finder = FakeDeclarationFinder(references, declared_names_in_node)
     
     for name, type_ in types.items():
         context.update_type(nodes.ref(name), type_)
     
-    return context
+    return declaration_finder, context
 
 
 class SingleScopeContext(object):
-    def __init__(self):
-        self._context = Context(SingleScopeReferences(), {})
+    def __init__(self, references):
+        self._context = Context(references, {})
     
     def __getattr__(self, key):
         return getattr(self._context, key)
@@ -72,9 +100,7 @@ class SingleScopeContext(object):
 
 
 def update_blank_context(node, *args, **kwargs):
-    context = create_context()
-    update_context(node, context, *args, **kwargs)
-    return context
+    return update_context(node, *args, **kwargs)
 
 
 def module(attrs):
@@ -120,26 +146,26 @@ def assert_variable_remains_unbound(create_node):
     assert_equal(types.int_type, context.lookup("x", allow_unbound=True))
 
 
-def assert_statement_type_checks(statement, context):
-    update_context(statement, context)
+def assert_statement_type_checks(statement, type_bindings):
+    update_context(statement, type_bindings=type_bindings)
 
 
-def assert_statement_is_type_checked(create_node, context=None):
+def assert_statement_is_type_checked(create_node, type_bindings=None):
     assert_expression_is_type_checked(
         lambda bad_expression: create_node(nodes.expression_statement(bad_expression)),
-        context
+        type_bindings=type_bindings,
     )
 
 
-def assert_expression_is_type_checked(create_node, context=None):
-    if context is None:
-        context = create_context()
+def assert_expression_is_type_checked(create_node, type_bindings=None):
+    if type_bindings is None:
+        type_bindings = {}
     
     bad_ref = nodes.ref("bad")
     node = create_node(bad_ref)
     
     try:
-        update_context(node, context)
+        update_context(node, type_bindings=type_bindings)
         assert False, "Expected error"
     except errors.TypeCheckError as error:
         assert_equal(bad_ref, error.node)
@@ -151,7 +177,7 @@ def assert_subexpression_is_type_checked(create_node):
     node = create_node(bad_ref)
     
     try:
-        infer(node, create_context())
+        infer(node, {})
         assert False, "Expected error"
     except errors.TypeCheckError as error:
         assert_equal(bad_ref, error.node)

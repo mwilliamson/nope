@@ -3,7 +3,7 @@ from nose.tools import istest, assert_equal
 from nope import types, nodes, errors
 from nope.inference import ephemeral
 from nope.context import Context
-from .util import update_context, create_context
+from .util import update_context
 
 
 @istest
@@ -16,8 +16,8 @@ def assignment_sets_type_of_target_variable_to_type_of_value():
 @istest
 def assignment_to_list_allows_subtype():
     node = nodes.assign([nodes.subscript(nodes.ref("x"), nodes.int(0))], nodes.string("Hello"))
-    context = create_context({"x": types.list_type(types.object_type)})
-    update_context(node, context)
+    type_bindings = {"x": types.list_type(types.object_type)}
+    update_context(node, type_bindings=type_bindings)
 
 
 @istest
@@ -25,12 +25,12 @@ def assignment_to_list_does_not_allow_supertype():
     target_sequence_node = nodes.ref("x")
     value_node = nodes.ref("y")
     node = nodes.assign([nodes.subscript(target_sequence_node, nodes.int(0))], value_node)
-    context = create_context({
+    type_bindings = {
         "x": types.list_type(types.str_type),
         "y": types.object_type,
-    })
+    }
     try:
-        update_context(node, context)
+        update_context(node, type_bindings=type_bindings)
         assert False, "Expected error"
     except errors.TypeMismatchError as error:
         assert_equal(target_sequence_node, ephemeral.root_node(error.node))
@@ -47,8 +47,8 @@ def assignment_to_attribute_allows_subtype():
     cls = types.scalar_type("X", [types.attr("y", types.object_type)])
     
     node = nodes.assign([nodes.attr(nodes.ref("x"), "y")], nodes.string("Hello"))
-    context = create_context({"x": cls})
-    update_context(node, context)
+    type_bindings = {"x": cls}
+    update_context(node, type_bindings=type_bindings)
 
 
 @istest
@@ -57,9 +57,9 @@ def assignment_to_attribute_does_not_allow_strict_supertype():
     
     attr_node = nodes.attr(nodes.ref("x"), "y")
     node = nodes.assign([attr_node], nodes.ref("obj"))
-    context = create_context({"x": cls, "obj": types.object_type})
+    type_bindings = {"x": cls, "obj": types.object_type}
     try:
-        update_context(node, context)
+        update_context(node, type_bindings=type_bindings)
         assert False, "Expected error"
     except errors.BadAssignmentError as error:
         assert_equal(attr_node, error.node)
@@ -73,9 +73,9 @@ def cannot_reassign_read_only_attribute():
     
     attr_node = nodes.attr(nodes.ref("x"), "y")
     node = nodes.assign([attr_node], nodes.string("Hello"))
-    context = create_context({"x": cls})
+    type_bindings = {"x": cls}
     try:
-        update_context(node, context)
+        update_context(node, type_bindings=type_bindings)
         assert False, "Expected error"
     except errors.ReadOnlyAttributeError as error:
         assert_equal(attr_node, error.node)
@@ -85,9 +85,9 @@ def cannot_reassign_read_only_attribute():
 @istest
 def variables_cannot_change_type():
     node = nodes.assign(["x"], nodes.int(1))
-    context = create_context({"x": types.none_type})
+    type_bindings = {"x": types.none_type}
     try:
-        update_context(node, context)
+        update_context(node, type_bindings=type_bindings)
         assert False, "Expected error"
     except errors.BadAssignmentError as error:
         assert_equal(node, error.node)
@@ -96,6 +96,6 @@ def variables_cannot_change_type():
 @istest
 def variables_can_be_reassigned_if_type_is_consistent():
     node = nodes.assign(["x"], nodes.int(1))
-    context = create_context({"x": types.object_type})
-    update_context(node, context)
+    type_bindings = {"x": types.object_type}
+    context = update_context(node, type_bindings=type_bindings)
     assert_equal(types.object_type, context.lookup_name("x"))
