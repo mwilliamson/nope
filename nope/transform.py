@@ -210,7 +210,7 @@ class Converter(object):
     
     
     def _try(self, node):
-        if node.orelse:
+        if getattr(node, "orelse", None):
             raise SyntaxError("'else' clause in 'try' statement is unsupported")
         
         return nodes.try_statement(
