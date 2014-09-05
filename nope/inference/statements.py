@@ -77,17 +77,19 @@ class StatementTypeChecker(object):
     
     def _check_class_definition(self, node, context):
         class_type = types.scalar_type(node.name)
-
+        meta_type = types.meta_type(class_type)
+        
         body_context = context.enter_class()
         self.update_context(node.body, body_context)
         
         class_declarations = self._declaration_finder.declarations_in_class(node)
-        member_names = class_declarations.names()
+        attr_names = class_declarations.names()
         
-        for member_name in member_names:
-            class_type.attrs.add(member_name, body_context.lookup_declaration(class_declarations.declaration(member_name)))
+        for attr_name in attr_names:
+            attr_type = body_context.lookup_declaration(class_declarations.declaration(attr_name))
+            class_type.attrs.add(attr_name, attr_type)
+            meta_type.attrs.add(attr_name, attr_type)
         
-        meta_type = types.meta_type(class_type)
         meta_type.attrs.add("__call__", types.func([], class_type), read_only=True)
         context.update_type(node, meta_type)
 
