@@ -86,10 +86,11 @@ def attributes_with_function_type_defined_in_class_definition_body_are_bound_to_
 
 @istest
 def self_argument_in_method_signature_cannot_be_unrelated_type():
+    signature_arg_type_node = nodes.ref("bool")
     func_node = nodes.func(
         name="is_person",
         signature=nodes.signature(
-            args=[nodes.signature_arg(nodes.ref("bool"))],
+            args=[nodes.signature_arg(signature_arg_type_node)],
             returns=nodes.ref("bool")
         ),
         args=nodes.args([nodes.arg("self")]),
@@ -100,8 +101,7 @@ def self_argument_in_method_signature_cannot_be_unrelated_type():
         _infer_class_type(node, ["is_person"])
         assert False, "Expected error"
     except errors.UnexpectedTargetTypeError as error:
-        # TODO: fix this, possibly by pushing the checking into the function checker
-        #assert_equal(func_node, error.node)
+        assert_equal(signature_arg_type_node, error.node)
         assert_equal(types.boolean_type, error.target_type)
         assert_equal("User", error.value_type.name)
 
