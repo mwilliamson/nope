@@ -121,6 +121,13 @@ class ClassDeclarationNode(object):
         self.name = name
 
 
+class SelfTypeDeclarationNode(object):
+    description = "self type declaration"
+    
+    def __init__(self, name):
+        self.name = name
+
+
 class ImportDeclarationNode(object):
     description = "import statement"
     
@@ -163,6 +170,8 @@ def _declarations_in_function(node):
         
 def _declarations_in_class(node):
     declarations = Declarations({})
+    
+    declarations.declare("Self", node, target_type=SelfTypeDeclarationNode)
     
     for statement in node.body:
         _declare(statement, declarations)

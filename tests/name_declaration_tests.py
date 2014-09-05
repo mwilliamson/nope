@@ -149,10 +149,37 @@ def declarations_in_function_include_argument_declarations():
     declarations = declarations_in_function(node)
     assert isinstance(declarations.declaration("x"), name_declaration.VariableDeclarationNode)
     assert not declarations.is_declared("f")
+
+
+@istest
+def declarations_in_class_include_declarations_in_body():
+    node = nodes.class_def("User", [
+        nodes.assign([nodes.ref("x")], nodes.none())
+    ])
+    
+    declarations = declarations_in_class(node)
+    assert isinstance(declarations.declaration("x"), name_declaration.VariableDeclarationNode)
+    assert not declarations.is_declared("User")
+
+
+@istest
+def declarations_in_class_include_self_class():
+    node = nodes.class_def("User", [
+        nodes.assign([nodes.ref("x")], nodes.none())
+    ])
+    
+    declarations = declarations_in_class(node)
+    assert isinstance(declarations.declaration("Self"), name_declaration.SelfTypeDeclarationNode)
     
 
 def _new_declarations():
     return Declarations({})
 
-_finder = DeclarationFinder()
-declarations_in_function = _finder.declarations_in_function
+
+def declarations_in_function(*args, **kwargs):
+    finder = DeclarationFinder()
+    return finder.declarations_in_function(*args, **kwargs)
+
+def declarations_in_class(*args, **kwargs):
+    finder = DeclarationFinder()
+    return finder.declarations_in_class(*args, **kwargs)
