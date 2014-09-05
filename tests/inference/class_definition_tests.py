@@ -37,11 +37,26 @@ def attributes_defined_in_class_definition_body_are_present_on_meta_type():
     ])
     meta_type = _infer_meta_type(node, ["is_person"])
     assert_equal(types.boolean_type, meta_type.attrs.type_of("is_person"))
+
+
+@istest
+def attributes_with_function_type_defined_in_class_definition_body_are_not_present_on_meta_type():
+    node = nodes.class_def("User", [
+        nodes.assign([nodes.ref("is_person")], nodes.ref("true_func")),
+    ])
+    meta_type = _infer_meta_type(node, ["is_person"], type_bindings={
+		"true_func": types.func([], types.none_type)
+    })
+    assert "is_person" not in meta_type.attrs
     
 
 
-def _infer_meta_type(class_node, names):
-    context = update_context(class_node, declared_names_in_node=IdentityDict([(class_node, names)]))
+def _infer_meta_type(class_node, names, type_bindings=None):
+    context = update_context(
+		class_node,
+		declared_names_in_node=IdentityDict([(class_node, names)]),
+		type_bindings=type_bindings,
+	)
     meta_type = context.lookup(class_node)
     assert isinstance(meta_type, types.MetaType)
     assert isinstance(meta_type.type, types._ScalarType)

@@ -87,8 +87,9 @@ class StatementTypeChecker(object):
         
         for attr_name in attr_names:
             attr_type = body_context.lookup_declaration(class_declarations.declaration(attr_name))
-            class_type.attrs.add(attr_name, attr_type)
-            meta_type.attrs.add(attr_name, attr_type)
+            if not types.is_func_type(attr_type):
+                class_type.attrs.add(attr_name, attr_type)
+                meta_type.attrs.add(attr_name, attr_type)
         
         meta_type.attrs.add("__call__", types.func([], class_type), read_only=True)
         context.update_type(node, meta_type)

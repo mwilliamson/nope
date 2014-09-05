@@ -264,6 +264,8 @@ def func_arg(name, type):
 
 
 def is_func_type(type_):
+    # Note that callable types may not be func types
+    # For instance, classe with a __call__ method are callable, but not func types
     return isinstance(type_, _FunctionType)
 
 
