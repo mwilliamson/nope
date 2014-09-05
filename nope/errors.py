@@ -29,17 +29,17 @@ class ArgumentsError(TypeCheckError):
         return self.message
 
 
-class TypeMismatchError(TypeCheckError):
+class UnexpectedValueTypeError(TypeCheckError):
     def __init__(self, node, expected, actual):
         self.expected = expected
         self.actual = actual
         self.node = node
         
     def __str__(self):
-        return "Expected '{0}' but was '{1}'".format(self.expected, self.actual)
+        return "Expected value of type '{1}' but was '{2}'".format(self.expected, self.actual)
 
 
-class BadAssignmentError(TypeCheckError):
+class UnexpectedTargetTypeError(TypeCheckError):
     def __init__(self, node, target_type, value_type):
         self.node = node
         self.target_type = target_type

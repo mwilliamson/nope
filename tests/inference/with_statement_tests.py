@@ -75,7 +75,7 @@ def target_cannot_be_strict_subtype_of_return_type_of_enter_method():
     try:
         update_context(node, type_bindings=type_bindings)
         assert False, "Expected error"
-    except errors.BadAssignmentError as error:
+    except errors.UnexpectedTargetTypeError as error:
         assert_equal(target_node, error.node)
         assert_equal(types.any_type, error.value_type)
         assert_equal(types.int_type, error.target_type)

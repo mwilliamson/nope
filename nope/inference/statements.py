@@ -100,7 +100,7 @@ class StatementTypeChecker(object):
         expected = context.return_type
         actual = self._infer(node.value, context)
         if not types.is_sub_type(expected, actual):
-            raise errors.TypeMismatchError(node, expected, actual)
+            raise errors.UnexpectedValueTypeError(node, expected, actual)
 
 
     def _check_assignment(self, node, context):
@@ -122,7 +122,7 @@ class StatementTypeChecker(object):
     def _assign_ref(self, node, target, value_type, context):
         var_type = context.lookup(target, allow_unbound=True)
         if var_type is not None and not types.is_sub_type(var_type, value_type):
-            raise errors.BadAssignmentError(node, target_type=var_type, value_type=value_type)
+            raise errors.UnexpectedTargetTypeError(node, target_type=var_type, value_type=value_type)
         
         # TODO: add test demonstrating necessity of `if var_type is None`
         if var_type is None:
@@ -145,7 +145,7 @@ class StatementTypeChecker(object):
         target_type = self._infer(target, context)
         
         if not types.is_sub_type(target_type, value_type):
-            raise errors.BadAssignmentError(target, value_type=value_type, target_type=target_type)
+            raise errors.UnexpectedTargetTypeError(target, value_type=value_type, target_type=target_type)
         
         obj_type = self._infer(target.value, context)
         if obj_type.attrs.get(target.attr).read_only:
@@ -193,7 +193,7 @@ class StatementTypeChecker(object):
             args = [ephemeral.formal_arg_constraint(types.int_type)]
             return self._expression_type_inferer.infer_magic_method_call(node, "getitem", node.iterable, args, context)
         else:
-            raise errors.TypeMismatchError(node.iterable, expected="iterable type", actual=iterable_type)
+            raise errors.UnexpectedValueTypeError(node.iterable, expected="iterable type", actual=iterable_type)
     
     
     def _check_break(self, node, context):
@@ -220,7 +220,7 @@ class StatementTypeChecker(object):
         if handler.type:
             meta_type = self._infer(handler.type, context)
             if not types.is_meta_type(meta_type) or not types.is_sub_type(types.exception_type, meta_type.type):
-                raise errors.TypeMismatchError(handler.type,
+                raise errors.UnexpectedValueTypeError(handler.type,
                     expected="exception type",
                     actual=meta_type,
                 )
@@ -230,7 +230,7 @@ class StatementTypeChecker(object):
     def _check_raise(self, node, context):
         exception_type = self._infer(node.value, context)
         if not types.is_sub_type(types.exception_type, exception_type):
-            raise errors.TypeMismatchError(
+            raise errors.UnexpectedValueTypeError(
                 node.value,
                 expected=types.exception_type,
                 actual=exception_type,

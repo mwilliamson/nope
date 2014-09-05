@@ -52,7 +52,7 @@ def callee_must_be_function_or_have_call_magic_method():
     try:
         infer(nodes.call(callee_node, []), type_bindings=type_bindings)
         assert False, "Expected error"
-    except errors.TypeMismatchError as error:
+    except errors.UnexpectedValueTypeError as error:
         assert_equal(callee_node, error.node)
         assert_equal("callable object", error.expected)
         assert_equal(cls, error.actual)
@@ -66,7 +66,7 @@ def call_attribute_must_be_function():
     try:
         infer(nodes.call(callee_node, []), type_bindings=type_bindings)
         assert False, "Expected error"
-    except errors.TypeMismatchError as error:
+    except errors.UnexpectedValueTypeError as error:
         assert_equal(callee_node, ephemeral.root_node(error.node))
         assert_equal(nodes.attr(callee_node, "__call__"), ephemeral.underlying_node(error.node))
         assert_equal("callable object", error.expected)

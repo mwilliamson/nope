@@ -112,7 +112,7 @@ class ExpressionTypeInferer(object):
         elif "__call__" in callee_type.attrs:
             return self._get_call_type(ephemeral.attr(node, "__call__"), context)
         else:
-            raise errors.TypeMismatchError(node, expected="callable object", actual=callee_type)
+            raise errors.UnexpectedValueTypeError(node, expected="callable object", actual=callee_type)
 
 
     def _infer_attr(self, node, context):
@@ -166,7 +166,7 @@ class ExpressionTypeInferer(object):
         receiver_type = self.infer(receiver, context)
         
         if method_name not in receiver_type.attrs:
-            raise errors.TypeMismatchError(receiver, expected="object with method '{}'".format(method_name), actual=receiver_type)
+            raise errors.UnexpectedValueTypeError(receiver, expected="object with method '{}'".format(method_name), actual=receiver_type)
         
         return self._get_call_type(ephemeral.attr(receiver, method_name), context)
     
@@ -175,13 +175,13 @@ class ExpressionTypeInferer(object):
             actual_arg_type = self.infer(actual_arg, context)
             if not types.is_sub_type(formal_arg_type, actual_arg_type):
                 if isinstance(actual_arg, ephemeral.FormalArgumentConstraint):
-                    raise errors.TypeMismatchError(
+                    raise errors.UnexpectedTargetTypeError(
                         actual_arg.formal_arg_node,
-                        expected=actual_arg_type,
-                        actual=formal_arg_type
+                        value_type=actual_arg_type,
+                        target_type=formal_arg_type
                     )
                 else:
-                    raise errors.TypeMismatchError(
+                    raise errors.UnexpectedValueTypeError(
                         actual_arg,
                         expected=formal_arg_type,
                         actual=actual_arg_type

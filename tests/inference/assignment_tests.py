@@ -32,14 +32,14 @@ def assignment_to_list_does_not_allow_supertype():
     try:
         update_context(node, type_bindings=type_bindings)
         assert False, "Expected error"
-    except errors.TypeMismatchError as error:
+    except errors.UnexpectedTargetTypeError as error:
         assert_equal(target_sequence_node, ephemeral.root_node(error.node))
         assert_equal(
             ephemeral.FormalArg(ephemeral.attr(target_sequence_node, "__setitem__"), 1),
             ephemeral.underlying_node(error.node)
         )
-        assert_equal(types.object_type, error.expected)
-        assert_equal(types.str_type, error.actual)
+        assert_equal(types.object_type, error.value_type)
+        assert_equal(types.str_type, error.target_type)
 
 
 @istest
@@ -61,7 +61,7 @@ def assignment_to_attribute_does_not_allow_strict_supertype():
     try:
         update_context(node, type_bindings=type_bindings)
         assert False, "Expected error"
-    except errors.BadAssignmentError as error:
+    except errors.UnexpectedTargetTypeError as error:
         assert_equal(attr_node, error.node)
         assert_equal(types.object_type, error.value_type)
         assert_equal(types.str_type, error.target_type)
@@ -89,7 +89,7 @@ def variables_cannot_change_type():
     try:
         update_context(node, type_bindings=type_bindings)
         assert False, "Expected error"
-    except errors.BadAssignmentError as error:
+    except errors.UnexpectedTargetTypeError as error:
         assert_equal(node, error.node)
 
 

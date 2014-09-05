@@ -25,5 +25,5 @@ def raise_value_cannot_be_non_subtype_of_exception():
     try:
         update_context(nodes.raise_statement(ref_node), type_bindings=type_bindings)
         assert False, "Expected error"
-    except errors.TypeMismatchError as error:
+    except errors.UnexpectedValueTypeError as error:
         assert_equal(ref_node, error.node)

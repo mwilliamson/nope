@@ -19,7 +19,7 @@ def cannot_add_int_and_str():
     try:
         infer(addition, type_bindings=type_bindings)
         assert False, "Expected error"
-    except errors.TypeMismatchError as error:
+    except errors.UnexpectedValueTypeError as error:
         assert_equal(addition.right, error.node)
         assert_equal(types.int_type, error.expected)
         assert_equal(types.str_type, error.actual)
@@ -32,7 +32,7 @@ def operands_of_add_operation_must_support_add():
     try:
         infer(addition, type_bindings=type_bindings)
         assert False, "Expected error"
-    except errors.TypeMismatchError as error:
+    except errors.UnexpectedValueTypeError as error:
         assert_equal(addition.left, error.node)
         assert_equal("object with method '__add__'", error.expected)
         assert_equal(types.none_type, error.actual)
@@ -45,7 +45,7 @@ def right_hand_operand_must_be_sub_type_of_formal_argument():
     try:
         infer(addition, type_bindings=type_bindings)
         assert False, "Expected error"
-    except errors.TypeMismatchError as error:
+    except errors.UnexpectedValueTypeError as error:
         assert_equal(addition.right, error.node)
         assert_equal(types.int_type, error.expected)
         assert_equal(types.object_type, error.actual)
@@ -100,7 +100,7 @@ def operands_of_sub_operation_must_support_sub():
     try:
         infer(subtraction, type_bindings=type_bindings)
         assert False, "Expected error"
-    except errors.TypeMismatchError as error:
+    except errors.UnexpectedValueTypeError as error:
         assert_equal(subtraction.left, error.node)
         assert_equal("object with method '__sub__'", error.expected)
         assert_equal(types.none_type, error.actual)
@@ -120,7 +120,7 @@ def operands_of_mul_operation_must_support_mul():
     try:
         infer(multiplication, type_bindings=type_bindings)
         assert False, "Expected error"
-    except errors.TypeMismatchError as error:
+    except errors.UnexpectedValueTypeError as error:
         assert_equal(multiplication.left, error.node)
         assert_equal("object with method '__mul__'", error.expected)
         assert_equal(types.none_type, error.actual)

@@ -53,14 +53,14 @@ def for_statement_requires_iterable_getitem_method_to_accept_integers():
     try:
         update_context(node, type_bindings=type_bindings)
         assert False, "Expected error"
-    except errors.TypeMismatchError as error:
+    except errors.UnexpectedTargetTypeError as error:
         assert_equal(ref_node, ephemeral.root_node(error.node))
         assert_equal(
             ephemeral.FormalArg(ephemeral.attr(ref_node, "__getitem__"), 0),
             ephemeral.underlying_node(error.node)
         )
-        assert_equal(types.int_type, error.expected)
-        assert_equal(types.str_type, error.actual)
+        assert_equal(types.int_type, error.value_type)
+        assert_equal(types.str_type, error.target_type)
 
 
 @istest
@@ -83,7 +83,7 @@ def for_statement_requires_iterable_to_have_iter_method():
     try:
         update_context(node, type_bindings={"xs": types.int_type})
         assert False, "Expected error"
-    except errors.TypeMismatchError as error:
+    except errors.UnexpectedValueTypeError as error:
         assert_equal(ref_node, error.node)
         assert_equal("iterable type", error.expected)
         assert_equal(types.int_type, error.actual)
@@ -141,14 +141,14 @@ def for_statement_target_cannot_be_strict_subtype_of_iterable_element_type():
             "ys": types.list_type(types.int_type),
         })
         assert False, "Expected error"
-    except errors.TypeMismatchError as error:
+    except errors.UnexpectedTargetTypeError as error:
         assert_equal(target_sequence_node, ephemeral.root_node(error.node))
         assert_equal(
             ephemeral.FormalArg(ephemeral.attr(target_sequence_node, "__setitem__"), 1),
             ephemeral.underlying_node(error.node)
         )
-        assert_equal(types.object_type, error.expected)
-        assert_equal(types.int_type, error.actual)
+        assert_equal(types.object_type, error.value_type)
+        assert_equal(types.int_type, error.target_type)
 
 
 @istest

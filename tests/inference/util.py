@@ -130,7 +130,7 @@ def assert_type_mismatch(func, expected, actual, node):
     try:
         func()
         assert False, "Expected type mismatch"
-    except errors.TypeMismatchError as mismatch:
+    except errors.UnexpectedValueTypeError as mismatch:
         assert_equal(expected, mismatch.expected)
         assert_equal(actual, mismatch.actual)
         assert mismatch.node is node
