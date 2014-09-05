@@ -36,7 +36,8 @@ class UnexpectedValueTypeError(TypeCheckError):
         self.node = node
         
     def __str__(self):
-        return "Expected value of type '{1}' but was '{2}'".format(self.expected, self.actual)
+        return "Expected value of type {} but was of type {}".format(
+			_quote_type(self.expected), _quote_type(self.actual))
 
 
 class UnexpectedTargetTypeError(TypeCheckError):
@@ -46,7 +47,8 @@ class UnexpectedTargetTypeError(TypeCheckError):
         self.value_type = value_type
     
     def __str__(self):
-        return "Target has type '{}' but value has type '{}'".format(self.target_type, self.value_type)
+        return "Target has type {} but value has type {}".format(
+			_quote_type(self.target_type), _quote_type(self.value_type))
 
 
 class UnboundLocalError(TypeCheckError):
@@ -115,7 +117,8 @@ class MissingReturnError(TypeCheckError):
         self._return_type = return_type
     
     def __str__(self):
-        return "Function must return value of type '{}'".format(self._return_type)
+        return "Function must return value of type {}".format(
+			_quote_type(self._return_type))
 
 
 class BadSignatureError(TypeCheckError):
@@ -134,3 +137,10 @@ class InvalidStatementError(TypeCheckError):
     
     def __str__(self):
         return self._message
+
+
+def _quote_type(type_):
+	if isinstance(type_, str):
+		return '"{}"'.format(type_)
+	else:
+		return "'{}'".format(type_)
