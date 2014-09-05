@@ -29,6 +29,14 @@ class ArgumentsError(TypeCheckError):
         return self.message
 
 
+class MethodHasNoArgumentsError(Exception):
+    def __init__(self, node):
+        self.node = node
+    
+    def __str__(self):
+        return "methods must have at least one argument"
+
+
 class UnexpectedValueTypeError(TypeCheckError):
     def __init__(self, node, expected, actual):
         self.expected = expected

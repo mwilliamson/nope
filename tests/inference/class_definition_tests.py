@@ -106,6 +106,26 @@ def self_argument_in_method_signature_cannot_be_unrelated_type():
         assert_equal("User", error.value_type.name)
 
 
+@istest
+def methods_must_have_at_least_one_argument():
+    func_node = nodes.func(
+        name="is_person",
+        signature=nodes.signature(
+            args=[],
+            returns=nodes.ref("bool")
+        ),
+        args=nodes.args([]),
+        body=[nodes.ret(nodes.boolean(True))],
+    )
+    node = nodes.class_def("User", [func_node])
+    try:
+        _infer_class_type(node, ["is_person"])
+        assert False, "Expected error"
+    except errors.MethodHasNoArgumentsError as error:
+        assert_equal(func_node, error.node)
+        assert_equal("methods must have at least one argument", str(error))
+
+
 def _infer_meta_type(class_node, names, type_bindings=None):
     if type_bindings is None:
         type_bindings = {}

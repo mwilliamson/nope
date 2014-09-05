@@ -80,6 +80,9 @@ class StatementTypeChecker(object):
         context.update_type(node, func_type)
     
     def _check_method_receiver_argument(self, func_node, class_type, func_type):
+        if len(func_node.args.args) < 1:
+            raise errors.MethodHasNoArgumentsError(func_node)
+        
         formal_receiver_type = func_type.args[0].type
         if not types.is_sub_type(formal_receiver_type, class_type):
             raise errors.UnexpectedTargetTypeError(
