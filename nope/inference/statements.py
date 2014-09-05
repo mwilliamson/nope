@@ -79,20 +79,39 @@ class StatementTypeChecker(object):
         class_type = types.scalar_type(node.name)
         meta_type = types.meta_type(class_type)
         
-        body_context = context.enter_class()
-        self.update_context(node.body, body_context)
-        
         class_declarations = self._declaration_finder.declarations_in_class(node)
         attr_names = class_declarations.names()
         
+        body_context = context.enter_class()
+        body_context.update_declaration_type(
+            class_declarations.declaration("Self"),
+            meta_type
+        )
+        self.update_context(node.body, body_context)
+        
         for attr_name in attr_names:
             attr_type = body_context.lookup_declaration(class_declarations.declaration(attr_name))
-            if not types.is_func_type(attr_type):
+            if types.is_func_type(attr_type):
+                method_type = self._function_type_to_method_type(class_type, attr_type)
+                class_type.attrs.add(attr_name, method_type)
+            else:
                 class_type.attrs.add(attr_name, attr_type)
                 meta_type.attrs.add(attr_name, attr_type)
+                
         
         meta_type.attrs.add("__call__", types.func([], class_type), read_only=True)
         context.update_type(node, meta_type)
+    
+    
+    def _function_type_to_method_type(self, class_type, func_type):
+        formal_receiver_type = func_type.args[0].type
+        if types.is_sub_type(formal_receiver_type, class_type):
+            return types.func(func_type.args[1:], func_type.return_type)
+        else:
+            raise errors.UnexpectedTargetTypeError(None,
+                target_type=formal_receiver_type,
+                value_type=class_type,
+            )
 
 
     def _check_expression_statement(self, node, context):

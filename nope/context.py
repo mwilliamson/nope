@@ -11,12 +11,16 @@ class Context(object):
         self.is_module_scope = is_module_scope
     
     def update_type(self, node, type_):
-        definition = self._references.referenced_declaration(node)
-        if definition in self._definition_types:
+        declaration = self._references.referenced_declaration(node)
+        self.update_declaration_type(declaration, type_)
+    
+    def update_declaration_type(self, declaration, type_):
+        if declaration in self._definition_types:
             # TODO: raise a proper TypeCheckError with a node attribute, or push responsibility into inference.py
             raise Exception("definition already has a type")
         else:
-            self._definition_types[definition] = type_
+            self._definition_types[declaration] = type_
+        
     
     def lookup(self, node, allow_unbound=False):
         definition = self._references.referenced_declaration(node)
