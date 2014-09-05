@@ -60,6 +60,13 @@ TODO
 * Allow types of variables to be specified in the same way as functions, such
   as giving the type of an empty list.
 
+* If a class definition body contains a value of type object that could
+  be a function (but that is not possible to determine at runtime), how
+  should it be treated? In Python, if it's a function, we bind it to the
+  instance. Is it possible to sensibly do the same in other languages?
+  The result is that any value of type object will need to be checked
+  as to whether it is a function or not for consistency.
+
 Status
 ------
 
