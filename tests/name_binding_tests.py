@@ -364,6 +364,29 @@ def children_of_with_statement_are_checked():
 
 
 @istest
+def with_statement_target_is_definitely_bound_in_body():
+    manager_ref = nodes.ref("manager")
+    target_ref = nodes.ref("target")
+    var_ref = nodes.ref("target")
+    statement = nodes.with_statement(manager_ref, target_ref, [nodes.expression_statement(var_ref)])
+    
+    manager_declaration = name_declaration.VariableDeclarationNode("manager")
+    target_declaration = name_declaration.VariableDeclarationNode("target")
+    references = References([
+        (manager_ref, manager_declaration),
+        (target_ref, target_declaration),
+        (var_ref, target_declaration),
+    ])
+    
+    _updated_bindings(
+        statement,
+        references,
+        is_definitely_bound={manager_declaration: True},
+        type_lookup=TypeLookup(IdentityDict([(manager_ref, context_manager_class(exit_type=types.none_type))]))
+    )
+
+
+@istest
 def assigned_variables_in_with_statement_body_are_still_bound_after_exit_if_exit_method_always_returns_none():
     context_manager_type = context_manager_class(exit_type=types.none_type)
     _assert_name_is_definitely_bound(lambda generate:

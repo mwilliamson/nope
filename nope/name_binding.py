@@ -123,17 +123,19 @@ class _BindingChecker(object):
 
     def _update_with(self, visitor, node, context):
         visitor.visit(node.value, context)
-        if node.target is not None:
-            visitor.visit(node.target, context)
         
         exit_type = self._type_of(node.value).attrs.type_of("__exit__")
         # TODO: this is duplicated in codegeneration
         while not types.is_func_type(exit_type):
             exit_type = exit_type.attrs.type_of("__call__")
         
+        def update_with_target(branch_context):
+            if node.target is not None:
+                self._update_target(visitor, node.target, branch_context)
+        
         self._update_branches(
             visitor,
-            [_branch(node.body)],
+            [_branch(node.body, before=update_with_target)],
             context,
             bind=exit_type.return_type == types.none_type,
         )
