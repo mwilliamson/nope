@@ -507,6 +507,20 @@ except Exception as error:
         assert_equal(b"", result.output)
         assert_in(b"AssertionError", result.stderr_output)
     
+    
+    @istest
+    def test_call_method_of_class_with_default_constructor(self):
+        program = """
+class A:
+    #:: Self, object -> none
+    def f(self, x):
+        print(x)
+
+A().f(42)
+"""
+        self._test_program_string(program, b"42\n")
+        
+    
     def _test_program_string(self, program, expected_output):
         result = self._run_program_string(program)
         

@@ -219,6 +219,43 @@ def test_transform_function_declaration_does_not_redeclare_variables_with_same_n
 
 
 @istest
+def test_transform_empty_class():
+    _assert_transform(
+        nodes.class_def(
+            name="User",
+            body=[],
+        ),
+        """
+            User = function() {
+                var $self0 = {};
+                return $self0;
+            };
+        """
+    )
+
+
+@istest
+def test_transform_class_with_attributes():
+    _assert_transform(
+        nodes.class_def(
+            name="User",
+            body=[
+                nodes.assign([nodes.ref("x")], nodes.none())
+            ],
+        ),
+        """
+            User = function() {
+                var $self0 = {};
+                var x;
+                x = null;
+                $self0.x = $nope.instanceAttribute($self0, x);
+                return $self0;
+            };
+        """
+    )
+
+
+@istest
 def test_transform_single_assignment():
     _assert_transform(
         nodes.assign(["x"], nodes.ref("z")),

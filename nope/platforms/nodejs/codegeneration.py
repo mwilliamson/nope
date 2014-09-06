@@ -195,6 +195,7 @@ class Transformer(object):
             
             nodes.ExpressionStatement:self. _expression_statement,
             nodes.Assignment: self._assign,
+            nodes.ClassDefinition: self._class_definition,
             nodes.FunctionDef: self._function_def,
             nodes.ReturnStatement: self._return_statement,
             nodes.IfElse: self._if_else,
@@ -340,7 +341,46 @@ class Transformer(object):
         else:
             return js.assign_statement(self.transform(target), value)
         
-
+    
+    def _class_definition(self, class_definition):
+        # TODO: come up with a more general way of detecting names that only
+        # occur at compile-time and removing them from actual output
+        declared_names = list(self._declarations.declarations_in_class(class_definition).names())
+        declared_names.remove("Self")
+        declared_names.sort()
+        
+        self_name = self._unique_name("self")
+        self_ref = js.ref(self_name)
+        
+        declare_self = js.var(self_name, js.obj({}))
+        declarations = [js.var(name) for name in declared_names]
+        execute_body = self._transform_all(class_definition.body)
+        assign_attrs = [
+            js.assign_statement(
+                js.property_access(self_ref, name),
+                _call_internal(["instanceAttribute"], [self_ref, js.ref(name)])
+            )
+            for name in declared_names
+        ]
+        return_self = js.ret(js.ref(self_name))
+        
+        body = (
+            [declare_self] +
+            declarations +
+            execute_body +
+            assign_attrs +
+            [return_self]
+        )
+        
+        return js.assign_statement(
+            class_definition.name,
+            js.function_expression(
+                [],
+                body
+            )
+        )
+    
+    
     def _function_def(self, func):
         declared_names = set(self._declarations.declarations_in_function(func).names())
         arg_names = [arg.name for arg in func.args.args]

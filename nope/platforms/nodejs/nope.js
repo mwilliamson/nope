@@ -252,6 +252,14 @@ var builtins = {
     isinstance: isinstance
 };
 
+function instanceAttribute(self, attr) {
+    if (Object.prototype.toString.call(attr) == "[object Function]") {
+        return attr.bind(null, self);
+    } else {
+        return attr;
+    }
+}
+
 function numberMod(left, right) {
     return (left % right + right) % right;
 }
@@ -274,6 +282,8 @@ var $nope = module.exports = {
     exports: exports,
     operators: operators,
     builtins: builtins,
+    
+    instanceAttribute: instanceAttribute,
     
     numberMod: numberMod,
     numberDivMod: numberDivMod,
