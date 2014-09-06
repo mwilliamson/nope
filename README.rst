@@ -73,6 +73,8 @@ TODO
 
 * Prevent re-definition of functions and classes
 
+* Allow mutually recursive functions
+
 Status
 ------
 
