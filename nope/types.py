@@ -359,6 +359,10 @@ str_meta_type = meta_type(str_type, [
     attr("__call__", func([any_type], str_type), read_only=True),
 ])
 
+bool_meta_type = meta_type(boolean_type, [
+    attr("__call__", func([any_type], boolean_type), read_only=True),
+])
+
 iterator = generic_structural_type("iterator", ["T"])
 iterator.attrs.add("__iter__", lambda T: func([], iterator(T)), read_only=True)
 iterator.attrs.add("__next__", lambda T: func([], T), read_only=True)

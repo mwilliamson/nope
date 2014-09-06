@@ -520,7 +520,7 @@ A().f(42)
     
     
     @istest
-    def test_with_calls_enter_and_exit_methods_when_body_exits_normally(self):
+    def test_with_statement_calls_enter_and_exit_methods_when_body_exits_normally(self):
         program = """
 class A:
     #:: Self -> int
@@ -538,6 +538,68 @@ with A() as value:
     print(value)
 """
         self._test_program_string(program, b"enter\n42\nNone\nNone\nNone\n")
+    
+    
+    @istest
+    def test_with_statement_passes_exception_info_to_exit_method_if_body_raises_exception(self):
+        program = """
+class A:
+    #:: Self -> none
+    def __enter__(self):
+        return
+    
+    #:: Self, object, object, object -> none
+    def __exit__(self, exception_type, exception, traceback):
+        print(exception_type is Exception)
+        print(exception)
+
+try:
+    with A() as value:
+        raise Exception("Angel in Blue Jeans")
+except:
+    pass
+"""
+        self._test_program_string(program, b"True\nAngel in Blue Jeans\n")
+    
+    
+    @istest
+    def test_with_statement_suppresses_exception_when_exit_returns_true(self):
+        program = """
+class A:
+    #:: Self -> none
+    def __enter__(self):
+        return
+    
+    #:: Self, object, object, object -> bool
+    def __exit__(self, exception_type, exception, traceback):
+        return True
+
+with A():
+    raise Exception("")
+print("Done")
+"""
+        self._test_program_string(program, b"Done\n")
+    
+    
+    @istest
+    def test_with_statement_does_not_suppress_exception_when_exit_returns_false(self):
+        program = """
+class A:
+    #:: Self -> none
+    def __enter__(self):
+        return
+    
+    #:: Self, object, object, object -> bool
+    def __exit__(self, exception_type, exception, traceback):
+        return False
+
+try:
+    with A():
+        raise Exception("")
+except:
+    print("Exception handler")
+"""
+        self._test_program_string(program, b"Exception handler\n")
         
     
     def _test_program_string(self, program, expected_output):
