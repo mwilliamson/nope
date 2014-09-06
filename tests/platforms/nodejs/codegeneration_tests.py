@@ -180,6 +180,32 @@ def test_transform_function_declaration():
 
 
 @istest
+def test_function_without_explicit_return_on_all_paths_returns_null_at_end():
+    _assert_transform(
+        nodes.func(
+            name="f",
+            signature=parse_signature("-> none"),
+            args=nodes.args([]),
+            body=[
+                nodes.if_else(
+                    nodes.ref("x"),
+                    [nodes.ret(nodes.none())],
+                    []
+                ),
+            ],
+        ),
+        """
+        function f() {
+            if ($nope.builtins.bool(x)) {
+                return null;
+            }
+            return null;
+        }
+        """
+    )
+
+
+@istest
 def test_transform_function_declaration_declares_variables_at_top_of_function():
     _assert_transform(
         nodes.func(
@@ -194,6 +220,7 @@ def test_transform_function_declaration_declares_variables_at_top_of_function():
             body=[
                 js.var("x"),
                 js.expression_statement(js.assign("x", js.ref("y"))),
+                js.ret(js.null),
             ],
         )
     )
@@ -213,6 +240,7 @@ def test_transform_function_declaration_does_not_redeclare_variables_with_same_n
             args=["x"],
             body=[
                 js.expression_statement(js.assign("x", js.ref("y"))),
+                js.ret(js.null),
             ],
         )
     )

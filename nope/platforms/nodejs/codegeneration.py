@@ -3,7 +3,7 @@ import shutil
 import inspect
 
 from . import js
-from ... import nodes, util, types, name_declaration
+from ... import nodes, util, types, name_declaration, returns
 from ...walk import walk_tree
 
 
@@ -387,6 +387,9 @@ class Transformer(object):
         declared_names.difference_update(arg_names)
         
         body = [js.var(name) for name in declared_names] + self._transform_all(func.body)
+        
+        if not returns.has_unconditional_return(func.body):
+            body += [js.ret(js.null)]
         
         return js.function_declaration(
             name=func.name,
