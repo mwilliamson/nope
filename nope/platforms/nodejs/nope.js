@@ -106,11 +106,18 @@ var booleanMethods = {
     }
 };
 
+var noneMethods = {
+    "__str__": function() {
+        return "None";
+    }
+};
+
 var builtinMethods = {
     "[object Number]": numberMethods,
     "[object String]": stringMethods,
     "[object Array]": arrayMethods,
-    "[object Boolean]": booleanMethods
+    "[object Boolean]": booleanMethods,
+    "[object Null]": noneMethods
 };
 
 function bool(value) {
