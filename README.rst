@@ -43,14 +43,16 @@ TODO
 ----
 
 * When defining `__add__` and similar methods on classes,
-  the type signature should be specific e.g. on int, `int -> int`.
+  the type signature should be specific e.g. on int, ``int -> int``.
   However, to maintain compatibility with Python,
   the type checker should assume the argument is the top type when type
   checking the actual method, so isinstance or similar still has to be used.
 
-* Support for the r versions of operators e.g. `__radd__`.
+* Support for the r versions of operators e.g. ``__radd__``.
 
-* Class definitions
+* Inheritance
+
+* ``__init__`` methods
 
 * Standard library support
 
