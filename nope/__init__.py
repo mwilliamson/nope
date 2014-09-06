@@ -40,7 +40,7 @@ def compile(source_path, destination_dir, platform):
     result = check(source_path)
     
     if not result.is_valid:
-        raise source_tree.error
+        raise result.error
     
     source_tree, checker = result.value
     
