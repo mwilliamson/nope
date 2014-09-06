@@ -29,6 +29,7 @@ class Visitor(object):
             nodes.TryStatement: self._visit_try,
             nodes.RaiseStatement: self._visit_raise,
             nodes.AssertStatement: self._visit_assert,
+            nodes.WithStatement: self._visit_with,
             #~ nodes.FunctionDef: self._visit_function_def,
             nodes.FunctionSignature: self._visit_function_signature,
             nodes.SignatureArgument: self._visit_signature_argument,
@@ -158,6 +159,13 @@ class Visitor(object):
         self.visit(node.condition, *args)
         if node.message is not None:
             self.visit(node.message, *args)
+    
+    
+    def _visit_with(self, node, *args):
+        self.visit(node.value, *args)
+        if node.target is not None:
+            self.visit(node.target, *args)
+        self._visit_statements(node.body, *args)
     
     
     def _visit_function_signature(self, node, *args):

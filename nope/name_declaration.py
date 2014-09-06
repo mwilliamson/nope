@@ -7,6 +7,7 @@ def _declare(node, declarations):
     visitor.before(nodes.Assignment, _declare_assignment)
     visitor.before(nodes.ForLoop, _declare_for_loop)
     visitor.before(nodes.TryStatement, _declare_try)
+    visitor.before(nodes.WithStatement, _declare_with)
     visitor.replace(nodes.FunctionDef, _declare_function_def)
     visitor.replace(nodes.ClassDefinition, _declare_class_definition)
     visitor.before(nodes.Argument, _declare_argument)
@@ -34,6 +35,11 @@ def _declare_try(visitor, node, declarations):
     for handler in node.handlers:
         if handler.target is not None:
             _declare_target(handler.target, declarations, target_type=ExceptionHandlerTargetNode)
+
+
+def _declare_with(visitor, node, declarations):
+    if node.target is not None:
+        _declare_target(node.target, declarations, target_type=VariableDeclarationNode)
 
 
 def _declare_function_def(visitor, node, declarations):
