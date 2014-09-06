@@ -282,6 +282,12 @@ def is_sub_type(super_type, sub_type):
     if super_type == object_type:
         return True
     
+    if isinstance(sub_type, _UnionType):
+        return all(
+            is_sub_type(super_type, possible_sub_type)
+            for possible_sub_type in sub_type._types
+        )
+    
     if isinstance(sub_type, _ScalarType) and super_type in sub_type.base_classes:
         return True
     
@@ -289,6 +295,12 @@ def is_sub_type(super_type, sub_type):
         return all(
             is_sub_type(attr.type, sub_type.attrs.type_of(attr.name))
             for attr in super_type.attrs
+        )
+    
+    if isinstance(super_type, _UnionType):
+        return any(
+            is_sub_type(possible_super_type, sub_type)
+            for possible_super_type in super_type._types
         )
     
     return super_type == sub_type

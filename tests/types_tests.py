@@ -161,3 +161,27 @@ class SubTypeTests(object):
         
         assert not types.is_sub_type(structural_type, cls)
         assert not types.is_sub_type(cls, structural_type)
+        
+    @istest
+    def type_is_subtype_of_union_type_if_it_appears_in_union_type(self):
+        scalar_type = types.scalar_type("User")
+        union_type = types.union(scalar_type, types.none_type)
+        
+        assert types.is_sub_type(union_type, scalar_type)
+        assert not types.is_sub_type(scalar_type, union_type)
+        
+    @istest
+    def union_type_is_subtype_of_other_union_type_if_its_types_are_a_subset(self):
+        smaller_union_type = types.union(types.int_type, types.none_type)
+        larger_union_type = types.union(types.int_type, types.none_type, types.str_type)
+        
+        assert types.is_sub_type(larger_union_type, smaller_union_type)
+        assert not types.is_sub_type(smaller_union_type, larger_union_type)
+        
+    @istest
+    def union_of_union_is_treated_the_same_as_flat_union(self):
+        nested_union_type = types.union(types.int_type, types.union(types.none_type, types.str_type))
+        flat_union_type = types.union(types.int_type, types.none_type, types.str_type)
+        
+        assert types.is_sub_type(nested_union_type, flat_union_type)
+        assert types.is_sub_type(flat_union_type, nested_union_type)
