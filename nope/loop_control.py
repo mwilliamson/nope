@@ -9,6 +9,7 @@ def check_loop_control(node, in_loop, in_finally=False):
     visitor.before(nodes.ContinueStatement, _check_continue)
     visitor.replace(nodes.TryStatement, _check_try)
     visitor.replace(nodes.FunctionDef, _check_function_definition)
+    visitor.replace(nodes.ClassDefinition, _check_class_definition)
     
     visitor.visit(node, in_loop, in_finally)
 
@@ -51,4 +52,8 @@ def _check_try(visitor, node, in_loop, in_finally):
 
 
 def _check_function_definition(visitor, node, in_loop, in_finally):
+    _check_statements(visitor, node.body, False, False)
+
+
+def _check_class_definition(visitor, node, in_loop, in_finally):
     _check_statements(visitor, node.body, False, False)
