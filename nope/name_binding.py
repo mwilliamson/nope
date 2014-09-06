@@ -24,6 +24,7 @@ class _BindingChecker(object):
         visitor.replace(nodes.WithStatement, self._update_with)
         visitor.replace(nodes.FunctionDef, self._update_function_definition)
         visitor.before(nodes.Argument, self._update_argument)
+        visitor.replace(nodes.ClassDefinition, self._update_class_definition)
         visitor.before(nodes.Import, self._update_import)
         visitor.before(nodes.ImportFrom, self._update_import)
         
@@ -140,7 +141,7 @@ class _BindingChecker(object):
 
     def _update_function_definition(self, visitor, node, context):
         context.bind(node)
-        body_context = context.enter_function()
+        body_context = context.enter_new_namespace()
         for arg in node.args.args:
             visitor.visit(arg, body_context)
         
@@ -151,7 +152,14 @@ class _BindingChecker(object):
     def _update_argument(self, visitor, node, context):
         context.bind(node)
 
-
+    
+    def _update_class_definition(self, visitor, node, context):
+        context.bind(node)
+        body_context = context.enter_new_namespace()
+        for statement in node.body:
+            visitor.visit(statement, body_context)
+    
+    
     def _update_import(self, visitor, node, context):
         for alias in node.names:
             context.bind(alias)
@@ -229,7 +237,7 @@ class _Context(object):
     def enter_branch(self):
         return _Context(self._declarations, DiffingDict(self._is_definitely_bound), self._exception_handler_target_names)
     
-    def enter_function(self):
+    def enter_new_namespace(self):
         is_definitely_bound = _copy_dict(self._is_definitely_bound)
         for declaration in is_definitely_bound:
             if isinstance(declaration, name_declaration.ExceptionHandlerTargetNode):

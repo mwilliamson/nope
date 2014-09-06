@@ -465,6 +465,24 @@ def exception_handler_targets_cannot_be_accessed_from_nested_function():
 
 
 @istest
+def class_name_is_definitely_bound_after_class_definition():
+    node = nodes.class_def("User", [])
+    declaration = name_declaration.VariableDeclarationNode("User")
+    
+    references = References([(node, declaration)])
+    
+    bindings = _updated_bindings(node, references)
+    assert_equal(True, bindings.is_definitely_bound(node))
+
+
+@istest
+def body_of_class_is_checked():
+    _assert_child_statement_is_checked(lambda generate:
+        generate.class_def("User", [generate.unbound_ref_statement()])
+    )
+
+
+@istest
 def import_name_is_definitely_bound_after_import_statement():
     alias_node = nodes.import_alias("x.y", None)
     node = nodes.Import([alias_node])
@@ -530,6 +548,13 @@ def _test_context(create_node):
             declaration = name_declaration.FunctionDeclarationNode(node.name)
             references[node] = declaration
             return node
+        
+        def class_def(self, *args, **kwargs):
+            node = nodes.class_def(*args, **kwargs)
+            declaration = name_declaration.ClassDeclarationNode(node.name)
+            references[node] = declaration
+            return node
+            
             
         
     node = create_node(NodeGenerator())
