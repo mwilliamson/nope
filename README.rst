@@ -69,6 +69,10 @@ TODO
   The result is that any value of type object will need to be checked
   as to whether it is a function or not for consistency.
 
+* Proper tests for builtin functions
+
+* Prevent re-definition of functions and classes
+
 Status
 ------
 
