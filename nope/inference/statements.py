@@ -286,6 +286,7 @@ class StatementTypeChecker(object):
             node.value,
             [
                 ephemeral.formal_arg_constraint(type_)
+                # TODO: the arg types should be unioned with none
                 for type_ in [types.exception_meta_type, types.exception_type, types.traceback_type]
             ],
             context,
