@@ -59,6 +59,14 @@ class UnexpectedTargetTypeError(TypeCheckError):
             _quote_type(self.target_type), _quote_type(self.value_type))
 
 
+class InitMethodsMustReturnNoneError(TypeCheckError):
+    def __init__(self, node):
+        self.node = node
+    
+    def __str__(self):
+        return "__init__ methods must return None"
+
+
 class UnboundLocalError(TypeCheckError):
     def __init__(self, node, name):
         self.node = node

@@ -52,6 +52,11 @@ class StatementTypeChecker(object):
             return_type = types.none_type
         else:
             return_type = self._infer(node.signature.returns, context).type
+        
+        if (context.class_type is not None and
+                node.name == "__init__" and
+                return_type != types.none_type):
+            raise errors.InitMethodsMustReturnNoneError(node.signature.returns)
             
         return types.func(
             [read_signature_arg(arg) for arg in node.signature.args],
@@ -106,18 +111,27 @@ class StatementTypeChecker(object):
             meta_type
         )
         self.update_context(node.body, body_context)
+        init_method_type = types.func([], class_type)
         
         for attr_name in attr_names:
             attr_type = body_context.lookup_declaration(class_declarations.declaration(attr_name))
+            is_init_method = attr_name == "__init__"
+                
             if types.is_func_type(attr_type):
                 method_type = self._function_type_to_method_type(class_type, attr_type)
-                class_type.attrs.add(attr_name, method_type)
+                if is_init_method:
+                    # We verify that __init__ returns None in the function
+                    # definition checker
+                    init_method_type = types.func(method_type.args, class_type)
+                else:
+                    class_type.attrs.add(attr_name, method_type)
             else:
+                # TODO: handle case where init is not a function (callable is presumably also not acceptable)
                 class_type.attrs.add(attr_name, attr_type)
                 meta_type.attrs.add(attr_name, attr_type)
                 
         
-        meta_type.attrs.add("__call__", types.func([], class_type), read_only=True)
+        meta_type.attrs.add("__call__", init_method_type, read_only=True)
         context.update_type(node, meta_type)
     
     

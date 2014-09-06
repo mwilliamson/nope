@@ -126,6 +126,64 @@ def methods_must_have_at_least_one_argument():
         assert_equal("methods must have at least one argument", str(error))
 
 
+@istest
+def init_method_is_not_present_on_instance():
+    node = _create_class_with_init(
+        signature=nodes.signature(
+            args=[nodes.signature_arg(nodes.ref("Self"))],
+            returns=nodes.ref("none")
+        ),
+        args=nodes.args([nodes.arg("self")]),
+        body=[],
+    )
+    meta_type = _infer_meta_type(node, ["__init__"])
+    assert not "__init__" in meta_type.type.attrs
+    
+
+@istest
+def init_method_is_used_as_call_method_on_meta_type():
+    node = _create_class_with_init(
+        signature=nodes.signature(
+            args=[nodes.signature_arg(nodes.ref("Self")), nodes.signature_arg(nodes.ref("str"))],
+            returns=nodes.ref("none")
+        ),
+        args=nodes.args([nodes.arg("self"), nodes.arg("name")]),
+        body=[],
+    )
+    meta_type = _infer_meta_type(node, ["__init__"])
+    assert_equal(types.func([types.str_type], meta_type.type), meta_type.attrs.type_of("__call__"))
+    
+
+@istest
+def init_method_must_return_none():
+    returns_node = nodes.ref("str")
+    node = _create_class_with_init(
+        signature=nodes.signature(
+            args=[nodes.signature_arg(nodes.ref("Self"))],
+            returns=returns_node
+        ),
+        args=nodes.args([nodes.arg("self")]),
+        body=[nodes.ret(nodes.string(""))],
+    )
+    try:
+        _infer_meta_type(node, ["__init__"])
+        assert False, "Expected error"
+    except errors.InitMethodsMustReturnNoneError as error:
+        assert_equal(returns_node, error.node)
+
+
+def _create_class_with_init(signature, args, body):
+    return nodes.class_def("User", [
+        nodes.func(
+            name="__init__",
+            signature=signature,
+            args=args,
+            body=body,
+        )
+    ])
+    
+
+
 def _infer_meta_type(class_node, names, type_bindings=None):
     if type_bindings is None:
         type_bindings = {}
@@ -134,6 +192,8 @@ def _infer_meta_type(class_node, names, type_bindings=None):
     
     type_bindings["bool"] = types.meta_type(types.boolean_type)
     type_bindings["object"] = types.meta_type(types.object_type)
+    type_bindings["none"] = types.meta_type(types.none_type)
+    type_bindings["str"] = types.meta_type(types.str_type)
     context = update_context(
         class_node,
         declared_names_in_node=IdentityDict([(class_node, names + ["Self"])]),
