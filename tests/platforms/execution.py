@@ -7,8 +7,6 @@ from .. import testing
 from ..testing import program_path
 
 
-# TODO: add tests for with statements (requires class definition support)
-
 @nottest
 class ExecutionTests(object):
     @istest
@@ -519,6 +517,27 @@ class A:
 A().f(42)
 """
         self._test_program_string(program, b"42\n")
+    
+    
+    @istest
+    def test_with_calls_enter_and_exit_methods_when_body_exits_normally(self):
+        program = """
+class A:
+    #:: Self -> int
+    def __enter__(self):
+        print("enter")
+        return 42
+    
+    #:: Self, object, object, object -> none
+    def __exit__(self, exception_type, exception, traceback):
+        print(exception_type)
+        print(exception)
+        print(traceback)
+
+with A() as value:
+    print(value)
+"""
+        self._test_program_string(program, b"enter\n42\nNone\nNone\nNone\n")
         
     
     def _test_program_string(self, program, expected_output):
