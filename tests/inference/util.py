@@ -211,4 +211,12 @@ def enter_method(return_type=None):
 def exit_method(return_type=None):
     if return_type is None:
         return_type = types.none_type
-    return types.func([types.exception_meta_type, types.exception_type, types.traceback_type], return_type)
+    
+    return types.func(
+        [
+            types.union(types.exception_meta_type, types.none_type),
+            types.union(types.exception_type, types.none_type),
+            types.union(types.traceback_type, types.none_type)
+        ],
+        return_type
+    )

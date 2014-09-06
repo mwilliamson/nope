@@ -272,6 +272,9 @@ def is_func_type(type_):
 class _UnionType(object):
     def __init__(self, types):
         self._types = types
+    
+    def __str__(self):
+        return " | ".join(map(str, self._types))
 
 
 def union(*types):

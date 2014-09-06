@@ -280,14 +280,19 @@ class StatementTypeChecker(object):
     def _check_with(self, node, context):
         enter_return_type = self._infer_magic_method_call(node.value, "enter", node.value, [], context)
         
+        exit_arg_types = [
+            types.union(types.exception_meta_type, types.none_type),
+            types.union(types.exception_type, types.none_type),
+            types.union(types.traceback_type, types.none_type)
+        ]
+        
         exit_return_type = self._infer_magic_method_call(
             node.value,
             "exit",
             node.value,
             [
                 ephemeral.formal_arg_constraint(type_)
-                # TODO: the arg types should be unioned with none
-                for type_ in [types.exception_meta_type, types.exception_type, types.traceback_type]
+                for type_ in exit_arg_types
             ],
             context,
         )
