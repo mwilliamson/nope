@@ -321,7 +321,7 @@ any_type = object_type = scalar_type("object")
 
 none_type = scalar_type("NoneType")
 
-boolean_type = scalar_type("BooleanType")
+boolean_type = scalar_type("bool")
 
 int_type = scalar_type("int")
 
