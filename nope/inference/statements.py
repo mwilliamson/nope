@@ -53,6 +53,7 @@ class StatementTypeChecker(object):
         else:
             return_type = self._infer(node.signature.returns, context).type
         
+        # TODO: handle __init__ being declared via assignment rather than a def
         if (context.class_type is not None and
                 node.name == "__init__" and
                 return_type != types.none_type):
