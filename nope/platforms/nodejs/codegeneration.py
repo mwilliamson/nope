@@ -351,13 +351,13 @@ class Transformer(object):
         declared_names.sort()
         
         if "__init__" in declared_names:
-            # TODO: make this less hacktastic
-            init_node = next(
-                statement
-                for statement in class_definition.body
-                if isinstance(statement, nodes.FunctionDef) and statement.name == "__init__"
-            )
-            constructor_arg_names = [arg.name for arg in init_node.args.args[1:]]
+            init_type = self._type_of(class_definition).attrs.type_of("__call__")
+            # The type checker should guarantee that init_type exists and
+            # is a function type (a stronger constraint than simply callable)
+            constructor_arg_names = [
+                self._unique_name("arg")
+                for arg in init_type.args
+            ]
         else:
             constructor_arg_names = []
         

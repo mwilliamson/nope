@@ -38,6 +38,9 @@ class _TypeChecker(object):
         for statement in module.node.body:
             self.update_context(statement, context)
         
+        for reference in references:
+            self._type_lookup[reference] = context.lookup(reference)
+        
         module_declarations = self._declaration_finder.declarations_in_module(module.node)
         exported_names = util.exported_names(module.node)
         exported_declarations = [

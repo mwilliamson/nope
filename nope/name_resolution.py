@@ -20,6 +20,9 @@ class References(object):
     
     def referenced_declaration(self, reference):
         return self._references[reference]
+    
+    def __iter__(self):
+        return iter(self._references.keys())
 
 
 def _resolve(node, context):
