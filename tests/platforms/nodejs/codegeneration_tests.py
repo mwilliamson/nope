@@ -284,6 +284,34 @@ def test_transform_class_with_attributes():
 
 
 @istest
+def test_transform_class_with_init_method():
+    _assert_transform(
+        nodes.class_def(
+            name="User",
+            body=[
+                nodes.func(
+                    "__init__",
+                    None,
+                    nodes.args([nodes.arg("self"), nodes.arg("x")]),
+                    [],
+                )
+            ],
+        ),
+        """
+            User = function(x) {
+                var $self0 = {};
+                var __init__;
+                function __init__(self, x) {
+                    return null;
+                }
+                __init__($self0, x);
+                return $self0;
+            };
+        """,
+    )
+
+
+@istest
 def test_transform_single_assignment():
     _assert_transform(
         nodes.assign(["x"], nodes.ref("z")),

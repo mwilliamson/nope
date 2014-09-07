@@ -520,6 +520,19 @@ A().f(42)
     
     
     @istest
+    def test_init_method_is_used_to_construct_instance(self):
+        program = """
+class A:
+    #:: Self, object -> none
+    def __init__(self, x):
+        print(x)
+
+A(42)
+"""
+        self._test_program_string(program, b"42\n")
+    
+    
+    @istest
     def test_with_statement_calls_enter_and_exit_methods_when_body_exits_normally(self):
         program = """
 class A:

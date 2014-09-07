@@ -349,6 +349,17 @@ class Transformer(object):
         declared_names.remove("Self")
         declared_names.sort()
         
+        if "__init__" in declared_names:
+            # TODO: make this less hacktastic
+            init_node = next(
+                statement
+                for statement in class_definition.body
+                if isinstance(statement, nodes.FunctionDef) and statement.name == "__init__"
+            )
+            constructor_arg_names = [arg.name for arg in init_node.args.args[1:]]
+        else:
+            constructor_arg_names = []
+        
         self_name = self._unique_name("self")
         self_ref = js.ref(self_name)
         
@@ -361,7 +372,15 @@ class Transformer(object):
                 _call_internal(["instanceAttribute"], [self_ref, js.ref(name)])
             )
             for name in declared_names
+            if name != "__init__"
         ]
+        
+        if "__init__" in declared_names:
+            init_args = [self_ref] + [js.ref(name) for name in constructor_arg_names]
+            call_init = [js.expression_statement(js.call(js.ref("__init__"), init_args))]
+        else:
+            call_init = []
+        
         return_self = js.ret(js.ref(self_name))
         
         body = (
@@ -369,13 +388,14 @@ class Transformer(object):
             declarations +
             execute_body +
             assign_attrs +
+            call_init + 
             [return_self]
         )
         
         return js.assign_statement(
             class_definition.name,
             js.function_expression(
-                [],
+                constructor_arg_names,
                 body
             )
         )
