@@ -284,6 +284,35 @@ def test_transform_class_with_attributes():
 
 
 @istest
+def test_transform_class_with_methods():
+    _assert_transform(
+        nodes.class_def(
+            name="User",
+            body=[
+                nodes.func(
+                    "f",
+                    None,
+                    nodes.args([nodes.arg("self"), nodes.arg("x")]),
+                    [],
+                )
+            ],
+        ),
+        """
+            function $f0(self, x) {
+                return null;
+            }
+            User = function() {
+                var $self1 = {};
+                var f;
+                f = $f0;
+                $self1.f = $nope.instanceAttribute($self1, f);
+                return $self1;
+            };
+        """
+    )
+
+
+@istest
 def test_transform_class_with_init_method():
     class_node = nodes.class_def(
         name="User",
@@ -306,14 +335,15 @@ def test_transform_class_with_init_method():
     _assert_transform(
         class_node,
         """
-            User = function($arg0) {
-                var $self1 = {};
+            function $__init__0(self, x) {
+                return null;
+            }
+            User = function($arg1) {
+                var $self2 = {};
                 var __init__;
-                function __init__(self, x) {
-                    return null;
-                }
-                __init__($self1, $arg0);
-                return $self1;
+                __init__ = $__init__0;
+                __init__($self2, $arg1);
+                return $self2;
             };
         """,
         type_lookup=type_lookup

@@ -345,10 +345,11 @@ class Transformer(object):
     def _class_definition(self, class_definition):
         # TODO: come up with a more general way of detecting names that only
         # occur at compile-time and removing them from actual output
-        # TODO: functions need to resolve names from outer scope, not in class body
         declared_names = list(self._declarations.declarations_in_class(class_definition).names())
         declared_names.remove("Self")
         declared_names.sort()
+        
+        renamed_methods, method_definitions = self._transform_class_methods(class_definition.body)
         
         if "__init__" in declared_names:
             init_type = self._type_of(class_definition).attrs.type_of("__call__")
@@ -366,7 +367,7 @@ class Transformer(object):
         
         declare_self = js.var(self_name, js.obj({}))
         declarations = [js.var(name) for name in declared_names]
-        execute_body = self._transform_all(class_definition.body)
+        execute_body = self._transform_class_body(class_definition.body, renamed_methods)
         assign_attrs = [
             js.assign_statement(
                 js.property_access(self_ref, name),
@@ -393,13 +394,44 @@ class Transformer(object):
             [return_self]
         )
         
-        return js.assign_statement(
+        assign_class = js.assign_statement(
             class_definition.name,
-            js.function_expression(
-                constructor_arg_names,
-                body
-            )
+            js.function_expression(constructor_arg_names, body)
         )
+        
+        return js.statements(method_definitions + [assign_class])
+    
+    
+    def _transform_class_methods(self, body):
+        renamed_methods = {}
+        method_definitions = []
+        
+        for statement in body:
+            if isinstance(statement, nodes.FunctionDef):
+                unique_name = self._unique_name(statement.name)
+                renamed_methods[statement.name] = unique_name
+                function = self.transform(statement)
+                function.name = unique_name
+                method_definitions.append(function)
+        
+        return renamed_methods, method_definitions
+    
+    
+    def _transform_class_body(self, body, renamed_methods):
+        return [
+            self._transform_class_body_statement(statement, renamed_methods)
+            for statement in body
+        ]
+    
+    
+    def _transform_class_body_statement(self, statement, renamed_methods):
+        if isinstance(statement, nodes.FunctionDef):
+            # Compound statements are not allowed in class bodies, so we don't
+            # need to recurse
+            name = statement.name
+            return js.assign_statement(js.ref(name), js.ref(renamed_methods[name]));
+        else:
+            return self.transform(statement)
     
     
     def _function_def(self, func):
