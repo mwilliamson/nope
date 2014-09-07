@@ -104,8 +104,9 @@ class StatementTypeChecker(object):
                     init_method_type = types.func(method_type.args, class_type)
                 else:
                     class_type.attrs.add(attr_name, method_type)
+            elif is_init_method:
+                raise errors.InitAttributeMustBeFunctionError(node)
             else:
-                # TODO: handle case where init is not a function (callable is presumably also not acceptable)
                 class_type.attrs.add(attr_name, attr_type)
                 meta_type.attrs.add(attr_name, attr_type)
                 

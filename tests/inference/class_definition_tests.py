@@ -197,6 +197,19 @@ def init_signature_is_checked_when_defined_by_assignment():
         assert_equal(node, error.node)
 
 
+@istest
+def init_must_be_function():
+    func_node = nodes.assign([nodes.ref("__init__")], nodes.ref("f"))
+    node = nodes.class_def("User", [func_node])
+    try:
+        _infer_class_type(node, ["__init__"], type_bindings={
+            "f": types.str_type,
+        })
+        assert False, "Expected error"
+    except errors.InitAttributeMustBeFunctionError as error:
+        assert_equal(node, error.node)
+
+
 def _create_class_with_init(signature, args, body):
     return nodes.class_def("User", [
         nodes.func(
