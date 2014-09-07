@@ -345,6 +345,7 @@ class Transformer(object):
     def _class_definition(self, class_definition):
         # TODO: come up with a more general way of detecting names that only
         # occur at compile-time and removing them from actual output
+        # TODO: functions need to resolve names from outer scope, not in class body
         declared_names = list(self._declarations.declarations_in_class(class_definition).names())
         declared_names.remove("Self")
         declared_names.sort()
