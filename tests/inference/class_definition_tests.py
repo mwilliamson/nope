@@ -169,11 +169,10 @@ def init_method_is_used_as_call_method_on_meta_type():
 
 @istest
 def init_method_must_return_none():
-    returns_node = nodes.ref("str")
     node = _create_class_with_init(
         signature=nodes.signature(
             args=[nodes.signature_arg(nodes.ref("Self"))],
-            returns=returns_node
+            returns=nodes.ref("str")
         ),
         args=nodes.args([nodes.arg("self")]),
         body=[nodes.ret(nodes.string(""))],
@@ -182,7 +181,20 @@ def init_method_must_return_none():
         _infer_meta_type(node, ["__init__"])
         assert False, "Expected error"
     except errors.InitMethodsMustReturnNoneError as error:
-        assert_equal(returns_node, error.node)
+        assert_equal(node, error.node)
+
+
+@istest
+def init_signature_is_checked_when_defined_by_assignment():
+    func_node = nodes.assign([nodes.ref("__init__")], nodes.ref("f"))
+    node = nodes.class_def("User", [func_node])
+    try:
+        _infer_class_type(node, ["__init__"], type_bindings={
+            "f": types.func([types.object_type], types.str_type)
+        })
+        assert False, "Expected error"
+    except errors.InitMethodsMustReturnNoneError as error:
+        assert_equal(node, error.node)
 
 
 def _create_class_with_init(signature, args, body):

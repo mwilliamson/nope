@@ -52,12 +52,6 @@ class StatementTypeChecker(object):
             return_type = types.none_type
         else:
             return_type = self._infer(node.signature.returns, context).type
-        
-        # TODO: handle __init__ being declared via assignment rather than a def
-        if (context.class_type is not None and
-                node.name == "__init__" and
-                return_type != types.none_type):
-            raise errors.InitMethodsMustReturnNoneError(node.signature.returns)
             
         return types.func(
             [read_signature_arg(arg) for arg in node.signature.args],
@@ -89,7 +83,7 @@ class StatementTypeChecker(object):
         class_declarations = self._declaration_finder.declarations_in_class(node)
         attr_names = class_declarations.names()
         
-        body_context = context.enter_class(class_type)
+        body_context = context.enter_class()
         body_context.update_declaration_type(
             class_declarations.declaration("Self"),
             meta_type
@@ -100,12 +94,13 @@ class StatementTypeChecker(object):
         for attr_name in attr_names:
             attr_type = body_context.lookup_declaration(class_declarations.declaration(attr_name))
             is_init_method = attr_name == "__init__"
-                
+            is_func_type = types.is_func_type(attr_type)
+            
             if types.is_func_type(attr_type):
                 method_type = self._function_type_to_method_type(node, class_type, attr_name, attr_type)
                 if is_init_method:
-                    # We verify that __init__ returns None in the function
-                    # definition checker
+                    if method_type.return_type != types.none_type:
+                        raise errors.InitMethodsMustReturnNoneError(node)
                     init_method_type = types.func(method_type.args, class_type)
                 else:
                     class_type.attrs.add(attr_name, method_type)

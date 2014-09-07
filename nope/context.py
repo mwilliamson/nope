@@ -4,12 +4,11 @@ from . import types, errors, name_resolution
 
 
 class Context(object):
-    def __init__(self, references, definition_types, return_type=None, is_module_scope=False, class_type=None):
+    def __init__(self, references, definition_types, return_type=None, is_module_scope=False):
         self._references = references
         self._definition_types = definition_types
         self.return_type = return_type
         self.is_module_scope = is_module_scope
-        self.class_type = class_type
     
     def update_type(self, node, type_):
         declaration = self._references.referenced_declaration(node)
@@ -40,16 +39,14 @@ class Context(object):
             self._definition_types,
             return_type=return_type,
             is_module_scope=False,
-            class_type=None,
         )
     
-    def enter_class(self, class_type):
+    def enter_class(self):
         return Context(
             self._references,
             self._definition_types,
             return_type=None,
             is_module_scope=False,
-            class_type=class_type,
         )
     
     def enter_module(self):
@@ -58,5 +55,4 @@ class Context(object):
             self._definition_types,
             return_type=None,
             is_module_scope=True,
-            class_type=None,
         )
