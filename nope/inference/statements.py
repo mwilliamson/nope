@@ -68,6 +68,7 @@ class StatementTypeChecker(object):
         func_type = self._infer_function_def(node, context)
         
         if context.class_type is not None:
+            # TODO: handle method being declared via assignment rather than a def
             self._check_method_receiver_argument(
                 node, context.class_type, func_type)
         
