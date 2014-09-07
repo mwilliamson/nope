@@ -67,11 +67,6 @@ class StatementTypeChecker(object):
     def _check_function_def(self, node, context):
         func_type = self._infer_function_def(node, context)
         
-        if context.class_type is not None:
-            # TODO: handle method being declared via assignment rather than a def
-            self._check_method_receiver_argument(
-                node, context.class_type, func_type)
-        
         return_type = func_type.return_type
         
         body_context = context.enter_func(return_type)
@@ -85,20 +80,7 @@ class StatementTypeChecker(object):
             raise errors.MissingReturnError(node, return_type)
         
         context.update_type(node, func_type)
-    
-    def _check_method_receiver_argument(self, func_node, class_type, func_type):
-        if len(func_node.args.args) < 1:
-            raise errors.MethodHasNoArgumentsError(func_node)
         
-        formal_receiver_type = func_type.args[0].type
-        if not types.is_sub_type(formal_receiver_type, class_type):
-            raise errors.UnexpectedTargetTypeError(
-                func_node.signature.args[0].type,
-                target_type=formal_receiver_type,
-                value_type=class_type,
-            )
-        
-    
     
     def _check_class_definition(self, node, context):
         class_type = types.scalar_type(node.name)
@@ -120,7 +102,7 @@ class StatementTypeChecker(object):
             is_init_method = attr_name == "__init__"
                 
             if types.is_func_type(attr_type):
-                method_type = self._function_type_to_method_type(class_type, attr_type)
+                method_type = self._function_type_to_method_type(node, class_type, attr_name, attr_type)
                 if is_init_method:
                     # We verify that __init__ returns None in the function
                     # definition checker
@@ -137,10 +119,20 @@ class StatementTypeChecker(object):
         context.update_type(node, meta_type)
     
     
-    def _function_type_to_method_type(self, class_type, func_type):
-        # We verify the receiver argument is correct when checking the
-        # function definition
+    def _function_type_to_method_type(self, class_node, class_type, attr_name, func_type):
+        self._check_method_receiver_argument(class_node, class_type, attr_name, func_type)
         return types.func(func_type.args[1:], func_type.return_type)
+    
+    def _check_method_receiver_argument(self, class_node, class_type, attr_name, func_type):
+        if len(func_type.args) < 1:
+            raise errors.MethodHasNoArgumentsError(class_node, attr_name)
+        
+        formal_receiver_type = func_type.args[0].type
+        if not types.is_sub_type(formal_receiver_type, class_type):
+            raise errors.UnexpectedReceiverTypeError(
+                class_node,
+                receiver_type=formal_receiver_type,
+            )
 
 
     def _check_expression_statement(self, node, context):

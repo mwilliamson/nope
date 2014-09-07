@@ -86,11 +86,10 @@ def attributes_with_function_type_defined_in_class_definition_body_are_bound_to_
 
 @istest
 def self_argument_in_method_signature_cannot_be_unrelated_type():
-    signature_arg_type_node = nodes.ref("bool")
     func_node = nodes.func(
         name="is_person",
         signature=nodes.signature(
-            args=[nodes.signature_arg(signature_arg_type_node)],
+            args=[nodes.signature_arg(nodes.ref("bool"))],
             returns=nodes.ref("bool")
         ),
         args=nodes.args([nodes.arg("self")]),
@@ -100,10 +99,10 @@ def self_argument_in_method_signature_cannot_be_unrelated_type():
     try:
         _infer_class_type(node, ["is_person"])
         assert False, "Expected error"
-    except errors.UnexpectedTargetTypeError as error:
-        assert_equal(signature_arg_type_node, error.node)
-        assert_equal(types.boolean_type, error.target_type)
-        assert_equal("User", error.value_type.name)
+    except errors.UnexpectedReceiverTypeError as error:
+        assert_equal(node, error.node)
+        assert_equal(types.boolean_type, error.receiver_type)
+        assert_equal("first argument of methods should have Self type but was 'bool'", str(error))
 
 
 @istest
@@ -122,8 +121,22 @@ def methods_must_have_at_least_one_argument():
         _infer_class_type(node, ["is_person"])
         assert False, "Expected error"
     except errors.MethodHasNoArgumentsError as error:
-        assert_equal(func_node, error.node)
-        assert_equal("methods must have at least one argument", str(error))
+        assert_equal(node, error.node)
+        assert_equal("'is_person' method must have at least one argument", str(error))
+
+
+@istest
+def method_signature_is_checked_when_defined_by_assignment():
+    func_node = nodes.assign([nodes.ref("is_person")], nodes.ref("f"))
+    node = nodes.class_def("User", [func_node])
+    try:
+        _infer_class_type(node, ["is_person"], type_bindings={
+            "f": types.func([], types.boolean_type)
+        })
+        assert False, "Expected error"
+    except errors.MethodHasNoArgumentsError as error:
+        assert_equal(node, error.node)
+        assert_equal("is_person", error.attr_name)
 
 
 @istest
@@ -205,6 +218,6 @@ def _infer_meta_type(class_node, names, type_bindings=None):
     return meta_type
 
 
-def _infer_class_type(class_node, names):
-    return _infer_meta_type(class_node, names).type
+def _infer_class_type(class_node, names, type_bindings=None):
+    return _infer_meta_type(class_node, names, type_bindings=type_bindings).type
     

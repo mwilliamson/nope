@@ -29,12 +29,23 @@ class ArgumentsError(TypeCheckError):
         return self.message
 
 
-class MethodHasNoArgumentsError(Exception):
-    def __init__(self, node):
-        self.node = node
+class MethodHasNoArgumentsError(TypeCheckError):
+    def __init__(self, class_node, attr_name):
+        self.node = class_node
+        self.attr_name = attr_name
     
     def __str__(self):
-        return "methods must have at least one argument"
+        return "'{}' method must have at least one argument".format(self.attr_name)
+
+
+class UnexpectedReceiverTypeError(TypeCheckError):
+    def __init__(self, class_node, receiver_type):
+        self.node = class_node
+        self.receiver_type = receiver_type
+    
+    def __str__(self):
+        return "first argument of methods should have Self type but was {}".format(
+            _quote_type(self.receiver_type))
 
 
 class UnexpectedValueTypeError(TypeCheckError):
