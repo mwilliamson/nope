@@ -91,6 +91,18 @@ class StatementTypeChecker(object):
         self.update_context(node.body, body_context)
         init_method_type = types.func([], class_type)
         
+        for statement in node.body:
+            if isinstance(statement, nodes.FunctionDef):
+                pass
+            elif isinstance(statement, nodes.Assignment):
+                for target in statement.targets:
+                    if isinstance(target, nodes.VariableReference) and target.name == "__init__":
+                        raise errors.InitAttributeMustBeFunctionDefinitionError(statement)
+            else:
+                # The type of statements in a class body should have
+                # been verified in an earlier stage.
+                raise Exception("Unexpected statement in class body")
+        
         for attr_name in attr_names:
             attr_type = body_context.lookup_declaration(class_declarations.declaration(attr_name))
             is_init_method = attr_name == "__init__"
@@ -104,8 +116,6 @@ class StatementTypeChecker(object):
                     init_method_type = types.func(method_type.args, class_type)
                 else:
                     class_type.attrs.add(attr_name, method_type)
-            elif is_init_method:
-                raise errors.InitAttributeMustBeFunctionError(node)
             else:
                 class_type.attrs.add(attr_name, attr_type)
                 meta_type.attrs.add(attr_name, attr_type)
