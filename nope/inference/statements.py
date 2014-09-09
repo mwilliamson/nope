@@ -88,45 +88,65 @@ class StatementTypeChecker(object):
             class_declarations.declaration("Self"),
             meta_type
         )
-        self.update_context(node.body, body_context)
-        init_method_type = types.func([], class_type)
         
+        function_definitions = []
+        assignments = []
         for statement in node.body:
             if isinstance(statement, nodes.FunctionDef):
-                pass
+                function_definitions.append(statement)
             elif isinstance(statement, nodes.Assignment):
                 for target in statement.targets:
                     if isinstance(target, nodes.VariableReference) and target.name == "__init__":
                         raise errors.InitAttributeMustBeFunctionDefinitionError(statement)
+                assignments.append(statement)
             else:
                 # The type of statements in a class body should have
                 # been verified in an earlier stage.
                 raise Exception("Unexpected statement in class body")
         
-        for attr_name in attr_names:
-            attr_type = body_context.lookup_declaration(class_declarations.declaration(attr_name))
+        def add_attr_to_type(attr_name, attr_type):
             is_init_method = attr_name == "__init__"
             is_func_type = types.is_func_type(attr_type)
             
             if types.is_func_type(attr_type):
-                method_type = self._function_type_to_method_type(node, class_type, attr_name, attr_type)
+                self._check_method_receiver_argument(node, class_type, attr_name, attr_type)
+                method_type = self._function_type_to_method_type(attr_type)
                 if is_init_method:
                     if method_type.return_type != types.none_type:
                         raise errors.InitMethodsMustReturnNoneError(node)
-                    init_method_type = types.func(method_type.args, class_type)
                 else:
                     class_type.attrs.add(attr_name, method_type)
             else:
                 class_type.attrs.add(attr_name, attr_type)
                 meta_type.attrs.add(attr_name, attr_type)
-                
         
-        meta_type.attrs.add("__call__", init_method_type, read_only=True)
+        for assignment in assignments:
+            self.update_context(assignment, body_context)        
+            attr_type = self._infer(assignment.value, body_context)
+            for target in assignment.targets:
+                if isinstance(target, nodes.VariableReference):
+                    add_attr_to_type(target.name, attr_type)
+        
+        for function_definition in function_definitions:
+            func_type = self._infer_function_def(function_definition, body_context)
+            add_attr_to_type(function_definition.name, func_type)
+        
+        for function_definition in function_definitions:
+            self.update_context(function_definition, body_context)
+        
+        if "__init__" in attr_names:
+            init_declaration = class_declarations.declaration("__init__")
+            init_func_type = body_context.lookup_declaration(init_declaration)
+            init_method_type = self._function_type_to_method_type(init_func_type)
+            constructor_type = types.func(init_method_type.args, class_type)
+        else:
+            constructor_type = types.func([], class_type)
+        
+        meta_type.attrs.add("__call__", constructor_type, read_only=True)
         context.update_type(node, meta_type)
+        
     
-    
-    def _function_type_to_method_type(self, class_node, class_type, attr_name, func_type):
-        self._check_method_receiver_argument(class_node, class_type, attr_name, func_type)
+    def _function_type_to_method_type(self, func_type):
         return types.func(func_type.args[1:], func_type.return_type)
     
     def _check_method_receiver_argument(self, class_node, class_type, attr_name, func_type):

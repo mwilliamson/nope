@@ -197,6 +197,35 @@ def init_must_be_function_definition():
         assert_equal(func_node, error.node)
 
 
+@istest
+def method_can_call_method_on_same_instance_defined_later_in_body():
+    node = nodes.class_def("User", [
+        nodes.func(
+            name="f",
+            signature=nodes.signature(
+                args=[nodes.signature_arg(nodes.ref("Self"))],
+                returns=nodes.ref("none")
+            ),
+            args=nodes.args([nodes.arg("self_f")]),
+            body=[
+                nodes.ret(nodes.call(nodes.attr(nodes.ref("self_f"), "g"), []))
+            ],
+        ),
+        nodes.func(
+            name="g",
+            signature=nodes.signature(
+                args=[nodes.signature_arg(nodes.ref("Self"))],
+                returns=nodes.ref("none")
+            ),
+            args=nodes.args([nodes.arg("self_g")]),
+            body=[
+                nodes.ret(nodes.call(nodes.attr(nodes.ref("self_g"), "f"), []))
+            ],
+        )
+    ])
+    _infer_class_type(node, ["f", "g"])
+
+
 def _create_class_with_init(signature, args, body):
     return nodes.class_def("User", [
         nodes.func(
