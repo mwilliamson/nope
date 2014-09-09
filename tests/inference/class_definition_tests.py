@@ -226,6 +226,38 @@ def method_can_call_method_on_same_instance_defined_later_in_body():
     _infer_class_type(node, ["f", "g"])
 
 
+@istest
+def init_method_cannot_call_other_methods():
+    node = nodes.class_def("User", [
+        nodes.func(
+            name="__init__",
+            signature=nodes.signature(
+                args=[nodes.signature_arg(nodes.ref("Self"))],
+                returns=nodes.ref("none")
+            ),
+            args=nodes.args([nodes.arg("self_init")]),
+            body=[
+                nodes.ret(nodes.call(nodes.attr(nodes.ref("self_init"), "g"), []))
+            ],
+        ),
+        nodes.func(
+            name="g",
+            signature=nodes.signature(
+                args=[nodes.signature_arg(nodes.ref("Self"))],
+                returns=nodes.ref("none")
+            ),
+            args=nodes.args([nodes.arg("self_g")]),
+            body=[],
+        )
+    ])
+    try:
+        _infer_class_type(node, ["__init__", "g"])
+        assert False, "Expected error"
+    except errors.NoSuchAttributeError as error:
+        # TODO: design a slightly more accurate error
+        assert_equal("'User' object has no attribute 'g'", str(error))
+
+
 def _create_class_with_init(signature, args, body):
     return nodes.class_def("User", [
         nodes.func(

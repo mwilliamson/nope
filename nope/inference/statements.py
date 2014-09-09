@@ -130,9 +130,12 @@ class StatementTypeChecker(object):
         for function_definition in function_definitions:
             func_type = self._infer_function_def(function_definition, body_context)
             add_attr_to_type(function_definition.name, func_type)
+            if function_definition.name == "__init__":
+                self.update_context(function_definition, body_context)
         
         for function_definition in function_definitions:
-            self.update_context(function_definition, body_context)
+            if function_definition.name != "__init__":
+                self.update_context(function_definition, body_context)
         
         if "__init__" in attr_names:
             init_declaration = class_declarations.declaration("__init__")
