@@ -40,8 +40,14 @@ def _create_type_checker(declaration_finder=None, module_types=None, module_reso
 
 
 class SingleScopeReferences(object):
-    def __init__(self):
-        self._references = {}
+    def __init__(self, names=None, references=None):
+        if names is None:
+            names = []
+        if references is None:
+            references = {}
+        
+        self._names = names
+        self._references = references
     
     def referenced_declaration(self, node):
         if isinstance(node, (nodes.VariableReference, nodes.Argument, nodes.FunctionDef, nodes.ClassDefinition)):
@@ -58,6 +64,12 @@ class SingleScopeReferences(object):
             self._references[name] = name_declaration.VariableDeclarationNode(name)
         
         return self._references[name]
+    
+    def names(self):
+        return self._names
+    
+    def with_names(self, names):
+        return SingleScopeReferences(names, self._references)
 
 
 class FakeDeclarationFinder(object):
@@ -72,11 +84,8 @@ class FakeDeclarationFinder(object):
         return self._declarations(node)
     
     def _declarations(self, node):
-        names = self._declared_names_in_node[node]
-        return Declarations(dict(
-            (name, self._references.declaration(name))
-            for name in names
-        ))
+        names = self._declared_names_in_node.get(node, [])
+        return self._references.with_names(names)
 
 
 def _create_context(types=None, declared_names_in_node=None):

@@ -131,17 +131,7 @@ class StatementTypeChecker(object):
             func_type = self._infer_function_def(function_definition, body_context)
             add_attr_to_type(function_definition.name, func_type)
             if function_definition.name == "__init__":
-                for statement in function_definition.body:
-                    # TODO: relax this constraint
-                    assert isinstance(statement, nodes.Assignment)
-                    for target in statement.targets:
-                        if isinstance(target, nodes.AttributeAccess):
-                            self_arg_name = function_definition.args.args[0].name
-                            self_declaration = self._declaration_finder.declarations_in_function(function_definition).declaration(self_arg_name)
-                            if context.referenced_declaration(target.value) == self_declaration:
-                                value_type = self._infer(statement.value, context)
-                                class_type.attrs.add(target.attr, value_type)
-                                
+                self._check_init_method(function_definition, body_context, class_type)                
                 self.update_context(function_definition, body_context)
         
         for function_definition in function_definitions:
@@ -158,7 +148,23 @@ class StatementTypeChecker(object):
         
         meta_type.attrs.add("__call__", constructor_type, read_only=True)
         context.update_type(node, meta_type)
-        
+    
+    def _check_init_method(self, node, context, class_type):
+        declarations_in_function = self._declaration_finder.declarations_in_function(node)
+        self_arg_name = node.args.args[0].name
+        self_declaration = declarations_in_function.declaration(self_arg_name)
+        for statement in node.body:
+            # TODO: relax this constraint
+            assert isinstance(statement, nodes.Assignment)
+            for target in statement.targets:
+                is_self_attr_assignment = (
+                    isinstance(target, nodes.AttributeAccess) and
+                    context.referenced_declaration(target.value) == self_declaration
+                )
+                if is_self_attr_assignment:
+                    value_type = self._infer(statement.value, context)
+                    class_type.attrs.add(target.attr, value_type)
+                
     
     def _function_type_to_method_type(self, func_type):
         return types.func(func_type.args[1:], func_type.return_type)
