@@ -131,6 +131,17 @@ class StatementTypeChecker(object):
             func_type = self._infer_function_def(function_definition, body_context)
             add_attr_to_type(function_definition.name, func_type)
             if function_definition.name == "__init__":
+                for statement in function_definition.body:
+                    # TODO: relax this constraint
+                    assert isinstance(statement, nodes.Assignment)
+                    for target in statement.targets:
+                        if isinstance(target, nodes.AttributeAccess):
+                            self_arg_name = function_definition.args.args[0].name
+                            self_declaration = self._declaration_finder.declarations_in_function(function_definition).declaration(self_arg_name)
+                            if context.referenced_declaration(target.value) == self_declaration:
+                                value_type = self._infer(statement.value, context)
+                                class_type.attrs.add(target.attr, value_type)
+                                
                 self.update_context(function_definition, body_context)
         
         for function_definition in function_definitions:

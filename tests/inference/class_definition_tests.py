@@ -237,7 +237,7 @@ def init_method_cannot_call_other_methods():
             ),
             args=nodes.args([nodes.arg("self_init")]),
             body=[
-                nodes.ret(nodes.call(nodes.attr(nodes.ref("self_init"), "g"), []))
+                nodes.assign([nodes.ref("x")], nodes.call(nodes.attr(nodes.ref("self_init"), "g"), []))
             ],
         ),
         nodes.func(
@@ -258,6 +258,37 @@ def init_method_cannot_call_other_methods():
         assert_equal("'User' object has no attribute 'g'", str(error))
 
 
+@istest
+def attributes_assigned_in_init_can_be_used_in_methods():
+    init_func = nodes.func(
+        name="__init__",
+        signature=nodes.signature(
+            args=[nodes.signature_arg(nodes.ref("Self"))],
+            returns=nodes.ref("none")
+        ),
+        args=nodes.args([nodes.arg("self_init")]),
+        body=[
+            nodes.assign(
+                [nodes.attr(nodes.ref("self_init"), "message")],
+                nodes.string("Hello")
+            )
+        ],
+    )
+    node = nodes.class_def("User", [
+        init_func,
+        nodes.func(
+            name="g",
+            signature=nodes.signature(
+                args=[nodes.signature_arg(nodes.ref("Self"))],
+                returns=nodes.ref("str")
+            ),
+            args=nodes.args([nodes.arg("self_g")]),
+            body=[nodes.ret(nodes.attr(nodes.ref("self_g"), "message"))],
+        )
+    ])
+    _infer_class_type(node, ["__init__", "g"], [(init_func, ["self_init"])])
+
+
 def _create_class_with_init(signature, args, body):
     return nodes.class_def("User", [
         nodes.func(
@@ -270,11 +301,13 @@ def _create_class_with_init(signature, args, body):
     
 
 
-def _infer_meta_type(class_node, names, type_bindings=None):
+def _infer_meta_type(class_node, names, names_in_nodes=None, type_bindings=None):
     if type_bindings is None:
         type_bindings = {}
     else:
         type_bindings = type_bindings.copy()
+    if names_in_nodes is None:
+        names_in_nodes = []
     
     type_bindings["bool"] = types.meta_type(types.boolean_type)
     type_bindings["object"] = types.meta_type(types.object_type)
@@ -282,7 +315,7 @@ def _infer_meta_type(class_node, names, type_bindings=None):
     type_bindings["str"] = types.meta_type(types.str_type)
     context = update_context(
         class_node,
-        declared_names_in_node=IdentityDict([(class_node, names + ["Self"])]),
+        declared_names_in_node=IdentityDict(names_in_nodes + [(class_node, names + ["Self"])]),
         type_bindings=type_bindings,
     )
     meta_type = context.lookup(class_node)
@@ -291,6 +324,6 @@ def _infer_meta_type(class_node, names, type_bindings=None):
     return meta_type
 
 
-def _infer_class_type(class_node, names, type_bindings=None):
-    return _infer_meta_type(class_node, names, type_bindings=type_bindings).type
+def _infer_class_type(class_node, names, names_in_nodes=None, type_bindings=None):
+    return _infer_meta_type(class_node, names, names_in_nodes, type_bindings=type_bindings).type
     

@@ -31,7 +31,9 @@ class Context(object):
     
     def lookup_declaration(self, declaration):
         return self._definition_types[declaration]
-        
+    
+    def referenced_declaration(self, node):
+        return self._references.referenced_declaration(node)
     
     def enter_func(self, return_type):
         return Context(
