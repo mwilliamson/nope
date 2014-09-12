@@ -12,6 +12,25 @@ def class_type_uses_name_from_node():
     node = nodes.class_def("User", [])
     class_type = _infer_class_type(node, [])
     assert_equal("User", class_type.name)
+    
+
+@istest
+def class_type_has_no_base_classes_if_object_is_explicit_base_class():
+    node = nodes.class_def("User", [], base_classes=[nodes.ref("object")])
+    class_type = _infer_class_type(node, [])
+    assert_equal("User", class_type.name)
+    assert_equal([], class_type.base_classes)
+
+
+@istest
+def error_if_base_class_is_not_object():
+    type_bindings = {"Person": types.meta_type(types.scalar_type("Person"))}
+    node = nodes.class_def("User", [], base_classes=[nodes.ref("Person")])
+    try:
+        class_type = _infer_class_type(node, [], type_bindings=type_bindings)
+        assert False, "Expected error"
+    except errors.UnsupportedError as error:
+        assert_equal("base classes other than 'object' are not supported", str(error))
 
 
 @istest

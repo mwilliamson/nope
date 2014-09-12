@@ -77,6 +77,13 @@ class StatementTypeChecker(object):
         
     
     def _check_class_definition(self, node, context):
+        base_classes = [
+            self._infer(base_class, context).type
+            for base_class in node.base_classes
+        ]
+        if any(base_class != types.object_type for base_class in base_classes):
+            raise errors.UnsupportedError("base classes other than 'object' are not supported")
+        
         class_type = types.scalar_type(node.name)
         meta_type = types.meta_type(class_type)
         

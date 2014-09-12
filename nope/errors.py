@@ -2,6 +2,14 @@ class TypeCheckError(Exception):
     pass
 
 
+class UnsupportedError(TypeCheckError):
+    def __init__(self, message):
+        self._message = message
+        
+    def __str__(self):
+        return self._message
+
+
 class UndefinedNameError(TypeCheckError):
     def __init__(self, node, name):
         self.node = node
