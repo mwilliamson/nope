@@ -728,6 +728,12 @@ def test_parse_class_with_body():
 
 
 @istest
+def test_parse_class_with_base_classes():
+    expected_node = nodes.class_def("User", [], base_classes=[nodes.ref("Person")])
+    _assert_statement_parse(expected_node, "class User(Person):\n  pass")
+
+
+@istest
 def test_error_when_class_body_is_not_assignment_nor_function_definition():
     _assert_syntax_error(
         "IfElse node is not supported in current context",
@@ -736,13 +742,8 @@ def test_error_when_class_body_is_not_assignment_nor_function_definition():
 
 
 @istest
-def test_error_when_parsing_class_base_classes():
-    _assert_syntax_error("base classes are not supported", "class User(Person):\n  pass")
-
-
-@istest
 def test_error_when_parsing_class_vararg_base_classes():
-    _assert_syntax_error("base classes are not supported", "class User(*bases):\n  pass")
+    _assert_syntax_error("base classes in the form '*bases' are not supported", "class User(*bases):\n  pass")
 
 
 @istest
