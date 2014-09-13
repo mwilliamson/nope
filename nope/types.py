@@ -291,7 +291,9 @@ def is_sub_type(super_type, sub_type):
             for possible_sub_type in sub_type._types
         )
     
-    if isinstance(sub_type, _ScalarType) and super_type in sub_type.base_classes:
+    if (isinstance(sub_type, _ScalarType) and
+            any(is_sub_type(super_type, base_class)
+            for base_class in sub_type.base_classes)):
         return True
     
     if isinstance(super_type, _StructuralType):

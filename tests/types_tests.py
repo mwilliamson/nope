@@ -115,6 +115,14 @@ class SubTypeTests(object):
         assert not types.is_sub_type(cls, super_type)
         
     @istest
+    def scalar_type_is_subtype_of_base_class_of_base_class(self):
+        super_super_type = types.scalar_type("GrandParent")
+        super_type = types.scalar_type("Parent", base_classes=[super_super_type])
+        cls = types.scalar_type("Blah", base_classes=[super_type])
+        assert types.is_sub_type(super_super_type, cls)
+        assert not types.is_sub_type(cls, super_super_type)
+        
+    @istest
     def scalar_type_is_subtype_of_structural_type_if_it_has_subset_of_attrs(self):
         # TODO: how to handle sub-typing of mutable attrs
         cls = types.scalar_type("Person", [
