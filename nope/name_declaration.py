@@ -20,6 +20,9 @@ def _declare(node, declarations):
 def _declare_target(target, declarations, target_type):
     if isinstance(target, nodes.VariableReference):
         declarations.declare(target.name, target, target_type=target_type)
+    elif isinstance(target, nodes.TupleLiteral):
+        for element in target.elements:
+            _declare_target(element, declarations, target_type)
 
 
 def _declare_assignment(visitor, node, declarations):

@@ -15,6 +15,19 @@ def assignment_adds_declaration_to_declarations():
 
 
 @istest
+def assignment_to_tuple_declares_variables_in_tuple():
+    declarations = _new_declarations()
+    first_definition_node = nodes.ref("x")
+    second_definition_node = nodes.ref("y")
+    node = nodes.assign([nodes.tuple_literal([first_definition_node, second_definition_node])], nodes.none())
+    declare(node, declarations)
+    assert_equal("x", declarations.declaration("x").name)
+    assert_equal("y", declarations.declaration("y").name)
+    assert isinstance(declarations.declaration("x"), name_declaration.VariableDeclarationNode)
+    assert isinstance(declarations.declaration("y"), name_declaration.VariableDeclarationNode)
+
+
+@istest
 def for_loop_target_is_declared():
     declarations = _new_declarations()
     node = nodes.for_loop(nodes.ref("target"), nodes.list([]), [], [])
