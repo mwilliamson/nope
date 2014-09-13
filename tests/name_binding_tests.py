@@ -203,7 +203,7 @@ def children_of_for_loop_are_checked():
     _assert_child_expression_is_checked(lambda generate:
         nodes.for_loop(
             nodes.attr(generate.unbound_ref(), "blah"),
-            nodes.list([]),
+            nodes.list_literal([]),
             [],
             []
         )
@@ -219,7 +219,7 @@ def children_of_for_loop_are_checked():
     _assert_child_statement_is_checked(lambda generate:
         nodes.for_loop(
             generate.target(),
-            nodes.list([]),
+            nodes.list_literal([]),
             [generate.unbound_ref_statement()],
             []
         ),
@@ -227,7 +227,7 @@ def children_of_for_loop_are_checked():
     _assert_child_statement_is_checked(lambda generate:
         nodes.for_loop(
             generate.target(),
-            nodes.list([]),
+            nodes.list_literal([]),
             [],
             [generate.unbound_ref_statement()],
         ),
@@ -236,7 +236,7 @@ def children_of_for_loop_are_checked():
 @istest
 def for_loop_target_is_defined_but_not_definitely_bound():
     _assert_name_is_not_definitely_bound(lambda generate:
-        nodes.for_loop(generate.target(), nodes.list([]), [], [])
+        nodes.for_loop(generate.target(), nodes.list_literal([]), [], [])
     )
 
 
@@ -245,7 +245,7 @@ def declarations_in_both_body_and_else_body_of_for_loop_are_not_definitely_bound
     _assert_name_is_not_definitely_bound(lambda generate:
         nodes.for_loop(
             generate.target(),
-            nodes.list([]),
+            nodes.list_literal([]),
             [generate.assignment()],
             [generate.assignment()]
         ),

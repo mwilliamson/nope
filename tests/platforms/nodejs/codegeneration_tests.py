@@ -19,7 +19,7 @@ def test_transform_module():
 def test_transform_module_with_exports():
     _assert_transform(
         nodes.module([
-            nodes.assign(["__all__"], nodes.list([nodes.string("x")]))
+            nodes.assign(["__all__"], nodes.list_literal([nodes.string("x")]))
         ]),
         js.statements([
             js.var("__all__"),

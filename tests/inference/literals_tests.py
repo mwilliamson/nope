@@ -36,12 +36,12 @@ def can_infer_type_of_list_of_two_tuple():
 
 @istest
 def can_infer_type_of_list_of_ints():
-    assert_equal(types.list_type(types.int_type), infer(nodes.list([nodes.int(1), nodes.int(42)])))
+    assert_equal(types.list_type(types.int_type), infer(nodes.list_literal([nodes.int(1), nodes.int(42)])))
     
 
 @istest
 def empty_list_has_elements_of_type_bottom():
-    assert_equal(types.list_type(types.bottom_type), infer(nodes.list([])))
+    assert_equal(types.list_type(types.bottom_type), infer(nodes.list_literal([])))
 
 
 @istest

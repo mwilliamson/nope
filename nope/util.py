@@ -7,7 +7,7 @@ def exported_names(module):
     for statement in module.body:
         if (isinstance(statement, nodes.Assignment) and
                 any(isinstance(target, nodes.VariableReference) and target.name == "__all__" for target in statement.targets)):
-            if not isinstance(statement.value, nodes.ListExpression):
+            if not isinstance(statement.value, nodes.ListLiteral):
                 raise _all_wrong_type_error(statement)
             
             def extract_string_value(node):

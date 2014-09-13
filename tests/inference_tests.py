@@ -28,7 +28,7 @@ def check_generates_type_lookup_for_all_expressions():
 @istest
 def module_exports_are_specified_using_all():
     module_node = nodes.module([
-        nodes.assign(["__all__"], nodes.list([nodes.string("x"), nodes.string("z")])),
+        nodes.assign(["__all__"], nodes.list_literal([nodes.string("x"), nodes.string("z")])),
         nodes.assign(["x"], nodes.string("one")),
         nodes.assign(["y"], nodes.string("two")),
         nodes.assign(["z"], nodes.int(3)),

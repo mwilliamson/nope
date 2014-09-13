@@ -12,7 +12,7 @@ class ExpressionTypeInferer(object):
             nodes.IntExpression: self._infer_int,
             nodes.StringExpression: self._infer_str,
             nodes.TupleLiteral: self._infer_tuple_literal,
-            nodes.ListExpression: self._infer_list,
+            nodes.ListLiteral: self._infer_list_literal,
             nodes.DictLiteral: self._infer_dict_literal,
             nodes.VariableReference: self._infer_ref,
             nodes.Call: self._infer_call,
@@ -45,7 +45,7 @@ class ExpressionTypeInferer(object):
         element_types = [self.infer(element, context) for element in node.elements]
         return types.tuple(*element_types)
     
-    def _infer_list(self, node, context):
+    def _infer_list_literal(self, node, context):
         element_types = [self.infer(element, context) for element in node.elements]
         return types.list_type(types.unify(element_types))
 

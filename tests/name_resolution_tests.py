@@ -51,7 +51,7 @@ def error_if_name_is_undefined():
 @istest
 def list_expression_has_names_in_elements_resolved():
     _assert_children_resolved(
-        lambda ref: nodes.list([ref]),
+        lambda ref: nodes.list_literal([ref]),
     )
 
 
@@ -161,18 +161,18 @@ def while_loop_has_child_names_resolved():
 @istest
 def for_loop_has_child_names_resolved():
     _assert_children_resolved(
-        lambda ref: nodes.for_loop(ref, nodes.list([]), [], []),
+        lambda ref: nodes.for_loop(ref, nodes.list_literal([]), [], []),
     )
     _assert_children_resolved(
         lambda ref: nodes.for_loop(nodes.ref("target"), ref, [], []),
         other_names=["target"]
     )
     _assert_children_resolved(
-        lambda ref: nodes.for_loop(nodes.ref("target"), nodes.list([]), [nodes.expression_statement(ref)], []),
+        lambda ref: nodes.for_loop(nodes.ref("target"), nodes.list_literal([]), [nodes.expression_statement(ref)], []),
         other_names=["target"]
     )
     _assert_children_resolved(
-        lambda ref: nodes.for_loop(nodes.ref("target"), nodes.list([]), [], [nodes.expression_statement(ref)]),
+        lambda ref: nodes.for_loop(nodes.ref("target"), nodes.list_literal([]), [], [nodes.expression_statement(ref)]),
         other_names=["target"]
     )
 

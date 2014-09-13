@@ -218,7 +218,7 @@ class Transformer(object):
             nodes.BooleanExpression: _bool,
             nodes.IntExpression: _int,
             nodes.StringExpression: _str,
-            nodes.ListExpression: self._list,
+            nodes.ListLiteral: self._list_literal,
             
             ConvertedNode: lambda node: node.js_node,
         }
@@ -765,7 +765,7 @@ class Transformer(object):
         return self._operation("getitem", [subscript.value, subscript.slice])
 
 
-    def _list(self, node):
+    def _list_literal(self, node):
         return js.array(self._transform_all(node.elements))
     
     

@@ -17,7 +17,7 @@ def error_is_raised_if_all_is_not_a_list():
 @istest
 def error_is_raised_if_all_does_not_contain_only_string_literals():
     try:
-        all_node = nodes.assign(["__all__"], nodes.list([nodes.none()]))
+        all_node = nodes.assign(["__all__"], nodes.list_literal([nodes.none()]))
         util.exported_names(nodes.module([all_node]))
         assert False, "Expected error"
     except errors.AllAssignmentError as error:
@@ -29,8 +29,8 @@ def error_is_raised_if_all_does_not_contain_only_string_literals():
 @istest
 def error_is_raised_if_all_is_redeclared():
     try:
-        all_node = nodes.assign(["__all__"], nodes.list([]))
-        second_all_node = nodes.assign(["__all__"], nodes.list([]))
+        all_node = nodes.assign(["__all__"], nodes.list_literal([]))
+        second_all_node = nodes.assign(["__all__"], nodes.list_literal([]))
         util.exported_names(nodes.module([all_node, second_all_node]))
         assert False, "Expected error"
     except errors.AllAssignmentError as error:

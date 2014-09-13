@@ -30,7 +30,7 @@ def assignment_to_tuple_declares_variables_in_tuple():
 @istest
 def for_loop_target_is_declared():
     declarations = _new_declarations()
-    node = nodes.for_loop(nodes.ref("target"), nodes.list([]), [], [])
+    node = nodes.for_loop(nodes.ref("target"), nodes.list_literal([]), [], [])
     declare(node, declarations)
     assert_equal("target", declarations.declaration("target").name)
     assert isinstance(declarations.declaration("target"), name_declaration.VariableDeclarationNode)

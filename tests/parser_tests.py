@@ -385,7 +385,7 @@ def test_parse_tuple_literal():
 
 @istest
 def test_parse_list():
-    _assert_expression_parse(nodes.list([nodes.string("hello"), nodes.int(4)]), "['hello', 4]")
+    _assert_expression_parse(nodes.list_literal([nodes.string("hello"), nodes.int(4)]), "['hello', 4]")
 
 
 @istest

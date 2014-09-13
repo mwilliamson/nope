@@ -300,7 +300,7 @@ class Converter(object):
     
     
     def _list_literal(self, node):
-        return nodes.list(self._mapped(node.elts))
+        return nodes.list_literal(self._mapped(node.elts))
 
 
     def _dict_literal(self, node):
