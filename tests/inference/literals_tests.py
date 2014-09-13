@@ -27,6 +27,14 @@ def can_infer_type_of_str_literal():
 
 
 @istest
+def can_infer_type_of_list_of_two_tuple():
+    assert_equal(
+        types.tuple(types.int_type, types.str_type),
+        infer(nodes.tuple_literal([nodes.int(1), nodes.string("42")]))
+    )
+
+
+@istest
 def can_infer_type_of_list_of_ints():
     assert_equal(types.list_type(types.int_type), infer(nodes.list([nodes.int(1), nodes.int(42)])))
     

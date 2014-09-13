@@ -11,6 +11,7 @@ class ExpressionTypeInferer(object):
             nodes.BooleanExpression: self._infer_bool,
             nodes.IntExpression: self._infer_int,
             nodes.StringExpression: self._infer_str,
+            nodes.TupleLiteral: self._infer_tuple_literal,
             nodes.ListExpression: self._infer_list,
             nodes.DictLiteral: self._infer_dict_literal,
             nodes.VariableReference: self._infer_ref,
@@ -39,7 +40,11 @@ class ExpressionTypeInferer(object):
 
     def _infer_str(self, node, context):
         return types.str_type
-
+    
+    def _infer_tuple_literal(self, node, context):
+        element_types = [self.infer(element, context) for element in node.elements]
+        return types.tuple(*element_types)
+    
     def _infer_list(self, node, context):
         element_types = [self.infer(element, context) for element in node.elements]
         return types.list_type(types.unify(element_types))
