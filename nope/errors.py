@@ -78,6 +78,16 @@ class UnexpectedTargetTypeError(TypeCheckError):
             _quote_type(self.target_type), _quote_type(self.value_type))
 
 
+class UnpackError(TypeCheckError):
+    def __init__(self, node, target_length, value_length):
+        self.node = node
+        self._target_length = target_length
+        self._value_length = value_length
+    
+    def __str__(self):
+        return "need {} values to unpack, but only have {}".format(self._target_length, self._value_length)
+
+
 class InitMethodsMustReturnNoneError(TypeCheckError):
     def __init__(self, node):
         self.node = node

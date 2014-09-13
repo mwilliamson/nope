@@ -400,11 +400,16 @@ assertion_error_meta_type = meta_type(assertion_error_type, [
 ])
 
 
-tuple2 = generic_class("tuple2", ["A", "B"])
+def _create_tuple_class(length):
+    return generic_class(
+        "tuple{}".format(length),
+        [chr(ord("A") + index) for index in range(length)]
+    )
+
+_tuple_types = [_create_tuple_class(index) for index in range(0, 10)]
 
 def tuple(*args):
-    assert len(args) == 2
-    return tuple2(*args)
+    return _tuple_types[len(args)](*args)
 
 
 def unify(types):

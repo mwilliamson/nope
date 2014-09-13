@@ -211,6 +211,8 @@ class StatementTypeChecker(object):
             self._assign_attr(node, target, value_type, context)
         elif isinstance(target, nodes.Subscript):
             self._assign_subscript(node, target, value_type, context)
+        elif isinstance(target, nodes.TupleLiteral):
+            self._assign_tuple_literal(node, target, value_type, context)
         else:
             raise Exception("Not implemented yet")
     
@@ -255,6 +257,13 @@ class StatementTypeChecker(object):
             [target.slice, ephemeral.formal_arg_constraint(value_type)],
             context,
         )
+    
+    def _assign_tuple_literal(self, node, target, value_type, context):
+        if len(target.elements) != len(value_type.params):
+            raise errors.UnpackError(target, len(target.elements), len(value_type.params))
+        
+        for element, element_type in zip(target.elements, value_type.params):
+            self._assign(node, element, element_type, context)
     
     
     def _check_if_else(self, node, context):

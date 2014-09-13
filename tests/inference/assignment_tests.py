@@ -67,6 +67,38 @@ def assignment_to_attribute_does_not_allow_strict_supertype():
         assert_equal(types.str_type, error.target_type)
 
 
+
+@istest
+def assignment_to_tuple_unpacks_tuple_type():
+    node = nodes.assign(
+        [nodes.tuple_literal([nodes.ref("x"), nodes.ref("y")])],
+        nodes.ref("value")
+    )
+    context = update_context(node, type_bindings={
+        "value": types.tuple(types.int_type, types.str_type),
+    })
+    assert_equal(types.int_type, context.lookup_name("x"))
+    assert_equal(types.str_type, context.lookup_name("y"))
+
+
+
+@istest
+def assignment_to_tuple_must_have_correct_length_tuple():
+    tuple_node = nodes.tuple_literal([nodes.ref("x"), nodes.ref("y")])
+    node = nodes.assign(
+        [tuple_node],
+        nodes.ref("value")
+    )
+    try:
+        context = update_context(node, type_bindings={
+            "value": types.tuple(types.int_type),
+        })
+        assert False, "Expected error"
+    except errors.UnpackError as error:
+        assert_equal(tuple_node, error.node)
+        assert_equal("need 2 values to unpack, but only have 1" , str(error))
+
+
 @istest
 def cannot_reassign_read_only_attribute():
     cls = types.scalar_type("X", [types.attr("y", types.str_type, read_only=True)])

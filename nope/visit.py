@@ -11,6 +11,7 @@ class Visitor(object):
             nodes.IntExpression: self._visit_nothing,
             nodes.StringExpression: self._visit_nothing,
             nodes.VariableReference: self._visit_nothing,
+            nodes.TupleLiteral: self._visit_tuple_literal,
             nodes.ListExpression: self._visit_list_expression,
             nodes.DictLiteral: self._visit_dict_literal,
             nodes.Call: self._visit_call,
@@ -73,7 +74,11 @@ class Visitor(object):
     
     def _visit_nothing(self, node, *args):
         pass
-
+    
+    def _visit_tuple_literal(self, node, *args):
+        for element in node.elements:
+            self.visit(element, *args)
+    
     def _visit_list_expression(self, node, *args):
         for element in node.elements:
             self.visit(element, *args)
