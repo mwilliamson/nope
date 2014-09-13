@@ -65,6 +65,7 @@ _create_binary_operators()
 subscript = Subscript = dodge.data_class("Subscript", ["value", "slice"])
 
 list_comprehension = ListComprehension = dodge.data_class("ListComprehension", ["element", "generator"])
+generator_expression = GeneratorExpression = dodge.data_class("GeneratorExpression", ["element", "generator"])
 comprehension = Comprehension = dodge.data_class("Comprehension", ["target", "iterable"])
 
 ReturnStatement = dodge.data_class("ReturnStatement", ["value"])

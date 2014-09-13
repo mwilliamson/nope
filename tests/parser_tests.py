@@ -516,6 +516,17 @@ def test_parse_single_list_comprehension():
 
 
 @istest
+def test_parse_generator_expression():
+    _assert_expression_parse(
+        nodes.generator_expression(
+            nodes.call(nodes.ref("f"), [nodes.ref("x")]),
+            nodes.comprehension(nodes.ref("x"), nodes.ref("xs"))
+        ),
+        "(f(x) for x in xs)"
+    )
+
+
+@istest
 def test_parse_expression_statement():
     expected = nodes.expression_statement(nodes.ref("x"))
     _assert_statement_parse(expected, "x")
