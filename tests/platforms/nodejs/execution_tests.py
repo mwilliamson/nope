@@ -45,6 +45,7 @@ class NodeJsExecutionTests(execution.ExecutionTests):
     platform = _optimised_node_js
     
     test_getitem_dict = None
+    test_for_unpacking = None
 
 
 @istest
@@ -52,3 +53,4 @@ class UnoptimisedNodeJsExecutionTests(execution.ExecutionTests):
     platform = _unoptimised_node_js
     
     test_getitem_dict = None
+    test_for_unpacking = None

@@ -325,6 +325,16 @@ countdown(2)
         self._test_program_string("x = 0\nfor y in [1, 2, 3]:\n  x = x + y\nprint(x)", b"6\n")
     
     @istest
+    def test_for_unpacking(self):
+        program = """
+for first, second in [(2, 'Hello'), (3, 'there')]:
+    print(first)
+    print(second)
+    print('')
+"""
+        self._test_program_string(program, b"2\nHello\n\n3\nthere\n\n")
+    
+    @istest
     def test_for_else(self):
         program = """
 #:: int -> none
