@@ -12,6 +12,7 @@ class Visitor(object):
             nodes.StringExpression: self._visit_nothing,
             nodes.VariableReference: self._visit_nothing,
             nodes.ListExpression: self._visit_list_expression,
+            nodes.DictLiteral: self._visit_dict_literal,
             nodes.Call: self._visit_call,
             nodes.AttributeAccess: self._visit_attribute_access,
             nodes.UnaryOperation: self._visit_unary_operation,
@@ -76,6 +77,11 @@ class Visitor(object):
     def _visit_list_expression(self, node, *args):
         for element in node.elements:
             self.visit(element, *args)
+    
+    def _visit_dict_literal(self, node, *args):
+        for key, value in node.items:
+            self.visit(key, *args)
+            self.visit(value, *args)
     
     def _visit_call(self, node, *args):
         self.visit(node.func, *args)

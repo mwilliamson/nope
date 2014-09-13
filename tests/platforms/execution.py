@@ -255,6 +255,10 @@ True
         self._test_program_string("x = [1]\nx[0] = 2\nprint(x[0])", b"2\n")
     
     @istest
+    def test_getitem_dict(self):
+        self._test_expression("{42: 'Hello'}[42]", b"Hello")
+    
+    @istest
     def test_while(self):
         self._test_program_string("x = 4\nwhile x: x = x - 1\nprint(x)", b"0\n")
     

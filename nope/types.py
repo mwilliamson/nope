@@ -378,6 +378,9 @@ list_type = generic_class("list", ["T"], [
 ])
 
 dict_type = generic_class("dict", ["K", "V"], [
+    attr("__getitem__", lambda K, V: func([K], V), read_only=True),
+    attr("__setitem__", lambda K, V: func([K, V], none_type), read_only=True),
+    attr("__iter__", lambda K, V: func([], iterator(K)), read_only=True),
 ])
 
 bottom_type = scalar_type("bottom")
