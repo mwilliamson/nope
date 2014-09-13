@@ -38,6 +38,7 @@ class Converter(object):
             ast.Str: self._str_literal,
             ast.Num: self._num_literal,
             ast.List: self._list_literal,
+            ast.Dict: self._dict_literal,
             ast.Name: self._name,
             ast.Call: self._call,
             ast.Attribute: self._attr,
@@ -295,6 +296,10 @@ class Converter(object):
     
     def _list_literal(self, node):
         return nodes.list(self._mapped(node.elts))
+
+
+    def _dict_literal(self, node):
+        return nodes.dict_literal(list(zip(self._mapped(node.keys), self._mapped(node.values))))
 
 
     def _name(self, node):

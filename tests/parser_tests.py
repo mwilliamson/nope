@@ -381,6 +381,17 @@ def test_parse_list():
 
 
 @istest
+def test_parse_dict_literal():
+    _assert_expression_parse(
+        nodes.dict_literal([
+            (nodes.string("hello"), nodes.int(4)),
+            (nodes.string("there"), nodes.int(5)),
+        ]),
+        "{'hello': 4, 'there': 5}"
+    )
+
+
+@istest
 def test_parse_variable_reference():
     _assert_expression_parse(nodes.ref("x"), "x")
 
