@@ -384,7 +384,7 @@ def test_parse_tuple_literal():
 
 
 @istest
-def test_parse_list():
+def test_parse_list_literal():
     _assert_expression_parse(nodes.list_literal([nodes.string("hello"), nodes.int(4)]), "['hello', 4]")
 
 
@@ -502,6 +502,17 @@ def test_parse_chained_boolean_operators():
 @istest
 def test_parse_is_operation():
     _assert_expression_parse(nodes.is_(nodes.ref("x"), nodes.ref("y")), "x is y")
+
+
+@istest
+def test_parse_single_list_comprehension():
+    _assert_expression_parse(
+        nodes.list_comprehension(
+            nodes.call(nodes.ref("f"), [nodes.ref("x")]),
+            nodes.comprehension(nodes.ref("x"), nodes.ref("xs"))
+        ),
+        "[f(x) for x in xs]"
+    )
 
 
 @istest

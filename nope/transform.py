@@ -49,6 +49,8 @@ class Converter(object):
             ast.Subscript: self._subscript,
             ast.Index: self._index,
             ast.BoolOp: self._bool_op,
+            ast.ListComp: self._list_comprehension,
+            ast.comprehension: self._comprehension,
         }
         
         # Python >= 3.3:
@@ -414,6 +416,13 @@ class Converter(object):
         for value in values[2:]:
             node = create_node(node, value)
         return node
+    
+    def _list_comprehension(self, node):
+        generator, = node.generators
+        return nodes.list_comprehension(self.convert(node.elt), self.convert(generator))
+    
+    def _comprehension(self, node):
+        return nodes.comprehension(self.convert(node.target), self.convert(node.iter))
 
     def _mapped(self, nodes, allowed=None):
         return [
