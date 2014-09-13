@@ -52,6 +52,19 @@ def targets_are_evaluated_left_to_right():
 
 
 @istest
+def variable_in_tuple_is_definitely_bound_after_assignment():
+    target_node = nodes.ref("x")
+    node = nodes.assign([nodes.tuple_literal([target_node])], nodes.tuple_literal([nodes.none()]))
+    
+    references = References([
+        (target_node, name_declaration.VariableDeclarationNode("x")),
+    ])
+    
+    bindings = _updated_bindings(node, references)
+    assert_equal(True, bindings.is_definitely_bound(target_node))
+
+
+@istest
 def error_if_name_is_unbound():
     ref = nodes.ref("x")
     references = References([

@@ -37,9 +37,13 @@ class _BindingChecker(object):
 
 
     def _update_target(self, visitor, target, context):
-        if isinstance(target, nodes.VariableReference):
-            context.bind(target)
-        visitor.visit(target, context)
+        if isinstance(target, nodes.TupleLiteral):
+            for element in target.elements:
+                self._update_target(visitor, element, context)
+        else:
+            if isinstance(target, nodes.VariableReference):
+                context.bind(target)
+            visitor.visit(target, context)
 
 
     def _update_assignment_binding(self, visitor, node, context):
