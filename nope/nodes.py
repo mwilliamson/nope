@@ -8,6 +8,7 @@ BooleanExpression = dodge.data_class("BooleanExpression", ["value"])
 IntExpression = dodge.data_class("IntExpression", ["value"])
 StringExpression = dodge.data_class("StringExpression", ["value"])
 ListExpression = dodge.data_class("ListExpression", ["elements"])
+DictLiteral = dodge.data_class("DictLiteral", ["items"])
 VariableReference = dodge.data_class("VariableReference", ["name"])
 
 Call = dodge.data_class("Call", ["func", "args", "kwargs"])
@@ -111,6 +112,7 @@ def int(value):
 boolean = BooleanExpression
 string = StringExpression
 list = ListExpression
+dict_literal = DictLiteral
 ref = VariableReference
 
 def call(func, args, kwargs=None):

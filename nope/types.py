@@ -377,6 +377,9 @@ list_type = generic_class("list", ["T"], [
     attr("append", lambda T: func([T], none_type), read_only=True),
 ])
 
+dict_type = generic_class("dict", ["K", "V"], [
+])
+
 bottom_type = scalar_type("bottom")
 
 exception_type = scalar_type("Exception")

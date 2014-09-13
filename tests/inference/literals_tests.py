@@ -34,3 +34,14 @@ def can_infer_type_of_list_of_ints():
 @istest
 def empty_list_has_elements_of_type_bottom():
     assert_equal(types.list_type(types.bottom_type), infer(nodes.list([])))
+
+
+@istest
+def type_of_dict_is_determined_by_unifying_types_of_keys_and_values():
+    assert_equal(
+        types.dict_type(types.str_type, types.int_type),
+        infer(nodes.dict_literal([
+            (nodes.string("Hello"), nodes.int(42)),
+            (nodes.string("Blah"), nodes.int(16)),
+        ]))
+    )
