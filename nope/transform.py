@@ -37,6 +37,7 @@ class Converter(object):
             
             ast.Str: self._str_literal,
             ast.Num: self._num_literal,
+            ast.Tuple: self._tuple_literal,
             ast.List: self._list_literal,
             ast.Dict: self._dict_literal,
             ast.Name: self._name,
@@ -292,6 +293,10 @@ class Converter(object):
         value = node.n
         if isinstance(value, int):
             return nodes.int(value)
+    
+    
+    def _tuple_literal(self, node):
+        return nodes.tuple_literal(self._mapped(node.elts))
     
     
     def _list_literal(self, node):
