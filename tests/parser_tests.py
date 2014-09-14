@@ -454,9 +454,24 @@ def test_parse_negation():
 
 
 @istest
-def test_parse_subscript():
+def test_parse_subscript_with_index():
     expected = nodes.subscript(nodes.ref("x"), nodes.ref("y"))
     _assert_expression_parse(expected, "x[y]")
+
+
+@istest
+def test_parse_subscript_with_slice():
+    expected = nodes.subscript(
+        nodes.ref("x"),
+        nodes.slice(nodes.ref("a"), nodes.ref("b"), nodes.ref("c")),
+    )
+    _assert_expression_parse(expected, "x[a:b:c]")
+
+
+@istest
+def test_missing_subscript_slice_values_are_treated_as_none():
+    expected = nodes.subscript(nodes.ref("x"), nodes.slice(nodes.none(), nodes.none(), nodes.none()))
+    _assert_expression_parse(expected, "x[:]")
 
 
 @istest

@@ -63,6 +63,7 @@ def _create_binary_operators():
 _create_binary_operators()
 
 subscript = Subscript = dodge.data_class("Subscript", ["value", "slice"])
+slice = Slice = dodge.data_class("Slice", ["start", "stop", "step"])
 
 list_comprehension = ListComprehension = dodge.data_class("ListComprehension", ["element", "generator"])
 generator_expression = GeneratorExpression = dodge.data_class("GeneratorExpression", ["element", "generator"])

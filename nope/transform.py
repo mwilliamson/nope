@@ -48,6 +48,7 @@ class Converter(object):
             ast.Compare: self._compare,
             ast.Subscript: self._subscript,
             ast.Index: self._index,
+            ast.Slice: self._slice,
             ast.BoolOp: self._bool_op,
             ast.ListComp: self._list_comprehension,
             ast.GeneratorExp: self._generator_expression,
@@ -408,6 +409,13 @@ class Converter(object):
     
     def _index(self, node):
         return self.convert(node.value)
+    
+    def _slice(self, node):
+        return nodes.slice(
+            self._convert_or_none_node(node.lower),
+            self._convert_or_none_node(node.upper),
+            self._convert_or_none_node(node.step),
+        )
 
     def _bool_op(self, node):
         values = [self.convert(value) for value in node.values]
@@ -435,3 +443,12 @@ class Converter(object):
             for node in nodes
             if not isinstance(node, ast.Pass)
         ]
+    
+    def _convert_or_none_node(self, node):
+        return self._convert_or_default(node, nodes.none)
+    
+    def _convert_or_default(self, node, default):
+        if node is None:
+            return default()
+        else:
+            return self.convert(node)
