@@ -3,7 +3,7 @@ from nose.tools import istest, assert_equal, assert_not_equal
 from nope import types
 
 
-_formal_param = types._FormalParameter("T")
+_formal_param = types.invariant("T")
 int_type = types.int_type
 str_type = types.str_type
 none_type = types.none_type
@@ -20,7 +20,7 @@ class TypeSubstitutionTests(object):
     @istest
     def formal_type_parameter_is_unchanged_if_not_in_type_map(self):
         replacement_type = types.scalar_type("Counter")
-        new_type = types._substitute_types(_formal_param, {types._FormalParameter("T"): replacement_type})
+        new_type = types._substitute_types(_formal_param, {types.invariant("T"): replacement_type})
         assert_equal(_formal_param, new_type)
     
     @istest

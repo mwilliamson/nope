@@ -116,7 +116,7 @@ def _generic_type(params, underlying_type, attrs=None):
     if attrs is None:
         attrs = {}
     
-    formal_params = [_FormalParameter(param) for param in params]
+    formal_params = [_formal_param(param) for param in params]
     param_map = dict(zip(params, formal_params))
     generic_class = _GenericType(formal_params, underlying_type)
     
@@ -134,12 +134,36 @@ def _substitute_types(type_, type_map):
     return type_.substitute_types(type_map)
 
 
+class _Variance(object):
+    Invariant, Covariant, Contravariant = range(3)
+
+
 class _FormalParameter(object):
-    def __init__(self, name):
+    def __init__(self, name, variance):
         self._name = name
+        self._variance = variance
     
     def substitute_types(self, type_map):
         return type_map.get(self, self)
+
+
+def _formal_param(param):
+    if isinstance(param, _FormalParameter):
+        return param
+    else:
+        return _FormalParameter(param, _Variance.Invariant)
+
+
+def invariant(name):
+    return _FormalParameter(name, _Variance.Invariant)
+
+
+def covariant(name):
+    return _FormalParameter(name, _Variance.Covariant)
+
+
+def contravariant(name):
+    return _FormalParameter(name, _Variance.Contravariant)
 
 
 class InstantiatedType(object):
