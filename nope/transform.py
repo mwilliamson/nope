@@ -169,11 +169,7 @@ class Converter(object):
 
     
     def _return(self, node):
-        if node.value is None:
-            value = nodes.none()
-        else:
-            value = self.convert(node.value)
-        return nodes.ret(value)
+        return nodes.ret(self._convert_or_none_node(node.value))
     
     
     def _assign(self, node):
