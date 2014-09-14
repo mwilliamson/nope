@@ -42,6 +42,12 @@ class TypeSubstitutionTests(object):
         func_type = types.func([], _formal_param)
         new_type = types._substitute_types(func_type, {_formal_param: int_type})
         assert_equal(types.func([], int_type), new_type)
+    
+    @istest
+    def union_type_substitutes_types_in_unioned_types(self):
+        replacement_type = types.scalar_type("Counter")
+        new_type = types._substitute_types(types.union(types.int_type, _formal_param), {_formal_param: replacement_type})
+        assert_equal(types.union(int_type, replacement_type), new_type)
         
 
 @istest

@@ -271,10 +271,24 @@ def is_func_type(type_):
 
 class _UnionType(object):
     def __init__(self, types):
-        self._types = types
+        self._types = list(types)
+    
+    def substitute_types(self, type_map):
+        return _UnionType([_substitute_types(type_, type_map) for type_ in self._types])
     
     def __str__(self):
         return " | ".join(map(str, self._types))
+    
+    def __repr__(self):
+        return "union({})".format(", ".join(map(repr, self._types)))
+    
+    def __eq__(self, other):
+        if not isinstance(other, _UnionType):
+            return False
+        return self._types == other._types
+    
+    def __neq__(self, other):
+        return not (self == other)
 
 
 def union(*types):
