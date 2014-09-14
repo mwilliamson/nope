@@ -48,6 +48,19 @@ class TypeSubstitutionTests(object):
         replacement_type = types.scalar_type("Counter")
         new_type = types._substitute_types(types.union(types.int_type, _formal_param), {_formal_param: replacement_type})
         assert_equal(types.union(int_type, replacement_type), new_type)
+
+    
+    @istest
+    def function_type_return_type_is_substituted(self):
+        func_type = types.func([], _formal_param)
+        new_type = types._substitute_types(func_type, {_formal_param: int_type})
+        assert_equal(types.func([], int_type), new_type)
+    
+    @istest
+    def union_type_substitutes_types_in_unioned_types(self):
+        replacement_type = types.scalar_type("Counter")
+        new_type = types._substitute_types(types.union(types.int_type, _formal_param), {_formal_param: replacement_type})
+        assert_equal(types.union(int_type, replacement_type), new_type)
         
 
 @istest
@@ -199,19 +212,27 @@ class SubTypeTests(object):
         
         assert types.is_sub_type(nested_union_type, flat_union_type)
         assert types.is_sub_type(flat_union_type, nested_union_type)
-
     
     @istest
-    def function_type_return_type_is_substituted(self):
-        func_type = types.func([], _formal_param)
-        new_type = types._substitute_types(func_type, {_formal_param: int_type})
-        assert_equal(types.func([], int_type), new_type)
+    def instantiated_class_is_not_sub_type_of_other_instantiated_class_if_formal_param_is_invariant_and_type_params_are_different(self):
+        generic_class = types.generic_class("iterator", [types.invariant("T")])
+        
+        assert not types.is_sub_type(generic_class(types.object_type), generic_class(types.int_type))
+        assert not types.is_sub_type(generic_class(types.int_type), generic_class(types.object_type))
     
     @istest
-    def union_type_substitutes_types_in_unioned_types(self):
-        replacement_type = types.scalar_type("Counter")
-        new_type = types._substitute_types(types.union(types.int_type, _formal_param), {_formal_param: replacement_type})
-        assert_equal(types.union(int_type, replacement_type), new_type)
+    def instantiated_class_is_sub_type_of_other_instantiated_class_if_formal_param_is_covariant_and_type_params_are_subtypes(self):
+        generic_class = types.generic_class("iterator", [types.covariant("T")])
+        
+        assert types.is_sub_type(generic_class(types.object_type), generic_class(types.int_type))
+        assert not types.is_sub_type(generic_class(types.int_type), generic_class(types.object_type))
+    
+    @istest
+    def instantiated_class_is_sub_type_of_other_instantiated_class_if_formal_param_is_contravariant_and_type_params_are_supertypes(self):
+        generic_class = types.generic_class("iterator", [types.contravariant("T")])
+        
+        assert not types.is_sub_type(generic_class(types.object_type), generic_class(types.int_type))
+        assert types.is_sub_type(generic_class(types.int_type), generic_class(types.object_type))
         
 
 @istest

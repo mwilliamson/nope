@@ -141,7 +141,7 @@ class _Variance(object):
 class _FormalParameter(object):
     def __init__(self, name, variance):
         self._name = name
-        self._variance = variance
+        self.variance = variance
     
     def substitute_types(self, type_map):
         return type_map.get(self, self)
@@ -356,7 +356,21 @@ def is_sub_type(super_type, sub_type):
             for possible_super_type in super_type._types
         )
     
+    if (isinstance(super_type, InstantiatedType) and
+            isinstance(sub_type, InstantiatedType) and
+            super_type.generic_type == sub_type.generic_type):
+        return all(map(_is_matching_type, super_type.generic_type.params, super_type.params, sub_type.params))
+    
     return super_type == sub_type
+
+
+def _is_matching_type(formal_type_param, super_type_param, sub_type_param):
+    if formal_type_param.variance == _Variance.Covariant:
+        return is_sub_type(super_type_param, sub_type_param)
+    elif formal_type_param.variance == _Variance.Contravariant:
+        return is_sub_type(sub_type_param, super_type_param)
+    else:
+        return super_type_param == sub_type_param
 
 
 def meta_type(type_, attrs=None):
