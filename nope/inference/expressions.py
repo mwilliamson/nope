@@ -68,7 +68,7 @@ class ExpressionTypeInferer(object):
             else:
                 return actual_arg
         
-        if types.is_union_type(callee_type):
+        if types.is_overloaded_func_type(callee_type):
             # TODO: this still allows some ambiguity e.g. if a function is
             # overloaded with types "int -> int" and "v: int -> str", then
             # the call f(v=1) is still potentially ambiguous since it *may*

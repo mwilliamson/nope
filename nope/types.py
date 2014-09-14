@@ -293,26 +293,34 @@ def is_func_type(type_):
     return isinstance(type_, _FunctionType)
 
 
-class _UnionType(object):
+class _UnionTypeBase(object):
     def __init__(self, types):
         self._types = list(types)
     
     def substitute_types(self, type_map):
-        return _UnionType([_substitute_types(type_, type_map) for type_ in self._types])
+        return type(self)([_substitute_types(type_, type_map) for type_ in self._types])
     
     def __str__(self):
         return " | ".join(map(str, self._types))
     
     def __repr__(self):
-        return "union({})".format(", ".join(map(repr, self._types)))
+        return "{}({})".format(self._union_type_name, ", ".join(map(repr, self._types)))
     
     def __eq__(self, other):
-        if not isinstance(other, _UnionType):
+        if not isinstance(other, _UnionTypeBase):
             return False
-        return self._types == other._types
+        return (self._union_type_name, self._types) == (other._union_type_name, other._types)
     
     def __neq__(self, other):
         return not (self == other)
+
+
+class _UnionType(_UnionTypeBase):
+    _union_type_name = "union"
+
+
+class _OverloadedFunctionType(_UnionTypeBase):
+    _union_type_name = "overloaded_func"
 
 
 def union(*types):
@@ -326,7 +334,11 @@ def is_union_type(type_):
 def overloaded_func(*func_types):
     for func_type in func_types:
         assert is_func_type(func_type)
-    return union(*func_types)
+    return _OverloadedFunctionType(func_types)
+
+
+def is_overloaded_func_type(type_):
+    return isinstance(type_, _OverloadedFunctionType)
 
 
 def is_sub_type(super_type, sub_type):
