@@ -436,7 +436,7 @@ iterator.attrs.add("__next__", lambda T: func([], T), read_only=True)
 iterable = generic_structural_type("iterable", ["T"])
 iterable.attrs.add("__iter__", lambda T: func([], iterator(T)), read_only=True)
 
-slice_type = generic_class("slice", ["A", "B", "C"], {
+slice_type = generic_class("slice", [covariant("A"), covariant("B"), covariant("C")], {
     attr("start", lambda A, B, C: A, read_only=True),
     attr("stop", lambda A, B, C: B, read_only=True),
     attr("step", lambda A, B, C: C, read_only=True),

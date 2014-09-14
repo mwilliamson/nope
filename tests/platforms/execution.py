@@ -251,6 +251,10 @@ True
         self._test_expression("[42, 53, 75][1]", b"53")
     
     @istest
+    def test_slice_list(self):
+        self._test_expression("[11, 12, 13, 14, 15, 16][1:4:2]", b"[12, 14]")
+    
+    @istest
     def test_settitem_list(self):
         self._test_program_string("x = [1]\nx[0] = 2\nprint(x[0])", b"2\n")
     

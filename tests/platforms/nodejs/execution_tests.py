@@ -46,6 +46,7 @@ class NodeJsExecutionTests(execution.ExecutionTests):
     
     test_getitem_dict = None
     test_for_unpacking = None
+    test_slice_list = None
 
 
 @istest
@@ -54,3 +55,4 @@ class UnoptimisedNodeJsExecutionTests(execution.ExecutionTests):
     
     test_getitem_dict = None
     test_for_unpacking = None
+    test_slice_list = None
