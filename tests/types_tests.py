@@ -199,3 +199,37 @@ class SubTypeTests(object):
         
         assert types.is_sub_type(nested_union_type, flat_union_type)
         assert types.is_sub_type(flat_union_type, nested_union_type)
+
+    
+    @istest
+    def function_type_return_type_is_substituted(self):
+        func_type = types.func([], _formal_param)
+        new_type = types._substitute_types(func_type, {_formal_param: int_type})
+        assert_equal(types.func([], int_type), new_type)
+    
+    @istest
+    def union_type_substitutes_types_in_unioned_types(self):
+        replacement_type = types.scalar_type("Counter")
+        new_type = types._substitute_types(types.union(types.int_type, _formal_param), {_formal_param: replacement_type})
+        assert_equal(types.union(int_type, replacement_type), new_type)
+        
+
+@istest
+class IsFuncTypeTests(object):
+    @istest
+    def func_type_is_func_type(self):
+        func_type = types.func([], types.none_type)
+        assert types.is_func_type(func_type)
+
+    @istest
+    def scalar_type_is_not_func_type(self):
+        scalar_type = types.scalar_type("A")
+        assert not types.is_func_type(scalar_type)
+
+    @istest
+    def scalar_type_with_call_magic_method_is_not_func_type(self):
+        scalar_type = types.scalar_type("A", [
+            types.attr("__call__", types.func([], types.none_type)),
+        ])
+        assert not types.is_func_type(scalar_type)
+        
