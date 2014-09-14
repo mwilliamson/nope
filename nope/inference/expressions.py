@@ -69,7 +69,6 @@ class ExpressionTypeInferer(object):
                 return actual_arg
         
         if types.is_union_type(callee_type):
-            # TODO: how to report failure to type?
             # TODO: this still allows some ambiguity e.g. if a function is
             # overloaded with types "int -> int" and "v: int -> str", then
             # the call f(v=1) is still potentially ambiguous since it *may*
@@ -88,9 +87,11 @@ class ExpressionTypeInferer(object):
                     _possible_return_types.append(self._infer_call_with_callee_type(node, type_, context))
                 except errors.TypeCheckError:
                     pass
-            # TODO: handle no matches
-            assert _possible_return_types
-            return types.unify(_possible_return_types)
+            if len(_possible_return_types) > 0:
+                return types.unify(_possible_return_types)
+            else:
+                # TODO: more descriptive error
+                raise errors.ArgumentsError(node, "could not find matching overload")
                 
         call_function_type = self._get_call_type(node.func, callee_type)
         
