@@ -19,6 +19,7 @@ class Visitor(object):
             nodes.UnaryOperation: self._visit_unary_operation,
             nodes.BinaryOperation: self._visit_binary_operation,
             nodes.Subscript: self._visit_subscript,
+            nodes.Slice: self._visit_slice,
             
             nodes.ReturnStatement: self._visit_return,
             nodes.ExpressionStatement: self._visit_expression_statement,
@@ -112,6 +113,12 @@ class Visitor(object):
     def _visit_subscript(self, node, *args):
         self.visit(node.value, *args)
         self.visit(node.slice, *args)
+
+
+    def _visit_slice(self, node, *args):
+        self.visit(node.start, *args)
+        self.visit(node.stop, *args)
+        self.visit(node.step, *args)
 
 
     def _visit_return(self, node, *args):
