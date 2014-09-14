@@ -20,6 +20,7 @@ class ExpressionTypeInferer(object):
             nodes.BinaryOperation: self._infer_binary_operation,
             nodes.UnaryOperation: self._infer_unary_operation,
             nodes.Subscript: self._infer_subscript,
+            nodes.Slice: self._infer_slice,
             ephemeral.EphemeralNode: lambda node, context: self.infer(node._node, context),
             ephemeral.FormalArgumentConstraint: lambda node, context: node.type,
         }
@@ -156,6 +157,14 @@ class ExpressionTypeInferer(object):
     
     def _infer_subscript(self, node, context):
         return self.infer_magic_method_call(node, "getitem", node.value, [node.slice], context)
+    
+    
+    def _infer_slice(self, node, context):
+        return types.slice_type(
+            self.infer(node.start, context),
+            self.infer(node.stop, context),
+            self.infer(node.step, context),
+        )
     
     def infer_magic_method_call(self, node, short_name, receiver, actual_args, context):
         method_name = "__{}__".format(short_name)

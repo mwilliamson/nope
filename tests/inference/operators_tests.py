@@ -144,6 +144,15 @@ def can_infer_type_of_subscript_using_getitem():
 
 
 @istest
+def can_infer_type_of_slice():
+    node = nodes.slice(nodes.string(""), nodes.int(4), nodes.none())
+    assert_equal(
+        types.slice_type(types.str_type, types.int_type, types.none_type),
+        infer(node)
+    )
+
+
+@istest
 def can_infer_type_of_subscript_of_list():
     type_bindings = {"x": types.list_type(types.str_type)}
     node = nodes.subscript(nodes.ref("x"), nodes.int(4))

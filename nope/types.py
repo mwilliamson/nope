@@ -412,6 +412,13 @@ def tuple(*args):
     return _tuple_types[len(args)](*args)
 
 
+slice_type = generic_class("slice", ["A", "B", "C"], {
+    attr("start", lambda A, B, C: A, read_only=True),
+    attr("stop", lambda A, B, C: B, read_only=True),
+    attr("step", lambda A, B, C: C, read_only=True),
+})
+
+
 def unify(types):
     if len(types) == 0:
         return bottom_type
