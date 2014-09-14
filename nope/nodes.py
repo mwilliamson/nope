@@ -44,6 +44,7 @@ binary_operators = [
     "eq", "ne", "lt", "le", "gt", "ge",
     "bool_and", "bool_or",
     "is",
+    "contains",
 ]
 
 

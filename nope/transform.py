@@ -364,6 +364,8 @@ class Converter(object):
         return compare_node
     
     def _create_comparison(self, op, left, right):
+        if isinstance(op, ast.In):
+            left, right = right, left
         return self._operator(op)(self.convert(left), self.convert(right))
     
     def _operator(self, operator):
@@ -397,6 +399,8 @@ class Converter(object):
             ast.Not: nodes.bool_not,
             
             ast.Is: nodes.is_,
+            
+            ast.In: nodes.contains,
         }
         return operators[type(operator)]
     

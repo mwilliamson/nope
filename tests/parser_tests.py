@@ -454,6 +454,12 @@ def test_parse_negation():
 
 
 @istest
+def test_parse_in_operator():
+    expected = nodes.contains(nodes.ref("y"), nodes.ref("x"))
+    _assert_expression_parse(expected, "x in y")
+
+
+@istest
 def test_parse_subscript_with_index():
     expected = nodes.subscript(nodes.ref("x"), nodes.ref("y"))
     _assert_expression_parse(expected, "x[y]")
