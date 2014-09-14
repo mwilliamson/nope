@@ -263,6 +263,11 @@ True
         self._test_expression("{42: 'Hello'}[42]", b"Hello")
     
     @istest
+    def test_in_operator_list(self):
+        self._test_expression("'a' in ['a', 'b']", b"True")
+        self._test_expression("'c' in ['a', 'b']", b"False")
+    
+    @istest
     def test_while(self):
         self._test_program_string("x = 4\nwhile x: x = x - 1\nprint(x)", b"0\n")
     

@@ -2,6 +2,10 @@ function print(value) {
     console.log(str(value));
 }
 
+function isString(value) {
+    return Object.prototype.toString.call(value) == "[object String]";
+}
+
 function getattr(value, propertyName) {
     var methods = builtinMethods[Object.prototype.toString.call(value)];
     if (methods) {
@@ -25,7 +29,7 @@ var operators = {};
     "add", "sub", "mul", "truediv", "floordiv", "mod", "divmod", "pow",
     "lshift", "rshift", "and", "or", "xor",
     "eq", "ne", "lt", "le", "gt", "ge",
-    "getitem"
+    "getitem", "contains"
 ].forEach(function(operatorName) {
     operators[operatorName] = createMagicBinaryFunction(operatorName);
 });
@@ -59,6 +63,9 @@ var stringMethods = {
     find: String.prototype.indexOf,
     __str__: function() {
         return "" + this;
+    },
+    __eq__: function(other) {
+        return isString(other) && this == other;
     }
 };
 
@@ -93,6 +100,14 @@ var arrayMethods = {
             }
         };
         return iterator;
+    },
+    __contains__: function(value) {
+        for (var i = 0; i < this.length; i++) {
+            if ($nope.operators.eq(value, this[i])) {
+                return true;
+            }
+        }
+        return false;
     },
     append: function(value) {
         this.push(value);

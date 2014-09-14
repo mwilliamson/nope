@@ -445,6 +445,7 @@ slice_type = generic_class("slice", [covariant("A"), covariant("B"), covariant("
 list_type = generic_class("list", ["T"], [
     attr("__setitem__", lambda T: func([int_type, T], none_type), read_only=True),
     attr("__iter__", lambda T: func([], iterator(T)), read_only=True),
+    attr("__contains__", lambda T: func([object_type], boolean_type), read_only=True),
     attr("append", lambda T: func([T], none_type), read_only=True),
 ])
 list_type.attrs.add(
