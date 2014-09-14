@@ -1,6 +1,7 @@
 from nose.tools import istest, assert_equal
 
 from nope import types, nodes, errors
+from nope.inference import ephemeral
 
 from .util import infer, assert_subexpression_is_type_checked
 
@@ -32,10 +33,9 @@ def operands_of_add_operation_must_support_add():
     try:
         infer(addition, type_bindings=type_bindings)
         assert False, "Expected error"
-    except errors.UnexpectedValueTypeError as error:
-        assert_equal(addition.left, error.node)
-        assert_equal("object with method '__add__'", error.expected)
-        assert_equal(types.none_type, error.actual)
+    except errors.NoSuchAttributeError as error:
+        assert_equal(nodes.attr(addition.left, "__add__"), error.node)
+        assert_equal(addition.left, ephemeral.root_node(error.node))
 
 
 @istest
@@ -71,9 +71,8 @@ def add_method_should_only_accept_one_argument():
     try:
         infer(addition, type_bindings=type_bindings)
         assert False, "Expected error"
-    except errors.BadSignatureError as error:
-        assert_equal(addition.left, error.node)
-        assert_equal("__add__ should have exactly 1 argument(s)", str(error))
+    except errors.TypeCheckError as error:
+        assert_equal(addition, ephemeral.root_node(error.node))
 
 
 @istest
@@ -100,10 +99,8 @@ def operands_of_sub_operation_must_support_sub():
     try:
         infer(subtraction, type_bindings=type_bindings)
         assert False, "Expected error"
-    except errors.UnexpectedValueTypeError as error:
-        assert_equal(subtraction.left, error.node)
-        assert_equal("object with method '__sub__'", error.expected)
-        assert_equal(types.none_type, error.actual)
+    except errors.NoSuchAttributeError as error:
+        assert_equal(nodes.attr(subtraction.left, "__sub__"), error.node)
 
 
 @istest
@@ -120,10 +117,9 @@ def operands_of_mul_operation_must_support_mul():
     try:
         infer(multiplication, type_bindings=type_bindings)
         assert False, "Expected error"
-    except errors.UnexpectedValueTypeError as error:
-        assert_equal(multiplication.left, error.node)
-        assert_equal("object with method '__mul__'", error.expected)
-        assert_equal(types.none_type, error.actual)
+    except errors.NoSuchAttributeError as error:
+        assert_equal(nodes.attr(multiplication.left, "__mul__"), error.node)
+        assert_equal(multiplication.left, ephemeral.root_node(error.node))
 
 
 @istest

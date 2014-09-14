@@ -45,6 +45,26 @@ def object_can_be_called_if_it_has_call_magic_method_that_returns_callable():
 
 
 @istest
+def callee_can_be_overloaded_func_type_where_choice_is_unambiguous_given_args():
+    type_bindings = {"f": types.overloaded_func(
+        types.func([types.str_type], types.int_type),
+        types.func([types.int_type], types.str_type),
+    )}
+    node = nodes.call(nodes.ref("f"), [nodes.string("")])
+    assert_equal(types.int_type, infer(node, type_bindings=type_bindings))
+
+
+@istest
+def return_type_is_unification_of_possible_return_types_of_overloaded_function():
+    type_bindings = {"f": types.overloaded_func(
+        types.func([types.object_type], types.int_type),
+        types.func([types.str_type], types.str_type),
+    )}
+    node = nodes.call(nodes.ref("f"), [nodes.string("")])
+    assert_equal(types.unify([types.int_type, types.str_type]), infer(node, type_bindings=type_bindings))
+
+
+@istest
 def callee_must_be_function_or_have_call_magic_method():
     cls = types.scalar_type("Blah", {})
     type_bindings = {"f": cls}
@@ -68,7 +88,6 @@ def call_attribute_must_be_function():
         assert False, "Expected error"
     except errors.UnexpectedValueTypeError as error:
         assert_equal(callee_node, ephemeral.root_node(error.node))
-        assert_equal(nodes.attr(callee_node, "__call__"), ephemeral.underlying_node(error.node))
         assert_equal("callable object", error.expected)
         assert_equal(types.int_type, error.actual)
 

@@ -21,7 +21,6 @@ class ExpressionTypeInferer(object):
             nodes.UnaryOperation: self._infer_unary_operation,
             nodes.Subscript: self._infer_subscript,
             nodes.Slice: self._infer_slice,
-            ephemeral.EphemeralNode: lambda node, context: self.infer(node._node, context),
             ephemeral.FormalArgumentConstraint: lambda node, context: node.type,
         }
     
@@ -59,13 +58,41 @@ class ExpressionTypeInferer(object):
         return context.lookup(node)
 
     def _infer_call(self, node, context):
+        callee_type = self.infer(node.func, context)
+        return self._infer_call_with_callee_type(node, callee_type, context)
+    
+    def _infer_call_with_callee_type(self, node, callee_type, context):
         def read_actual_arg(actual_arg, index):
             if isinstance(actual_arg, ephemeral.FormalArgumentConstraint) and actual_arg.formal_arg_node is None:
                 return ephemeral.formal_arg_constraint(ephemeral.formal_arg(node.func, index), actual_arg.type)
             else:
                 return actual_arg
         
-        call_function_type = self._get_call_type(node.func, context)
+        if types.is_union_type(callee_type):
+            # TODO: how to report failure to type?
+            # TODO: this still allows some ambiguity e.g. if a function is
+            # overloaded with types "int -> int" and "v: int -> str", then
+            # the call f(v=1) is still potentially ambiguous since it *may*
+            # match the first type
+            # It's also ambiguous due to sub-classing e.g. if a function is
+            # overloaded with types "A -> int" and "B -> str", then passing
+            # in an instance of "B" may in fact result in "int" being returned
+            # since that instance was *also* a subclass of "B".
+            # Since we have the restriction that many built-ins (e.g. int) can't be
+            # sub-classed, perhaps we check for ambiguities by passing in the bottom
+            # type as the arg type instead of any non-primitive?
+            _possible_return_types = []
+            # TODO: remove internal access
+            for type_ in callee_type._types:
+                try:
+                    _possible_return_types.append(self._infer_call_with_callee_type(node, type_, context))
+                except errors.TypeCheckError:
+                    pass
+            # TODO: handle no matches
+            assert _possible_return_types
+            return types.unify(_possible_return_types)
+                
+        call_function_type = self._get_call_type(node.func, callee_type)
         
         if len(node.args) > len(call_function_type.args):
             raise errors.ArgumentsError(
@@ -117,12 +144,11 @@ class ExpressionTypeInferer(object):
         )
         return call_function_type.return_type
 
-    def _get_call_type(self, node, context):
-        callee_type = self.infer(node, context)
+    def _get_call_type(self, node, callee_type):
         if types.is_func_type(callee_type):
             return callee_type
         elif "__call__" in callee_type.attrs:
-            return self._get_call_type(ephemeral.attr(node, "__call__"), context)
+            return self._get_call_type(node, callee_type.attrs.type_of("__call__"))
         else:
             raise errors.UnexpectedValueTypeError(node, expected="callable object", actual=callee_type)
 
@@ -168,12 +194,6 @@ class ExpressionTypeInferer(object):
     
     def infer_magic_method_call(self, node, short_name, receiver, actual_args, context):
         method_name = "__{}__".format(short_name)
-        method = self._get_method_type(receiver, method_name, context)
-        
-        formal_arg_types = [arg.type for arg in method.args]
-        
-        if len(formal_arg_types) != len(actual_args):
-            raise errors.BadSignatureError(receiver, "{} should have exactly {} argument(s)".format(method_name, len(actual_args)))
         
         call_node = ephemeral.call(
             node,
@@ -181,14 +201,6 @@ class ExpressionTypeInferer(object):
             actual_args,
         )
         return self._infer_call(call_node, context)
-    
-    def _get_method_type(self, receiver, method_name, context):
-        receiver_type = self.infer(receiver, context)
-        
-        if method_name not in receiver_type.attrs:
-            raise errors.UnexpectedValueTypeError(receiver, expected="object with method '{}'".format(method_name), actual=receiver_type)
-        
-        return self._get_call_type(ephemeral.attr(receiver, method_name), context)
     
     def _type_check_args(self, node, actual_args, formal_arg_types, context):
         for actual_arg, formal_arg_type in zip(actual_args, formal_arg_types):

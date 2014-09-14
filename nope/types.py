@@ -295,6 +295,16 @@ def union(*types):
     return _UnionType(types)
 
 
+def is_union_type(type_):
+    return isinstance(type_, _UnionType)
+
+
+def overloaded_func(*func_types):
+    for func_type in func_types:
+        assert is_func_type(func_type)
+    return union(*func_types)
+
+
 def is_sub_type(super_type, sub_type):
     if super_type == object_type:
         return True
@@ -368,6 +378,8 @@ int_type.attrs.add("__le__", func([int_type], boolean_type), read_only=True)
 int_type.attrs.add("__gt__", func([int_type], boolean_type), read_only=True)
 int_type.attrs.add("__ge__", func([int_type], boolean_type), read_only=True)
 
+_int_or_none = union(int_type, none_type)
+
 str_type = scalar_type("str")
 str_type.attrs.add("find", func([str_type], int_type), read_only=True)
 
@@ -386,12 +398,25 @@ iterator.attrs.add("__next__", lambda T: func([], T), read_only=True)
 iterable = generic_structural_type("iterable", ["T"])
 iterable.attrs.add("__iter__", lambda T: func([], iterator(T)), read_only=True)
 
+slice_type = generic_class("slice", ["A", "B", "C"], {
+    attr("start", lambda A, B, C: A, read_only=True),
+    attr("stop", lambda A, B, C: B, read_only=True),
+    attr("step", lambda A, B, C: C, read_only=True),
+})
+
 list_type = generic_class("list", ["T"], [
-    attr("__getitem__", lambda T: func([int_type], T), read_only=True),
     attr("__setitem__", lambda T: func([int_type, T], none_type), read_only=True),
     attr("__iter__", lambda T: func([], iterator(T)), read_only=True),
     attr("append", lambda T: func([T], none_type), read_only=True),
 ])
+list_type.attrs.add(
+    "__getitem__",
+    lambda T: overloaded_func(
+        func([int_type], T),
+        func([slice_type(_int_or_none, _int_or_none, _int_or_none)], list_type(T)),
+    ),
+    read_only=True,
+)
 
 dict_type = generic_class("dict", ["K", "V"], [
     attr("__getitem__", lambda K, V: func([K], V), read_only=True),
@@ -424,13 +449,6 @@ _tuple_types = [_create_tuple_class(index) for index in range(0, 10)]
 
 def tuple(*args):
     return _tuple_types[len(args)](*args)
-
-
-slice_type = generic_class("slice", ["A", "B", "C"], {
-    attr("start", lambda A, B, C: A, read_only=True),
-    attr("stop", lambda A, B, C: B, read_only=True),
-    attr("step", lambda A, B, C: C, read_only=True),
-})
 
 
 def unify(types):

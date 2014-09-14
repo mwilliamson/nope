@@ -36,12 +36,11 @@ def context_manager_of_with_statement_must_have_enter_method():
     context_manager_node = nodes.ref("x")
     node = nodes.with_statement(context_manager_node, None, [])
     
-    assert_type_mismatch(
-        lambda: update_context(node, type_bindings={"x": cls}),
-        expected="object with method '__enter__'",
-        actual=cls,
-        node=context_manager_node,
-    )
+    try:
+        update_context(node, type_bindings={"x": cls})
+        assert False, "Expected error"
+    except errors.NoSuchAttributeError as error:
+        assert_equal(nodes.attr(context_manager_node, "__enter__"), error.node)
 
 
 @istest
@@ -50,12 +49,11 @@ def context_manager_of_with_statement_must_have_exit_method():
     context_manager_node = nodes.ref("x")
     node = nodes.with_statement(context_manager_node, None, [])
     
-    assert_type_mismatch(
-        lambda: update_context(node, type_bindings={"x": cls}),
-        expected="object with method '__exit__'",
-        actual=cls,
-        node=context_manager_node,
-    )
+    try:
+        update_context(node, type_bindings={"x": cls})
+        assert False, "Expected error"
+    except errors.NoSuchAttributeError as error:
+        assert_equal(nodes.attr(context_manager_node, "__exit__"), error.node)
 
 
 @istest

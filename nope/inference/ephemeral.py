@@ -1,43 +1,34 @@
-import collections
+import dodge
 
 from .. import nodes
 
 
 def attr(value, attr):
-    return EphemeralNode(value, nodes.attr(value, attr))
+    return _ephemeral(value, nodes.attr(value, attr))
 
 
 def call(root_node, receiver, args):
-    return EphemeralNode(root_node, nodes.call(receiver, args))
+    return _ephemeral(root_node, nodes.call(receiver, args))
 
 
-class EphemeralNode(object):
-    def __init__(self, root_node, node):
-        self._root_node = root_node
-        self._node = node
-    
-    def __getattr__(self, name):
-        return getattr(self._node, name)
-    
-    def __eq__(self, other):
-        if not isinstance(other, EphemeralNode):
-            return False
-        
-        return (self._root_node, self._node) == (other._root_node, other._node)
-    
-    def __neq__(self, other):
-        return not (self == other)
+def _ephemeral(root_node, node):
+    node._ephemeral_root_node = root_node
+    return node
+
+
+def _is_ephemeral(node):
+    return hasattr(node, "_ephemeral_root_node")
 
 
 def root_node(node):
-    while isinstance(node, EphemeralNode):
-        node = node._root_node
+    while _is_ephemeral(node):
+        node = node._ephemeral_root_node
         
     return node
 
 
 def underlying_node(node):
-    return node._node
+    return node
 
 
 def formal_arg_constraint(formal_arg_node, type_=None):
@@ -54,7 +45,7 @@ class FormalArgumentConstraint(object):
 
 
 def formal_arg(func, index):
-    return EphemeralNode(func, FormalArg(func, index))
+    return _ephemeral(func, FormalArg(func, index))
     
 
-FormalArg = collections.namedtuple("FormalArg", ["func", "index"])
+FormalArg = dodge.data_class("FormalArg", ["func", "index"])
