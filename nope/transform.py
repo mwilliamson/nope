@@ -435,6 +435,8 @@ class Converter(object):
         return nodes.generator_expression(self.convert(node.elt), self.convert(generator))
     
     def _comprehension(self, node):
+        # TODO: support ifs
+        assert not node.ifs
         return nodes.comprehension(self.convert(node.target), self.convert(node.iter))
 
     def _mapped(self, nodes, allowed=None):
