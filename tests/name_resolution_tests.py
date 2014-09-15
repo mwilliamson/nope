@@ -231,6 +231,49 @@ def assert_statement_has_child_names_resolved():
         lambda ref: nodes.assert_statement(nodes.boolean(False), ref),
     )
     
+    
+@istest
+def list_comprehension_has_child_names_resolved():
+    _assert_children_resolved(
+        lambda ref: nodes.list_comprehension(ref, nodes.comprehension(nodes.none(), nodes.none())),
+    )
+    _assert_children_resolved(
+        lambda ref: nodes.list_comprehension(nodes.none(), nodes.comprehension(nodes.attr(ref, "name"), nodes.none())),
+    )
+    _assert_children_resolved(
+        lambda ref: nodes.list_comprehension(nodes.none(), nodes.comprehension(nodes.none(), ref)),
+    )
+    
+
+@istest
+def list_comprehension_adds_target_names_to_body_context():
+    target = nodes.ref("target")
+    ref = nodes.ref("target")
+    node = nodes.list_comprehension(
+        target,
+        nodes.comprehension(ref, nodes.none())
+    )
+    
+    declarations = _create_declarations([])
+    references = resolve(node, declarations)
+    assert not declarations.is_declared("target")
+    assert_is(references.referenced_declaration(target), references.referenced_declaration(ref))
+    
+
+@istest
+def list_comprehension_generator_is_not_in_same_scope_as_element():
+    target = nodes.ref("target")
+    ref = nodes.ref("target")
+    iterable = nodes.ref("target")
+    node = nodes.list_comprehension(
+        target,
+        nodes.comprehension(ref, iterable)
+    )
+    
+    declarations = _create_declarations(["target"])
+    references = resolve(node, declarations)
+    assert_is_not(references.referenced_declaration(target), references.referenced_declaration(iterable))
+
 
 @istest
 def function_definition_signature_has_names_resolved():

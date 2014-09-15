@@ -199,6 +199,20 @@ def declarations_in_class_include_self_class():
     
     declarations = declarations_in_class(node)
     assert isinstance(declarations.declaration("Self"), name_declaration.SelfTypeDeclarationNode)
+
+
+@istest
+def declarations_in_class_are_variable_reference_targets():
+    node = nodes.comprehension(
+        nodes.tuple_literal([nodes.ref("target"), nodes.attr(nodes.ref("other"), "name")]),
+        nodes.ref("iterable")
+    )
+    
+    declarations = declarations_in_comprehension(node)
+    assert isinstance(declarations.declaration("target"), name_declaration.VariableDeclarationNode)
+    assert not declarations.is_declared("other")
+    assert not declarations.is_declared("iterable")
+    
     
 
 def _new_declarations():
@@ -212,3 +226,8 @@ def declarations_in_function(*args, **kwargs):
 def declarations_in_class(*args, **kwargs):
     finder = DeclarationFinder()
     return finder.declarations_in_class(*args, **kwargs)
+
+
+def declarations_in_comprehension(*args, **kwargs):
+    finder = DeclarationFinder()
+    return finder.declarations_in_comprehension(*args, **kwargs)

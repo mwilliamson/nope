@@ -20,6 +20,8 @@ class Visitor(object):
             nodes.BinaryOperation: self._visit_binary_operation,
             nodes.Subscript: self._visit_subscript,
             nodes.Slice: self._visit_slice,
+            nodes.ListComprehension: self._visit_list_comprehension,
+            nodes.Comprehension: self._visit_comprehension,
             
             nodes.ReturnStatement: self._visit_return,
             nodes.ExpressionStatement: self._visit_expression_statement,
@@ -119,6 +121,16 @@ class Visitor(object):
         self.visit(node.start, *args)
         self.visit(node.stop, *args)
         self.visit(node.step, *args)
+
+
+    def _visit_list_comprehension(self, node, *args):
+        self.visit(node.generator, *args)
+        self.visit(node.element, *args)
+    
+    
+    def _visit_comprehension(self, node, *args):
+        self.visit(node.iterable, *args)
+        self.visit(node.target, *args)
 
 
     def _visit_return(self, node, *args):

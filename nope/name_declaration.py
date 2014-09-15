@@ -158,6 +158,9 @@ class DeclarationFinder(object):
     def declarations_in_module(self, node):
         return self._declarations(node, _declarations_in_module)
     
+    def declarations_in_comprehension(self, node):
+        return self._declarations(node, _declarations_in_comprehension)
+    
     def _declarations(self, node, generator):
         if node not in self._node_to_declarations:
             self._node_to_declarations[node] = generator(node)
@@ -194,4 +197,10 @@ def _declarations_in_module(node):
     for statement in node.body:
         _declare(statement, declarations)
         
+    return declarations
+
+
+def _declarations_in_comprehension(node):
+    declarations = Declarations({})
+    _declare_target(node.target, declarations, target_type=VariableDeclarationNode)
     return declarations
