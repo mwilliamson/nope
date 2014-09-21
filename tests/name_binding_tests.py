@@ -9,6 +9,59 @@ from .inference.util import context_manager_class
 
 
 @istest
+def children_of_list_comprehension_are_checked():
+    _assert_child_expression_is_checked(lambda generate:
+        nodes.list_comprehension(
+            generate.unbound_ref(),
+            nodes.comprehension(
+                generate.bound_ref("x", types.int_type),
+                nodes.list_literal([]),
+            ),
+        )
+    )
+    _assert_child_expression_is_checked(lambda generate:
+        nodes.list_comprehension(
+            nodes.none(),
+            nodes.comprehension(
+                nodes.attr(generate.unbound_ref(), "x"),
+                nodes.list_literal([]),
+            ),
+        )
+    )
+    _assert_child_expression_is_checked(lambda generate:
+        nodes.list_comprehension(
+            nodes.none(),
+            nodes.comprehension(
+                generate.bound_ref("x", types.int_type),
+                generate.unbound_ref(),
+            ),
+        )
+    )
+
+
+@istest
+def list_comprehension_target_is_definitely_bound():
+    target_node = nodes.ref("x")
+    ref_node = nodes.ref("x")
+    node = nodes.list_comprehension(
+        ref_node,
+        nodes.comprehension(
+            target_node,
+            nodes.list_literal([]),
+        ),
+    )
+    
+    declaration = name_declaration.VariableDeclarationNode("x")
+    
+    references = References([
+        (ref_node, declaration),
+        (target_node, declaration),
+    ])
+    
+    _updated_bindings(node, references)
+
+
+@istest
 def variable_is_definitely_bound_after_assignment():
     target_node = nodes.ref("x")
     node = nodes.assign([target_node], nodes.none())
