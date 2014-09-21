@@ -23,6 +23,7 @@ class ExpressionTypeInferer(object):
             nodes.Subscript: self._infer_subscript,
             nodes.Slice: self._infer_slice,
             nodes.ListComprehension: self._infer_list_comprehension,
+            nodes.GeneratorExpression: self._infer_generator_expression,
             ephemeral.FormalArgumentConstraint: lambda node, context: node.type,
         }
     
@@ -199,6 +200,11 @@ class ExpressionTypeInferer(object):
         self._infer_comprehension(node.generator, context)
         element_type = self.infer(node.element, context)
         return types.list_type(element_type)
+    
+    def _infer_generator_expression(self, node, context):
+        self._infer_comprehension(node.generator, context)
+        element_type = self.infer(node.element, context)
+        return types.iterator(element_type)
     
     def _infer_comprehension(self, node, context):
         element_type = self.infer_iterable_element_type(node.iterable, context)

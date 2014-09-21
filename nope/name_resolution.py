@@ -28,7 +28,8 @@ class References(object):
 def _resolve(node, context):
     visitor = visit.Visitor()
     visitor.replace(nodes.VariableReference, _resolve_variable_reference)
-    visitor.replace(nodes.ListComprehension, _resolve_list_comprehension)
+    visitor.replace(nodes.ListComprehension, _resolve_comprehension)
+    visitor.replace(nodes.GeneratorExpression, _resolve_comprehension)
     visitor.replace(nodes.FunctionDef, _resolve_function_def)
     visitor.replace(nodes.ClassDefinition, _resolve_class_definition)
     visitor.replace(nodes.Import, _resolve_import)
@@ -45,12 +46,12 @@ def _resolve_variable_reference(visitor, node, context):
     context.add_reference(node, node.name)
 
 
-def _resolve_list_comprehension(visitor, node, context):
-    body_context = _resolve_comprehension(visitor, node.generator, context)
+def _resolve_comprehension(visitor, node, context):
+    body_context = _resolve_comprehension_generator(visitor, node.generator, context)
     visitor.visit(node.element, body_context)
 
 
-def _resolve_comprehension(visitor, node, context):
+def _resolve_comprehension_generator(visitor, node, context):
     body_context = context.enter_comprehension(node)
     visitor.visit(node.iterable, context)
     visitor.visit(node.target, body_context)
