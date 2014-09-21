@@ -431,6 +431,7 @@ class Converter(object):
         return nodes.list_comprehension(self.convert(node.elt), self.convert(generator))
     
     def _generator_expression(self, node):
+        # TODO: support nested fors
         generator, = node.generators
         return nodes.generator_expression(self.convert(node.elt), self.convert(generator))
     
