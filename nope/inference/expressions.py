@@ -1,5 +1,6 @@
 from .. import nodes, types, errors
 from . import ephemeral
+from .assignment import Assignment
 
 
 class ExpressionTypeInferer(object):
@@ -21,6 +22,7 @@ class ExpressionTypeInferer(object):
             nodes.UnaryOperation: self._infer_unary_operation,
             nodes.Subscript: self._infer_subscript,
             nodes.Slice: self._infer_slice,
+            nodes.ListComprehension: self._infer_list_comprehension,
             ephemeral.FormalArgumentConstraint: lambda node, context: node.type,
         }
     
@@ -192,6 +194,17 @@ class ExpressionTypeInferer(object):
             self.infer(node.stop, context),
             self.infer(node.step, context),
         )
+    
+    def _infer_list_comprehension(self, node, context):
+        self._infer_comprehension(node.generator, context)
+        element_type = self.infer(node.element, context)
+        return types.list_type(element_type)
+    
+    def _infer_comprehension(self, node, context):
+        iterable_type = self.infer(node.iterable, context)
+        # TODO: check that iterable_type is indeed an iterable
+        assignment = Assignment(self)
+        assignment.assign(node, node.target, iterable_type.params[0], context)
     
     def infer_magic_method_call(self, node, short_name, receiver, actual_args, context):
         method_name = "__{}__".format(short_name)

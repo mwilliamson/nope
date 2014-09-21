@@ -2,6 +2,7 @@ import os
 
 from .. import nodes, types, util, returns, errors, name_declaration
 from . import ephemeral
+from .assignment import Assignment
 
 
 class StatementTypeChecker(object):
@@ -205,27 +206,10 @@ class StatementTypeChecker(object):
             self._assign(node, target, value_type, context)
     
     def _assign(self, node, target, value_type, context):
-        if isinstance(target, nodes.VariableReference):
-            self._assign_ref(node, target, value_type, context)
-        elif isinstance(target, nodes.AttributeAccess):
-            self._assign_attr(node, target, value_type, context)
-        elif isinstance(target, nodes.Subscript):
-            self._assign_subscript(node, target, value_type, context)
-        elif isinstance(target, nodes.TupleLiteral):
-            self._assign_tuple_literal(node, target, value_type, context)
-        else:
-            raise Exception("Not implemented yet")
+        assignment = Assignment(self._expression_type_inferer, on_ref=self._check_ref)
+        assignment.assign(node, target, value_type, context)
     
-    
-    def _assign_ref(self, node, target, value_type, context):
-        var_type = context.lookup(target, allow_unbound=True)
-        if var_type is not None and not types.is_sub_type(var_type, value_type):
-            raise errors.UnexpectedTargetTypeError(node, target_type=var_type, value_type=value_type)
-        
-        # TODO: add test demonstrating necessity of `if var_type is None`
-        if var_type is None:
-            context.update_type(target, value_type)
-        
+    def _check_ref(self, target, value_type, context):
         if self._is_package() and context.is_module_scope:
             self._check_for_package_value_and_module_name_clashes(target, value_type)
 
@@ -237,33 +221,6 @@ class StatementTypeChecker(object):
         if submodule is not None:
             if value_type is not submodule:
                 raise errors.ImportedValueRedeclaration(target, target.name)
-
-
-    def _assign_attr(self, node, target, value_type, context):
-        target_type = self._infer(target, context)
-        
-        if not types.is_sub_type(target_type, value_type):
-            raise errors.UnexpectedTargetTypeError(target, value_type=value_type, target_type=target_type)
-        
-        obj_type = self._infer(target.value, context)
-        if obj_type.attrs.get(target.attr).read_only:
-            raise errors.ReadOnlyAttributeError(target, obj_type, target.attr)
-    
-    def _assign_subscript(self, node, target, value_type, context):
-        self._expression_type_inferer.infer_magic_method_call(
-            node,
-            "setitem",
-            target.value,
-            [target.slice, ephemeral.formal_arg_constraint(value_type)],
-            context,
-        )
-    
-    def _assign_tuple_literal(self, node, target, value_type, context):
-        if len(target.elements) != len(value_type.params):
-            raise errors.UnpackError(target, len(target.elements), len(value_type.params))
-        
-        for element, element_type in zip(target.elements, value_type.params):
-            self._assign(node, element, element_type, context)
     
     
     def _check_if_else(self, node, context):
