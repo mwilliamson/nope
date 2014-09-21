@@ -100,7 +100,7 @@ def iter_method_must_take_no_arguments():
         update_context(node, type_bindings={"x": None, "xs": cls})
         assert False, "Expected error"
     except errors.TypeCheckError as error:
-        assert_equal(node, ephemeral.root_node(error.node))
+        assert_equal(ref_node, ephemeral.root_node(error.node))
 
 
 @istest

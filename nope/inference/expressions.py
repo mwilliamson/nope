@@ -201,10 +201,9 @@ class ExpressionTypeInferer(object):
         return types.list_type(element_type)
     
     def _infer_comprehension(self, node, context):
-        iterable_type = self.infer(node.iterable, context)
-        # TODO: check that iterable_type is indeed an iterable
+        element_type = self.infer_iterable_element_type(node.iterable, context)
         assignment = Assignment(self)
-        assignment.assign(node, node.target, iterable_type.params[0], context)
+        assignment.assign(node, node.target, element_type, context)
     
     def infer_magic_method_call(self, node, short_name, receiver, actual_args, context):
         method_name = "__{}__".format(short_name)
@@ -232,6 +231,22 @@ class ExpressionTypeInferer(object):
                         expected=formal_arg_type,
                         actual=actual_arg_type
                     )
+    
+    
+    def infer_iterable_element_type(self, node, context):
+        iterable_type = self.infer(node, context)
+        if "__iter__" in iterable_type.attrs:
+            iterator_type = self.infer_magic_method_call(node, "iter", node, [], context)
+            if not types.iterator.is_instantiated_type(iterator_type):
+                raise errors.BadSignatureError(node, "__iter__ should return an iterator")
+            
+            element_type, = iterator_type.params
+            return element_type
+        elif "__getitem__" in iterable_type.attrs:
+            args = [ephemeral.formal_arg_constraint(types.int_type)]
+            return self.infer_magic_method_call(node, "getitem", node, args, context)
+        else:
+            raise errors.UnexpectedValueTypeError(node, expected="iterable type", actual=iterable_type)
 
 
 _ordinal_suffixes = {1: "st", 2: "nd", 3: "rd"}

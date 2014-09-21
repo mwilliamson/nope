@@ -243,19 +243,7 @@ class StatementTypeChecker(object):
     
     
     def _infer_for_loop_element_type(self, node, context):
-        iterable_type = self._infer(node.iterable, context)
-        if "__iter__" in iterable_type.attrs:
-            iterator_type = self._expression_type_inferer.infer_magic_method_call(node, "iter", node.iterable, [], context)
-            if not types.iterator.is_instantiated_type(iterator_type):
-                raise errors.BadSignatureError(node.iterable, "__iter__ should return an iterator")
-            
-            element_type, = iterator_type.params
-            return element_type
-        elif "__getitem__" in iterable_type.attrs:
-            args = [ephemeral.formal_arg_constraint(types.int_type)]
-            return self._expression_type_inferer.infer_magic_method_call(node, "getitem", node.iterable, args, context)
-        else:
-            raise errors.UnexpectedValueTypeError(node.iterable, expected="iterable type", actual=iterable_type)
+        return self._expression_type_inferer.infer_iterable_element_type(node.iterable, context)
     
     
     def _check_break(self, node, context):
