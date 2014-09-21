@@ -268,6 +268,10 @@ True
         self._test_expression("'c' in ['a', 'b']", b"False")
     
     @istest
+    def test_unnested_list_comprehension(self):
+        self._test_program_string("print([2 * x for x in [1, 2, 3]])", b"[2, 4, 6]\n")
+    
+    @istest
     def test_while(self):
         self._test_program_string("x = 4\nwhile x: x = x - 1\nprint(x)", b"0\n")
     
