@@ -23,7 +23,7 @@ def except_handler_type_must_be_type():
     ])
     assert_type_mismatch(
         lambda: update_context(node, type_bindings={"x": types.int_type}),
-        expected="exception type",
+        expected="type",
         actual=types.int_type,
         node=type_node,
     )
@@ -38,8 +38,8 @@ def except_handler_type_must_be_exception_type():
     meta_type = types.meta_type(types.int_type)
     assert_type_mismatch(
         lambda: update_context(node, type_bindings={"int": meta_type}),
-        expected="exception type",
-        actual=meta_type,
+        expected="exception",
+        actual=types.int_type,
         node=type_node,
     )
 

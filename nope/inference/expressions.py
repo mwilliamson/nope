@@ -167,16 +167,21 @@ class ExpressionTypeInferer(object):
 
 
     def _infer_type_application(self, node, context):
-        generic_type = self._infer_type_value(node.generic_type, context)
+        generic_type = self.infer_type_value(node.generic_type, context)
         type_params = [
-            self._infer_type_value(param, context)
+            self.infer_type_value(param, context)
             for param in node.params
         ]
         return generic_type(*type_params)
     
-    def _infer_type_value(self, node, context):
-        # TODO: check this is a meta-type
-        return self.infer(node, context).type
+    def infer_type_value(self, node, context):
+        meta_type = self.infer(node, context)
+        if not types.is_meta_type(meta_type):
+            raise errors.UnexpectedValueTypeError(node,
+                expected="type",
+                actual=meta_type,
+            )
+        return meta_type.type
         
 
     def _infer_binary_operation(self, node, context):

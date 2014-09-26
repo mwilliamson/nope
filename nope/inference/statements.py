@@ -46,13 +46,13 @@ class StatementTypeChecker(object):
         def read_signature_arg(arg):
             return types.func_arg(
                 arg.name,
-                self._infer(arg.type, context).type,
+                self._infer_type_value(arg.type, context),
             )
         
         if node.signature.returns is None:
             return_type = types.none_type
         else:
-            return_type = self._infer(node.signature.returns, context).type
+            return_type = self._infer_type_value(node.signature.returns, context)
             
         return types.func(
             [read_signature_arg(arg) for arg in node.signature.args],
@@ -79,7 +79,7 @@ class StatementTypeChecker(object):
     
     def _check_class_definition(self, node, context):
         base_classes = [
-            self._infer(base_class, context).type
+            self._infer_type_value(base_class, context)
             for base_class in node.base_classes
         ]
         if any(base_class != types.object_type for base_class in base_classes):
@@ -268,13 +268,15 @@ class StatementTypeChecker(object):
         
     def _infer_handler_exception_type(self, handler, context):
         if handler.type:
-            meta_type = self._infer(handler.type, context)
-            if not types.is_meta_type(meta_type) or not types.is_sub_type(types.exception_type, meta_type.type):
+            handled_type = self._infer_type_value(handler.type, context)
+            if not types.is_sub_type(types.exception_type, handled_type):
+                # TODO: strictly speaking, this error should have the
+                # meta-types rather than the actual types
                 raise errors.UnexpectedValueTypeError(handler.type,
-                    expected="exception type",
-                    actual=meta_type,
+                    expected="exception",
+                    actual=handled_type,
                 )
-            return meta_type.type
+            return handled_type
     
     
     def _check_raise(self, node, context):
@@ -376,6 +378,9 @@ class StatementTypeChecker(object):
     
     def _infer_magic_method_call(self, *args, **kwargs):
         return self._expression_type_inferer.infer_magic_method_call(*args, **kwargs)
+    
+    def _infer_type_value(self, *args, **kwargs):
+        return self._expression_type_inferer.infer_type_value(*args, **kwargs)
     
     def _type_of_module(self, path):
         if self._module_types.is_module_path(path):
