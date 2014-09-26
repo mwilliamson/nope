@@ -18,6 +18,7 @@ class ExpressionTypeInferer(object):
             nodes.VariableReference: self._infer_ref,
             nodes.Call: self._infer_call,
             nodes.AttributeAccess: self._infer_attr,
+            nodes.TypeApplication: self._infer_type_application,
             nodes.BinaryOperation: self._infer_binary_operation,
             nodes.UnaryOperation: self._infer_unary_operation,
             nodes.Subscript: self._infer_subscript,
@@ -164,6 +165,19 @@ class ExpressionTypeInferer(object):
         else:
             raise errors.NoSuchAttributeError(node, str(value_type), node.attr)
 
+
+    def _infer_type_application(self, node, context):
+        generic_type = self._infer_type_value(node.generic_type, context)
+        type_params = [
+            self._infer_type_value(param, context)
+            for param in node.params
+        ]
+        return generic_type(*type_params)
+    
+    def _infer_type_value(self, node, context):
+        # TODO: check this is a meta-type
+        return self.infer(node, context).type
+        
 
     def _infer_binary_operation(self, node, context):
         if node.operator in ["bool_and", "bool_or"]:
