@@ -469,6 +469,8 @@ list_type.attrs.add(
     read_only=True,
 )
 
+list_meta_type = meta_type(list_type)
+
 dict_type = generic_class("dict", ["K", "V"], [
     attr("__getitem__", lambda K, V: func([K], V), read_only=True),
     attr("__setitem__", lambda K, V: func([K, V], none_type), read_only=True),

@@ -7,6 +7,7 @@ _builtin_types = {
     "int": types.meta_type(types.int_type),
     "str": types.str_meta_type,
     "none": types.meta_type(types.none_type),
+    "list": types.list_meta_type,
     "Exception": types.exception_meta_type,
     "AssertionError": types.assertion_error_meta_type,
     
