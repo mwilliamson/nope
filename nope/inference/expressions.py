@@ -172,7 +172,7 @@ class ExpressionTypeInferer(object):
             self.infer_type_value(param, context)
             for param in node.params
         ]
-        return generic_type(*type_params)
+        return types.meta_type(generic_type(*type_params))
     
     def infer_type_value(self, node, context):
         meta_type = self.infer(node, context)
