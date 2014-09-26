@@ -16,6 +16,7 @@ class Visitor(object):
             nodes.DictLiteral: self._visit_dict_literal,
             nodes.Call: self._visit_call,
             nodes.AttributeAccess: self._visit_attribute_access,
+            nodes.TypeApplication: self._visit_type_application,
             nodes.UnaryOperation: self._visit_unary_operation,
             nodes.BinaryOperation: self._visit_binary_operation,
             nodes.Subscript: self._visit_subscript,
@@ -102,6 +103,12 @@ class Visitor(object):
 
     def _visit_attribute_access(self, node, *args):
         self.visit(node.value, *args)
+
+
+    def _visit_type_application(self, node, *args):
+        self.visit(node.generic_type, *args)
+        for param in node.params:
+            self.visit(param, *args)
 
 
     def _visit_unary_operation(self, node, *args):
