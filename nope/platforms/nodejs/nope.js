@@ -109,6 +109,9 @@ var arrayMethods = {
         }
         return false;
     },
+    __str__: function() {
+        return "[" + this.map(str).join(", ") + "]";
+    },
     append: function(value) {
         this.push(value);
         return null;
