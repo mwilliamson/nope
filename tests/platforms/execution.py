@@ -40,6 +40,17 @@ f(42, y="blah")
         self._test_program_string(program, b"42\nblah\n")
         
     @istest
+    def function_calls_with_generics(self):
+        program = """
+#:: x: list[int] -> none
+def f(x):
+    print(x)
+
+f([42, 45])
+"""
+        self._test_program_string(program, b"[42, 45]\n")
+        
+    @istest
     def fib_program_prints_result_to_stdout(self):
         result = self._run_program(path=program_path("valid/fib.py"), program="fib")
         assert_equal(b"55\n", result.output)
