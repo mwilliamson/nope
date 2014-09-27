@@ -397,7 +397,7 @@ any_type = object_type = scalar_type("object")
 
 bottom_type = scalar_type("bottom")
 
-def unify(types):
+def common_super_type(types):
     if len(types) == 0:
         return bottom_type
         

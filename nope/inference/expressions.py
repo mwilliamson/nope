@@ -51,12 +51,15 @@ class ExpressionTypeInferer(object):
     
     def _infer_list_literal(self, node, context):
         element_types = [self.infer(element, context) for element in node.elements]
-        return types.list_type(types.unify(element_types))
+        return types.list_type(types.common_super_type(element_types))
 
     def _infer_dict_literal(self, node, context):
         key_types = [self.infer(key, context) for key, value in node.items]
         value_types = [self.infer(value, context) for key, value in node.items]
-        return types.dict_type(types.unify(key_types), types.unify(value_types))
+        return types.dict_type(
+            types.common_super_type(key_types),
+            types.common_super_type(value_types)
+        )
 
     def _infer_ref(self, node, context):
         return context.lookup(node)
@@ -92,7 +95,7 @@ class ExpressionTypeInferer(object):
                 except errors.TypeCheckError:
                     pass
             if len(_possible_return_types) > 0:
-                return types.unify(_possible_return_types)
+                return types.common_super_type(_possible_return_types)
             else:
                 # TODO: more descriptive error
                 raise errors.ArgumentsError(node, "could not find matching overload")
@@ -186,7 +189,7 @@ class ExpressionTypeInferer(object):
 
     def _infer_binary_operation(self, node, context):
         if node.operator in ["bool_and", "bool_or"]:
-            return types.unify([
+            return types.common_super_type([
                 self.infer(node.left, context),
                 self.infer(node.right, context),
             ])

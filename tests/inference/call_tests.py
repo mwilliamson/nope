@@ -55,13 +55,16 @@ def callee_can_be_overloaded_func_type_where_choice_is_unambiguous_given_args():
 
 
 @istest
-def return_type_is_unification_of_possible_return_types_of_overloaded_function():
+def return_type_is_common_super_type_of_possible_return_types_of_overloaded_function():
     type_bindings = {"f": types.overloaded_func(
         types.func([types.object_type], types.int_type),
         types.func([types.str_type], types.str_type),
     )}
     node = nodes.call(nodes.ref("f"), [nodes.string("")])
-    assert_equal(types.unify([types.int_type, types.str_type]), infer(node, type_bindings=type_bindings))
+    assert_equal(
+        types.common_super_type([types.int_type, types.str_type]),
+        infer(node, type_bindings=type_bindings)
+    )
 
 
 @istest
