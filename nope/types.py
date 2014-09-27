@@ -91,7 +91,8 @@ class _GenericType(object):
     def __init__(self, params, underlying_type):
         self.underlying_type = underlying_type
         self.params = params
-        self.attrs = _GenericTypeAttributes(params, underlying_type.attrs)
+        if hasattr(underlying_type, "attrs"):
+            self.attrs = _GenericTypeAttributes(params, underlying_type.attrs)
     
     def __call__(self, *args):
         return self.instantiate(list(args))
@@ -112,6 +113,10 @@ class _GenericType(object):
         return str(self)
 
 
+def is_generic_type(type_):
+    return isinstance(type_, _GenericType)
+
+
 def _generic_type(params, underlying_type, attrs=None):
     if attrs is None:
         attrs = {}
@@ -124,6 +129,12 @@ def _generic_type(params, underlying_type, attrs=None):
         generic_class.attrs.add(attr.name, attr.type, attr.read_only)
     
     return generic_class
+
+
+def generic(params, create_underlying_type):
+    formal_params = [_formal_param(param) for param in params]
+    param_map = dict(zip(params, formal_params))
+    return _GenericType(formal_params, create_underlying_type(*formal_params))
 
 
 def generic_class(name, params, attrs=None):
@@ -145,6 +156,9 @@ class _FormalParameter(object):
     
     def substitute_types(self, type_map):
         return type_map.get(self, self)
+    
+    def __repr__(self):
+        return "_FormalParameter({}, {})".format(self._name, self.variance)
 
 
 def _formal_param(param):
@@ -293,6 +307,10 @@ def is_func_type(type_):
     return isinstance(type_, _FunctionType)
 
 
+def is_generic_func_type(type_):
+    return isinstance(type_, _GenericType) and isinstance(type_.underlying_type, _FunctionType)
+
+
 class _UnionTypeBase(object):
     def __init__(self, types):
         self._types = list(types)
@@ -341,48 +359,122 @@ def is_overloaded_func_type(type_):
     return isinstance(type_, _OverloadedFunctionType)
 
 
-def is_sub_type(super_type, sub_type):
-    if super_type == object_type:
-        return True
-    
-    if isinstance(sub_type, _UnionType):
-        return all(
-            is_sub_type(super_type, possible_sub_type)
-            for possible_sub_type in sub_type._types
-        )
-    
-    if (isinstance(sub_type, _ScalarType) and
-            any(is_sub_type(super_type, base_class)
-            for base_class in sub_type.base_classes)):
-        return True
-    
-    if isinstance(super_type, _StructuralType):
-        return all(
-            is_sub_type(attr.type, sub_type.attrs.type_of(attr.name))
-            for attr in super_type.attrs
-        )
-    
-    if isinstance(super_type, _UnionType):
-        return any(
-            is_sub_type(possible_super_type, sub_type)
-            for possible_super_type in super_type._types
-        )
-    
-    if (isinstance(super_type, InstantiatedType) and
-            isinstance(sub_type, InstantiatedType) and
-            super_type.generic_type == sub_type.generic_type):
-        return all(map(_is_matching_type, super_type.generic_type.params, super_type.params, sub_type.params))
-    
-    return super_type == sub_type
-
-
-def _is_matching_type(formal_type_param, super_type_param, sub_type_param):
-    if formal_type_param.variance == _Variance.Covariant:
-        return is_sub_type(super_type_param, sub_type_param)
-    elif formal_type_param.variance == _Variance.Contravariant:
-        return is_sub_type(sub_type_param, super_type_param)
+def is_sub_type(super_type, sub_type, unify=None):
+    if unify is None:
+        unify = set()
     else:
-        return super_type_param == sub_type_param
+        unify = set(unify)
+    
+    constraints = Constraints()
+
+    def is_matching_type(formal_type_param, super_type_param, sub_type_param):
+        if formal_type_param.variance == _Variance.Covariant:
+            return is_sub_type(super_type_param, sub_type_param)
+        elif formal_type_param.variance == _Variance.Contravariant:
+            return is_sub_type(sub_type_param, super_type_param)
+        else:
+            # TODO: fix type equality and use it here (either by implementing
+            # type equality using sub-typing or implementing type substitution)
+            return is_sub_type(super_type_param, sub_type_param) and is_sub_type(sub_type_param, super_type_param)
+    
+    def is_sub_type(super_type, sub_type):
+        if super_type == object_type:
+            return True
+        
+        if isinstance(sub_type, _UnionType):
+            return all(
+                is_sub_type(super_type, possible_sub_type)
+                for possible_sub_type in sub_type._types
+            )
+        
+        if (isinstance(sub_type, _ScalarType) and
+                any(is_sub_type(super_type, base_class)
+                for base_class in sub_type.base_classes)):
+            return True
+        
+        if isinstance(super_type, _StructuralType):
+            return all(
+                is_sub_type(attr.type, sub_type.attrs.type_of(attr.name))
+                for attr in super_type.attrs
+            )
+        
+        if isinstance(super_type, _UnionType):
+            return any(
+                is_sub_type(possible_super_type, sub_type)
+                for possible_super_type in super_type._types
+            )
+        
+        if (isinstance(super_type, InstantiatedType) and
+                isinstance(sub_type, InstantiatedType) and
+                super_type.generic_type == sub_type.generic_type):
+            return all(map(is_matching_type, super_type.generic_type.params, super_type.params, sub_type.params))
+        
+        if isinstance(super_type, _FormalParameter) and super_type in unify:
+            constraints.constrain_type_param_to_super_type(super_type, sub_type)
+            return True
+        
+        if isinstance(sub_type, _FormalParameter) and sub_type in unify:
+            constraints.constrain_type_param_to_sub_type(sub_type, super_type)
+            return True
+        
+        return super_type == sub_type
+
+    
+    if is_sub_type(super_type, sub_type):
+        return constraints.resolve()
+    else:
+        return None
+
+
+class Constraints(object):
+    def __init__(self):
+        self._constraints = {}
+    
+    def resolve(self):
+        type_map = dict(
+            (type_param, self._resolve_constraints(constraints))
+            for type_param, constraints in self._constraints.items()
+        )
+        
+        if any(value is None for value in type_map.values()):
+            return None
+        else:
+            return TypeMap(type_map)
+    
+    def _resolve_constraints(self, constraints):
+        types = set(type_ for relation, type_ in constraints)
+        
+        if len(types) == 1:
+            return next(iter(types))
+        
+        relations = set(relation for relation, type_ in constraints)
+        if relations == set(["super"]):
+            return common_super_type(types)
+        elif relations == set(["sub"]):
+            return common_sub_type(types)
+        else:
+            return None
+        
+    
+    def constrain_type_param_to_super_type(self, type_param, sub_type):
+        self._add_constraint(type_param, ("super", sub_type))
+    
+    def constrain_type_param_to_sub_type(self, type_param, super_type):
+        self._add_constraint(type_param, ("sub", super_type))
+    
+    def _add_constraint(self, type_param, constraint):
+        if type_param not in self._constraints:
+            self._constraints[type_param] = []
+        
+        self._constraints[type_param].append(constraint)
+
+
+class TypeMap(object):
+    def __init__(self, type_map):
+        self._type_map = type_map
+    
+    def __getitem__(self, key):
+        return self._type_map[key]
 
 
 def meta_type(type_, attrs=None):
@@ -400,12 +492,27 @@ bottom_type = scalar_type("bottom")
 def common_super_type(types):
     if len(types) == 0:
         return bottom_type
-        
+    
+    first_type = next(iter(types))
+    
     for type_ in types:
-        if not is_sub_type(types[0], type_):
+        if not is_sub_type(first_type, type_):
             return object_type
     
-    return types[0]
+    return first_type
+
+
+def common_sub_type(types):
+    if len(types) == 0:
+        return any_type
+    
+    first_type = next(iter(types))
+    
+    for type_ in types:
+        if not is_sub_type(type_, first_type):
+            return bottom_type
+    
+    return first_type
 
 
 class _Module(object):

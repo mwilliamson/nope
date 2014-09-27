@@ -4,6 +4,7 @@ from nope import types
 
 
 _formal_param = types.invariant("T")
+_scalar_type = types.scalar_type("User")
 int_type = types.int_type
 str_type = types.str_type
 none_type = types.none_type
@@ -233,6 +234,75 @@ class SubTypeTests(object):
         
         assert not types.is_sub_type(generic_class(types.object_type), generic_class(types.int_type))
         assert types.is_sub_type(generic_class(types.int_type), generic_class(types.object_type))
+    
+    @istest
+    def scalar_type_is_not_sub_type_of_formal_type_parameter(self):
+        assert not types.is_sub_type(_formal_param, _scalar_type)
+    
+    @istest
+    def scalar_type_is_not_super_type_of_formal_type_parameter(self):
+        assert not types.is_sub_type(_scalar_type, _formal_param)
+    
+    @istest
+    def formal_type_can_be_super_type_of_formal_param_if_formal_param_can_be_unified(self):
+        assert types.is_sub_type(_formal_param, _scalar_type, unify=[_formal_param])
+    
+    @istest
+    def formal_type_can_be_sub_type_of_formal_param_if_formal_param_can_be_unified(self):
+        assert types.is_sub_type(_scalar_type, _formal_param, unify=[_formal_param])
+    
+    @istest
+    def type_map_is_returned_by_sub_type_unification(self):
+        type_map = types.is_sub_type(_formal_param, _scalar_type, unify=[_formal_param])
+        assert_equal(_scalar_type, type_map[_formal_param])
+    
+    @istest
+    def type_map_is_returned_by_super_type_unification(self):
+        type_map = types.is_sub_type(_scalar_type, _formal_param, unify=[_formal_param])
+        assert_equal(_scalar_type, type_map[_formal_param])
+    
+    @istest
+    def invariant_type_parameter_cannot_have_different_values_in_same_is_sub_type_relation(self):
+        invariant_type_param = types.invariant("T")
+        first_scalar_type = types.scalar_type("User")
+        second_scalar_type = types.scalar_type("Role")
+        generic_class = types.generic_class("Pair", [invariant_type_param, invariant_type_param])
+        assert not types.is_sub_type(
+            # TODO: need a reliable way of getting the underlying type (but as an instantiated type)
+            generic_class(invariant_type_param, invariant_type_param),
+            generic_class(first_scalar_type, second_scalar_type),
+            unify=[invariant_type_param]
+        )
+    
+    @istest
+    def covariant_type_parameter_is_substituted_with_common_super_type_of_actual_type_params(self):
+        covariant_type_param = types.covariant("T")
+        first_scalar_type = types.scalar_type("User")
+        second_scalar_type = types.scalar_type("Role")
+        generic_class = types.generic_class("Pair", [covariant_type_param, covariant_type_param])
+        
+        type_map = types.is_sub_type(
+            # TODO: need a reliable way of getting the underlying type (but as an instantiated type)
+            generic_class(covariant_type_param, covariant_type_param),
+            generic_class(first_scalar_type, second_scalar_type),
+            unify=[covariant_type_param]
+        )
+        assert_equal(types.object_type, type_map[covariant_type_param])
+    
+    @istest
+    def contravariant_type_parameter_is_substituted_with_common_sub_type_of_actual_type_params(self):
+        contravariant_type_param = types.contravariant("T")
+        first_scalar_type = types.scalar_type("User")
+        second_scalar_type = types.scalar_type("Role")
+        generic_class = types.generic_class("Pair", [contravariant_type_param, contravariant_type_param])
+        
+        type_map = types.is_sub_type(
+            # TODO: need a reliable way of getting the underlying type (but as an instantiated type)
+            generic_class(contravariant_type_param, contravariant_type_param),
+            generic_class(first_scalar_type, second_scalar_type),
+            unify=[contravariant_type_param]
+        )
+        assert_equal(types.bottom_type, type_map[contravariant_type_param])
         
 
 @istest
