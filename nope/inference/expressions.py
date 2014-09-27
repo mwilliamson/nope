@@ -110,11 +110,6 @@ class ExpressionTypeInferer(object):
                     len(node.args))
             )
         
-        formal_arg_types = [
-            arg.type
-            for arg in call_function_type.args
-        ]
-        
         kwarg_nodes = node.kwargs.copy()
         actual_args = []
         
@@ -143,6 +138,11 @@ class ExpressionTypeInferer(object):
         if kwarg_nodes:
             first_key = next(iter(kwarg_nodes.keys()))
             raise errors.ArgumentsError(node, "unexpected keyword argument '{}'".format(first_key))
+        
+        formal_arg_types = [
+            arg.type
+            for arg in call_function_type.args
+        ]
         
         self._type_check_args(
             node,
