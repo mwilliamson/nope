@@ -113,26 +113,28 @@ class ExpressionTypeInferer(object):
         kwarg_nodes = node.kwargs.copy()
         actual_args = []
         
-        for index, formal_arg in enumerate(call_function_type.args):
+        formal_arg_names = [arg.name for arg in call_function_type.args]
+        
+        for index, formal_arg_name in enumerate(formal_arg_names):
             positional_arg = None
             keyword_arg = None
             
             if index < len(node.args):
                 positional_arg = node.args[index]
-            if formal_arg.name is not None:
-                keyword_arg = kwarg_nodes.pop(formal_arg.name, None)
+            if formal_arg_name is not None:
+                keyword_arg = kwarg_nodes.pop(formal_arg_name, None)
             
             if positional_arg is not None and keyword_arg is not None:
-                raise errors.ArgumentsError(node, "multiple values for argument '{}'".format(formal_arg.name))
+                raise errors.ArgumentsError(node, "multiple values for argument '{}'".format(formal_arg_name))
             elif positional_arg is not None:
                 actual_args.append(read_actual_arg(positional_arg, index))
             elif keyword_arg is not None:
                 actual_args.append(read_actual_arg(keyword_arg, index))
             else:
-                if formal_arg.name is None:
+                if formal_arg_name is None:
                     message = "missing {} positional argument".format(_ordinal(index + 1))
                 else:
-                    message = "missing argument '{}'".format(formal_arg.name)
+                    message = "missing argument '{}'".format(formal_arg_name)
                 raise errors.ArgumentsError(node, message)
         
         if kwarg_nodes:
