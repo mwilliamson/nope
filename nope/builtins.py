@@ -8,11 +8,13 @@ _builtin_types = {
     "str": types.str_meta_type,
     "none": types.meta_type(types.none_type),
     "list": types.list_meta_type,
+    "dict": types.dict_meta_type,
     "Exception": types.exception_meta_type,
     "AssertionError": types.assertion_error_meta_type,
     
     "print": types.func([types.object_type], types.none_type),
     "bool": types.bool_meta_type,
+    "len": types.func([types.has_len], types.int_type),
     # TODO: make abs generic e.g. T => T -> T
     "abs": types.func([types.int_type], types.int_type),
     # TODO: make divmod generic e.g. T, U where T <: DivMod[U] => T, T -> U

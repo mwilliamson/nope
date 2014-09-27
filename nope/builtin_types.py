@@ -1,5 +1,5 @@
 from .types import (
-    scalar_type, meta_type, union, generic_structural_type,
+    scalar_type, meta_type, union, structural_type, generic_structural_type,
     generic_class, func, overloaded_func,
     attr,
     any_type, object_type,
@@ -59,6 +59,9 @@ iterator.attrs.add("__next__", lambda T: func([], T), read_only=True)
 iterable = generic_structural_type("iterable", ["T"])
 iterable.attrs.add("__iter__", lambda T: func([], iterator(T)), read_only=True)
 
+has_len = structural_type("has_len")
+has_len.attrs.add("__len__", func([], int_type), read_only=True)
+
 slice_type = generic_class("slice", [covariant("A"), covariant("B"), covariant("C")], {
     attr("start", lambda A, B, C: A, read_only=True),
     attr("stop", lambda A, B, C: B, read_only=True),
@@ -87,6 +90,8 @@ dict_type = generic_class("dict", ["K", "V"], [
     attr("__setitem__", lambda K, V: func([K, V], none_type), read_only=True),
     attr("__iter__", lambda K, V: func([], iterator(K)), read_only=True),
 ])
+
+dict_meta_type = meta_type(dict_type)
 
 exception_type = scalar_type("Exception")
 exception_meta_type = meta_type(exception_type, [
