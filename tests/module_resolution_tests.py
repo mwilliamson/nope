@@ -129,11 +129,9 @@ def relative_import_using_two_dots_searches_parent_directory():
 
 
 def _resolve_import(module, names, modules):
-    return module_resolution.resolve_import(
-        module,
-        names,
-        source_tree=FakeSourceTree(modules),
-    )
+    source_tree = FakeSourceTree(modules)
+    return module_resolution.ModuleResolution(source_tree) \
+        .resolve_import(module, names)
 
 
 def _create_module(path, is_executable=False):
