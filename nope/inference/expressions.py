@@ -74,14 +74,6 @@ class ExpressionTypeInferer(object):
                 
         type_params, call_function_type = self._get_call_type(node.func, callee_type)
         
-        if len(node.args) > len(call_function_type.args):
-            raise errors.ArgumentsError(
-                node,
-                "function takes {} positional arguments but {} was given".format(
-                    len(call_function_type.args),
-                    len(node.args))
-            )
-        
         actual_args = self._generate_actual_args(node, call_function_type.args)
         
         formal_arg_types = [
@@ -136,6 +128,14 @@ class ExpressionTypeInferer(object):
     
     
     def _generate_actual_args(self, node, formal_args):
+        if len(node.args) > len(formal_args):
+            raise errors.ArgumentsError(
+                node,
+                "function takes {} positional arguments but {} was given".format(
+                    len(formal_args),
+                    len(node.args))
+            )
+            
         def read_actual_arg(actual_arg, index):
             if isinstance(actual_arg, ephemeral.FormalArgumentConstraint) and actual_arg.formal_arg_node is None:
                 return ephemeral.formal_arg_constraint(ephemeral.formal_arg(node.func, index), actual_arg.type)
