@@ -69,12 +69,6 @@ class ExpressionTypeInferer(object):
         return self._infer_call_with_callee_type(node, callee_type, context)
     
     def _infer_call_with_callee_type(self, node, callee_type, context):
-        def read_actual_arg(actual_arg, index):
-            if isinstance(actual_arg, ephemeral.FormalArgumentConstraint) and actual_arg.formal_arg_node is None:
-                return ephemeral.formal_arg_constraint(ephemeral.formal_arg(node.func, index), actual_arg.type)
-            else:
-                return actual_arg
-        
         if types.is_overloaded_func_type(callee_type):
             return self._infer_overloaded_func_call(node, callee_type, context)
                 
@@ -88,36 +82,7 @@ class ExpressionTypeInferer(object):
                     len(node.args))
             )
         
-        kwarg_nodes = node.kwargs.copy()
-        actual_args = []
-        
-        formal_arg_names = [arg.name for arg in call_function_type.args]
-        
-        for index, formal_arg_name in enumerate(formal_arg_names):
-            positional_arg = None
-            keyword_arg = None
-            
-            if index < len(node.args):
-                positional_arg = node.args[index]
-            if formal_arg_name is not None:
-                keyword_arg = kwarg_nodes.pop(formal_arg_name, None)
-            
-            if positional_arg is not None and keyword_arg is not None:
-                raise errors.ArgumentsError(node, "multiple values for argument '{}'".format(formal_arg_name))
-            elif positional_arg is not None:
-                actual_args.append(read_actual_arg(positional_arg, index))
-            elif keyword_arg is not None:
-                actual_args.append(read_actual_arg(keyword_arg, index))
-            else:
-                if formal_arg_name is None:
-                    message = "missing {} positional argument".format(_ordinal(index + 1))
-                else:
-                    message = "missing argument '{}'".format(formal_arg_name)
-                raise errors.ArgumentsError(node, message)
-        
-        if kwarg_nodes:
-            first_key = next(iter(kwarg_nodes.keys()))
-            raise errors.ArgumentsError(node, "unexpected keyword argument '{}'".format(first_key))
+        actual_args = self._generate_actual_args(node, call_function_type.args)
         
         formal_arg_types = [
             arg.type
@@ -168,6 +133,47 @@ class ExpressionTypeInferer(object):
         else:
             # TODO: more descriptive error
             raise errors.ArgumentsError(node, "could not find matching overload")
+    
+    
+    def _generate_actual_args(self, node, formal_args):
+        def read_actual_arg(actual_arg, index):
+            if isinstance(actual_arg, ephemeral.FormalArgumentConstraint) and actual_arg.formal_arg_node is None:
+                return ephemeral.formal_arg_constraint(ephemeral.formal_arg(node.func, index), actual_arg.type)
+            else:
+                return actual_arg
+        
+        kwarg_nodes = node.kwargs.copy()
+        actual_args = []
+        
+        formal_arg_names = [arg.name for arg in formal_args]
+        
+        for index, formal_arg_name in enumerate(formal_arg_names):
+            positional_arg = None
+            keyword_arg = None
+            
+            if index < len(node.args):
+                positional_arg = node.args[index]
+            if formal_arg_name is not None:
+                keyword_arg = kwarg_nodes.pop(formal_arg_name, None)
+            
+            if positional_arg is not None and keyword_arg is not None:
+                raise errors.ArgumentsError(node, "multiple values for argument '{}'".format(formal_arg_name))
+            elif positional_arg is not None:
+                actual_args.append(read_actual_arg(positional_arg, index))
+            elif keyword_arg is not None:
+                actual_args.append(read_actual_arg(keyword_arg, index))
+            else:
+                if formal_arg_name is None:
+                    message = "missing {} positional argument".format(_ordinal(index + 1))
+                else:
+                    message = "missing argument '{}'".format(formal_arg_name)
+                raise errors.ArgumentsError(node, message)
+        
+        if kwarg_nodes:
+            first_key = next(iter(kwarg_nodes.keys()))
+            raise errors.ArgumentsError(node, "unexpected keyword argument '{}'".format(first_key))
+        
+        return actual_args
     
 
     def _infer_attr(self, node, context):
