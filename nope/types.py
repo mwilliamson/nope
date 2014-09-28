@@ -417,6 +417,18 @@ def is_sub_type(super_type, sub_type, unify=None):
             constraints.constrain_type_param_to_sub_type(sub_type, super_type)
             return True
         
+        if isinstance(super_type, _FunctionType) and (sub_type, _FunctionType):
+            if len(super_type.args) != len(sub_type.args):
+                return False
+            
+            for super_arg, sub_arg in zip(super_type.args, sub_type.args):
+                if sub_arg.name != super_arg.name:
+                    return False
+                if not is_sub_type(sub_arg.type, super_arg.type):
+                    return False
+            
+            return is_sub_type(super_type.return_type, sub_type.return_type)
+        
         return super_type == sub_type
 
     

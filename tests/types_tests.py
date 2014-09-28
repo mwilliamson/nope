@@ -304,6 +304,44 @@ class SubTypeTests(object):
         )
         assert_equal(types.bottom_type, type_map[contravariant_type_param])
         
+    @istest
+    def func_type_is_sub_type_of_itself(self):
+        func_type = lambda: types.func([int_type], str_type)
+        
+        assert types.is_sub_type(func_type(), func_type())
+        
+    @istest
+    def func_type_is_not_sub_type_if_it_has_different_number_of_arguments(self):
+        short_func_type = types.func([], str_type)
+        long_func_type = types.func([int_type], str_type)
+        
+        assert not types.is_sub_type(short_func_type, long_func_type)
+        assert not types.is_sub_type(long_func_type, short_func_type)
+        
+    @istest
+    def func_type_is_not_sub_type_if_argument_has_different_name(self):
+        first_func_type = types.func([types.func_arg("x", int_type)], str_type)
+        second_func_type = types.func([types.func_arg("y", int_type)], str_type)
+        
+        assert not types.is_sub_type(first_func_type, second_func_type)
+        assert not types.is_sub_type(second_func_type, first_func_type)
+        
+    @istest
+    def functions_are_contravariant_in_their_arguments(self):
+        super_type = types.func([int_type], str_type)
+        sub_type = types.func([types.object_type], str_type)
+        
+        assert types.is_sub_type(super_type, sub_type)
+        assert not types.is_sub_type(sub_type, super_type)
+        
+    @istest
+    def functions_are_covariant_in_return_type(self):
+        super_type = types.func([int_type], types.object_type)
+        sub_type = types.func([int_type], str_type)
+        
+        assert types.is_sub_type(super_type, sub_type)
+        assert not types.is_sub_type(sub_type, super_type)
+        
 
 @istest
 class IsFuncTypeTests(object):
