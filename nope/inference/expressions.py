@@ -76,19 +76,32 @@ class ExpressionTypeInferer(object):
         
         actual_args = self._generate_actual_args(node, call_function_type.args)
         
-        formal_arg_types = [
-            arg.type
-            for arg in call_function_type.args
-        ]
-        
-        self._type_check_args(
-            node,
-            actual_args,
-            type_params,
-            formal_arg_types,
-            context
-        )
-        return call_function_type.return_type
+        if type_params:
+            actual_arg_types = [
+                self.infer(actual_arg, context)
+                for actual_arg in actual_args
+            ]
+            actual_func_type = types.func(actual_arg_types, types.object_type)
+            # TODO: handle type_map is None
+            # TODO: unify these two ways of checking args -- the logic is effectively
+            # duplicated in this class and in types.is_sub_type, and the user gets
+            # less informative errors in the generic case
+            type_map = types.is_sub_type(actual_func_type, call_function_type, unify=type_params)
+            return call_function_type.substitute_types(type_map).return_type
+        else:
+            formal_arg_types = [
+                arg.type
+                for arg in call_function_type.args
+            ]
+            
+            self._type_check_args(
+                node,
+                actual_args,
+                type_params,
+                formal_arg_types,
+                context
+            )
+            return call_function_type.return_type
 
     def _get_call_type(self, node, callee_type):
         if types.is_func_type(callee_type):

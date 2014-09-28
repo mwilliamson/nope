@@ -487,6 +487,9 @@ class TypeMap(object):
     
     def __getitem__(self, key):
         return self._type_map[key]
+    
+    def get(self, key, default):
+        return self._type_map.get(key, default)
 
 
 def meta_type(type_, attrs=None):

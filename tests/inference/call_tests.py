@@ -77,6 +77,18 @@ def callee_can_be_generic_func():
 
 
 @istest
+def generic_type_arguments_are_covariant():
+    type_bindings = {"f": types.generic(["T"], lambda T:
+        types.func([T, T], T),
+    )}
+    node = nodes.call(nodes.ref("f"), [nodes.string(""), nodes.none()])
+    assert_equal(
+        types.common_super_type([types.str_type, types.none_type]),
+        infer(node, type_bindings=type_bindings)
+    )
+
+
+@istest
 def callee_must_be_function_or_have_call_magic_method():
     cls = types.scalar_type("Blah", {})
     type_bindings = {"f": cls}
