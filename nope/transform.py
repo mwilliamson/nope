@@ -83,6 +83,9 @@ class Converter(object):
             
             raise
         
+        if nope_node is None:
+            return
+        
         if hasattr(node, "lineno"):
             nope_node.lineno = node.lineno
         if hasattr(node, "col_offset"):
@@ -101,6 +104,22 @@ class Converter(object):
 
 
     def _import_from(self, node):
+        if node.module == "__future__":
+            future_imports = set([
+                "nested_scopes",
+                "generators",
+                "division",
+                "absolute_import",
+                "with_statement",
+                "print_function",
+                "unicode_literals",
+            ])
+            
+            for name in node.names:
+                if name.name not in future_imports:
+                    raise SyntaxError("Unknown __future__ import: '{}'".format(name.name))
+            return None
+        
         if node.level == 1:
             module_path = ["."]
         else:
@@ -441,11 +460,11 @@ class Converter(object):
         return nodes.comprehension(self.convert(node.target), self.convert(node.iter))
 
     def _mapped(self, nodes, allowed=None):
-        return [
+        return list(filter(None, (
             self.convert(node, allowed=allowed)
             for node in nodes
             if not isinstance(node, ast.Pass)
-        ]
+        )))
     
     def _convert_or_none_node(self, node):
         return self._convert_or_default(node, nodes.none)

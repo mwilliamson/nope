@@ -22,6 +22,30 @@ def module_is_not_executable_if_it_is_missing_shebang():
 
 
 @istest
+def known_future_import_is_ignored():
+    # As of Python 3.4, all valid future imports are mandatory
+    source = """#!/usr/bin/env python
+from __future__ import unicode_literals
+"""
+    
+    module_node = parser.parse(source)
+    assert_equal([], module_node.body)
+
+
+@istest
+def unknown_future_import_is_parser_error():
+    source = """#!/usr/bin/env python
+from __future__ import blah
+"""
+    
+    try:
+        module_node = parser.parse(source)
+        assert False
+    except SyntaxError as error:
+        assert_equal("Unknown __future__ import: 'blah'", error.msg)
+
+
+@istest
 def can_parse_import_from_in_current_package_and_one_name():
     source = """
 from . import message
