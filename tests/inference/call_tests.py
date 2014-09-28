@@ -68,6 +68,15 @@ def return_type_is_common_super_type_of_possible_return_types_of_overloaded_func
 
 
 @istest
+def callee_can_be_generic_func():
+    type_bindings = {"f": types.generic(["T"], lambda T:
+        types.func([T], types.int_type),
+    )}
+    node = nodes.call(nodes.ref("f"), [nodes.string("")])
+    assert_equal(types.int_type, infer(node, type_bindings=type_bindings))
+
+
+@istest
 def callee_must_be_function_or_have_call_magic_method():
     cls = types.scalar_type("Blah", {})
     type_bindings = {"f": cls}

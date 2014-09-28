@@ -100,7 +100,7 @@ class ExpressionTypeInferer(object):
                 # TODO: more descriptive error
                 raise errors.ArgumentsError(node, "could not find matching overload")
                 
-        call_function_type = self._get_call_type(node.func, callee_type)
+        type_params, call_function_type = self._get_call_type(node.func, callee_type)
         
         if len(node.args) > len(call_function_type.args):
             raise errors.ArgumentsError(
@@ -149,6 +149,7 @@ class ExpressionTypeInferer(object):
         self._type_check_args(
             node,
             actual_args,
+            type_params,
             formal_arg_types,
             context
         )
@@ -156,7 +157,9 @@ class ExpressionTypeInferer(object):
 
     def _get_call_type(self, node, callee_type):
         if types.is_func_type(callee_type):
-            return callee_type
+            return [], callee_type
+        elif types.is_generic_type(callee_type) and types.is_func_type(callee_type.underlying_type):
+            return callee_type.params, callee_type.underlying_type
         elif "__call__" in callee_type.attrs:
             return self._get_call_type(node, callee_type.attrs.type_of("__call__"))
         else:
@@ -245,10 +248,11 @@ class ExpressionTypeInferer(object):
         )
         return self._infer_call(call_node, context)
     
-    def _type_check_args(self, node, actual_args, formal_arg_types, context):
+    def _type_check_args(self, node, actual_args, type_params, formal_arg_types, context):
         for actual_arg, formal_arg_type in zip(actual_args, formal_arg_types):
             actual_arg_type = self.infer(actual_arg, context)
-            if not types.is_sub_type(formal_arg_type, actual_arg_type):
+            # TODO: need to ensure unified type params are consistent
+            if not types.is_sub_type(formal_arg_type, actual_arg_type, unify=type_params):
                 if isinstance(actual_arg, ephemeral.FormalArgumentConstraint):
                     raise errors.UnexpectedTargetTypeError(
                         actual_arg.formal_arg_node,
