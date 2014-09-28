@@ -76,29 +76,7 @@ class ExpressionTypeInferer(object):
                 return actual_arg
         
         if types.is_overloaded_func_type(callee_type):
-            # TODO: this still allows some ambiguity e.g. if a function is
-            # overloaded with types "int -> int" and "v: int -> str", then
-            # the call f(v=1) is still potentially ambiguous since it *may*
-            # match the first type
-            # It's also ambiguous due to sub-classing e.g. if a function is
-            # overloaded with types "A -> int" and "B -> str", then passing
-            # in an instance of "B" may in fact result in "int" being returned
-            # since that instance was *also* a subclass of "B".
-            # Since we have the restriction that many built-ins (e.g. int) can't be
-            # sub-classed, perhaps we check for ambiguities by passing in the bottom
-            # type as the arg type instead of any non-primitive?
-            _possible_return_types = []
-            # TODO: remove internal access
-            for type_ in callee_type._types:
-                try:
-                    _possible_return_types.append(self._infer_call_with_callee_type(node, type_, context))
-                except errors.TypeCheckError:
-                    pass
-            if len(_possible_return_types) > 0:
-                return types.common_super_type(_possible_return_types)
-            else:
-                # TODO: more descriptive error
-                raise errors.ArgumentsError(node, "could not find matching overload")
+            return self._infer_overloaded_func_call(node, callee_type, context)
                 
         type_params, call_function_type = self._get_call_type(node.func, callee_type)
         
@@ -164,7 +142,33 @@ class ExpressionTypeInferer(object):
             return self._get_call_type(node, callee_type.attrs.type_of("__call__"))
         else:
             raise errors.UnexpectedValueTypeError(node, expected="callable object", actual=callee_type)
-
+    
+    
+    def _infer_overloaded_func_call(self, node, callee_type, context):
+        # TODO: this still allows some ambiguity e.g. if a function is
+        # overloaded with types "int -> int" and "v: int -> str", then
+        # the call f(v=1) is still potentially ambiguous since it *may*
+        # match the first type
+        # It's also ambiguous due to sub-classing e.g. if a function is
+        # overloaded with types "A -> int" and "B -> str", then passing
+        # in an instance of "B" may in fact result in "int" being returned
+        # since that instance was *also* a subclass of "B".
+        # Since we have the restriction that many built-ins (e.g. int) can't be
+        # sub-classed, perhaps we check for ambiguities by passing in the bottom
+        # type as the arg type instead of any non-primitive?
+        _possible_return_types = []
+        # TODO: remove internal access
+        for type_ in callee_type._types:
+            try:
+                _possible_return_types.append(self._infer_call_with_callee_type(node, type_, context))
+            except errors.TypeCheckError:
+                pass
+        if len(_possible_return_types) > 0:
+            return types.common_super_type(_possible_return_types)
+        else:
+            # TODO: more descriptive error
+            raise errors.ArgumentsError(node, "could not find matching overload")
+    
 
     def _infer_attr(self, node, context):
         value_type = self.infer(node.value, context)
