@@ -327,6 +327,14 @@ class SubTypeTests(object):
         assert not types.is_sub_type(second_func_type, first_func_type)
         
     @istest
+    def func_type_is_sub_type_if_argument_of_super_type_has_no_name_and_sub_type_has_name(self):
+        first_func_type = types.func([types.func_arg(None, int_type)], str_type)
+        second_func_type = types.func([types.func_arg("y", int_type)], str_type)
+        
+        assert types.is_sub_type(first_func_type, second_func_type)
+        assert not types.is_sub_type(second_func_type, first_func_type)
+        
+    @istest
     def functions_are_contravariant_in_their_arguments(self):
         super_type = types.func([int_type], str_type)
         sub_type = types.func([types.object_type], str_type)

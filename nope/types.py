@@ -422,7 +422,7 @@ def is_sub_type(super_type, sub_type, unify=None):
                 return False
             
             for super_arg, sub_arg in zip(super_type.args, sub_type.args):
-                if sub_arg.name != super_arg.name:
+                if super_arg.name is not None and sub_arg.name != super_arg.name:
                     return False
                 if not is_sub_type(sub_arg.type, super_arg.type):
                     return False
