@@ -16,7 +16,7 @@ def can_import_module_using_plain_import_syntax():
 
 
 @istest
-def importing_module_in_package_mutates_that_package():
+def importing_module_in_package_mutates_that_package_in_importing_module_only():
     node = nodes.Import([nodes.import_alias("messages.hello", None)])
     messages_module = module_type([])
     hello_module = module_type([types.attr("value", types.str_type)])
@@ -26,7 +26,8 @@ def importing_module_in_package_mutates_that_package():
         ("messages", "hello"): hello_module,
     })
     
-    assert_equal(hello_module, context.lookup_name("messages").attrs.type_of("hello"))
+    assert_equal(types.str_type, context.lookup_name("messages").attrs.type_of("hello").attrs.type_of("value"))
+    assert "hello" not in messages_module.attrs
 
 
 @istest
@@ -76,7 +77,6 @@ def can_import_module_using_import_from_syntax():
     })
     
     assert_equal(types.str_type, context.lookup_name("message").attrs.type_of("value"))
-    assert_equal(message_module, root_module.attrs.type_of("message"))
 
 
 @istest

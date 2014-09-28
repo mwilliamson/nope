@@ -359,7 +359,7 @@ class StatementTypeChecker(object):
         except errors.TypeCheckError as error:
             error.node = node
             raise error
-        return self._module_types.type_of_module(module)
+        return self._module_types.type_of_module(module).copy()
 
     def _possible_module_paths(self, names):
         import_path = os.path.normpath(os.path.join(os.path.dirname(self._module.path), *names))

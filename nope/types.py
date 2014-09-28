@@ -46,6 +46,9 @@ class _Attributes(object):
     
     def __iter__(self):
         return iter(self._attrs.values())
+    
+    def copy(self):
+        return _Attributes(self._attrs.copy())
 
 
 class _GenericTypeAttributes(object):
@@ -534,6 +537,9 @@ class _Module(object):
     def __init__(self, name, attrs):
         self.name = name
         self.attrs = attrs
+    
+    def copy(self):
+        return _Module(self.name, self.attrs.copy())
 
 
 def module(name, attrs):
