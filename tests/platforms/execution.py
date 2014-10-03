@@ -663,6 +663,16 @@ except:
     print("Exception handler")
 """
         self._test_program_string(program, b"Exception handler\n")
+    
+    
+    @istest
+    def test_import_of_module_in_standard_library(self):
+        program = """
+import cgi
+
+print(cgi.escape("<nope>"))
+"""
+        self._test_program_string(program, b"&lt;nope&gt;\n")
         
     
     def _test_program_string(self, program, expected_output):

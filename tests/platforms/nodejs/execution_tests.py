@@ -49,6 +49,7 @@ class NodeJsExecutionTests(execution.ExecutionTests):
     test_slice_list = None
     test_unnested_list_comprehension = None
     test_unnested_generator_expression = None
+    test_import_of_module_in_standard_library = None
 
 
 @istest
@@ -60,3 +61,4 @@ class UnoptimisedNodeJsExecutionTests(execution.ExecutionTests):
     test_slice_list = None
     test_unnested_list_comprehension = None
     test_unnested_generator_expression = None
+    test_import_of_module_in_standard_library = None
