@@ -321,9 +321,6 @@ class Transformer(object):
     def _assign(self, assignment):
         value = self.transform(assignment.value)
         
-        if len(assignment.targets) == 1:
-            return self._create_single_assignment(assignment.targets[0], value)
-        
         tmp_name = self._unique_name("tmp")
         assignments = [
             self._create_single_assignment(target, js.ref(tmp_name))

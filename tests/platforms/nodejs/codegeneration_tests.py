@@ -21,21 +21,12 @@ def test_transform_module_with_exports():
         nodes.module([
             nodes.assign(["__all__"], nodes.list_literal([nodes.string("x")]))
         ]),
-        js.statements([
-            js.var("__all__"),
-            js.expression_statement(
-                js.assign(
-                    "__all__",
-                    js.array([js.string("x")])
-                )
-            ),
-            js.expression_statement(
-                js.assign(
-                    js.property_access(js.ref("$exports"), "x"),
-                    js.ref("x"),
-                )
-            ),
-        ])
+        """
+            var __all__;
+            var $tmp0 = ["x"];
+            __all__ = $tmp0;
+            $exports.x = x;
+        """
     )
 
 
@@ -214,15 +205,14 @@ def test_transform_function_declaration_declares_variables_at_top_of_function():
             args=nodes.args([]),
             body=[nodes.assign(["x"], nodes.ref("y"))],
         ),
-        js.function_declaration(
-            name="f",
-            args=[],
-            body=[
-                js.var("x"),
-                js.expression_statement(js.assign("x", js.ref("y"))),
-                js.ret(js.null),
-            ],
-        )
+        """
+            function f() {
+                var x;
+                var $tmp0 = y;
+                x = $tmp0;
+                return null;
+            }
+        """
     )
 
 
@@ -235,14 +225,13 @@ def test_transform_function_declaration_does_not_redeclare_variables_with_same_n
             args=nodes.args([nodes.arg("x")]),
             body=[nodes.assign(["x"], nodes.ref("y"))],
         ),
-        js.function_declaration(
-            name="f",
-            args=["x"],
-            body=[
-                js.expression_statement(js.assign("x", js.ref("y"))),
-                js.ret(js.null),
-            ],
-        )
+        """
+            function f(x) {
+                var $tmp0 = y;
+                x = $tmp0;
+                return null;
+            }
+        """
     )
 
 
@@ -275,7 +264,8 @@ def test_transform_class_with_attributes():
             User = function() {
                 var $self0 = {};
                 var x;
-                x = null;
+                var $tmp1 = null;
+                x = $tmp1;
                 $self0.x = $nope.instanceAttribute($self0, x);
                 return $self0;
             };
@@ -354,7 +344,10 @@ def test_transform_class_with_init_method():
 def test_transform_single_assignment():
     _assert_transform(
         nodes.assign(["x"], nodes.ref("z")),
-        js.expression_statement(js.assign("x", js.ref("z"))),
+        """
+            var $tmp0 = z;
+            x = $tmp0;
+        """
     )
 
 
@@ -748,7 +741,10 @@ def test_transform_getitem_subscript():
 def test_transform_setitem_subscript():
     _assert_transform(
         nodes.assign([nodes.subscript(nodes.ref("x"), nodes.ref("y"))], nodes.ref("z")),
-        js.expression_statement(js.call(js.ref("$nope.operators.setitem"), [js.ref("x"), js.ref("y"), js.ref("z")]))
+        """
+            var $tmp0 = z;
+            $nope.operators.setitem(x, y, $tmp0);
+        """
     )
 
 
