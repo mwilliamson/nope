@@ -1,7 +1,8 @@
 from nose.tools import istest, assert_equal, assert_raises
 
-from nope import types, nodes, errors, Module
+from nope import types, nodes, errors
 from .util import FakeModuleTypes, FakeModuleResolver, update_blank_context, module as module_type
+from nope.modules import LocalModule
 
 
 @istest
@@ -99,7 +100,7 @@ def _update_blank_context(node, path_to_module_types):
     module_types = {}
     
     for path, module_type in path_to_module_types.items():
-        other_module = Module(path, nodes.module([]))
+        other_module = LocalModule(path, nodes.module([]))
         modules[path] = other_module
         module_types[other_module] = module_type
     
@@ -112,4 +113,4 @@ def _update_blank_context(node, path_to_module_types):
 
 
 def _create_module():
-    return Module(None, None)
+    return LocalModule(None, None)

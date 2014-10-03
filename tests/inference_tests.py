@@ -1,6 +1,7 @@
 from nose.tools import istest, assert_equal
 
-from nope import types, nodes, inference, errors, Module
+from nope import types, nodes, inference, errors
+from nope.modules import LocalModule
 
 from .inference.util import FakeModuleTypes, FakeModuleResolver, module
 
@@ -19,7 +20,7 @@ def check_generates_type_lookup_for_all_expressions():
         ]),
     ])
     
-    module, type_lookup = inference.check(Module(None, module_node))
+    module, type_lookup = inference.check(LocalModule(None, module_node))
     assert_equal(types.int_type, type_lookup.type_of(int_node))
     assert_equal(types.int_type, type_lookup.type_of(int_ref_node))
     assert_equal(types.str_type, type_lookup.type_of(str_node))
@@ -34,7 +35,7 @@ def module_exports_are_specified_using_all():
         nodes.assign(["z"], nodes.int(3)),
     ])
     
-    module, type_lookup = inference.check(Module(None, module_node))
+    module, type_lookup = inference.check(LocalModule(None, module_node))
     assert_equal(types.str_type, module.attrs.type_of("x"))
     assert_equal(None, module.attrs.get("y"))
     assert_equal(types.int_type, module.attrs.type_of("z"))
@@ -48,7 +49,7 @@ def module_exports_default_to_values_without_leading_underscore_if_all_is_not_sp
         nodes.assign(["z"], nodes.int(3)),
     ])
     
-    module, type_lookup = inference.check(Module(None, module_node))
+    module, type_lookup = inference.check(LocalModule(None, module_node))
     assert_equal(types.str_type, module.attrs.type_of("x"))
     assert_equal(None, module.attrs.get("_y"))
     assert_equal(types.int_type, module.attrs.type_of("z"))
@@ -69,7 +70,7 @@ def only_values_that_are_definitely_bound_are_exported():
         )
     ])
     
-    module, type_lookup = inference.check(Module(None, module_node))
+    module, type_lookup = inference.check(LocalModule(None, module_node))
     assert_equal(None, module.attrs.get("x"))
     assert_equal(types.str_type, module.attrs.type_of("y"))
 
@@ -80,7 +81,7 @@ def error_is_raised_if_value_in_package_has_same_name_as_module():
     node = nodes.module([nodes.assign([target_node], nodes.int(1))], is_executable=False)
     
     try:
-        _check_module(Module("root/__init__.py", node), {
+        _check_module(LocalModule("root/__init__.py", node), {
             (".", "x"): module({}),
         })
         assert False, "Expected error"
@@ -96,7 +97,7 @@ def values_can_have_same_name_as_child_module_if_they_are_not_in_module_scope():
         nodes.func("f", nodes.signature(), nodes.args([]), [value_node])
     ], is_executable=False)
     
-    _check_module(Module("root/__init__.py", node), {
+    _check_module(LocalModule("root/__init__.py", node), {
         (".", "x"): module({}),
     })
 
@@ -106,7 +107,7 @@ def value_in_package_can_have_same_name_as_module_if_it_is_that_module():
     value_node = nodes.import_from(["."], [nodes.import_alias("x", None)])
     node = nodes.module([value_node], is_executable=False)
     
-    _check_module(Module("root/__init__.py", node), {
+    _check_module(LocalModule("root/__init__.py", node), {
         (".",): module({}),
         (".", "x"): module({}),
     })
@@ -118,7 +119,7 @@ def _check_module(module, path_to_module_types):
     module_types = {}
     
     for path, module_type in path_to_module_types.items():
-        other_module = Module(path, nodes.module([]))
+        other_module = LocalModule(path, nodes.module([]))
         modules[path] = other_module
         module_types[other_module] = module_type
     

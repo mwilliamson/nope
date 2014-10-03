@@ -1,8 +1,9 @@
 from nose.tools import assert_equal
 
-from nope import types, errors, nodes, inference, name_declaration, Module
+from nope import types, errors, nodes, inference, name_declaration
 from nope.context import Context
 from nope.name_declaration import Declarations
+from nope.modules import LocalModule
 
 
 def update_context(statement, *, type_bindings=None, module_resolver=None, module_types=None, module_path=None, is_executable=False, declared_names_in_node=None):
@@ -35,7 +36,7 @@ def _create_type_checker(declaration_finder=None, module_types=None, module_reso
         declaration_finder=declaration_finder,
         module_resolver=module_resolver,
         module_types=module_types,
-        module=Module(module_path, nodes.module([], is_executable=is_executable)),
+        module=LocalModule(module_path, nodes.module([], is_executable=is_executable)),
     )
 
 

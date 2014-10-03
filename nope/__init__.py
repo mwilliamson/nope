@@ -2,6 +2,7 @@ import collections
 import os
 
 from . import inference, parser, platforms, errors, loop_control, module_resolution
+from .modules import LocalModule
 
 
 def check(path):
@@ -99,19 +100,13 @@ class SourceTree(object):
     
     def module(self, path):
         if path in self._asts:
-            return Module(path, self._asts[path])
+            return LocalModule(path, self._asts[path])
         else:
             return None
     
     def modules(self):
-        return [Module(path, node) for path, node in self._asts.items()]
+        return [LocalModule(path, node) for path, node in self._asts.items()]
 
 
 class CircularImportError(Exception):
     pass
-
-
-class Module(object):
-    def __init__(self, path, node):
-        self.path = path
-        self.node = node

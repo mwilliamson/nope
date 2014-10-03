@@ -1,6 +1,7 @@
 from nose.tools import istest, assert_is, assert_equal
 
-from nope import nodes, errors, module_resolution, Module
+from nope import nodes, errors, module_resolution
+from nope.modules import LocalModule
 
 
 @istest
@@ -135,7 +136,7 @@ def _resolve_import(module, names, modules):
 
 
 def _create_module(path, is_executable=False):
-    return Module(path=path, node=nodes.module([], is_executable=is_executable))
+    return LocalModule(path=path, node=nodes.module([], is_executable=is_executable))
 
 
 class FakeSourceTree(object):
