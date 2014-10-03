@@ -2,7 +2,7 @@ from nose.tools import istest, assert_equal, assert_raises
 
 from nope import types, nodes, errors
 from .util import FakeModuleTypes, FakeModuleResolver, update_blank_context, module as module_type
-from nope.modules import LocalModule
+from nope.modules import LocalModule, BuiltinModule
 
 
 @istest
@@ -93,6 +93,22 @@ def can_import_module_using_import_from_syntax_with_alias():
     assert_equal(types.str_type, context.lookup_name("v"))
     assert_raises(errors.UnboundLocalError, lambda: context.lookup_name("value"))
     assert_raises(errors.UnboundLocalError, lambda: context.lookup_name("message"))
+
+
+@istest
+def builtin_modules_are_typed():
+    cgi_module = BuiltinModule("cgi", types.module("cgi", [
+        types.attr("escape", types.none_type),
+    ]))
+    node = nodes.Import([nodes.import_alias("cgi", None)])
+    
+    context = update_blank_context(
+        node,
+        module_resolver=FakeModuleResolver({("cgi",): cgi_module}),
+        module_types=FakeModuleTypes({}),
+    )
+    
+    assert_equal(types.none_type, context.lookup_name("cgi").attrs.type_of("escape"))
 
 
 def _update_blank_context(node, path_to_module_types):

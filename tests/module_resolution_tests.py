@@ -131,7 +131,7 @@ def relative_import_using_two_dots_searches_parent_directory():
 
 @istest
 def absolute_import_retrieves_standard_library_module():
-    cgi_module = BuiltinModule("cgi")
+    cgi_module = BuiltinModule("cgi", None)
     
     resolved_module = _resolve_import(
         _create_module("root/main.py"),

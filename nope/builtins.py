@@ -1,5 +1,6 @@
 from . import types, name_declaration, name_resolution, name_binding, context
 from .identity_dict import IdentityDict
+from .modules import BuiltinModule
 
 
 _builtin_types = {
@@ -54,3 +55,10 @@ def module_context(references):
 
 def module_bindings(references):
     return dict((declaration, True) for declaration in _builtin_declarations.values())
+
+
+builtin_modules = {
+    "cgi": BuiltinModule("cgi", types.module("cgi", [
+        types.attr("escape", types.func([types.str_type], types.str_type), read_only=True)
+    ]))
+}

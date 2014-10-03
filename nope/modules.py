@@ -5,5 +5,6 @@ class LocalModule(object):
 
 
 class BuiltinModule(object):
-    def __init__(self, name):
+    def __init__(self, name, type_):
         self.name = name
+        self.type = type_

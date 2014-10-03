@@ -80,7 +80,7 @@ class Checker(object):
         loop_control.check_loop_control(module.node, in_loop=False)
         return inference.check(
             module,
-            module_resolution.ModuleResolution(self._source_tree, {}),
+            module_resolution.ModuleResolution(self._source_tree, builtins.builtin_modules),
             self
         )
 
