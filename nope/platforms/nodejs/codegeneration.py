@@ -335,7 +335,12 @@ class Transformer(object):
                 [target.value, target.slice, ConvertedNode(value)]
             )
             return js.expression_statement(call)
-        else:
+        elif isinstance(target, nodes.TupleLiteral):
+            return js.statements([
+                self._create_single_assignment(target_element, js.property_access(value, js.number(index)))
+                for index, target_element in enumerate(target.elements)
+            ])
+        elif isinstance(target, (nodes.VariableReference)):
             return js.assign_statement(self.transform(target), value)
         
     

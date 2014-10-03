@@ -364,6 +364,21 @@ def test_transform_compound_assignments():
 
 
 @istest
+def test_tuple_assignment():
+    _assert_transform(
+        nodes.assign(
+            [nodes.tuple_literal([nodes.ref("x"), nodes.ref("y")])],
+            nodes.ref("z")
+        ),
+        """
+            var $tmp0 = z;
+            x = $tmp0[0];
+            y = $tmp0[1];
+        """
+    )
+
+
+@istest
 def test_transform_return():
     _assert_transform(
         nodes.ret(nodes.ref("x")),
