@@ -5,11 +5,15 @@ from .identity_dict import IdentityDict
 
 
 class ModuleResolution(object):
-    def __init__(self, source_tree):
+    def __init__(self, source_tree, builtin_modules):
         self._source_tree = source_tree
+        self._builtin_modules = builtin_modules
     
     def resolve_import(self, module, names):
-        # TODO: handle absolute imports
+        name = ".".join(names)
+        if name in self._builtin_modules:
+            return self._builtin_modules[name]
+        
         if names[0] not in [".", ".."] and not module.node.is_executable:
             raise errors.ImportError(None, "Absolute imports not yet implemented")
             

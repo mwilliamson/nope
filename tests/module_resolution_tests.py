@@ -1,7 +1,7 @@
 from nose.tools import istest, assert_is, assert_equal
 
 from nope import nodes, errors, module_resolution
-from nope.modules import LocalModule
+from nope.modules import LocalModule, BuiltinModule
 
 
 @istest
@@ -129,9 +129,27 @@ def relative_import_using_two_dots_searches_parent_directory():
     assert_is(message_module, resolved_module)
 
 
-def _resolve_import(module, names, modules):
+@istest
+def absolute_import_retrieves_standard_library_module():
+    cgi_module = BuiltinModule("cgi")
+    
+    resolved_module = _resolve_import(
+        _create_module("root/main.py"),
+        ["cgi"],
+        builtin_modules={"cgi": cgi_module}
+    )
+    
+    assert_is(cgi_module, resolved_module)
+
+
+def _resolve_import(module, names, modules=None, builtin_modules=None):
+    if modules is None:
+        modules = []
+    if builtin_modules is None:
+        builtin_modules = {}
+        
     source_tree = FakeSourceTree(modules)
-    return module_resolution.ModuleResolution(source_tree) \
+    return module_resolution.ModuleResolution(source_tree, builtin_modules) \
         .resolve_import(module, names)
 
 

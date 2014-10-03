@@ -78,7 +78,11 @@ class Checker(object):
     
     def _uncached_check(self, module):
         loop_control.check_loop_control(module.node, in_loop=False)
-        return inference.check(module, module_resolution.ModuleResolution(self._source_tree), self)
+        return inference.check(
+            module,
+            module_resolution.ModuleResolution(self._source_tree, {}),
+            self
+        )
 
 
 class SourceTree(object):
