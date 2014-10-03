@@ -915,7 +915,15 @@ def test_transform_int_expression():
         nodes.int(42),
         js.number(42),
     )
-    
+
+
+@istest
+def test_transform_tuple_literal():
+    _assert_transform(
+        nodes.tuple_literal([nodes.int(42), nodes.int(1)]),
+        """$nope.jsArrayToTuple([42, 1])"""
+    )
+
 
 def _assert_transform(nope, expected_js, type_lookup=None, optimise=True):
     if type_lookup is None:

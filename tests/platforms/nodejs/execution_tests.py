@@ -45,7 +45,6 @@ class NodeJsExecutionTests(execution.ExecutionTests):
     platform = _optimised_node_js
     
     test_getitem_dict = None
-    test_for_unpacking = None
     test_slice_list = None
     test_unnested_list_comprehension = None
     test_unnested_generator_expression = None
@@ -57,7 +56,6 @@ class UnoptimisedNodeJsExecutionTests(execution.ExecutionTests):
     platform = _unoptimised_node_js
     
     test_getitem_dict = None
-    test_for_unpacking = None
     test_slice_list = None
     test_unnested_list_comprehension = None
     test_unnested_generator_expression = None

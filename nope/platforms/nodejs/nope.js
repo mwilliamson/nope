@@ -234,11 +234,17 @@ function type(value) {
 }
 
 function tuple(values) {
-    return {
+    var self = {
         __str__: function() {
             return "(" + values.map(str).join(", ") + ")";
         }
     };
+    
+    for (var i = 0; i < values.length; i++) {
+        self[i] = values[i];
+    }
+    
+    return self;
 }
 
 function isinstance(obj, clsinfo) {
@@ -319,5 +325,7 @@ var $nope = module.exports = {
     booleanOr: booleanOr,
     
     Error: Error,
-    undefined: undefined
+    undefined: undefined,
+    
+    jsArrayToTuple: tuple
 };

@@ -219,6 +219,7 @@ class Transformer(object):
             nodes.IntExpression: _int,
             nodes.StringExpression: _str,
             nodes.ListLiteral: self._list_literal,
+            nodes.TupleLiteral: self._tuple_literal,
             
             ConvertedNode: lambda node: node.js_node,
         }
@@ -769,6 +770,11 @@ class Transformer(object):
 
     def _list_literal(self, node):
         return js.array(self._transform_all(node.elements))
+    
+    
+    def _tuple_literal(self, node):
+        elements = js.array(self._transform_all(node.elements))
+        return _call_internal(["jsArrayToTuple"], [elements])
     
     
     def _getattr(self, value, attr_name):
