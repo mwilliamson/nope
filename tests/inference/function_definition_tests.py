@@ -106,6 +106,51 @@ def function_adds_arguments_to_context():
     assert_equal(types.func([types.int_type], types.int_type), _infer_func_type(node))
 
 
+@istest
+def error_if_name_of_argument_does_not_match_name_in_signature():
+    signature = nodes.signature(
+        args=[nodes.signature_arg("y", nodes.ref("int"))],
+        returns=nodes.ref("int")
+    )
+    args = nodes.arguments([nodes.argument("x")])
+    body = [nodes.ret(nodes.ref("x"))]
+    node = nodes.typed(signature, nodes.func("f", args, body))
+    try:
+        _infer_func_type(node)
+        assert False, "Expected error"
+    except errors.ArgumentsError as error:
+        assert_equal("argument 'x' has name 'y' in signature", str(error))
+    
+
+
+@istest
+def error_if_type_signature_has_different_number_of_args_from_def():
+    signature = nodes.signature(
+        args=[nodes.signature_arg(nodes.ref("int")), nodes.signature_arg(nodes.ref("int"))],
+        returns=nodes.ref("int")
+    )
+    args = nodes.arguments([nodes.argument("x")])
+    body = [nodes.ret(nodes.ref("x"))]
+    node = nodes.typed(signature, nodes.func("f", args, body))
+    try:
+        _infer_func_type(node)
+        assert False, "Expected error"
+    except errors.ArgumentsError as error:
+        assert_equal("args length mismatch: def has 1, signature has 2", str(error))
+
+
+@istest
+def error_if_type_signature_is_missing_from_function_with_args():
+    args = nodes.arguments([nodes.argument("x")])
+    body = [nodes.ret(nodes.ref("x"))]
+    node = nodes.func("f", args, body)
+    try:
+        _infer_func_type(node)
+        assert False, "Expected error"
+    except errors.ArgumentsError as error:
+        assert_equal("signature is missing from function definition", str(error))
+
+
 def _infer_func_type(func_node):
     context = update_context(func_node, type_bindings={
         "int": types.meta_type(types.int_type),

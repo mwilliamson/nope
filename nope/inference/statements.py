@@ -45,6 +45,7 @@ class StatementTypeChecker(object):
     def _infer_function_def(self, node, context):
         signature = nodes.explicit_type_of(node)
         args, return_type = self._read_signature(signature, context)
+        self._check_signature(signature, node)
         return types.func(args, return_type)
     
     def _read_signature(self, signature, context):
@@ -60,6 +61,24 @@ class StatementTypeChecker(object):
             arg.name,
             self._infer_type_value(arg.type, context),
         )
+    
+    def _check_signature(self, signature, node):
+        if signature is None:
+            if len(node.args.args) == 0:
+                signature = nodes.signature(type_params=[], args=[], returns=None)
+            else:
+                raise errors.ArgumentsError(node, "signature is missing from function definition")
+        
+        if len(node.args.args) != len(signature.args):
+            raise errors.ArgumentsError(signature, "args length mismatch: def has {0}, signature has {1}".format(
+                len(node.args.args), len(signature.args)))
+        
+        for def_arg, signature_arg in zip(node.args.args, signature.args):
+            if signature_arg.name is not None and def_arg.name != signature_arg.name:
+                raise errors.ArgumentsError(
+                    signature_arg,
+                    "argument '{}' has name '{}' in signature".format(def_arg.name, signature_arg.name)
+                )
 
     def _check_function_def(self, node, context):
         func_type = self._infer_function_def(node, context)

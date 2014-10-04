@@ -177,18 +177,6 @@ def g():
     assert_equal(expected, module_node.body[1])
 
 
-#TODO
-#~ @istest
-def syntax_error_if_name_of_argument_does_not_match_name_in_signature():
-    source = """
-#:: y: int -> str
-def f(x):
-    pass
-"""
-    
-    _assert_syntax_error("argument 'x' has name 'y' in signature", source)
-
-
 @istest
 def function_decorators_are_not_supported():
     source = """
@@ -228,28 +216,6 @@ def f(**kwargs):
     pass
 """
     _assert_syntax_error("arguments in the form '**kwargs' are not supported", source)
-
-
-#TODO
-#~ @istest
-def error_if_type_signature_has_different_number_of_args_from_def():
-    source = """
-#:: int, str -> int
-def f(x):
-    return x
-"""
-    
-    _assert_syntax_error("args length mismatch: def has 1, signature has 2", source)
-
-
-#TODO
-#~ @istest
-def error_if_type_signature_is_missing_from_function_with_args():
-    source = """
-def f(x):
-    return x
-"""
-    _assert_syntax_error("signature is missing from function definition", source)
 
 
 @istest

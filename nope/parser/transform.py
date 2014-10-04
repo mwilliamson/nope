@@ -162,24 +162,6 @@ class Converter(object):
             name = getattr(node.args.kwarg, "arg", node.args.kwarg)
             raise SyntaxError("arguments in the form '**{}' are not supported".format(name))
         
-        
-        # TODO: move to inference
-        #~ signature = self._comment_seeker.consume_signature(node.lineno, node.col_offset)
-        #~ if signature is None:
-            #~ if len(node.args.args) == 0:
-                #~ signature = nodes.signature(type_params=[], args=[], returns=None)
-            #~ else:
-                #~ raise SyntaxError("signature is missing from function definition")
-        #~ 
-        #~ 
-        #~ if len(node.args.args) != len(signature.args):
-            #~ raise SyntaxError("args length mismatch: def has {0}, signature has {1}".format(
-                #~ len(node.args.args), len(signature.args)))
-        #~ 
-        #~ for def_arg, signature_arg in zip(node.args.args, signature.args):
-            #~ if signature_arg.name is not None and def_arg.arg != signature_arg.name:
-                #~ raise SyntaxError("argument '{}' has name '{}' in signature".format(def_arg.arg, signature_arg.name))
-        
         args = nodes.arguments([
             nodes.argument(arg.arg)
             for arg in node.args.args
