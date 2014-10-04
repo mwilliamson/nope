@@ -144,20 +144,6 @@ def f():
 
 
 @istest
-def can_parse_signature_comment_with_return_type_and_no_args():
-    source = """
-#:: -> str
-def f():
-    pass
-"""
-    
-    module_node = parser.parse(source)
-    signature = nodes.signature(returns=nodes.ref("str"))
-    expected = nodes.func("f", signature, nodes.args([]), [])
-    assert_equal(expected, module_node.body[0])
-
-
-@istest
 def can_parse_signature_comment_with_no_args_for_function_after_indent():
     source = """
 #:: -> str
@@ -189,65 +175,6 @@ def g():
     signature = nodes.signature(returns=nodes.ref("int"))
     expected = nodes.func("g", signature, nodes.args([]), [])
     assert_equal(expected, module_node.body[1])
-
-
-@istest
-def can_parse_signature_comment_with_one_arg():
-    source = """
-#:: int -> str
-def f(x):
-    pass
-"""
-    
-    module_node = parser.parse(source)
-    signature = nodes.signature(
-        args=[nodes.signature_arg(nodes.ref("int"))],
-        returns=nodes.ref("str")
-    )
-    expected = nodes.func("f", signature, nodes.args([nodes.arg("x")]), [])
-    assert_equal(expected, module_node.body[0])
-
-
-
-@istest
-def can_parse_signature_comment_with_multiple_args():
-    source = """
-#:: int, str -> str
-def f(x, y):
-    pass
-"""
-    
-    module_node = parser.parse(source)
-    signature = nodes.signature(
-        args=[
-            nodes.signature_arg(nodes.ref("int")),
-            nodes.signature_arg(nodes.ref("str"))
-        ],
-        returns=nodes.ref("str")
-    )
-    args = nodes.args([
-        nodes.arg("x"),
-        nodes.arg("y"),
-    ])
-    expected = nodes.func("f", signature, args, [])
-    assert_equal(expected, module_node.body[0])
-
-
-@istest
-def can_parse_signature_comment_with_named_arg():
-    source = """
-#:: x: int -> str
-def f(x):
-    pass
-"""
-    
-    module_node = parser.parse(source)
-    signature = nodes.signature(
-        args=[nodes.signature_arg("x", nodes.ref("int"))],
-        returns=nodes.ref("str"),
-    )
-    expected = nodes.func("f", signature, nodes.args([nodes.arg("x")]), [])
-    assert_equal(expected, module_node.body[0])
 
 
 @istest
@@ -300,62 +227,6 @@ def f(**kwargs):
     pass
 """
     _assert_syntax_error("arguments in the form '**kwargs' are not supported", source)
-
-
-@istest
-def can_parse_signature_comment_with_type_application_with_one_generic_parameter():
-    source = """
-#:: -> list[str]
-def f():
-    pass
-"""
-    
-    module_node = parser.parse(source)
-    signature = nodes.signature(
-        returns=nodes.type_apply(nodes.ref("list"), [nodes.ref("str")])
-    )
-    expected = nodes.func("f", signature, nodes.args([]), [])
-    assert_equal(expected, module_node.body[0])
-
-
-
-@istest
-def can_parse_signature_comment_with_type_application_with_many_generic_parameters():
-    source = """
-#:: -> dict[str, int]
-def f():
-    pass
-"""
-    
-    module_node = parser.parse(source)
-    signature = nodes.signature(
-        returns=nodes.type_apply(nodes.ref("dict"), [nodes.ref("str"), nodes.ref("int")]),
-    )
-    expected = nodes.func("f", signature, nodes.args([]), [])
-    assert_equal(expected, module_node.body[0])
-
-
-@istest
-def can_parse_signature_comment_with_one_formal_type_parameter():
-    source = """
-#:: T => T -> T
-def f(x):
-    return x
-"""
-    
-    module_node = parser.parse(source)
-    signature = nodes.signature(
-        type_params=["T"],
-        args=[nodes.signature_arg(nodes.ref("T"))],
-        returns=nodes.ref("T")
-    )
-    expected = nodes.func(
-        "f",
-        signature,
-        nodes.args([nodes.arg("x")]),
-        [nodes.ret(nodes.ref("x"))],
-    )
-    assert_equal(expected, module_node.body[0])
 
 
 @istest
