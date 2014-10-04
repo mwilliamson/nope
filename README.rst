@@ -75,6 +75,8 @@ TODO
 
 * Allow mutually recursive functions
 
+* Ensure that all signatures are used in typing rules
+
 Status
 ------
 
