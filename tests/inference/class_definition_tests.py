@@ -72,15 +72,17 @@ def attributes_with_function_type_defined_in_class_definition_body_are_not_prese
 @istest
 def first_argument_in_method_signature_can_be_strict_supertype_of_class():
     node = nodes.class_def("User", [
-        nodes.func(
-            name="is_person",
-            signature=nodes.signature(
+        nodes.typed(
+            nodes.signature(
                 args=[nodes.signature_arg(nodes.ref("object"))],
                 returns=nodes.ref("bool")
             ),
-            args=nodes.args([nodes.arg("self")]),
-            body=[nodes.ret(nodes.boolean(True))],
-        )
+            nodes.func(
+                name="is_person",
+                args=nodes.args([nodes.arg("self")]),
+                body=[nodes.ret(nodes.boolean(True))],
+            )
+        ),
     ])
     class_type = _infer_class_type(node, ["is_person"])
     assert_equal(types.func([], types.boolean_type), class_type.attrs.type_of("is_person"))
@@ -89,14 +91,16 @@ def first_argument_in_method_signature_can_be_strict_supertype_of_class():
 @istest
 def attributes_with_function_type_defined_in_class_definition_body_are_bound_to_class_type():
     node = nodes.class_def("User", [
-        nodes.func(
-            name="is_person",
-            signature=nodes.signature(
+        nodes.typed(
+            nodes.signature(
                 args=[nodes.signature_arg(nodes.ref("Self"))],
                 returns=nodes.ref("bool")
             ),
-            args=nodes.args([nodes.arg("self")]),
-            body=[nodes.ret(nodes.boolean(True))],
+            nodes.func(
+                name="is_person",
+                args=nodes.args([nodes.arg("self")]),
+                body=[nodes.ret(nodes.boolean(True))],
+            ),
         )
     ])
     class_type = _infer_class_type(node, ["is_person"])
@@ -105,14 +109,16 @@ def attributes_with_function_type_defined_in_class_definition_body_are_bound_to_
 
 @istest
 def self_argument_in_method_signature_cannot_be_unrelated_type():
-    func_node = nodes.func(
-        name="is_person",
-        signature=nodes.signature(
+    func_node = nodes.typed(
+        nodes.signature(
             args=[nodes.signature_arg(nodes.ref("bool"))],
             returns=nodes.ref("bool")
         ),
-        args=nodes.args([nodes.arg("self")]),
-        body=[nodes.ret(nodes.boolean(True))],
+        nodes.func(
+            name="is_person",
+            args=nodes.args([nodes.arg("self")]),
+            body=[nodes.ret(nodes.boolean(True))],
+        ),
     )
     node = nodes.class_def("User", [func_node])
     try:
@@ -126,14 +132,16 @@ def self_argument_in_method_signature_cannot_be_unrelated_type():
 
 @istest
 def methods_must_have_at_least_one_argument():
-    func_node = nodes.func(
-        name="is_person",
-        signature=nodes.signature(
+    func_node = nodes.typed(
+        nodes.signature(
             args=[],
             returns=nodes.ref("bool")
         ),
-        args=nodes.args([]),
-        body=[nodes.ret(nodes.boolean(True))],
+        nodes.func(
+            name="is_person",
+            args=nodes.args([]),
+            body=[nodes.ret(nodes.boolean(True))],
+        ),
     )
     node = nodes.class_def("User", [func_node])
     try:
@@ -219,27 +227,31 @@ def init_must_be_function_definition():
 @istest
 def method_can_call_method_on_same_instance_defined_later_in_body():
     node = nodes.class_def("User", [
-        nodes.func(
-            name="f",
-            signature=nodes.signature(
+        nodes.typed(
+            nodes.signature(
                 args=[nodes.signature_arg(nodes.ref("Self"))],
                 returns=nodes.ref("none")
             ),
-            args=nodes.args([nodes.arg("self_f")]),
-            body=[
-                nodes.ret(nodes.call(nodes.attr(nodes.ref("self_f"), "g"), []))
-            ],
+            nodes.func(
+                name="f",
+                args=nodes.args([nodes.arg("self_f")]),
+                body=[
+                    nodes.ret(nodes.call(nodes.attr(nodes.ref("self_f"), "g"), []))
+                ],
+           ),
         ),
-        nodes.func(
-            name="g",
-            signature=nodes.signature(
+        nodes.typed(
+            nodes.signature(
                 args=[nodes.signature_arg(nodes.ref("Self"))],
                 returns=nodes.ref("none")
             ),
-            args=nodes.args([nodes.arg("self_g")]),
-            body=[
-                nodes.ret(nodes.call(nodes.attr(nodes.ref("self_g"), "f"), []))
-            ],
+            nodes.func(
+                name="g",
+                args=nodes.args([nodes.arg("self_g")]),
+                body=[
+                    nodes.ret(nodes.call(nodes.attr(nodes.ref("self_g"), "f"), []))
+                ],
+            )
         )
     ])
     _infer_class_type(node, ["f", "g"])
@@ -248,25 +260,29 @@ def method_can_call_method_on_same_instance_defined_later_in_body():
 @istest
 def init_method_cannot_call_other_methods():
     node = nodes.class_def("User", [
-        nodes.func(
-            name="__init__",
-            signature=nodes.signature(
+        nodes.typed(
+            nodes.signature(
                 args=[nodes.signature_arg(nodes.ref("Self"))],
                 returns=nodes.ref("none")
             ),
-            args=nodes.args([nodes.arg("self_init")]),
-            body=[
-                nodes.assign([nodes.ref("x")], nodes.call(nodes.attr(nodes.ref("self_init"), "g"), []))
-            ],
+            nodes.func(
+                name="__init__",
+                args=nodes.args([nodes.arg("self_init")]),
+                body=[
+                    nodes.assign([nodes.ref("x")], nodes.call(nodes.attr(nodes.ref("self_init"), "g"), []))
+                ],
+            ),
         ),
-        nodes.func(
-            name="g",
-            signature=nodes.signature(
+        nodes.typed(
+            nodes.signature(
                 args=[nodes.signature_arg(nodes.ref("Self"))],
                 returns=nodes.ref("none")
             ),
-            args=nodes.args([nodes.arg("self_g")]),
-            body=[],
+            nodes.func(
+                name="g",
+                args=nodes.args([nodes.arg("self_g")]),
+                body=[],
+            ),
         )
     ])
     try:
@@ -279,30 +295,34 @@ def init_method_cannot_call_other_methods():
 
 @istest
 def attributes_assigned_in_init_can_be_used_in_methods():
-    init_func = nodes.func(
-        name="__init__",
-        signature=nodes.signature(
+    init_func = nodes.typed(
+        nodes.signature(
             args=[nodes.signature_arg(nodes.ref("Self"))],
             returns=nodes.ref("none")
         ),
-        args=nodes.args([nodes.arg("self_init")]),
-        body=[
-            nodes.assign(
-                [nodes.attr(nodes.ref("self_init"), "message")],
-                nodes.string("Hello")
-            )
-        ],
+        nodes.func(
+            name="__init__",
+            args=nodes.args([nodes.arg("self_init")]),
+            body=[
+                nodes.assign(
+                    [nodes.attr(nodes.ref("self_init"), "message")],
+                    nodes.string("Hello")
+                )
+            ],
+        )
     )
     node = nodes.class_def("User", [
         init_func,
-        nodes.func(
-            name="g",
-            signature=nodes.signature(
+        nodes.typed(
+            nodes.signature(
                 args=[nodes.signature_arg(nodes.ref("Self"))],
                 returns=nodes.ref("str")
             ),
-            args=nodes.args([nodes.arg("self_g")]),
-            body=[nodes.ret(nodes.attr(nodes.ref("self_g"), "message"))],
+            nodes.func(
+                name="g",
+                args=nodes.args([nodes.arg("self_g")]),
+                body=[nodes.ret(nodes.attr(nodes.ref("self_g"), "message"))],
+            )
         )
     ])
     _infer_class_type(node, ["__init__", "g"], [(init_func, ["self_init"])])
@@ -310,11 +330,13 @@ def attributes_assigned_in_init_can_be_used_in_methods():
 
 def _create_class_with_init(signature, args, body):
     return nodes.class_def("User", [
-        nodes.func(
-            name="__init__",
-            signature=signature,
-            args=args,
-            body=body,
+        nodes.typed(
+            signature,
+            nodes.func(
+                name="__init__",
+                args=args,
+                body=body,
+            )
         )
     ])
     

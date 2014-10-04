@@ -27,6 +27,7 @@ class References(object):
 
 def _resolve(node, context):
     visitor = visit.Visitor()
+    
     visitor.replace(nodes.VariableReference, _resolve_variable_reference)
     visitor.replace(nodes.ListComprehension, _resolve_comprehension)
     visitor.replace(nodes.GeneratorExpression, _resolve_comprehension)
@@ -60,9 +61,6 @@ def _resolve_comprehension_generator(visitor, node, context):
 
 def _resolve_function_def(visitor, node, context):
     context.add_reference(node, node.name)
-    
-    if node.signature is not None:
-        visitor.visit(node.signature, context)
     
     body_context = context.enter_function(node)
     for arg in node.args.args:

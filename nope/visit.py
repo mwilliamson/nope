@@ -4,7 +4,7 @@ from . import nodes
 
 
 class Visitor(object):
-    def __init__(self):
+    def __init__(self, visit_explicit_types=True):
         self._default_visitors = {
             nodes.NoneExpression: self._visit_nothing,
             nodes.BooleanExpression: self._visit_nothing,
@@ -50,6 +50,10 @@ class Visitor(object):
         self._visitors = self._default_visitors.copy()
         self._before = {}
         self._after = {}
+        if visit_explicit_types:
+            self.visit_explicit_type = self.visit
+        else:
+            self.visit_explicit_type = lambda *args: None
     
     def replace(self, node_type, func):
         self._visitors[node_type] = functools.partial(func, self)
@@ -62,6 +66,10 @@ class Visitor(object):
     
     def visit(self, node, *args):
         node_type = type(node)
+        
+        explicit_type = nodes.explicit_type_of(node)
+        if explicit_type is not None:
+            self.visit_explicit_type(explicit_type, *args)
         
         if node_type in self._before:
             self._before[node_type](self, node, *args)

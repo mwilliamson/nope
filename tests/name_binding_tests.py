@@ -478,7 +478,7 @@ def assigned_variables_in_with_statement_body_are_unbound_after_exit_if_exit_met
 
 @istest
 def function_name_is_definitely_bound_after_function_definition():
-    node = nodes.func("f", None, nodes.arguments([]), [])
+    node = nodes.func("f", nodes.arguments([]), [])
     declaration = name_declaration.VariableDeclarationNode("f")
     
     references = References([(node, declaration)])
@@ -490,14 +490,14 @@ def function_name_is_definitely_bound_after_function_definition():
 @istest
 def body_of_function_is_checked():
     _assert_child_statement_is_checked(lambda generate:
-        generate.func("f", None, nodes.arguments([]), [generate.unbound_ref_statement()])
+        generate.func("f", nodes.arguments([]), [generate.unbound_ref_statement()])
     )
 
 
 @istest
 def variables_from_outer_scope_remain_bound():
     ref = nodes.ref("x")
-    func_node = nodes.func("f", None, nodes.arguments([]), [nodes.expression_statement(ref)])
+    func_node = nodes.func("f", nodes.arguments([]), [nodes.expression_statement(ref)])
     
     declaration = name_declaration.VariableDeclarationNode("x")
     references = References([
@@ -512,7 +512,7 @@ def variables_from_outer_scope_remain_bound():
 def arguments_of_function_are_definitely_bound():
     arg = nodes.arg("x")
     arg_ref = nodes.ref("x")
-    func_node = nodes.func("f", None, nodes.arguments([arg]), [nodes.expression_statement(arg_ref)])
+    func_node = nodes.func("f", nodes.arguments([arg]), [nodes.expression_statement(arg_ref)])
     
     arg_declaration = name_declaration.VariableDeclarationNode("x")
     
@@ -530,7 +530,7 @@ def exception_handler_targets_cannot_be_accessed_from_nested_function():
     target_node = nodes.ref("error")
     ref_node = nodes.ref("error")
     body = [nodes.ret(ref_node)]
-    func_node = nodes.func("f", None, nodes.arguments([]), body)
+    func_node = nodes.func("f", nodes.arguments([]), body)
     try_node = nodes.try_statement(
         [],
         handlers=[

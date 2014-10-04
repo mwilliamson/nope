@@ -14,7 +14,7 @@ def check_generates_type_lookup_for_all_expressions():
     
     module_node = nodes.module([
         nodes.assign(["a"], int_node),
-        nodes.func("f", nodes.signature(), nodes.args([]), [
+        nodes.func("f", nodes.args([]), [
             nodes.assign("b", int_ref_node),
             nodes.assign("c", str_node),
         ]),
@@ -94,7 +94,7 @@ def error_is_raised_if_value_in_package_has_same_name_as_module():
 def values_can_have_same_name_as_child_module_if_they_are_not_in_module_scope():
     value_node = nodes.assign([nodes.ref("x")], nodes.int(1))
     node = nodes.module([
-        nodes.func("f", nodes.signature(), nodes.args([]), [value_node])
+        nodes.func("f", nodes.args([]), [value_node])
     ], is_executable=False)
     
     _check_module(LocalModule("root/__init__.py", node), {

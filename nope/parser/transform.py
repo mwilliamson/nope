@@ -72,9 +72,18 @@ class Converter(object):
     
     def convert(self, node, allowed=None):
         try:
+            lineno = getattr(node, "lineno", None)
+            col_offset = getattr(node, "col_offset", None)
+            signature = self._comment_seeker.consume_signature(lineno, col_offset)
+            
             nope_node = self._converters[type(node)](node)
+            
+            if signature is not None:
+                nope_node = nodes.typed(signature, nope_node)
+            
             if allowed is not None and not isinstance(nope_node, allowed):
                 raise SyntaxError("{} node is not supported in current context".format(type(nope_node).__name__))
+                
         except SyntaxError as error:
             if error.lineno is None:
                 error.lineno = node.lineno
@@ -154,21 +163,22 @@ class Converter(object):
             raise SyntaxError("arguments in the form '**{}' are not supported".format(name))
         
         
-        signature = self._comment_seeker.consume_signature(node.lineno, node.col_offset)
-        if signature is None:
-            if len(node.args.args) == 0:
-                signature = nodes.signature(type_params=[], args=[], returns=None)
-            else:
-                raise SyntaxError("signature is missing from function definition")
-        
-        
-        if len(node.args.args) != len(signature.args):
-            raise SyntaxError("args length mismatch: def has {0}, signature has {1}".format(
-                len(node.args.args), len(signature.args)))
-        
-        for def_arg, signature_arg in zip(node.args.args, signature.args):
-            if signature_arg.name is not None and def_arg.arg != signature_arg.name:
-                raise SyntaxError("argument '{}' has name '{}' in signature".format(def_arg.arg, signature_arg.name))
+        # TODO: move to inference
+        #~ signature = self._comment_seeker.consume_signature(node.lineno, node.col_offset)
+        #~ if signature is None:
+            #~ if len(node.args.args) == 0:
+                #~ signature = nodes.signature(type_params=[], args=[], returns=None)
+            #~ else:
+                #~ raise SyntaxError("signature is missing from function definition")
+        #~ 
+        #~ 
+        #~ if len(node.args.args) != len(signature.args):
+            #~ raise SyntaxError("args length mismatch: def has {0}, signature has {1}".format(
+                #~ len(node.args.args), len(signature.args)))
+        #~ 
+        #~ for def_arg, signature_arg in zip(node.args.args, signature.args):
+            #~ if signature_arg.name is not None and def_arg.arg != signature_arg.name:
+                #~ raise SyntaxError("argument '{}' has name '{}' in signature".format(def_arg.arg, signature_arg.name))
         
         args = nodes.arguments([
             nodes.argument(arg.arg)
@@ -177,7 +187,6 @@ class Converter(object):
         
         return nodes.func(
             name=node.name,
-            signature=signature,
             args=args,
             body=self._mapped(node.body),
         )

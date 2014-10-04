@@ -68,7 +68,7 @@ def with_statement_target_can_be_none():
 
 @istest
 def function_definition_is_declared():
-    node = nodes.func("f", None, nodes.arguments([]), [])
+    node = nodes.func("f", nodes.arguments([]), [])
     
     declarations = _new_declarations()
     declare(node, declarations)
@@ -78,7 +78,7 @@ def function_definition_is_declared():
 
 @istest
 def names_in_function_are_not_declared():
-    node = nodes.func("f", None, nodes.arguments([]), [
+    node = nodes.func("f", nodes.arguments([]), [
         nodes.assign([nodes.ref("x")], nodes.none())
     ])
     
@@ -152,7 +152,7 @@ def cannot_declare_name_with_two_different_declaration_types():
     declarations = _new_declarations()
     node = nodes.assign([nodes.ref("f")], nodes.none())
     declare(node, declarations)
-    node = nodes.func("f", None, nodes.arguments([]), [])
+    node = nodes.func("f", nodes.arguments([]), [])
     try:
         declare(node, declarations)
         assert False, "Expected error"
@@ -162,7 +162,7 @@ def cannot_declare_name_with_two_different_declaration_types():
 
 @istest
 def declarations_in_function_include_declarations_in_body():
-    node = nodes.func("f", None, nodes.arguments([]), [
+    node = nodes.func("f", nodes.arguments([]), [
         nodes.assign([nodes.ref("x")], nodes.none())
     ])
     
@@ -173,7 +173,7 @@ def declarations_in_function_include_declarations_in_body():
 
 @istest
 def declarations_in_function_include_argument_declarations():
-    node = nodes.func("f", None, nodes.arguments([nodes.arg("x")]), [])
+    node = nodes.func("f", nodes.arguments([nodes.arg("x")]), [])
     
     declarations = declarations_in_function(node)
     assert isinstance(declarations.declaration("x"), name_declaration.VariableDeclarationNode)

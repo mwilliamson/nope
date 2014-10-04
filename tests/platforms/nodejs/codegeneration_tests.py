@@ -3,7 +3,7 @@ from nose.tools import istest, assert_equal
 
 from nope.platforms.nodejs import codegeneration, js
 from nope import nodes, types
-from nope.parser import parse_signature
+from nope.parser.typing import parse_signature
 from nope.identity_dict import IdentityDict
 
 
@@ -156,11 +156,13 @@ def test_transform_expression_statement():
 @istest
 def test_transform_function_declaration():
     _assert_transform(
-        nodes.func(
-            name="f",
-            signature=parse_signature("object, object -> object"),
-            args=nodes.args([nodes.arg("x"), nodes.arg("y")]),
-            body=[nodes.ret(nodes.ref("x"))],
+        nodes.typed(
+            parse_signature("object, object -> object"),
+            nodes.func(
+                name="f",
+                args=nodes.args([nodes.arg("x"), nodes.arg("y")]),
+                body=[nodes.ret(nodes.ref("x"))],
+            )
         ),
         js.function_declaration(
             name="f",
@@ -173,17 +175,19 @@ def test_transform_function_declaration():
 @istest
 def test_function_without_explicit_return_on_all_paths_returns_null_at_end():
     _assert_transform(
-        nodes.func(
-            name="f",
-            signature=parse_signature("-> none"),
-            args=nodes.args([]),
-            body=[
-                nodes.if_else(
-                    nodes.ref("x"),
-                    [nodes.ret(nodes.none())],
-                    []
-                ),
-            ],
+        nodes.typed(
+            parse_signature("-> none"),
+            nodes.func(
+                name="f",
+                args=nodes.args([]),
+                body=[
+                    nodes.if_else(
+                        nodes.ref("x"),
+                        [nodes.ret(nodes.none())],
+                        []
+                    ),
+                ],
+            )
         ),
         """
         function f() {
@@ -199,11 +203,13 @@ def test_function_without_explicit_return_on_all_paths_returns_null_at_end():
 @istest
 def test_transform_function_declaration_declares_variables_at_top_of_function():
     _assert_transform(
-        nodes.func(
-            name="f",
-            signature=parse_signature("-> none"),
-            args=nodes.args([]),
-            body=[nodes.assign(["x"], nodes.ref("y"))],
+        nodes.typed(
+            parse_signature("-> none"),
+            nodes.func(
+                name="f",
+                args=nodes.args([]),
+                body=[nodes.assign(["x"], nodes.ref("y"))],
+            ),
         ),
         """
             function f() {
@@ -219,11 +225,13 @@ def test_transform_function_declaration_declares_variables_at_top_of_function():
 @istest
 def test_transform_function_declaration_does_not_redeclare_variables_with_same_name_as_argument():
     _assert_transform(
-        nodes.func(
-            name="f",
-            signature=parse_signature("-> none"),
-            args=nodes.args([nodes.arg("x")]),
-            body=[nodes.assign(["x"], nodes.ref("y"))],
+        nodes.typed(
+            parse_signature("-> none"),
+            nodes.func(
+                name="f",
+                args=nodes.args([nodes.arg("x")]),
+                body=[nodes.assign(["x"], nodes.ref("y"))],
+            ),
         ),
         """
             function f(x) {
@@ -281,7 +289,6 @@ def test_transform_class_with_methods():
             body=[
                 nodes.func(
                     "f",
-                    None,
                     nodes.args([nodes.arg("self"), nodes.arg("x")]),
                     [],
                 )
@@ -309,7 +316,6 @@ def test_transform_class_with_init_method():
         body=[
             nodes.func(
                 "__init__",
-                None,
                 nodes.args([nodes.arg("self"), nodes.arg("x")]),
                 [],
             )

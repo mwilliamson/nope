@@ -14,7 +14,7 @@ class _BindingChecker(object):
         self._type_lookup = type_lookup
     
     def update_bindings(self, node, context):
-        visitor = visit.Visitor()
+        visitor = visit.Visitor(visit_explicit_types=False)
         visitor.before(nodes.VariableReference, self._check_variable_reference)
         visitor.before(nodes.ListComprehension, self._update_comprehension)
         visitor.before(nodes.GeneratorExpression, self._update_comprehension)

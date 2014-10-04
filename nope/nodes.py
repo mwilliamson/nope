@@ -84,7 +84,7 @@ RaiseStatement = dodge.data_class("RaiseStatement", ["value"])
 AssertStatement = dodge.data_class("AssertStatement", ["condition", "message"])
 WithStatement = dodge.data_class("WithStatement", ["value", "target", "body"])
 
-FunctionDef = dodge.data_class("FunctionDef", ["name", "signature", "args", "body"])
+FunctionDef = dodge.data_class("FunctionDef", ["name", "args", "body"])
 FunctionSignature = dodge.data_class("FunctionSignature", ["type_params", "args", "returns"])
 SignatureArgument = dodge.data_class("SignatureArgument", ["name", "type"])
 Arguments = dodge.data_class("Arguments", ["args"])
@@ -185,8 +185,19 @@ def assert_statement(condition, message=None):
 with_statement = WithStatement
 
 
-def func(name, signature, args, body):
-    return FunctionDef(name, signature, args, body)
+_typed_node_type_key = "_typed_node_type_key"
+
+def typed(type_, node):
+    setattr(node, _typed_node_type_key, type_)
+    return node
+
+
+def explicit_type_of(node):
+    return getattr(node, _typed_node_type_key, None)
+
+
+def func(name, args, body):
+    return FunctionDef(name, args, body)
 
 
 def class_def(name, body, base_classes=None):

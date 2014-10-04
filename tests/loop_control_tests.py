@@ -45,7 +45,7 @@ def break_is_not_valid_in_while_loop_else_body():
 @istest
 def break_is_not_valid_in_function_in_while_loop_body():
     break_node = nodes.break_statement()
-    func_node = nodes.func("f", None, nodes.args([]), [break_node])
+    func_node = nodes.func("f", nodes.args([]), [break_node])
     node = nodes.while_loop(nodes.boolean(True), [func_node], [])
     try:
         check_loop_control(node, False)
