@@ -1,7 +1,38 @@
+import tokenize
+import token
+
 from funcparserlib.lexer import make_tokenizer
 from funcparserlib.parser import (some, many, maybe, finished, forward_decl, skip)
 
 from .. import nodes
+
+
+def parse_signatures(source):
+    return dict(_signatures(source))
+
+
+_comment_prefix = "#::"
+
+def _signatures(source):
+    tokens = tokenize.generate_tokens(source.readline)
+    last_signature = None
+    
+    for token_type, token_str, position, _, _ in tokens:
+        if _is_signature_comment(token_type, token_str):
+            last_signature = parse_signature(token_str[len(_comment_prefix):].strip())
+        elif last_signature is not None and _is_part_of_node(token_type):
+            yield position, last_signature
+            last_signature = None
+
+
+def _is_signature_comment(token_type, token_str):
+    return token_type == tokenize.COMMENT and token_str.startswith(_comment_prefix)
+
+
+def _is_part_of_node(token_type):
+    return token_type not in (
+        token.NEWLINE, token.INDENT, token.DEDENT, tokenize.NL, tokenize.COMMENT
+    )
 
 
 def parse_signature(sig_str):
