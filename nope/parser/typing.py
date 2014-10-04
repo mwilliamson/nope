@@ -19,7 +19,7 @@ def _signatures(source):
     
     for token_type, token_str, position, _, _ in tokens:
         if _is_signature_comment(token_type, token_str):
-            last_signature = parse_signature(token_str[len(_comment_prefix):].strip())
+            last_signature = position, parse_signature(token_str[len(_comment_prefix):].strip())
         elif last_signature is not None and _is_part_of_node(token_type):
             yield position, last_signature
             last_signature = None

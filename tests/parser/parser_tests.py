@@ -718,6 +718,19 @@ def test_error_when_parsing_class_decorators():
     _assert_syntax_error("class decorators are not supported", "@wraps\nclass User:\n  pass")
 
 
+@istest
+def test_error_if_signature_is_not_consumed():
+    source = """
+#:: int -> int
+"""
+    try:
+        parser.parse(source)
+        assert False, "Expected SyntaxError"
+    except SyntaxError as error:
+        assert_equal("type signature is not valid here", error.msg)
+        assert_equal(2, error.lineno)
+        assert_equal(0, error.offset)
+
 
 def _assert_expression_parse(expected, source):
     assert_equal(expected, _parse_expression(source))

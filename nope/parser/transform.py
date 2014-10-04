@@ -154,7 +154,7 @@ class Converter(object):
             raise SyntaxError("arguments in the form '**{}' are not supported".format(name))
         
         
-        signature = self._comment_seeker.seek_signature(node.lineno, node.col_offset)
+        signature = self._comment_seeker.consume_signature(node.lineno, node.col_offset)
         if signature is None:
             if len(node.args.args) == 0:
                 signature = nodes.signature(type_params=[], args=[], returns=None)

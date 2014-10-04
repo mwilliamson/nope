@@ -11,7 +11,12 @@ def parse(source, filename=None):
         comment_seeker = CommentSeeker(signatures)
         python_ast = ast.parse(source)
         is_executable = source.startswith("#!/")
-        return transform.python_to_nope(python_ast, comment_seeker, is_executable=is_executable, filename=filename)
+        nope_node = transform.python_to_nope(python_ast, comment_seeker, is_executable=is_executable, filename=filename)
+        if signatures:
+            error = SyntaxError("type signature is not valid here")
+            (error.lineno, error.offset), _ = next(iter(signatures.values()))
+            raise error
+        return nope_node
     except SyntaxError as error:
         error.filename = filename
         raise error
@@ -21,5 +26,5 @@ class CommentSeeker(object):
     def __init__(self, signatures):
         self._signatures = signatures
 
-    def seek_signature(self, lineno, col_offset):
-        return self._signatures.get((lineno, col_offset))
+    def consume_signature(self, lineno, col_offset):
+        return self._signatures.pop((lineno, col_offset), (None, None))[1]
