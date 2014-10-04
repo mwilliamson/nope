@@ -58,7 +58,7 @@ def cannot_import_local_modules_if_not_in_executable():
         )
         assert False, "Expected error"
     except errors.ImportError as error:
-        assert_equal("Absolute imports not yet implemented", str(error))
+        assert_equal("Could not find module 'message'", str(error))
 
 
 @istest

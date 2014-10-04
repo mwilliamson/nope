@@ -15,12 +15,12 @@ class ModuleResolution(object):
             return self._builtin_modules[name]
         
         if names[0] not in [".", ".."] and not module.node.is_executable:
-            raise errors.ImportError(None, "Absolute imports not yet implemented")
+            package_value, module_value = None, None
+        else:
+            package_path, module_path = self._possible_module_paths(module.path, names)
             
-        package_path, module_path = self._possible_module_paths(module.path, names)
-        
-        package_value = self._source_tree.module(package_path)
-        module_value = self._source_tree.module(module_path)
+            package_value = self._source_tree.module(package_path)
+            module_value = self._source_tree.module(module_path)
         
         if package_value is not None and module_value is not None:
             raise errors.ImportError(None,
@@ -28,7 +28,7 @@ class ModuleResolution(object):
                     names[-1])
             )
         elif package_value is None and module_value is None:
-            raise errors.ModuleNotFoundError(None, "Could not find module '{}'".format(".".join(names)))
+            raise errors.ModuleNotFoundError(None, "Could not find module '{}'".format(name))
         else:
             module = package_value or module_value
             if module.node.is_executable:
