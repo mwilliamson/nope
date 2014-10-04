@@ -540,6 +540,9 @@ class _Module(object):
     
     def copy(self):
         return _Module(self.name, self.attrs.copy())
+    
+    def __str__(self):
+        return "module '{}'".format(self.name)
 
 
 def module(name, attrs):
