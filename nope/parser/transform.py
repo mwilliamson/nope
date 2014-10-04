@@ -1,6 +1,6 @@
 import ast
 
-from . import nodes
+from .. import nodes
 
 
 def python_to_nope(python_ast, comment_seeker, is_executable, filename=None):

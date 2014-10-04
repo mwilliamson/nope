@@ -7,7 +7,8 @@ import collections
 from funcparserlib.lexer import make_tokenizer
 from funcparserlib.parser import (some, many, maybe, finished, forward_decl, skip)
 
-from . import transform, nodes
+from . import transform
+from .. import nodes
 
 
 def parse(source, filename=None):
