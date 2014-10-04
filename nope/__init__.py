@@ -7,9 +7,10 @@ from .modules import LocalModule
 
 def check(path):
     try:
-        source_tree = _parse_source_tree(path)
+        source_tree = _parse_source_tree()
         checker = Checker(source_tree)
-        for module in source_tree.modules():
+        for source_path in _source_paths(path):
+            module = source_tree.module(source_path)
             checker.check(module)
     except (errors.TypeCheckError, SyntaxError) as error:
         return Result(is_valid=False, error=error, value=None)
@@ -17,15 +18,13 @@ def check(path):
     return Result(is_valid=True, error=None, value=(source_tree, checker))
 
 
-def _parse_source_tree(tree_path):
-    def read_ast(path):
-        with open(path) as source_file:
-            return parser.parse(source_file.read(), filename=path)
-    
-    return SourceTree(dict(
-        (path, read_ast(path))
-        for path in _source_paths(tree_path)
-    ))
+def _parse_source_tree():
+    return SourceTree()
+
+
+def _read_ast(path):
+    with open(path) as source_file:
+        return parser.parse(source_file.read(), filename=path)
 
 
 def _source_paths(path):
@@ -86,30 +85,17 @@ class Checker(object):
 
 
 class SourceTree(object):
-    def __init__(self, asts):
-        self._asts = asts
-        self._module_checkers = dict(
-            (path, self._checker(ast, path))
-            for path, ast in self._asts.items()
-        )
-    
-    def _checker(self, ast, path):
-        return lambda: _check(ast, self, path)
-    
-    def __contains__(self, value):
-        return value in self._asts
-    
-    def paths(self):
-        return self._asts.keys()
+    def __init__(self):
+        self._asts = {}
     
     def module(self, path):
-        if path in self._asts:
-            return LocalModule(path, self._asts[path])
-        else:
-            return None
-    
-    def modules(self):
-        return [LocalModule(path, node) for path, node in self._asts.items()]
+        if path not in self._asts:
+            if not os.path.exists(path) or not os.path.isfile(path):
+                return None
+                
+            self._asts[path] = _read_ast(path)
+        
+        return LocalModule(path, self._asts[path])
 
 
 class CircularImportError(Exception):
