@@ -69,3 +69,18 @@ def can_parse_signature_comment_with_one_formal_type_parameter():
         returns=nodes.ref("T")
     )
     assert_equal(expected_signature, parse_explicit_type("T => T -> T"))
+
+
+@istest
+def can_parse_signature_with_function_type_as_argument():
+    sub_signature = nodes.signature(
+        args=[nodes.signature_arg(nodes.ref("int"))],
+        returns=nodes.ref("str")
+    )
+    expected_signature = nodes.signature(
+        args=[
+            nodes.signature_arg(sub_signature)
+        ],
+        returns=nodes.ref("none")
+    )
+    assert_equal(expected_signature, parse_explicit_type("(int -> str) -> none"))

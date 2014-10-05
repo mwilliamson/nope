@@ -92,13 +92,15 @@ def _create_explicit_type_rule():
     type_ = forward_decl()
     type_ref = type_name >> _make_type
     applied_type = (type_ref + _token_type("open") + type_ + many(comma + type_) + _token_type("close")) >> _make_apply
-    type_.define(applied_type | type_ref)
     
     arg = (maybe(arg_name + skip(colon)) + type_) >> _make_arg
     
     generic_params = maybe(type_name + _token_type("fat-arrow")) >> _make_params
     args = maybe(arg + many(comma + arg)) >> _make_args
     signature = (generic_params + args + _token_type("arrow") + type_) >> _make_signature
+    sub_signature = (_token_type("paren-open") + signature + _token_type("paren-close")) >> (lambda result: result[1])
+    
+    type_.define(sub_signature | applied_type | type_ref)
     
     return (signature | type_) + finished >> (lambda result: result[0])
 
@@ -115,6 +117,8 @@ def _tokenize_explicit_type(sig_str):
         ('comma', (r',', )),
         ('open', (r'\[', )),
         ('close', (r'\]', )),
+        ('paren-open', (r'\(', )),
+        ('paren-close', (r'\)', )),
         ('colon', (r':', )),
     ]
     ignore = ['space']
