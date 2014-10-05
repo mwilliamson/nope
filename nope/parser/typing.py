@@ -36,8 +36,8 @@ def _is_part_of_node(token_type):
 
 
 def parse_explicit_type(sig_str):
-    tokens = _tokenize_signature(sig_str)
-    return _signature.parse(tokens)
+    tokens = _tokenize_explicit_type(sig_str)
+    return _explicit_type.parse(tokens)
 
 
 def _token_type(token_type):
@@ -84,7 +84,7 @@ def _make_signature(result):
     
 
 
-def _create_signature_rule():
+def _create_explicit_type_rule():
     comma = _token_type("comma")
     colon = _token_type("colon")
     type_name = arg_name = _token_type("name") >> _make_name
@@ -98,13 +98,15 @@ def _create_signature_rule():
     
     generic_params = maybe(type_name + _token_type("fat-arrow")) >> _make_params
     args = maybe(arg + many(comma + arg)) >> _make_args
-    return (generic_params + args + _token_type("arrow") + type_ + finished) >> _make_signature
+    signature = (generic_params + args + _token_type("arrow") + type_ + finished) >> _make_signature
+    
+    return signature | type_
 
 
-_signature = _create_signature_rule()
+_explicit_type = _create_explicit_type_rule()
     
     
-def _tokenize_signature(sig_str):
+def _tokenize_explicit_type(sig_str):
     specs = [
         ('space', (r'[ \t]+', )),
         ('name', (r'[A-Za-z_][A-Za-z_0-9]*', )),

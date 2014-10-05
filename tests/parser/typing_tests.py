@@ -5,6 +5,11 @@ from nope.parser.typing import parse_explicit_type
 
 
 @istest
+def can_parse_reference_to_simple_class():
+    assert_equal(nodes.ref("str"), parse_explicit_type("str"))
+
+
+@istest
 def can_parse_signature_with_return_type_and_no_args():
     expected_signature = nodes.signature(returns=nodes.ref("str"))
     assert_equal(expected_signature, parse_explicit_type("-> str"))
