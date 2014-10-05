@@ -98,9 +98,9 @@ def _create_explicit_type_rule():
     
     generic_params = maybe(type_name + _token_type("fat-arrow")) >> _make_params
     args = maybe(arg + many(comma + arg)) >> _make_args
-    signature = (generic_params + args + _token_type("arrow") + type_ + finished) >> _make_signature
+    signature = (generic_params + args + _token_type("arrow") + type_) >> _make_signature
     
-    return signature | type_
+    return (signature | type_) + finished >> (lambda result: result[0])
 
 
 _explicit_type = _create_explicit_type_rule()
