@@ -696,7 +696,7 @@ def test_error_if_signature_is_not_consumed():
         parser.parse(source)
         assert False, "Expected SyntaxError"
     except SyntaxError as error:
-        assert_equal("type signature is not valid here", error.msg)
+        assert_equal("explicit type is not valid here", error.msg)
         assert_equal(2, error.lineno)
         assert_equal(0, error.offset)
 

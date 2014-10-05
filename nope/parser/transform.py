@@ -74,7 +74,7 @@ class Converter(object):
         try:
             lineno = getattr(node, "lineno", None)
             col_offset = getattr(node, "col_offset", None)
-            signature = self._comment_seeker.consume_signature(lineno, col_offset)
+            signature = self._comment_seeker.consume_explicit_type(lineno, col_offset)
             
             nope_node = self._converters[type(node)](node)
             

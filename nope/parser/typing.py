@@ -7,22 +7,22 @@ from funcparserlib.parser import (some, many, maybe, finished, forward_decl, ski
 from .. import nodes
 
 
-def parse_signatures(source):
-    return dict(_signatures(source))
+def parse_explicit_types(source):
+    return dict(_explicit_types(source))
 
 
 _comment_prefix = "#::"
 
-def _signatures(source):
+def _explicit_types(source):
     tokens = tokenize.generate_tokens(source.readline)
-    last_signature = None
+    last_explicit_type = None
     
     for token_type, token_str, position, _, _ in tokens:
         if _is_signature_comment(token_type, token_str):
-            last_signature = position, parse_signature(token_str[len(_comment_prefix):].strip())
-        elif last_signature is not None and _is_part_of_node(token_type):
-            yield position, last_signature
-            last_signature = None
+            last_explicit_type = position, parse_explicit_type(token_str[len(_comment_prefix):].strip())
+        elif last_explicit_type is not None and _is_part_of_node(token_type):
+            yield position, last_explicit_type
+            last_explicit_type = None
 
 
 def _is_signature_comment(token_type, token_str):
@@ -35,7 +35,7 @@ def _is_part_of_node(token_type):
     )
 
 
-def parse_signature(sig_str):
+def parse_explicit_type(sig_str):
     tokens = _tokenize_signature(sig_str)
     return _signature.parse(tokens)
 

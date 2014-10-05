@@ -3,7 +3,7 @@ from nose.tools import istest, assert_equal
 
 from nope.platforms.nodejs import codegeneration, js
 from nope import nodes, types
-from nope.parser.typing import parse_signature
+from nope.parser.typing import parse_explicit_type
 from nope.identity_dict import IdentityDict
 
 
@@ -157,7 +157,7 @@ def test_transform_expression_statement():
 def test_transform_function_declaration():
     _assert_transform(
         nodes.typed(
-            parse_signature("object, object -> object"),
+            parse_explicit_type("object, object -> object"),
             nodes.func(
                 name="f",
                 args=nodes.args([nodes.arg("x"), nodes.arg("y")]),
@@ -176,7 +176,7 @@ def test_transform_function_declaration():
 def test_function_without_explicit_return_on_all_paths_returns_null_at_end():
     _assert_transform(
         nodes.typed(
-            parse_signature("-> none"),
+            parse_explicit_type("-> none"),
             nodes.func(
                 name="f",
                 args=nodes.args([]),
@@ -204,7 +204,7 @@ def test_function_without_explicit_return_on_all_paths_returns_null_at_end():
 def test_transform_function_declaration_declares_variables_at_top_of_function():
     _assert_transform(
         nodes.typed(
-            parse_signature("-> none"),
+            parse_explicit_type("-> none"),
             nodes.func(
                 name="f",
                 args=nodes.args([]),
@@ -226,7 +226,7 @@ def test_transform_function_declaration_declares_variables_at_top_of_function():
 def test_transform_function_declaration_does_not_redeclare_variables_with_same_name_as_argument():
     _assert_transform(
         nodes.typed(
-            parse_signature("-> none"),
+            parse_explicit_type("-> none"),
             nodes.func(
                 name="f",
                 args=nodes.args([nodes.arg("x")]),
