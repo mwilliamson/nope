@@ -7,7 +7,7 @@ from .modules import LocalModule
 
 def check(path):
     try:
-        source_tree = _parse_source_tree()
+        source_tree = CachedSourceTree(SourceTree())
         checker = Checker(source_tree)
         for source_path in _source_paths(path):
             module = source_tree.module(source_path)
@@ -16,15 +16,6 @@ def check(path):
         return Result(is_valid=False, error=error, value=None)
     
     return Result(is_valid=True, error=None, value=(source_tree, checker))
-
-
-def _parse_source_tree():
-    return SourceTree()
-
-
-def _read_ast(path):
-    with open(path) as source_file:
-        return parser.parse(source_file.read(), filename=path)
 
 
 def _source_paths(path):
@@ -84,18 +75,26 @@ class Checker(object):
         )
 
 
-class SourceTree(object):
-    def __init__(self):
+class CachedSourceTree(object):
+    def __init__(self, source_tree):
         self._asts = {}
+        self._source_tree = source_tree
     
     def module(self, path):
         if path not in self._asts:
-            if not os.path.exists(path) or not os.path.isfile(path):
-                return None
-                
-            self._asts[path] = _read_ast(path)
+            self._asts[path] = self._source_tree.module(path)
         
-        return LocalModule(path, self._asts[path])
+        return self._asts[path]
+
+
+class SourceTree(object):
+    def module(self, path):
+        if not os.path.exists(path) or not os.path.isfile(path):
+            return None
+                
+        with open(path) as source_file:
+            module_node = parser.parse(source_file.read(), filename=path)
+            return LocalModule(path, module_node)
 
 
 class CircularImportError(Exception):
