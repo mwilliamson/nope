@@ -34,18 +34,23 @@ class Visitor(object):
             nodes.BreakStatement: self._visit_nothing,
             nodes.ContinueStatement: self._visit_nothing,
             nodes.TryStatement: self._visit_try,
+            nodes.ExceptHandler: self._visit_except_handler,
             nodes.RaiseStatement: self._visit_raise,
             nodes.AssertStatement: self._visit_assert,
             nodes.WithStatement: self._visit_with,
-            #~ nodes.FunctionDef: self._visit_function_def,
+            nodes.FunctionDef: self._visit_function_def,
+            nodes.Arguments: self._visit_arguments,
             nodes.FunctionSignature: self._visit_function_signature,
             nodes.SignatureArgument: self._visit_signature_argument,
             nodes.Argument: self._visit_nothing,
+            nodes.ClassDefinition: self._visit_class_definition,
             
             nodes.Import: self._visit_nothing,
             nodes.ImportFrom: self._visit_nothing,
             
             nodes.Module: self._visit_module,
+            
+            type(None): lambda *args: None
         }
         self._visitors = self._default_visitors.copy()
         self._before = {}
@@ -53,7 +58,7 @@ class Visitor(object):
         if visit_explicit_types:
             self.visit_explicit_type = self.visit
         else:
-            self.visit_explicit_type = lambda *args: None
+            self.visit_explicit_type = lambda node, *args: node
     
     def replace(self, node_type, func):
         self._visitors[node_type] = functools.partial(func, self)
@@ -67,164 +72,195 @@ class Visitor(object):
     def visit(self, node, *args):
         node_type = type(node)
         
-        explicit_type = nodes.explicit_type_of(node)
-        if explicit_type is not None:
-            self.visit_explicit_type(explicit_type, *args)
-        
         if node_type in self._before:
             self._before[node_type](self, node, *args)
+        
+        explicit_type = nodes.explicit_type_of(node)
+        if explicit_type is None:
+            explicit_type_result = None
+        else:
+            explicit_type_result = self.visit_explicit_type(explicit_type, *args)
             
         result = self._visitors[node_type](node, *args)
+        
+        if explicit_type_result is not None and result is not None:
+            # TODO: this mutates, which is not the desired result when we're generating new nodes
+            result = nodes.typed(explicit_type_result, result)
         
         if node_type in self._after:
             self._after[node_type](self, node, *args)
         
         return result
 
+    
     def _visit_statements(self, statements, *args):
-        for statement in statements:
-            self.visit(statement, *args)
+        return self._visit_all(statements, *args)
+    
+    def _visit_all(self, nodes, *args):
+        return [self.visit(node, *args) for node in nodes]
     
     def _visit_nothing(self, node, *args):
-        pass
+        return node
     
     def _visit_tuple_literal(self, node, *args):
-        for element in node.elements:
-            self.visit(element, *args)
+        return nodes.tuple_literal(self._visit_all(node.elements, *args))
     
     def _visit_list_literal(self, node, *args):
-        for element in node.elements:
-            self.visit(element, *args)
+        return nodes.list_literal(self._visit_all(node.elements, *args))
     
     def _visit_dict_literal(self, node, *args):
-        for key, value in node.items:
-            self.visit(key, *args)
-            self.visit(value, *args)
+        return nodes.dict_literal([
+            (self.visit(key, *args), self.visit(value, *args))
+            for key, value in node.items
+        ])
     
     def _visit_call(self, node, *args):
-        self.visit(node.func, *args)
-        for arg in node.args:
-            self.visit(arg, *args)
-        for arg in node.kwargs.values():
-            self.visit(arg, *args)
-
+        return nodes.call(
+            self.visit(node.func, *args),
+            self._visit_all(node.args, *args),
+            dict((name, self.visit(value, *args)) for name, value in node.kwargs.items()),
+        )
 
     def _visit_attribute_access(self, node, *args):
-        self.visit(node.value, *args)
-
+        return nodes.attr(self.visit(node.value, *args), node.attr)
 
     def _visit_type_application(self, node, *args):
-        self.visit(node.generic_type, *args)
-        for param in node.params:
-            self.visit(param, *args)
-
+        return nodes.type_apply(
+            self.visit(node.generic_type, *args),
+            self._visit_all(node.params, *args),
+        )
 
     def _visit_unary_operation(self, node, *args):
-        self.visit(node.operand, *args)
-
+        return nodes.unary_operation(
+            node.operator,
+            self.visit(node.operand, *args)
+        )
 
     def _visit_binary_operation(self, node, *args):
-        self.visit(node.left, *args)
-        self.visit(node.right, *args)
-
+        return nodes.binary_operation(
+            node.operator,
+            self.visit(node.left, *args),
+            self.visit(node.right, *args),
+        )
 
     def _visit_subscript(self, node, *args):
-        self.visit(node.value, *args)
-        self.visit(node.slice, *args)
-
+        return nodes.subscript(
+            self.visit(node.value, *args),
+            self.visit(node.slice, *args),
+        )
 
     def _visit_slice(self, node, *args):
-        self.visit(node.start, *args)
-        self.visit(node.stop, *args)
-        self.visit(node.step, *args)
-
+        return nodes.slice(
+            self.visit(node.start, *args),
+            self.visit(node.stop, *args),
+            self.visit(node.step, *args),
+        )
 
     def _visit_comprehension(self, node, *args):
-        self.visit(node.generator, *args)
-        self.visit(node.element, *args)
-    
+        generator = self.visit(node.generator, *args)
+        element = self.visit(node.element, *args)
+        return type(node)(element, generator)
     
     def _visit_comprehension_generator(self, node, *args):
-        self.visit(node.iterable, *args)
-        self.visit(node.target, *args)
-
+        iterable = self.visit(node.iterable, *args)
+        target = self.visit(node.target, *args)
+        return nodes.comprehension(target, iterable)
 
     def _visit_return(self, node, *args):
-        if node.value is not None:
-            self.visit(node.value, *args)
-
+        return nodes.ret(self.visit(node.value, *args))
 
     def _visit_expression_statement(self, node, *args):
-        self.visit(node.value, *args)
-
+        return nodes.expression_statement(self.visit(node.value, *args))
 
     def _visit_assignment(self, node, *args):
-        self.visit(node.value, *args)
-        
-        for target in node.targets:
-            self.visit(target, *args)
-
+        value = self.visit(node.value, *args)
+        targets = self._visit_all(node.targets, *args)
+        return nodes.assign(targets, value)
 
     def _visit_if_else(self, node, *args):
-        self.visit(node.condition, *args)
-        
-        self._visit_statements(node.true_body, *args)
-        self._visit_statements(node.false_body, *args)
-
+        return nodes.if_else(
+            self.visit(node.condition, *args),
+            self._visit_statements(node.true_body, *args),
+            self._visit_statements(node.false_body, *args),
+        )
 
     def _visit_while_loop(self, node, *args):
-        self.visit(node.condition, *args)
-        
-        self._visit_statements(node.body, *args)
-        self._visit_statements(node.else_body, *args)
-
+        return nodes.while_loop(
+            self.visit(node.condition, *args),
+            self._visit_statements(node.body, *args),
+            self._visit_statements(node.else_body, *args),
+        )
 
     def _visit_for_loop(self, node, *args):
-        self.visit(node.iterable, *args)
-        self.visit(node.target, *args)
-        self._visit_statements(node.body, *args)
-        self._visit_statements(node.else_body, *args)
-
+        iterable = self.visit(node.iterable, *args)
+        target = self.visit(node.target, *args)
+        return nodes.for_loop(
+            target,
+            iterable,
+            self._visit_statements(node.body, *args),
+            self._visit_statements(node.else_body, *args),
+        )
 
     def _visit_try(self, node, *args):
-        self._visit_statements(node.body, *args)
-        for handler in node.handlers:
-            if handler.type is not None:
-                self.visit(handler.type, *args)
-            if handler.target is not None:
-                self.visit(handler.target, *args)
-            self._visit_statements(handler.body, *args)
-        self._visit_statements(node.finally_body, *args)
+        return nodes.try_statement(
+            self._visit_statements(node.body, *args),
+            handlers=self._visit_all(node.handlers, *args),
+            finally_body=self._visit_all(node.finally_body, *args),
+        )
 
+    def _visit_except_handler(self, node, *args):
+        return nodes.except_handler(
+            self.visit(node.type, *args),
+            self.visit(node.target, *args),
+            self._visit_statements(node.body, *args),
+        )
 
     def _visit_raise(self, node, *args):
-        self.visit(node.value, *args)
-
+        return nodes.raise_statement(self.visit(node.value, *args))
 
     def _visit_assert(self, node, *args):
-        self.visit(node.condition, *args)
-        if node.message is not None:
-            self.visit(node.message, *args)
-    
+        return nodes.assert_statement(
+            self.visit(node.condition, *args),
+            self.visit(node.message, *args),
+        )
     
     def _visit_with(self, node, *args):
-        self.visit(node.value, *args)
-        if node.target is not None:
-            self.visit(node.target, *args)
-        self._visit_statements(node.body, *args)
+        return nodes.with_statement(
+            self.visit(node.value, *args),
+            self.visit(node.target, *args),
+            self._visit_statements(node.body, *args),
+        )
     
+    def _visit_function_def(self, node, *args):
+        return nodes.func(
+            node.name,
+            self.visit(node.args, *args),
+            self._visit_statements(node.body, *args),
+        )
+    
+    def _visit_arguments(self, node, *args):
+        return nodes.arguments(self._visit_all(node.args, *args))
     
     def _visit_function_signature(self, node, *args):
-        for arg in node.args:
-            self.visit(arg, *args)
-        
-        if node.returns is not None:
-            self.visit(node.returns, *args)
-    
+        return nodes.signature(
+            args=self._visit_all(node.args, *args),
+            returns=self.visit(node.returns, *args)
+        )
     
     def _visit_signature_argument(self, node, *args):
-        self.visit(node.type, *args)
+        return nodes.signature_arg(node.name, self.visit(node.type, *args))
     
+    def _visit_class_definition(self, node, *args):
+        base_classes = self._visit_all(node.base_classes, *args)
+        return nodes.class_def(
+            node.name,
+            self._visit_statements(node.body, *args),
+            base_classes=base_classes,
+        )
     
     def _visit_module(self, node, *args):
-        self._visit_statements(node.body, *args)
+        return nodes.module(
+            self._visit_statements(node.body, *args),
+            is_executable=node.is_executable,
+        )
+        

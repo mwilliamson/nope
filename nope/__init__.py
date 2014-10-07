@@ -3,11 +3,12 @@ import os
 
 from . import inference, parser, platforms, errors, loop_control, module_resolution
 from .modules import LocalModule
+from .transformers import collections_namedtuple_transform
 
 
 def check(path):
     try:
-        source_tree = CachedSourceTree(SourceTree())
+        source_tree = CachedSourceTree(TransformingSourceTree(SourceTree(), collections_namedtuple_transform))
         checker = Checker(source_tree)
         for source_path in _source_paths(path):
             module = source_tree.module(source_path)
@@ -16,6 +17,7 @@ def check(path):
         return Result(is_valid=False, error=error, value=None)
     
     return Result(is_valid=True, error=None, value=(source_tree, checker))
+
 
 
 def _source_paths(path):
@@ -85,6 +87,19 @@ class CachedSourceTree(object):
             self._asts[path] = self._source_tree.module(path)
         
         return self._asts[path]
+
+
+class TransformingSourceTree(object):
+    def __init__(self, source_tree, transform):
+        self._source_tree = source_tree
+        self._transform = transform
+    
+    def module(self, path):
+        module = self._source_tree.module(path)
+        if module is None:
+            return None
+        else:
+            return LocalModule(module.path, self._transform(module.node))
 
 
 class SourceTree(object):

@@ -673,6 +673,29 @@ import cgi
 print(cgi.escape("<nope>"))
 """
         self._test_program_string(program, b"&lt;nope&gt;\n")
+    
+    
+    @istest
+    def test_transformer_for_collections_namedtuple(self):
+        program = """
+import collections
+
+User = collections.namedtuple("User", [
+    #:: int
+    "id",
+    #:: str
+    "username",
+])
+
+#:: int, str -> none
+def f(id, username):
+    print(id)
+    print(username)
+
+user = User(42, "Bob")
+f(user.id, user.username)
+"""
+        self._test_program_string(program, b"42\nBob\n")
         
     
     def _test_program_string(self, program, expected_output):
