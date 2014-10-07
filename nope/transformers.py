@@ -10,8 +10,18 @@ def collections_namedtuple_transform(module_node):
     
     visitor = visit.Visitor()
     visitor.replace(nodes.Assignment, _assignment)
+    # TODO: don't delete imports, fix node.js backend to include collections builtin module
+    visitor.replace(nodes.Import, _import)
     return visitor.visit(module_node, references)
 
+
+def _import(visitor, node, references):
+    return nodes.Import([
+        alias
+        for alias in node.names
+        if alias.name != "collections"
+    ])
+    
 
 def _assignment(visitor, node, references):
     # TODO: handle cases that are currently asserted not to be true

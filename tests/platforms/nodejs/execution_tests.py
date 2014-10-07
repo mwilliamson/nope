@@ -49,7 +49,6 @@ class NodeJsExecutionTests(execution.ExecutionTests):
     test_unnested_list_comprehension = None
     test_unnested_generator_expression = None
     test_import_of_module_in_standard_library = None
-    test_transformer_for_collections_namedtuple = None
 
 
 @istest
@@ -61,4 +60,3 @@ class UnoptimisedNodeJsExecutionTests(execution.ExecutionTests):
     test_unnested_list_comprehension = None
     test_unnested_generator_expression = None
     test_import_of_module_in_standard_library = None
-    test_transformer_for_collections_namedtuple = None

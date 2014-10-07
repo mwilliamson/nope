@@ -341,8 +341,16 @@ class Transformer(object):
                 self._create_single_assignment(target_element, js.property_access(value, js.number(index)))
                 for index, target_element in enumerate(target.elements)
             ])
-        elif isinstance(target, (nodes.VariableReference)):
+        # TODO: test this! Is using setattr necessary?
+        elif isinstance(target, nodes.AttributeAccess):
+            return js.assign_statement(
+                js.property_access(self.transform(target.value), target.attr),
+                value
+            )
+        elif isinstance(target, nodes.VariableReference):
             return js.assign_statement(self.transform(target), value)
+        else:
+            raise Exception("Unhandled case")
         
     
     def _class_definition(self, class_definition):
