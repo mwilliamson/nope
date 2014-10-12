@@ -49,6 +49,9 @@ class _Attributes(object):
     
     def copy(self):
         return _Attributes(self._attrs.copy())
+    
+    def names(self):
+        return self._attrs.keys()
 
 
 class _GenericTypeAttributes(object):

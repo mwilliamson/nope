@@ -1,6 +1,6 @@
 from nose.tools import istest, assert_is, assert_equal
 
-from nope import nodes, errors, module_resolution, name_declaration
+from nope import nodes, errors, module_resolution, name_declaration, types
 from nope.modules import LocalModule, BuiltinModule, ModuleExports
 
 
@@ -160,7 +160,7 @@ def module_import_without_value_name_can_be_resolved():
 
 
 @istest
-def value_in_package_can_be_resolved():
+def value_in_local_module_can_be_resolved():
     message_module = _create_module("root/message.py", declares=["hello"])
     
     module_resolver = _module_resolver(
@@ -174,6 +174,26 @@ def value_in_package_can_be_resolved():
     
     assert_is(message_module, resolved_module)
     assert_equal("hello", attr_name)
+
+
+@istest
+def value_in_builtin_module_can_be_resolved():
+    cgi_module = BuiltinModule(
+        "cgi",
+        types.module("cgi", [types.attr("escape", types.none_type)])
+    )
+    
+    module_resolver = _module_resolver(
+        builtin_modules={"cgi": cgi_module}
+    )
+    resolved_module, attr_name = module_resolver.resolve_import_value(
+        _create_module("root/main.py", is_executable=True),
+        ["cgi"],
+        "escape",
+    )
+    
+    assert_is(cgi_module, resolved_module)
+    assert_equal("escape", attr_name)
 
 
 @istest

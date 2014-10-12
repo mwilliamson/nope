@@ -16,7 +16,10 @@ class ModuleResolution(zuice.Base):
         if value_name is None:
             return imported_module, None
         else:
-            module_names = self._module_exports.names(imported_module.node)
+            if isinstance(imported_module, modules.BuiltinModule):
+                module_names = imported_module.type.attrs.names()
+            else:
+                module_names = self._module_exports.names(imported_module.node)
             if value_name in module_names:
                 return imported_module, value_name
             else:
