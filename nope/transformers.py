@@ -35,6 +35,9 @@ def _assignment(visitor, node, references):
     if not isinstance(callee, nodes.AttributeAccess):
         return node
     
+    if not isinstance(callee.value, nodes.VariableReference):
+        return node
+    
     if not references.referenced_declaration(callee.value) != builtins.builtin_modules["collections"]:
         return node
     
