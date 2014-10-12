@@ -1,6 +1,6 @@
 from nose.tools import istest, assert_equal
 
-from nope import types, nodes, inference, errors
+from nope import types, nodes, inference, errors, name_declaration, name_resolution, builtins
 from nope.modules import LocalModule
 
 from .inference.util import FakeModuleTypes, FakeModuleResolver, module
@@ -20,7 +20,7 @@ def check_generates_type_lookup_for_all_expressions():
         ]),
     ])
     
-    module, type_lookup = inference.check(LocalModule(None, module_node))
+    module, type_lookup = _check(LocalModule(None, module_node))
     assert_equal(types.int_type, type_lookup.type_of(int_node))
     assert_equal(types.int_type, type_lookup.type_of(int_ref_node))
     assert_equal(types.str_type, type_lookup.type_of(str_node))
@@ -35,7 +35,7 @@ def module_exports_are_specified_using_all():
         nodes.assign(["z"], nodes.int(3)),
     ])
     
-    module, type_lookup = inference.check(LocalModule(None, module_node))
+    module, type_lookup = _check(LocalModule(None, module_node))
     assert_equal(types.str_type, module.attrs.type_of("x"))
     assert_equal(None, module.attrs.get("y"))
     assert_equal(types.int_type, module.attrs.type_of("z"))
@@ -49,7 +49,7 @@ def module_exports_default_to_values_without_leading_underscore_if_all_is_not_sp
         nodes.assign(["z"], nodes.int(3)),
     ])
     
-    module, type_lookup = inference.check(LocalModule(None, module_node))
+    module, type_lookup = _check(LocalModule(None, module_node))
     assert_equal(types.str_type, module.attrs.type_of("x"))
     assert_equal(None, module.attrs.get("_y"))
     assert_equal(types.int_type, module.attrs.type_of("z"))
@@ -70,7 +70,7 @@ def only_values_that_are_definitely_bound_are_exported():
         )
     ])
     
-    module, type_lookup = inference.check(LocalModule(None, module_node))
+    module, type_lookup = _check(LocalModule(None, module_node))
     assert_equal(None, module.attrs.get("x"))
     assert_equal(types.str_type, module.attrs.type_of("y"))
 
@@ -123,8 +123,19 @@ def _check_module(module, path_to_module_types):
         modules[path] = other_module
         module_types[other_module] = module_type
     
-    inference.check(
+    _check(
         module,
         module_resolver=FakeModuleResolver(modules),
         module_types=FakeModuleTypes(module_types)
     )
+
+
+
+def _check(module, module_resolver=None, module_types=None):
+    declaration_finder = name_declaration.DeclarationFinder()
+    checker = inference.TypeChecker(
+        declaration_finder=declaration_finder,
+        name_resolver=name_resolution.NameResolver(declaration_finder, initial_declarations=builtins.declarations()),
+        module_resolver=module_resolver
+    )
+    return checker.check_module(module, module_types)

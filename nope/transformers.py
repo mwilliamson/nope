@@ -1,18 +1,19 @@
-from . import builtins, name_resolution, name_declaration, visit, nodes
+import zuice
+
+from . import builtins, name_resolution, name_declaration, visit, nodes, injection
 
 
-def collections_namedtuple_transform(module_node):
-    declaration_finder = name_declaration.DeclarationFinder()
+class CollectionsNamedTupleTransform(zuice.Base):
+    _name_resolver = zuice.dependency(name_resolution.NameResolver)
     
-    declarations = builtins.declarations()
-    name_resolver = name_resolution.NameResolver(declaration_finder, declarations)
-    references = name_resolver.resolve(module_node)
-    
-    visitor = visit.Visitor(visit_explicit_types=True, generate=True)
-    visitor.replace(nodes.Assignment, _assignment)
-    # TODO: don't delete imports, fix node.js backend to include collections builtin module
-    visitor.replace(nodes.Import, _import)
-    return visitor.visit(module_node, references)
+    def __call__(self, module_node):
+        references = self._name_resolver.resolve(module_node)
+        
+        visitor = visit.Visitor(visit_explicit_types=True, generate=True)
+        visitor.replace(nodes.Assignment, _assignment)
+        # TODO: don't delete imports, fix node.js backend to include collections builtin module
+        visitor.replace(nodes.Import, _import)
+        return visitor.visit(module_node, references)
 
 
 def _import(visitor, node, references):

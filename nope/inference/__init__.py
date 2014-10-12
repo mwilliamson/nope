@@ -1,19 +1,27 @@
-from .. import nodes, types, name_declaration, name_resolution, name_binding, builtins, util
+import zuice
+
+from .. import nodes, types, name_declaration, name_resolution, name_binding, builtins, util, module_resolution
 from .expressions import ExpressionTypeInferer
 from .statements import StatementTypeChecker
 from ..identity_dict import IdentityDict
 
 
-def check(module, module_resolver=None, module_types=None):
-    # TODO: don't construct the type checker with a module
-    checker = _TypeChecker(name_declaration.DeclarationFinder(), module_types, module_resolver, module)
-    module_type = checker.check(module)
-    return module_type, checker.type_lookup()
+class TypeChecker(zuice.Base):
+    _declaration_finder = zuice.dependency(name_declaration.DeclarationFinder)
+    _name_resolver = zuice.dependency(name_resolution.NameResolver)
+    _module_resolver = zuice.dependency(module_resolution.ModuleResolution)
+    
+    def check_module(self, module, module_types):
+        # TODO: don't construct the type checker with a module
+        module_checker = _TypeCheckerForModule(self._declaration_finder, self._name_resolver, module_types, self._module_resolver, module)
+        module_type = module_checker.check(module)
+        return module_type, module_checker.type_lookup()
 
 
-class _TypeChecker(object):
-    def __init__(self, declaration_finder, module_types, module_resolver, module):
+class _TypeCheckerForModule(object):
+    def __init__(self, declaration_finder, name_resolver, module_types, module_resolver, module):
         self._declaration_finder = declaration_finder
+        self._name_resolver = name_resolver
         self._type_lookup = IdentityDict()
         self._expression_type_inferer = ExpressionTypeInferer(self._type_lookup)
         self._statement_type_checker = StatementTypeChecker(declaration_finder, self._expression_type_inferer, module_resolver, module_types, module)
@@ -28,10 +36,7 @@ class _TypeChecker(object):
         self._statement_type_checker.update_context(statement, context)
 
     def check(self, module):
-        declarations = builtins.declarations()
-        
-        name_resolver = name_resolution.NameResolver(self._declaration_finder, declarations)
-        references = name_resolver.resolve(module.node)
+        references = self._name_resolver.resolve(module.node)
     
         context = builtins.module_context(references)
         for statement in module.node.body:

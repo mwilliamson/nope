@@ -1,13 +1,14 @@
 import os
 
-from . import errors
+import zuice
+
+from . import errors, injection
 from .identity_dict import IdentityDict
 
 
-class ModuleResolution(object):
-    def __init__(self, source_tree, builtin_modules):
-        self._source_tree = source_tree
-        self._builtin_modules = builtin_modules
+class ModuleResolution(zuice.Base):
+    _source_tree = zuice.dependency(injection.source_tree)
+    _builtin_modules = zuice.dependency(injection.builtin_modules)
     
     def resolve_import(self, module, names):
         name = ".".join(names)

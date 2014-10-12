@@ -1,11 +1,12 @@
-from nope import nodes, errors, name_declaration, visit
+import zuice
+
+from nope import nodes, errors, name_declaration, visit, injection
 from nope.identity_dict import IdentityDict
 
 
-class NameResolver(object):
-    def __init__(self, declaration_finder, initial_declarations):
-        self._declaration_finder = declaration_finder
-        self._initial_declarations = initial_declarations
+class NameResolver(zuice.Base):
+    _declaration_finder = zuice.dependency(name_declaration.DeclarationFinder)
+    _initial_declarations = zuice.dependency(injection.initial_declarations)
     
     def resolve(self, node):
         references = IdentityDict()
