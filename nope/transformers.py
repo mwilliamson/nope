@@ -8,7 +8,7 @@ def collections_namedtuple_transform(module_node):
     name_resolver = name_resolution.NameResolver(declaration_finder, declarations)
     references = name_resolver.resolve(module_node)
     
-    visitor = visit.Visitor()
+    visitor = visit.Visitor(visit_explicit_types=True, generate=True)
     visitor.replace(nodes.Assignment, _assignment)
     # TODO: don't delete imports, fix node.js backend to include collections builtin module
     visitor.replace(nodes.Import, _import)
@@ -57,7 +57,10 @@ def _assignment(visitor, node, references):
     
     def _read_attribute(attribute_node):
         assert isinstance(attribute_node, nodes.StringExpression)
-        return attribute_node.value, nodes.explicit_type_of(attribute_node)
+        explicit_type = nodes.explicit_type_of(attribute_node)
+        if explicit_type is None:
+            raise Exception("fields of collections.namedtuple must have explicit type")
+        return attribute_node.value, explicit_type
     
     attributes = list(map(_read_attribute, attribute_list.elements))
     
