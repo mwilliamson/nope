@@ -2,13 +2,25 @@ import os
 
 import zuice
 
-from . import errors, injection
+from . import errors, injection, modules
 from .identity_dict import IdentityDict
 
 
 class ModuleResolution(zuice.Base):
     _source_tree = zuice.dependency(injection.source_tree)
     _builtin_modules = zuice.dependency(injection.builtin_modules)
+    _module_exports = zuice.dependency(modules.ModuleExports)
+    
+    def resolve_import_value(self, module, names, value_name):
+        imported_module = self.resolve_import_path(module, names)
+        if value_name is None:
+            return imported_module, None
+        else:
+            module_names = self._module_exports.names(imported_module.node)
+            if value_name in module_names:
+                return imported_module, value_name
+            else:
+                return self.resolve_import_path(module, names + [value_name]), None
     
     def resolve_import_path(self, module, names):
         name = ".".join(names)

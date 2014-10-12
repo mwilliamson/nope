@@ -343,49 +343,50 @@ class StatementTypeChecker(object):
 
     def _check_import(self, node, context):
         for alias in node.names:
-            if alias.asname is None:
-                parts = alias.name_parts
+            self._check_import_alias(node, alias, context)
+        
+    def _check_import_alias(self, node, alias, context):
+        if alias.asname is None:
+            parts = alias.name_parts
+            
+            for index, part in enumerate(parts):
+                this_module = self._find_module(node, parts[:index + 1])
                 
-                for index, part in enumerate(parts):
-                    this_module = self._find_module(node, parts[:index + 1])
+                if index == 0:
+                    context.update_type(alias, this_module)
+                else:
+                    # TODO: set readonly
+                    last_module.attrs.add(part, this_module)
                     
-                    if index == 0:
-                        context.update_type(alias, this_module)
-                    else:
-                        # TODO: set readonly
-                        last_module.attrs.add(part, this_module)
-                        
-                    last_module = this_module
-                
-            else:
-                module = self._find_module(node, alias.name_parts)
-                context.update_type(alias, module)
+                last_module = this_module
+            
+        else:
+            module = self._find_module(node, alias.name_parts)
+            context.update_type(alias, module)
 
 
     def _check_import_from(self, node, context):
-        module = self._find_module(node, node.module)
         for alias in node.names:
-            module_value = module.attrs.type_of(alias.name)
-            if module_value is not None:
-                context.update_type(alias, module_value)
-            else:
-                submodule = self._find_module(node, node.module + [alias.name])
-                # TODO: set readonly
-                module.attrs.add(alias.value_name, submodule)
-                context.update_type(alias, submodule)
+            module_type = self._find_module(node, node.module, alias.name)
+            context.update_type(alias, module_type)
 
     
-    def _find_module(self, node, names):
+    def _find_module(self, node, names, value_name=None):
         try:
-            module = self._module_resolver.resolve_import_path(self._module, names)
+            module, attr_name = self._module_resolver.resolve_import_value(self._module, names, value_name)
         except errors.TypeCheckError as error:
             error.node = node
             raise error
         
         if hasattr(module, "type"):
-            return module.type.copy()
+            module_type = module.type.copy()
         else:
-            return self._module_types.type_of_module(module).copy()
+            module_type = self._module_types.type_of_module(module).copy()
+        
+        if attr_name is None:
+            return module_type
+        else:
+            return module_type.attrs.type_of(value_name)
 
     def _possible_module_paths(self, names):
         import_path = os.path.normpath(os.path.join(os.path.dirname(self._module.path), *names))

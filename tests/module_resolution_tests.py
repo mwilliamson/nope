@@ -1,7 +1,7 @@
 from nose.tools import istest, assert_is, assert_equal
 
-from nope import nodes, errors, module_resolution
-from nope.modules import LocalModule, BuiltinModule
+from nope import nodes, errors, module_resolution, name_declaration
+from nope.modules import LocalModule, BuiltinModule, ModuleExports
 
 
 @istest
@@ -142,19 +142,87 @@ def absolute_import_retrieves_standard_library_module():
     assert_is(cgi_module, resolved_module)
 
 
+@istest
+def module_import_without_value_name_can_be_resolved():
+    message_module = _create_module("root/message.py")
+    
+    module_resolver = _module_resolver(
+        modules=[message_module]
+    )
+    resolved_module, attr_name = module_resolver.resolve_import_value(
+        _create_module("root/main.py", is_executable=True),
+        ["message"],
+        None,
+    )
+    
+    assert_is(message_module, resolved_module)
+    assert_equal(None, attr_name)
+
+
+@istest
+def value_in_package_can_be_resolved():
+    message_module = _create_module("root/message.py", declares=["hello"])
+    
+    module_resolver = _module_resolver(
+        modules=[message_module]
+    )
+    resolved_module, attr_name = module_resolver.resolve_import_value(
+        _create_module("root/main.py", is_executable=True),
+        ["message"],
+        "hello",
+    )
+    
+    assert_is(message_module, resolved_module)
+    assert_equal("hello", attr_name)
+
+
+@istest
+def module_in_package_is_resolved_if_package_has_no_value_with_that_name():
+    message_module = _create_module("root/message/__init__.py")
+    hello_module = _create_module("root/message/hello.py")
+    
+    module_resolver = _module_resolver(
+        modules=[message_module, hello_module]
+    )
+    resolved_module, attr_name = module_resolver.resolve_import_value(
+        _create_module("root/main.py", is_executable=True),
+        ["message"],
+        "hello",
+    )
+    
+    assert_is(hello_module, resolved_module)
+    assert_equal(None, attr_name)
+
+
 def _resolve_import(module, names, modules=None, builtin_modules=None):
+    module_resolver = _module_resolver(modules, builtin_modules)
+    return module_resolver.resolve_import_path(module, names)
+
+
+def _module_resolver(modules=None, builtin_modules=None):
     if modules is None:
         modules = []
     if builtin_modules is None:
         builtin_modules = {}
         
     source_tree = FakeSourceTree(modules)
-    return module_resolution.ModuleResolution(source_tree, builtin_modules) \
-        .resolve_import_path(module, names)
+    return module_resolution.ModuleResolution(
+        source_tree,
+        builtin_modules,
+        ModuleExports(name_declaration.DeclarationFinder()),
+    )
+    
 
 
-def _create_module(path, is_executable=False):
-    return LocalModule(path=path, node=nodes.module([], is_executable=is_executable))
+def _create_module(path, is_executable=False, declares=[]):
+    declarations = [
+        nodes.assign([nodes.ref(name)], nodes.none())
+        for name in declares
+    ]
+    return LocalModule(
+        path=path,
+        node=nodes.module(declarations, is_executable=is_executable)
+    )
 
 
 class FakeSourceTree(object):

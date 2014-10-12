@@ -2,4 +2,8 @@
 
 from messages import message
 
-print(message)
+#:: str -> none
+def say(value):
+    print(value)
+
+say(message)

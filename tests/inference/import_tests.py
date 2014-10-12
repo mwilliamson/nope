@@ -73,7 +73,6 @@ def can_import_module_using_import_from_syntax():
     message_module = module_type([types.attr("value", types.str_type)])
     
     context = _update_blank_context(node, {
-        (".", ): root_module,
         (".", "message"): message_module,
     })
     
