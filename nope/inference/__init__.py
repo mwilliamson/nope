@@ -14,7 +14,6 @@ def check(module, module_resolver=None, module_types=None):
 class _TypeChecker(object):
     def __init__(self, declaration_finder, module_types, module_resolver, module):
         self._declaration_finder = declaration_finder
-        self._module_path = module.path
         self._type_lookup = IdentityDict()
         self._expression_type_inferer = ExpressionTypeInferer(self._type_lookup)
         self._statement_type_checker = StatementTypeChecker(declaration_finder, self._expression_type_inferer, module_resolver, module_types, module)
