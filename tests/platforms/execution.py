@@ -86,6 +86,13 @@ f([42, 45])
         assert_equal(b"Hello\n", result.output)
         assert_equal(b"", result.stderr_output)
     
+    # TODO: fix on node.js backend
+    #~ @istest
+    def can_import_module_in_package_using_import_from(self):
+        result = self._run_program(path=program_path("valid/import_module_from_local_package"), program="main")
+        assert_equal(b"Hello\n", result.output)
+        assert_equal(b"", result.stderr_output)
+    
     @istest
     def test_output_of_bool(self):
         result = self._run_program(path=program_path("valid/bool.py"), program="bool")
