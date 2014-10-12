@@ -1,3 +1,5 @@
+import zuice
+
 from . import nodes, errors, name_declaration
 
 
@@ -13,37 +15,39 @@ class BuiltinModule(object):
         self.type = type_
 
 
-def exported_names(module_node):
-    export_names = None
+class ExportedNames(zuice.Base):
+    _declaration_finder = zuice.dependency(name_declaration.DeclarationFinder)
     
-    for statement in module_node.body:
-        if (isinstance(statement, nodes.Assignment) and
-                any(isinstance(target, nodes.VariableReference) and target.name == "__all__" for target in statement.targets)):
-            if not isinstance(statement.value, nodes.ListLiteral):
-                raise _all_wrong_type_error(statement)
-            
-            def extract_string_value(node):
-                if isinstance(node, nodes.StringExpression):
-                    return node.value
-                else:
+    def for_module(self, module_node):
+        export_names = None
+        
+        for statement in module_node.body:
+            if (isinstance(statement, nodes.Assignment) and
+                    any(isinstance(target, nodes.VariableReference) and target.name == "__all__" for target in statement.targets)):
+                if not isinstance(statement.value, nodes.ListLiteral):
                     raise _all_wrong_type_error(statement)
-            
-            if export_names is None:
-                export_names = [
-                    extract_string_value(element)
-                    for element in statement.value.elements
-                ]
-            else:
-                raise errors.AllAssignmentError(statement, "__all__ cannot be redeclared")
-    
-    if export_names is None:
-        declaration_finder = name_declaration.DeclarationFinder()
-        return [
-            name for name in declaration_finder.declarations_in_module(module_node).names()
-            if not name.startswith("_")
-        ]
-    else:
-        return export_names
+                
+                def extract_string_value(node):
+                    if isinstance(node, nodes.StringExpression):
+                        return node.value
+                    else:
+                        raise _all_wrong_type_error(statement)
+                
+                if export_names is None:
+                    export_names = [
+                        extract_string_value(element)
+                        for element in statement.value.elements
+                    ]
+                else:
+                    raise errors.AllAssignmentError(statement, "__all__ cannot be redeclared")
+        
+        if export_names is None:
+            return [
+                name for name in self._declaration_finder.declarations_in_module(module_node).names()
+                if not name.startswith("_")
+            ]
+        else:
+            return export_names
 
 
 def _all_wrong_type_error(node):

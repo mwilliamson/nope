@@ -1,6 +1,6 @@
 from nose.tools import assert_equal
 
-from nope import types, errors, nodes, inference, name_declaration
+from nope import types, errors, nodes, inference, name_declaration, modules
 from nope.context import Context
 from nope.name_declaration import Declarations
 from nope.modules import LocalModule
@@ -35,6 +35,7 @@ def _create_type_checker(declaration_finder=None, module_types=None, module_reso
     return inference._TypeCheckerForModule(
         declaration_finder=declaration_finder,
         name_resolver=None,
+        exported_names=modules.ExportedNames(declaration_finder),
         module_resolver=module_resolver,
         module_types=module_types,
         module=LocalModule(module_path, nodes.module([], is_executable=is_executable)),

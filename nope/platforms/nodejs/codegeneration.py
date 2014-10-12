@@ -178,13 +178,18 @@ _main_require = """
 
 
 def transform(nope_node, type_lookup, optimise=True):
-    transformer = Transformer(type_lookup, optimise=optimise)
+    transformer = Transformer(
+        type_lookup,
+        modules.ExportedNames(name_declaration.DeclarationFinder()),
+        optimise=optimise,
+    )
     return transformer.transform(nope_node)
 
 
 class Transformer(object):
-    def __init__(self, type_lookup, optimise):
+    def __init__(self, type_lookup, exported_names, optimise):
         self._type_lookup = type_lookup
+        self._exported_names = exported_names
         self._declarations = name_declaration.DeclarationFinder()
         self._optimise = optimise
         
@@ -246,7 +251,7 @@ class Transformer(object):
             for name in sorted(self._declarations.declarations_in_module(module).names())
         ]
         body_statements = var_statements + self._transform_all(module.body)
-        export_names = modules.exported_names(module)
+        export_names = self._exported_names.for_module(module)
                 
         export_statements = [
             js.expression_statement(
