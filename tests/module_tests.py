@@ -39,4 +39,4 @@ def error_is_raised_if_all_is_redeclared():
 
 
 def _exported_names(module_node):
-    return modules.ExportedNames(name_declaration.DeclarationFinder()).for_module(module_node)
+    return modules.ModuleExports(name_declaration.DeclarationFinder()).names(module_node)

@@ -15,10 +15,10 @@ class BuiltinModule(object):
         self.type = type_
 
 
-class ExportedNames(zuice.Base):
+class ModuleExports(zuice.Base):
     _declaration_finder = zuice.dependency(name_declaration.DeclarationFinder)
     
-    def for_module(self, module_node):
+    def names(self, module_node):
         export_names = None
         
         for statement in module_node.body:

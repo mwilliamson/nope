@@ -10,14 +10,14 @@ class TypeChecker(zuice.Base):
     _declaration_finder = zuice.dependency(name_declaration.DeclarationFinder)
     _name_resolver = zuice.dependency(name_resolution.NameResolver)
     _module_resolver = zuice.dependency(module_resolution.ModuleResolution)
-    _exported_names = zuice.dependency(modules.ExportedNames)
+    _module_exports = zuice.dependency(modules.ModuleExports)
     
     def check_module(self, module, module_types):
         # TODO: don't construct the type checker with a module
         module_checker = _TypeCheckerForModule(
             self._declaration_finder,
             self._name_resolver,
-            self._exported_names,
+            self._module_exports,
             module_types,
             self._module_resolver,
             module,
@@ -27,10 +27,10 @@ class TypeChecker(zuice.Base):
 
 
 class _TypeCheckerForModule(object):
-    def __init__(self, declaration_finder, name_resolver, exported_names, module_types, module_resolver, module):
+    def __init__(self, declaration_finder, name_resolver, module_exports, module_types, module_resolver, module):
         self._declaration_finder = declaration_finder
         self._name_resolver = name_resolver
-        self._exported_names = exported_names
+        self._module_exports = module_exports
         self._type_lookup = IdentityDict()
         self._expression_type_inferer = ExpressionTypeInferer(self._type_lookup)
         self._statement_type_checker = StatementTypeChecker(declaration_finder, self._expression_type_inferer, module_resolver, module_types, module)
@@ -55,7 +55,7 @@ class _TypeCheckerForModule(object):
             self._type_lookup[reference] = context.lookup(reference)
         
         module_declarations = self._declaration_finder.declarations_in_module(module.node)
-        exported_names = self._exported_names.for_module(module.node)
+        exported_names = self._module_exports.names(module.node)
         exported_declarations = [
             module_declarations.declaration(name)
             for name in exported_names

@@ -136,7 +136,7 @@ def _check(module, module_resolver=None, module_types=None):
     checker = inference.TypeChecker(
         declaration_finder=declaration_finder,
         name_resolver=name_resolution.NameResolver(declaration_finder, initial_declarations=builtins.declarations()),
-        exported_names=modules.ExportedNames(declaration_finder),
+        module_exports=modules.ModuleExports(declaration_finder),
         module_resolver=module_resolver
     )
     return checker.check_module(module, module_types)
