@@ -46,6 +46,14 @@ def can_parse_signature_with_named_arg():
 
 
 @istest
+def can_parse_explicit_type_with_type_application_with_one_generic_parameter():
+    assert_equal(
+        nodes.type_apply(nodes.ref("list"), [nodes.ref("str")]),
+        parse_explicit_type("list[str]")
+    )
+
+
+@istest
 def can_parse_signature_comment_with_type_application_with_one_generic_parameter():
     expected_signature = nodes.signature(
         returns=nodes.type_apply(nodes.ref("list"), [nodes.ref("str")])
