@@ -137,7 +137,7 @@ class FakeModuleResolver(object):
     def __init__(self, modules):
         self._modules = modules
     
-    def resolve_import(self, module, names):
+    def resolve_import_path(self, module, names):
         try:
             return self._modules[tuple(names)]
         except KeyError:

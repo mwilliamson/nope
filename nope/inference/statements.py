@@ -38,7 +38,7 @@ class StatementTypeChecker(object):
 
     def _find_submodule(self, name):
         try:
-            return self._module_resolver.resolve_import(self._module, [".", name])
+            return self._module_resolver.resolve_import_path(self._module, [".", name])
         except errors.ModuleNotFoundError:
             return None
     
@@ -377,7 +377,7 @@ class StatementTypeChecker(object):
     
     def _find_module(self, node, names):
         try:
-            module = self._module_resolver.resolve_import(self._module, names)
+            module = self._module_resolver.resolve_import_path(self._module, names)
         except errors.TypeCheckError as error:
             error.node = node
             raise error

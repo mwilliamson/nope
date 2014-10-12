@@ -150,7 +150,7 @@ def _resolve_import(module, names, modules=None, builtin_modules=None):
         
     source_tree = FakeSourceTree(modules)
     return module_resolution.ModuleResolution(source_tree, builtin_modules) \
-        .resolve_import(module, names)
+        .resolve_import_path(module, names)
 
 
 def _create_module(path, is_executable=False):

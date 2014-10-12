@@ -10,7 +10,7 @@ class ModuleResolution(zuice.Base):
     _source_tree = zuice.dependency(injection.source_tree)
     _builtin_modules = zuice.dependency(injection.builtin_modules)
     
-    def resolve_import(self, module, names):
+    def resolve_import_path(self, module, names):
         name = ".".join(names)
         if name in self._builtin_modules:
             return self._builtin_modules[name]
