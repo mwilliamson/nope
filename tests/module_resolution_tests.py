@@ -166,6 +166,3 @@ class FakeSourceTree(object):
     
     def module(self, path):
         return self._modules.get(path)
-    
-    def __contains__(self, path):
-        return path in self._modules
