@@ -94,6 +94,9 @@ class Declarations(object):
         declarations.update(new_declarations._declarations)
         return Declarations(declarations)
     
+    def __iter__(self):
+        return iter(self._declarations.values())
+    
     def __repr__(self):
         return "Declarations({})".format(self._declarations)
 

@@ -28,7 +28,6 @@ class TypeChecker(zuice.Base):
 
 class _TypeCheckerForModule(object):
     def __init__(self, declaration_finder, name_resolver, module_exports, module_types, module_resolver, module):
-        self._declaration_finder = declaration_finder
         self._name_resolver = name_resolver
         self._module_exports = module_exports
         self._type_lookup = IdentityDict()
@@ -54,12 +53,7 @@ class _TypeCheckerForModule(object):
         for reference in references:
             self._type_lookup[reference] = context.lookup(reference)
         
-        module_declarations = self._declaration_finder.declarations_in_module(module.node)
-        exported_names = self._module_exports.names(module.node)
-        exported_declarations = [
-            module_declarations.declaration(name)
-            for name in exported_names
-        ]
+        exported_declarations = self._module_exports.declarations(module.node)
         
         builtin_is_definitely_bound = builtins.module_bindings(references)
         bindings = name_binding.check_bindings(

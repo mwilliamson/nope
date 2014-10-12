@@ -19,12 +19,16 @@ def test_transform_module():
 def test_transform_module_with_exports():
     _assert_transform(
         nodes.module([
-            nodes.assign(["__all__"], nodes.list_literal([nodes.string("x")]))
+            nodes.assign(["__all__"], nodes.list_literal([nodes.string("x")])),
+            nodes.assign(["x"], nodes.none())
         ]),
         """
             var __all__;
+            var x;
             var $tmp0 = ["x"];
             __all__ = $tmp0;
+            var $tmp1 = null;
+            x = $tmp1;
             $exports.x = x;
         """
     )

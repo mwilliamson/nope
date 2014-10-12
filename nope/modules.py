@@ -19,12 +19,19 @@ class ModuleExports(zuice.Base):
     _declaration_finder = zuice.dependency(name_declaration.DeclarationFinder)
     
     def names(self, module_node):
+        return [
+            declaration.name
+            for declaration in self.declarations(module_node)
+        ]
+    
+    def declarations(self, module_node):
         export_declarations = self._export_declarations(module_node.body)
+        module_declarations = self._declaration_finder.declarations_in_module(module_node)
         
         if len(export_declarations) == 0:
             return [
-                name for name in self._declaration_finder.declarations_in_module(module_node).names()
-                if not name.startswith("_")
+                declaration for declaration in module_declarations
+                if not declaration.name.startswith("_")
             ]
         elif len(export_declarations) == 1:
             statement, = export_declarations
@@ -32,10 +39,11 @@ class ModuleExports(zuice.Base):
             if not isinstance(statement.value, nodes.ListLiteral):
                 raise _all_wrong_type_error(statement)
             
-            return [
+            names = [
                 _extract_string_value_from_literal(statement, element)
                 for element in statement.value.elements
             ]
+            return list(map(module_declarations.declaration, names))
         else:
             raise errors.AllAssignmentError(export_declarations[1], "__all__ cannot be redeclared")
     
