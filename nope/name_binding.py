@@ -1,4 +1,4 @@
-from nope import nodes, errors, util, visit, name_declaration, types
+from nope import nodes, errors, visit, name_declaration, types
 from nope.identity_dict import IdentityDict
 
 

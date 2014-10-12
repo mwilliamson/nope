@@ -3,7 +3,7 @@ import shutil
 import inspect
 
 from . import js
-from ... import nodes, util, types, name_declaration, returns
+from ... import nodes, types, name_declaration, returns, modules
 from ...walk import walk_tree
 
 
@@ -246,7 +246,7 @@ class Transformer(object):
             for name in sorted(self._declarations.declarations_in_module(module).names())
         ]
         body_statements = var_statements + self._transform_all(module.body)
-        export_names = util.exported_names(module)
+        export_names = modules.exported_names(module)
                 
         export_statements = [
             js.expression_statement(

@@ -1,6 +1,6 @@
 import os
 
-from .. import nodes, types, util, returns, errors, name_declaration
+from .. import nodes, types, returns, errors, name_declaration
 from . import ephemeral
 from .assignment import Assignment
 

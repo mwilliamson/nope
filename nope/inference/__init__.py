@@ -1,6 +1,6 @@
 import zuice
 
-from .. import nodes, types, name_declaration, name_resolution, name_binding, builtins, util, module_resolution
+from .. import nodes, types, name_declaration, name_resolution, name_binding, builtins, module_resolution, modules
 from .expressions import ExpressionTypeInferer
 from .statements import StatementTypeChecker
 from ..identity_dict import IdentityDict
@@ -46,7 +46,7 @@ class _TypeCheckerForModule(object):
             self._type_lookup[reference] = context.lookup(reference)
         
         module_declarations = self._declaration_finder.declarations_in_module(module.node)
-        exported_names = util.exported_names(module.node)
+        exported_names = modules.exported_names(module.node)
         exported_declarations = [
             module_declarations.declaration(name)
             for name in exported_names
