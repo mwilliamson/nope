@@ -137,14 +137,14 @@ class FakeModuleResolver(object):
     def __init__(self, modules):
         self._modules = modules
     
-    def resolve_import_value(self, module, names, value_name):
+    def resolve_import_value(self, names, value_name):
         # TODO: this resembles an actual implementation too much for a stub
         if tuple(names) in self._modules:
-            return self.resolve_import_path(module, names), value_name
+            return self.resolve_import_path(names), value_name
         else:
-            return self.resolve_import_path(module, names + [value_name]), None
+            return self.resolve_import_path(names + [value_name]), None
     
-    def resolve_import_path(self, module, names):
+    def resolve_import_path(self, names):
         try:
             return self._modules[tuple(names)]
         except KeyError:

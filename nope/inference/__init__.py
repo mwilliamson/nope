@@ -9,7 +9,7 @@ from ..identity_dict import IdentityDict
 class TypeChecker(zuice.Base):
     _declaration_finder = zuice.dependency(name_declaration.DeclarationFinder)
     _name_resolver = zuice.dependency(name_resolution.NameResolver)
-    _module_resolver = zuice.dependency(module_resolution.ModuleResolution)
+    _module_resolver_factory = zuice.dependency(module_resolution.ModuleResolverFactory)
     _module_exports = zuice.dependency(modules.ModuleExports)
     
     def check_module(self, module, module_types):
@@ -19,7 +19,7 @@ class TypeChecker(zuice.Base):
             self._name_resolver,
             self._module_exports,
             module_types,
-            self._module_resolver,
+            self._module_resolver_factory.for_module(module),
             module,
         )
         module_type = module_checker.check(module)

@@ -147,10 +147,10 @@ def module_import_without_value_name_can_be_resolved():
     message_module = _create_module("root/message.py")
     
     module_resolver = _module_resolver(
+        _create_module("root/main.py", is_executable=True),
         modules=[message_module]
     )
     resolved_module, attr_name = module_resolver.resolve_import_value(
-        _create_module("root/main.py", is_executable=True),
         ["message"],
         None,
     )
@@ -164,10 +164,10 @@ def value_in_local_module_can_be_resolved():
     message_module = _create_module("root/message.py", declares=["hello"])
     
     module_resolver = _module_resolver(
+        _create_module("root/main.py", is_executable=True),
         modules=[message_module]
     )
     resolved_module, attr_name = module_resolver.resolve_import_value(
-        _create_module("root/main.py", is_executable=True),
         ["message"],
         "hello",
     )
@@ -184,10 +184,10 @@ def value_in_builtin_module_can_be_resolved():
     )
     
     module_resolver = _module_resolver(
+        _create_module("root/main.py", is_executable=True),
         builtin_modules={"cgi": cgi_module}
     )
     resolved_module, attr_name = module_resolver.resolve_import_value(
-        _create_module("root/main.py", is_executable=True),
         ["cgi"],
         "escape",
     )
@@ -202,10 +202,10 @@ def module_in_package_is_resolved_if_package_has_no_value_with_that_name():
     hello_module = _create_module("root/message/hello.py")
     
     module_resolver = _module_resolver(
+        _create_module("root/main.py", is_executable=True),
         modules=[message_module, hello_module]
     )
     resolved_module, attr_name = module_resolver.resolve_import_value(
-        _create_module("root/main.py", is_executable=True),
         ["message"],
         "hello",
     )
@@ -215,21 +215,22 @@ def module_in_package_is_resolved_if_package_has_no_value_with_that_name():
 
 
 def _resolve_import(module, names, modules=None, builtin_modules=None):
-    module_resolver = _module_resolver(modules, builtin_modules)
-    return module_resolver.resolve_import_path(module, names)
+    module_resolver = _module_resolver(module, modules, builtin_modules)
+    return module_resolver.resolve_import_path(names)
 
 
-def _module_resolver(modules=None, builtin_modules=None):
+def _module_resolver(module, modules=None, builtin_modules=None):
     if modules is None:
         modules = []
     if builtin_modules is None:
         builtin_modules = {}
         
     source_tree = FakeSourceTree(modules)
-    return module_resolution.ModuleResolution(
+    return module_resolution.ModuleResolver(
         source_tree,
         builtin_modules,
         ModuleExports(name_declaration.DeclarationFinder()),
+        module
     )
     
 

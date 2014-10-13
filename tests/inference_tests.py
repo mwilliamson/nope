@@ -137,6 +137,16 @@ def _check(module, module_resolver=None, module_types=None):
         declaration_finder=declaration_finder,
         name_resolver=name_resolution.NameResolver(declaration_finder, initial_declarations=builtins.declarations()),
         module_exports=modules.ModuleExports(declaration_finder),
-        module_resolver=module_resolver
+        module_resolver_factory=FakeModuleResolverFactory(module_resolver, module)
     )
     return checker.check_module(module, module_types)
+
+
+class FakeModuleResolverFactory(object):
+    def __init__(self, module_resolver, module):
+        self._module_resolver = module_resolver
+        self._module = module
+    
+    def for_module(self, module):
+        assert module == self._module
+        return self._module_resolver

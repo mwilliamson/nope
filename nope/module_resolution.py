@@ -6,13 +6,21 @@ from . import errors, injection, modules
 from .identity_dict import IdentityDict
 
 
-class ModuleResolution(zuice.Base):
+class ModuleResolverFactory(zuice.Base):
+    _injector = zuice.dependency(zuice.Injector)
+
+    def for_module(self, module):
+        return self._injector.get(ModuleResolver, module=module)
+
+
+class ModuleResolver(zuice.Base):
     _source_tree = zuice.dependency(injection.source_tree)
     _builtin_modules = zuice.dependency(injection.builtin_modules)
     _module_exports = zuice.dependency(modules.ModuleExports)
+    _module = zuice.argument()
     
-    def resolve_import_value(self, module, names, value_name):
-        imported_module = self.resolve_import_path(module, names)
+    def resolve_import_value(self, names, value_name):
+        imported_module = self.resolve_import_path(names)
         if value_name is None:
             return imported_module, None
         else:
@@ -23,17 +31,17 @@ class ModuleResolution(zuice.Base):
             if value_name in module_names:
                 return imported_module, value_name
             else:
-                return self.resolve_import_path(module, names + [value_name]), None
+                return self.resolve_import_path(names + [value_name]), None
     
-    def resolve_import_path(self, module, names):
+    def resolve_import_path(self, names):
         name = ".".join(names)
         if name in self._builtin_modules:
             return self._builtin_modules[name]
         
-        if names[0] not in [".", ".."] and not module.node.is_executable:
+        if names[0] not in [".", ".."] and not self._module.node.is_executable:
             package_value, module_value = None, None
         else:
-            package_path, module_path = self._possible_module_paths(module.path, names)
+            package_path, module_path = self._possible_module_paths(self._module.path, names)
             
             package_value = self._source_tree.module(package_path)
             module_value = self._source_tree.module(module_path)
