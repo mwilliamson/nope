@@ -6,6 +6,7 @@ from nope import nodes, types
 from nope.parser.typing import parse_explicit_type
 from nope.identity_dict import IdentityDict
 from nope.module_resolution import ResolvedImport
+from nope.modules import BuiltinModule
 
 
 @istest
@@ -131,6 +132,20 @@ def test_transform_import_value_from_absolute_package():
         """,
         module_resolver=FakeModuleResolver({
             (("x", ), "y"): ResolvedImport(["x", "y"], _stub_module, None)
+        })
+    )
+
+
+@istest
+def test_transform_import_builtin_module():
+    module = BuiltinModule("cgi", None)
+    _assert_transform(
+        nodes.Import([nodes.import_alias("cgi", None)]),
+        """
+            cgi = $require("__builtins/cgi");
+        """,
+        module_resolver=FakeModuleResolver({
+            (("cgi", ), None): ResolvedImport(["cgi"], module, None)
         })
     )
 

@@ -10,6 +10,7 @@ def walk_tree(path, handle_dir, handle_file):
         return os.path.relpath(full_path, root)
         
     if os.path.isdir(path):
+        handle_dir(path, _source_path_to_relative_path(path))
         for root, dirnames, filenames in os.walk(path):
             for dirname in dirnames: 
                 full_path = os.path.join(root, dirname)

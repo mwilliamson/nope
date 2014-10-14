@@ -3,13 +3,13 @@ import shutil
 import inspect
 
 from . import js
-from ... import nodes, types, name_declaration, returns, modules, module_resolution, builtins
+from ... import nodes, types, name_declaration, returns, modules, module_resolution, builtins, files
 from ...walk import walk_tree
 
 
 def nope_to_nodejs(source_path, source_tree, checker, destination_dir, optimise=True):
     def handle_dir(path, relative_path):
-        os.mkdir(os.path.join(destination_dir, relative_path))
+        files.mkdir_p(os.path.join(destination_dir, relative_path))
     
     def handle_file(path, relative_path):
         module = source_tree.module(path)
@@ -32,6 +32,7 @@ def nope_to_nodejs(source_path, source_tree, checker, destination_dir, optimise=
         )
     
     _write_nope_js(destination_dir)
+    _write_builtins(destination_dir)
     
     walk_tree(source_path, handle_dir, handle_file)
 
@@ -43,6 +44,11 @@ def _write_nope_js(destination_dir):
         
         with open(os.path.join(nope_js_path)) as source_file:
             shutil.copyfileobj(source_file, dest_file)
+
+
+def _write_builtins(destination_dir):
+    builtins_path = os.path.join(os.path.dirname(__file__), "__builtins")
+    files.copy_recursive(builtins_path, os.path.join(destination_dir, "__builtins"))
 
 
 def _number_methods_ast():
@@ -324,6 +330,9 @@ class Transformer(object):
         module_path = "/".join(resolved_import.module_name)
         if module_path.endswith("."):
             module_path += "/"
+        
+        if isinstance(resolved_import.module, modules.BuiltinModule):
+            module_path = "__builtins/{}".format(module_path)
         
         module_expr = js.call(js.ref("$require"), [js.string(module_path)])
         
