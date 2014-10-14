@@ -112,12 +112,26 @@ def test_transform_import_from_child_package():
 
 
 @istest
-def test_transform_import_from_absolute_package():
+def test_transform_import_module_from_absolute_package():
     _assert_transform(
         nodes.import_from(["x"], [nodes.import_alias("y", None)]),
         """
             y = ($require("x")).y;
         """
+    )
+
+
+@istest
+def test_transform_import_value_from_absolute_package():
+    stub_module = object()
+    _assert_transform(
+        nodes.import_from(["x"], [nodes.import_alias("y", None)]),
+        """
+            y = $require("x/y");
+        """,
+        module_resolver=FakeModuleResolver({
+            (("x", ), "y"): (stub_module, None)
+        })
     )
 
 
@@ -907,9 +921,10 @@ def test_transform_tuple_literal():
     )
 
 
-def _assert_transform(nope, expected_js, type_lookup=None, optimise=True):
+def _assert_transform(nope, expected_js, type_lookup=None, module_resolver=None, optimise=True):
     transformed_js = _transform_node(nope,
         type_lookup=type_lookup,
+        module_resolver=module_resolver,
         optimise=optimise,
     )
     _assert_node(transformed_js, expected_js)
@@ -924,11 +939,12 @@ def _assert_node(actual, expected_js):
         assert_equal(expected_js, actual)
 
 
-def _transform_node(nope, type_lookup=None, optimise=True):
+def _transform_node(nope, type_lookup=None, module_resolver=None, optimise=True):
     if type_lookup is None:
         type_lookup = types.TypeLookup(IdentityDict())
 
-    module_resolver = FakeModuleResolver()
+    if module_resolver is None:
+        module_resolver = FakeModuleResolver()
     
     return codegeneration.transform(nope,
         type_lookup=type_lookup,
@@ -938,8 +954,14 @@ def _transform_node(nope, type_lookup=None, optimise=True):
     
 
 class FakeModuleResolver(object):
+    def __init__(self, imports=None):
+        if imports is None:
+            imports = {}
+        
+        self._imports = imports
+    
     def resolve_import_value(self, names, value_name):
-        return None, value_name
+        return self._imports.get((tuple(names), value_name), (None, value_name))
 
 
 def _assert_equivalent_js(first, second):
