@@ -6,8 +6,8 @@ def find_platform_by_name(platform_name):
 
 
 _all = [
-    python.Python3(),
-    nodejs.NodeJs(),
+    python.Python3,
+    nodejs.NodeJs,
 ]
 
 

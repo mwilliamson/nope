@@ -8,7 +8,7 @@ from nope.platforms.nodejs import NodeJs
 from .. import execution
 
 
-_optimised_node_js = NodeJs()
+_optimised_node_js = NodeJs(optimise=True)
 _unoptimised_node_js = NodeJs(optimise=False)
 
 

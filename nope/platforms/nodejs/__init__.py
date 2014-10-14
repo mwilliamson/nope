@@ -1,9 +1,10 @@
+import zuice
+
 from . import codegeneration
 
 
-class NodeJs(object):
-    def __init__(self, optimise=True):
-        self._optimise = optimise
+class NodeJs(zuice.Base):
+    _optimise = zuice.argument(default=True)
     
     name = "node"
     binary = "node"
