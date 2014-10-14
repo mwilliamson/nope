@@ -3,7 +3,7 @@ import shutil
 import inspect
 
 from . import js
-from ... import nodes, types, name_declaration, returns, modules
+from ... import nodes, types, name_declaration, returns, modules, module_resolution, builtins
 from ...walk import walk_tree
 
 
@@ -13,7 +13,16 @@ def nope_to_nodejs(source_path, source_tree, checker, destination_dir, optimise=
     
     def handle_file(path, relative_path):
         module = source_tree.module(path)
+        
+        module_exports = modules.ModuleExports(name_declaration.DeclarationFinder())
+        module_resolver = module_resolution.ModuleResolver(
+            source_tree,
+            builtins.builtin_modules,
+            module_exports,
+            module,
+        )
         _convert_file(
+            module_resolver,
             path,
             relative_path,
             module.node,
@@ -55,7 +64,7 @@ def _generate_number_method(generate_operation):
         ])
 
 
-def _convert_file(source_path, relative_path, nope_ast, type_lookup, destination_root, optimise):
+def _convert_file(module_resolver, source_path, relative_path, nope_ast, type_lookup, destination_root, optimise):
     destination_dir = os.path.dirname(os.path.join(destination_root, relative_path))
     
     source_filename = os.path.basename(source_path)
@@ -63,7 +72,7 @@ def _convert_file(source_path, relative_path, nope_ast, type_lookup, destination
     dest_path = os.path.join(destination_dir, dest_filename)
     with open(dest_path, "w") as dest_file:
         _generate_prelude(dest_file, nope_ast, relative_path)
-        js.dump(transform(nope_ast, type_lookup, optimise=optimise), dest_file)
+        js.dump(transform(nope_ast, type_lookup, module_resolver, optimise=optimise), dest_file)
 
 
 def _js_filename(python_filename):
@@ -177,18 +186,21 @@ _main_require = """
 """
 
 
-def transform(nope_node, type_lookup, optimise=True):
+def transform(nope_node, type_lookup, module_resolver, optimise=True):
+    module_exports = modules.ModuleExports(name_declaration.DeclarationFinder())
     transformer = Transformer(
         type_lookup,
-        modules.ModuleExports(name_declaration.DeclarationFinder()),
+        module_resolver,
+        module_exports,
         optimise=optimise,
     )
     return transformer.transform(nope_node)
 
 
 class Transformer(object):
-    def __init__(self, type_lookup, module_exports, optimise):
+    def __init__(self, type_lookup, module_resolver, module_exports, optimise):
         self._type_lookup = type_lookup
+        self._module_resolver = module_resolver
         self._module_exports = module_exports
         self._declarations = name_declaration.DeclarationFinder()
         self._optimise = optimise
@@ -296,28 +308,35 @@ class Transformer(object):
 
 
     def _import_from(self, import_from):
-        module_import_name = self._unique_name("import")
-        
         statements = [
-            js.var(
-                module_import_name,
-                self._import_module_expr(import_from.module)
-            )
         ]
         
         for alias in import_from.names:
-            import_value = js.property_access(js.ref(module_import_name), alias.name)
+            import_value = self._import_module_expr(import_from.module, alias.name)
             statements.append(js.assign_statement(alias.value_name, import_value))
         
         return js.statements(statements)
     
     
-    def _import_module_expr(self, module_name):
-        module_path = "/".join(module_name)
+    def _import_module_expr(self, module_name, value_name=None):
+        module, attr_name = self._module_resolver.resolve_import_value(module_name, value_name)
+        
+        # TODO: push this logic into a separate class
+        if attr_name is None and value_name is not None:
+            path_parts = module_name + [value_name]
+        else:
+            path_parts = module_name
+            
+        module_path = "/".join(path_parts)
         if module_path.endswith("."):
             module_path += "/"
         
-        return js.call(js.ref("$require"), [js.string(module_path)])
+        module_expr = js.call(js.ref("$require"), [js.string(module_path)])
+        
+        if attr_name is None:
+            return module_expr
+        else:
+            return js.property_access(module_expr, attr_name)    
 
 
     def _expression_statement(self, statement):

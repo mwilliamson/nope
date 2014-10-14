@@ -59,10 +59,9 @@ def test_transform_basic_import_of_module_in_package():
 def test_transform_import_from_current_package():
     _assert_transform(
         nodes.import_from(["."], [nodes.import_alias("x", None)]),
-        js.statements([
-            js.var("$import0", js.call(js.ref("$require"), [js.string("./")])),
-            js.assign_statement("x", js.property_access(js.ref("$import0"), "x")),
-        ])
+        """
+            x = ($require("./")).x;
+        """
     )
 
 
@@ -70,10 +69,9 @@ def test_transform_import_from_current_package():
 def test_transform_import_from_parent_package():
     _assert_transform(
         nodes.import_from([".."], [nodes.import_alias("x", None)]),
-        js.statements([
-            js.var("$import0", js.call(js.ref("$require"), [js.string("../")])),
-            js.assign_statement("x", js.property_access(js.ref("$import0"), "x")),
-        ])
+        """
+            x = ($require("../")).x
+        """
     )
 
 
@@ -84,11 +82,10 @@ def test_transform_import_from_with_multiple_names():
             nodes.import_alias("x", None),
             nodes.import_alias("y", None),
         ]),
-        js.statements([
-            js.var("$import0", js.call(js.ref("$require"), [js.string("./")])),
-            js.assign_statement("x", js.property_access(js.ref("$import0"), "x")),
-            js.assign_statement("y", js.property_access(js.ref("$import0"), "y")),
-        ])
+        """
+            x = ($require("./")).x;
+            y = ($require("./")).y;
+        """
     )
 
 
@@ -98,10 +95,9 @@ def test_transform_import_from_with_alias():
         nodes.import_from(["."], [
             nodes.import_alias("x", "y"),
         ]),
-        js.statements([
-            js.var("$import0", js.call(js.ref("$require"), [js.string("./")])),
-            js.assign_statement("y", js.property_access(js.ref("$import0"), "x")),
-        ])
+        """
+            y = ($require("./")).x
+        """
     )
 
 
@@ -109,10 +105,9 @@ def test_transform_import_from_with_alias():
 def test_transform_import_from_child_package():
     _assert_transform(
         nodes.import_from([".", "x"], [nodes.import_alias("y", None)]),
-        js.statements([
-            js.var("$import0", js.call(js.ref("$require"), [js.string("./x")])),
-            js.assign_statement("y", js.property_access(js.ref("$import0"), "y")),
-        ])
+        """
+            y = ($require("./x")).y
+        """
     )
 
 
@@ -120,32 +115,9 @@ def test_transform_import_from_child_package():
 def test_transform_import_from_absolute_package():
     _assert_transform(
         nodes.import_from(["x"], [nodes.import_alias("y", None)]),
-        js.statements([
-            js.var("$import0", js.call(js.ref("$require"), [js.string("x")])),
-            js.assign_statement("y", js.property_access(js.ref("$import0"), "y")),
-        ])
-    )
-
-
-@istest
-def test_multiple_imports_use_different_names():
-    assert_equal(
-        codegeneration.transform(nodes.module([
-            nodes.import_from([".", "x1"], [nodes.import_alias("y1", None)]),
-            nodes.import_from([".", "x2"], [nodes.import_alias("y2", None)]),
-        ]), type_lookup=types.TypeLookup(IdentityDict())).statements[:4],
-        [
-            js.var("y1"),
-            js.var("y2"),
-            js.statements([
-                js.var("$import0", js.call(js.ref("$require"), [js.string("./x1")])),
-                js.assign_statement("y1", js.property_access(js.ref("$import0"), "y1")),
-            ]),
-            js.statements([
-                js.var("$import1", js.call(js.ref("$require"), [js.string("./x2")])),
-                js.assign_statement("y2", js.property_access(js.ref("$import1"), "y2")),
-            ]),
-        ],
+        """
+            y = ($require("x")).y;
+        """
     )
 
 
@@ -936,15 +908,38 @@ def test_transform_tuple_literal():
 
 
 def _assert_transform(nope, expected_js, type_lookup=None, optimise=True):
+    transformed_js = _transform_node(nope,
+        type_lookup=type_lookup,
+        optimise=optimise,
+    )
+    _assert_node(transformed_js, expected_js)
+
+
+def _assert_node(actual, expected_js):
+    if isinstance(expected_js, str):
+        if isinstance(actual, list):
+            actual = js.statements(actual)
+        _assert_equivalent_js(expected_js, js.dumps(actual))
+    else:
+        assert_equal(expected_js, actual)
+
+
+def _transform_node(nope, type_lookup=None, optimise=True):
     if type_lookup is None:
         type_lookup = types.TypeLookup(IdentityDict())
+
+    module_resolver = FakeModuleResolver()
     
-    transformed_js = codegeneration.transform(nope, type_lookup, optimise=optimise)
+    return codegeneration.transform(nope,
+        type_lookup=type_lookup,
+        module_resolver=module_resolver, 
+        optimise=optimise,
+    )
     
-    if isinstance(expected_js, str):
-        _assert_equivalent_js(expected_js, js.dumps(transformed_js))
-    else:
-        assert_equal(expected_js, transformed_js)
+
+class FakeModuleResolver(object):
+    def resolve_import_value(self, names, value_name):
+        return None, value_name
 
 
 def _assert_equivalent_js(first, second):
