@@ -6,4 +6,4 @@ from .. import execution
 
 @istest
 class Python3ExecutionTests(execution.ExecutionTests):
-    platform = python.Python3()
+    platform = python.Python3

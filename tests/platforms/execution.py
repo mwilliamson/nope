@@ -2,9 +2,11 @@ import os
 
 from nose.tools import istest, nottest, assert_equal, assert_not_equal, assert_in
 import tempman
+import zuice
 
 from .. import testing
 from ..testing import program_path
+from nope import injection
 
 
 @nottest
@@ -724,4 +726,9 @@ f(user.id, user.username)
         
     
     def _run_program(self, path, program, allow_error=False):
-        return testing.compile_and_run(self.platform, path, program, allow_error=allow_error)
+        bindings = injection.create_bindings()
+        if hasattr(self, "create_bindings"):
+            self.create_bindings(bindings)
+        injector = zuice.Injector(bindings)
+        
+        return testing.compile_and_run(injector.get(self.platform), path, program, allow_error=allow_error)

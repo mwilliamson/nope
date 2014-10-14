@@ -2,39 +2,42 @@ import os
 import shutil
 import inspect
 
+import zuice
+
 from . import js
 from ... import nodes, types, name_declaration, returns, modules, module_resolution, builtins, files
 from ...walk import walk_tree
 
 
-def nope_to_nodejs(source_path, source_tree, checker, destination_dir, optimise=True):
-    def handle_dir(path, relative_path):
-        files.mkdir_p(os.path.join(destination_dir, relative_path))
-    
-    def handle_file(path, relative_path):
-        module = source_tree.module(path)
+class CodeGenerator(zuice.Base):
+    def generate_files(self, source_path, source_tree, checker, destination_dir, optimise=True):
+        def handle_dir(path, relative_path):
+            files.mkdir_p(os.path.join(destination_dir, relative_path))
         
-        module_exports = modules.ModuleExports(name_declaration.DeclarationFinder())
-        module_resolver = module_resolution.ModuleResolver(
-            source_tree,
-            builtins.builtin_modules,
-            module_exports,
-            module,
-        )
-        _convert_file(
-            module_resolver,
-            path,
-            relative_path,
-            module.node,
-            checker.type_lookup(module),
-            destination_dir,
-            optimise=optimise,
-        )
-    
-    _write_nope_js(destination_dir)
-    _write_builtins(destination_dir)
-    
-    walk_tree(source_path, handle_dir, handle_file)
+        def handle_file(path, relative_path):
+            module = source_tree.module(path)
+            
+            module_exports = modules.ModuleExports(name_declaration.DeclarationFinder())
+            module_resolver = module_resolution.ModuleResolver(
+                source_tree,
+                builtins.builtin_modules,
+                module_exports,
+                module,
+            )
+            _convert_file(
+                module_resolver,
+                path,
+                relative_path,
+                module.node,
+                checker.type_lookup(module),
+                destination_dir,
+                optimise=optimise,
+            )
+        
+        _write_nope_js(destination_dir)
+        _write_builtins(destination_dir)
+        
+        walk_tree(source_path, handle_dir, handle_file)
 
 
 def _write_nope_js(destination_dir):

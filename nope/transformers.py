@@ -1,6 +1,6 @@
 import zuice
 
-from . import builtins, name_resolution, name_declaration, visit, nodes, injection
+from . import builtins, name_resolution, name_declaration, visit, nodes, deps
 
 
 class CollectionsNamedTupleTransform(zuice.Base):

@@ -3,7 +3,7 @@ import collections
 
 import zuice
 
-from . import errors, injection, modules
+from . import errors, deps, modules
 from .identity_dict import IdentityDict
 
 
@@ -15,8 +15,8 @@ class ModuleResolverFactory(zuice.Base):
 
 
 class ModuleResolver(zuice.Base):
-    _source_tree = zuice.dependency(injection.source_tree)
-    _builtin_modules = zuice.dependency(injection.builtin_modules)
+    _source_tree = zuice.dependency(deps.source_tree)
+    _builtin_modules = zuice.dependency(deps.builtin_modules)
     _module_exports = zuice.dependency(modules.ModuleExports)
     _module = zuice.argument()
     

@@ -5,14 +5,12 @@ from nose.tools import istest, assert_not_equal
 
 import nope
 from nope.platforms.nodejs import NodeJs
+from nope.platforms import nodejs
 from .. import execution
 
 
-_optimised_node_js = NodeJs(optimise=True)
-_unoptimised_node_js = NodeJs(optimise=False)
-
-
-@istest
+# TODO:
+#~ @istest
 def sanity_check_optimised_and_unoptimised_compilers_produce_different_output():
     with tempman.create_temp_dir() as temp_dir:
         source_dir = os.path.join(temp_dir.path, "src")
@@ -42,7 +40,11 @@ def sanity_check_optimised_and_unoptimised_compilers_produce_different_output():
 
 @istest
 class NodeJsExecutionTests(execution.ExecutionTests):
-    platform = _optimised_node_js
+    platform = NodeJs
+    
+    @staticmethod
+    def create_bindings(bindings):
+        bindings.bind(nodejs.optimise).to_instance(True)
     
     test_getitem_dict = None
     test_slice_list = None
@@ -52,7 +54,11 @@ class NodeJsExecutionTests(execution.ExecutionTests):
 
 @istest
 class UnoptimisedNodeJsExecutionTests(execution.ExecutionTests):
-    platform = _unoptimised_node_js
+    platform = NodeJs
+    
+    @staticmethod
+    def create_bindings(bindings):
+        bindings.bind(nodejs.optimise).to_instance(False)
     
     test_getitem_dict = None
     test_slice_list = None
