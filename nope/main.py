@@ -33,8 +33,23 @@ class CheckCommand(object):
             return 1
 
 
+class CompileCommand(object):
+    name = "compile"
+    
+    @staticmethod
+    def create_parser(parser):
+        parser.add_argument("path")
+        parser.add_argument("--backend", required=True)
+        parser.add_argument("--output-dir", required=True)
+    
+    @staticmethod
+    def execute(args):
+        nope.compile(args.path, args.output_dir, args.backend)
+
+
 _commands = [
-    CheckCommand
+    CheckCommand,
+    CompileCommand,
 ]
 
 def _print_error(error):
