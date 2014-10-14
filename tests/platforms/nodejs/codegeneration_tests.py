@@ -5,6 +5,7 @@ from nope.platforms.nodejs import codegeneration, js
 from nope import nodes, types
 from nope.parser.typing import parse_explicit_type
 from nope.identity_dict import IdentityDict
+from nope.module_resolution import ResolvedImport
 
 
 @istest
@@ -123,14 +124,13 @@ def test_transform_import_module_from_absolute_package():
 
 @istest
 def test_transform_import_value_from_absolute_package():
-    stub_module = object()
     _assert_transform(
         nodes.import_from(["x"], [nodes.import_alias("y", None)]),
         """
             y = $require("x/y");
         """,
         module_resolver=FakeModuleResolver({
-            (("x", ), "y"): (stub_module, None)
+            (("x", ), "y"): ResolvedImport(["x", "y"], _stub_module, None)
         })
     )
 
@@ -961,7 +961,13 @@ class FakeModuleResolver(object):
         self._imports = imports
     
     def resolve_import_value(self, names, value_name):
-        return self._imports.get((tuple(names), value_name), (None, value_name))
+        return self._imports.get(
+            (tuple(names), value_name),
+            ResolvedImport(names, _stub_module, value_name)
+        )
+
+
+_stub_module = object()
 
 
 def _assert_equivalent_js(first, second):

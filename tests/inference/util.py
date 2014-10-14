@@ -4,6 +4,7 @@ from nope import types, errors, nodes, inference, name_declaration, modules
 from nope.context import Context
 from nope.name_declaration import Declarations
 from nope.modules import LocalModule
+from nope.module_resolution import ResolvedImport
 
 
 def update_context(statement, *, type_bindings=None, module_resolver=None, module_types=None, module_path=None, is_executable=False, declared_names_in_node=None):
@@ -140,9 +141,10 @@ class FakeModuleResolver(object):
     def resolve_import_value(self, names, value_name):
         # TODO: this resembles an actual implementation too much for a stub
         if tuple(names) in self._modules:
-            return self.resolve_import_path(names), value_name
+            return ResolvedImport(names, self.resolve_import_path(names), value_name)
         else:
-            return self.resolve_import_path(names + [value_name]), None
+            module_name = names + [value_name]
+            return ResolvedImport(module_name, self.resolve_import_path(module_name), None)
     
     def resolve_import_path(self, names):
         try:

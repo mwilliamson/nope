@@ -150,13 +150,14 @@ def module_import_without_value_name_can_be_resolved():
         _create_module("root/main.py", is_executable=True),
         modules=[message_module]
     )
-    resolved_module, attr_name = module_resolver.resolve_import_value(
+    resolved_import = module_resolver.resolve_import_value(
         ["message"],
         None,
     )
     
-    assert_is(message_module, resolved_module)
-    assert_equal(None, attr_name)
+    assert_is(message_module, resolved_import.module)
+    assert_equal(None, resolved_import.attr_name)
+    assert_equal(["message"], resolved_import.module_name)
 
 
 @istest
@@ -167,13 +168,14 @@ def value_in_local_module_can_be_resolved():
         _create_module("root/main.py", is_executable=True),
         modules=[message_module]
     )
-    resolved_module, attr_name = module_resolver.resolve_import_value(
+    resolved_import = module_resolver.resolve_import_value(
         ["message"],
         "hello",
     )
     
-    assert_is(message_module, resolved_module)
-    assert_equal("hello", attr_name)
+    assert_is(message_module, resolved_import.module)
+    assert_equal("hello", resolved_import.attr_name)
+    assert_equal(["message"], resolved_import.module_name)
 
 
 @istest
@@ -187,13 +189,14 @@ def value_in_builtin_module_can_be_resolved():
         _create_module("root/main.py", is_executable=True),
         builtin_modules={"cgi": cgi_module}
     )
-    resolved_module, attr_name = module_resolver.resolve_import_value(
+    resolved_import = module_resolver.resolve_import_value(
         ["cgi"],
         "escape",
     )
     
-    assert_is(cgi_module, resolved_module)
-    assert_equal("escape", attr_name)
+    assert_is(cgi_module, resolved_import.module)
+    assert_equal("escape", resolved_import.attr_name)
+    assert_equal(["cgi"], resolved_import.module_name)
 
 
 @istest
@@ -205,13 +208,12 @@ def module_in_package_is_resolved_if_package_has_no_value_with_that_name():
         _create_module("root/main.py", is_executable=True),
         modules=[message_module, hello_module]
     )
-    resolved_module, attr_name = module_resolver.resolve_import_value(
-        ["message"],
-        "hello",
-    )
+    resolved_import = module_resolver.resolve_import_value(
+        ["message"], "hello")
     
-    assert_is(hello_module, resolved_module)
-    assert_equal(None, attr_name)
+    assert_is(hello_module, resolved_import.module)
+    assert_equal(None, resolved_import.attr_name)
+    assert_equal(["message", "hello"], resolved_import.module_name)
 
 
 def _resolve_import(module, names, modules=None, builtin_modules=None):

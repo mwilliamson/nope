@@ -373,20 +373,22 @@ class StatementTypeChecker(object):
     
     def _find_module(self, node, names, value_name=None):
         try:
-            module, attr_name = self._module_resolver.resolve_import_value(names, value_name)
+            resolved_import = self._module_resolver.resolve_import_value(names, value_name)
         except errors.TypeCheckError as error:
             error.node = node
             raise error
         
-        if hasattr(module, "type"):
-            module_type = module.type.copy()
+        if hasattr(resolved_import.module, "type"):
+            module_type = resolved_import.module.type
         else:
-            module_type = self._module_types.type_of_module(module).copy()
+            module_type = self._module_types.type_of_module(resolved_import.module)
         
-        if attr_name is None:
+        module_type = module_type.copy()
+        
+        if resolved_import.attr_name is None:
             return module_type
         else:
-            return module_type.attrs.type_of(value_name)
+            return module_type.attrs.type_of(resolved_import.attr_name)
 
     def _possible_module_paths(self, names):
         import_path = os.path.normpath(os.path.join(os.path.dirname(self._module.path), *names))

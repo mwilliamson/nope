@@ -319,24 +319,18 @@ class Transformer(object):
     
     
     def _import_module_expr(self, module_name, value_name=None):
-        module, attr_name = self._module_resolver.resolve_import_value(module_name, value_name)
+        resolved_import = self._module_resolver.resolve_import_value(module_name, value_name)
         
-        # TODO: push this logic into a separate class
-        if attr_name is None and value_name is not None:
-            path_parts = module_name + [value_name]
-        else:
-            path_parts = module_name
-            
-        module_path = "/".join(path_parts)
+        module_path = "/".join(resolved_import.module_name)
         if module_path.endswith("."):
             module_path += "/"
         
         module_expr = js.call(js.ref("$require"), [js.string(module_path)])
         
-        if attr_name is None:
+        if resolved_import.attr_name is None:
             return module_expr
         else:
-            return js.property_access(module_expr, attr_name)    
+            return js.property_access(module_expr, resolved_import.attr_name)    
 
 
     def _expression_statement(self, statement):

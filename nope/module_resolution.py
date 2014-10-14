@@ -23,11 +23,12 @@ class ModuleResolver(zuice.Base):
     def resolve_import_value(self, names, value_name):
         imported_module = self.resolve_import_path(names)
         if value_name is None:
-            return ResolvedImport(imported_module, None)
+            return ResolvedImport(names, imported_module, None)
         elif self._module_declares_name(imported_module, value_name):
-            return ResolvedImport(imported_module, value_name)
+            return ResolvedImport(names, imported_module, value_name)
         else:
-            return ResolvedImport(self.resolve_import_path(names + [value_name]), None)
+            module_names = names + [value_name]
+            return ResolvedImport(module_names, self.resolve_import_path(module_names), None)
     
     def _module_declares_name(self, imported_module, name):
         if isinstance(imported_module, modules.BuiltinModule):
@@ -75,5 +76,5 @@ class ModuleResolver(zuice.Base):
 
 
 ResolvedImport = collections.namedtuple("ResolvedImport",
-    ["module", "attr_name"]
+    ["module_name", "module", "attr_name"]
 )
