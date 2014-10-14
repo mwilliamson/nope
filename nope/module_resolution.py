@@ -24,11 +24,10 @@ class ModuleResolver(zuice.Base):
         imported_module = self.resolve_import_path(names)
         if value_name is None:
             return ResolvedImport(imported_module, None)
+        elif self._module_declares_name(imported_module, value_name):
+            return ResolvedImport(imported_module, value_name)
         else:
-            if self._module_declares_name(imported_module, value_name):
-                return ResolvedImport(imported_module, value_name)
-            else:
-                return ResolvedImport(self.resolve_import_path(names + [value_name]), None)
+            return ResolvedImport(self.resolve_import_path(names + [value_name]), None)
     
     def _module_declares_name(self, imported_module, name):
         if isinstance(imported_module, modules.BuiltinModule):
