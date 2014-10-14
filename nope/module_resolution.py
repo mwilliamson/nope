@@ -25,14 +25,18 @@ class ModuleResolver(zuice.Base):
         if value_name is None:
             return ResolvedImport(imported_module, None)
         else:
-            if isinstance(imported_module, modules.BuiltinModule):
-                module_names = imported_module.type.attrs.names()
-            else:
-                module_names = self._module_exports.names(imported_module.node)
-            if value_name in module_names:
+            if self._module_declares_name(imported_module, value_name):
                 return ResolvedImport(imported_module, value_name)
             else:
                 return self.resolve_import_path(names + [value_name]), None
+    
+    def _module_declares_name(self, imported_module, name):
+        if isinstance(imported_module, modules.BuiltinModule):
+            module_names = imported_module.type.attrs.names()
+        else:
+            module_names = self._module_exports.names(imported_module.node)
+        
+        return name in module_names
     
     def resolve_import_path(self, names):
         name = ".".join(names)
