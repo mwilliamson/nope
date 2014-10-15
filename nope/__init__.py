@@ -3,7 +3,7 @@ import os
 
 import zuice
 
-from . import platforms, errors, injection, deps
+from . import platforms, errors, injection
 from .check import ModuleChecker
 from .platforms import nodejs
 from .source import SourceTree

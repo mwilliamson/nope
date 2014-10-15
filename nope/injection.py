@@ -4,7 +4,7 @@ from .name_declaration import DeclarationFinder
 from .check import ModuleChecker
 from .source import SourceTree, CachedSourceTree, TransformingSourceTree, FileSystemSourceTree
 from .transformers import CollectionsNamedTupleTransform
-from . import deps, builtins, inference
+from . import environment, builtins, inference
 
 
 def create_bindings():
@@ -15,12 +15,12 @@ def create_bindings():
     bindings = zuice.Bindings()
     bindings.bind(DeclarationFinder).to_instance(declaration_finder)
     bindings.bind(SourceTree).to_provider(_source_tree_provider)
-    bindings.bind(deps.builtins).to_instance(builtins)
-    bindings.bind(deps.initial_declarations).to_provider(lambda injector:
-        injector.get(deps.builtins).declarations()
+    bindings.bind(environment.Builtins).to_instance(builtins)
+    bindings.bind(environment.InitialDeclarations).to_provider(lambda injector:
+        injector.get(environment.Builtins).declarations()
     )
-    bindings.bind(deps.builtin_modules).to_provider(lambda injector:
-        injector.get(deps.builtins).builtin_modules
+    bindings.bind(environment.BuiltinModules).to_provider(lambda injector:
+        injector.get(environment.Builtins).builtin_modules
     )
     bindings.bind(ModuleChecker).to_provider(lambda injector:
         ModuleChecker(injector.get(SourceTree), injector.get(inference.TypeChecker))
