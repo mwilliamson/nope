@@ -2,7 +2,7 @@ import zuice
 
 from .name_declaration import DeclarationFinder
 from .check import ModuleChecker
-from .source import CachedSourceTree, TransformingSourceTree, SourceTree
+from .source import CachedSourceTree, TransformingSourceTree, FileSystemSourceTree
 from .transformers import CollectionsNamedTupleTransform
 from . import deps, builtins, inference
 
@@ -36,7 +36,7 @@ def create_injector():
 def _source_tree_provider(injector):
     return CachedSourceTree(
         TransformingSourceTree(
-            SourceTree(),
+            FileSystemSourceTree(),
             create_injector().get(CollectionsNamedTupleTransform)
         )
     )

@@ -29,7 +29,7 @@ class TransformingSourceTree(object):
             return LocalModule(module.path, self._transform(module.node))
 
 
-class SourceTree(object):
+class FileSystemSourceTree(object):
     def module(self, path):
         if not os.path.exists(path) or not os.path.isfile(path):
             return None
