@@ -1,5 +1,7 @@
 import os
 
+import zuice
+
 from . import parser
 from .modules import LocalModule
 
@@ -42,3 +44,5 @@ class FileSystemSourceTree(object):
 class CircularImportError(Exception):
     pass
 
+
+SourceTree = zuice.Key("SourceTree")

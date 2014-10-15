@@ -6,6 +6,7 @@ import zuice
 from . import platforms, errors, injection, deps
 from .check import ModuleChecker
 from .platforms import nodejs
+from .source import SourceTree
 
 
 def check(path):
@@ -28,7 +29,7 @@ def _source_paths(path):
 
 
 class SourceChecker(zuice.Base):
-    _source_tree = zuice.dependency(deps.source_tree)
+    _source_tree = zuice.dependency(SourceTree)
     _module_checker = zuice.dependency(ModuleChecker)
     
     def check(self, path):
