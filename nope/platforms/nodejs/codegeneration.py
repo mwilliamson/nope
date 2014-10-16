@@ -5,13 +5,15 @@ import inspect
 import zuice
 
 from . import js
-from ... import nodes, types, name_declaration, returns, modules, module_resolution, builtins, files
+from ... import nodes, types, name_declaration, returns, modules, builtins, files
 from ...walk import walk_tree
 from ...source import SourceTree
+from ...module_resolution import ModuleResolverFactory
 
 
 class CodeGenerator(zuice.Base):
     _source_tree = zuice.dependency(SourceTree)
+    _module_resolver_factory = zuice.dependency(ModuleResolverFactory)
     
     def generate_files(self, source_path, checker, destination_dir, optimise=True):
         def handle_dir(path, relative_path):
@@ -20,13 +22,7 @@ class CodeGenerator(zuice.Base):
         def handle_file(path, relative_path):
             module = self._source_tree.module(path)
             
-            module_exports = modules.ModuleExports(name_declaration.DeclarationFinder())
-            module_resolver = module_resolution.ModuleResolver(
-                self._source_tree,
-                builtins.builtin_modules,
-                module_exports,
-                module,
-            )
+            module_resolver = self._module_resolver_factory.for_module(module)
             _convert_file(
                 module_resolver,
                 path,
