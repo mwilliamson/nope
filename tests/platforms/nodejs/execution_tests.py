@@ -2,15 +2,16 @@ import os
 
 import tempman
 from nose.tools import istest, assert_not_equal
+import zuice
 
 import nope
 from nope.platforms.nodejs import NodeJs
 from nope.platforms import nodejs
+from nope import injection
 from .. import execution
 
 
-# TODO:
-#~ @istest
+@istest
 def sanity_check_optimised_and_unoptimised_compilers_produce_different_output():
     with tempman.create_temp_dir() as temp_dir:
         source_dir = os.path.join(temp_dir.path, "src")
@@ -25,8 +26,8 @@ def sanity_check_optimised_and_unoptimised_compilers_produce_different_output():
             main_file.write("#!/usr/bin/env python\n")
             main_file.write("print(1 + 1)")
             
-        nope.compile(source_dir, optimised_dest_dir, _optimised_node_js)
-        nope.compile(source_dir, unoptimised_dest_dir, _unoptimised_node_js)
+        nope.compile(source_dir, optimised_dest_dir, _node_js_platform(optimise=True))
+        nope.compile(source_dir, unoptimised_dest_dir, _node_js_platform(optimise=False))
         
         def read(path):
             with open(path) as file_:
@@ -36,6 +37,12 @@ def sanity_check_optimised_and_unoptimised_compilers_produce_different_output():
             read(os.path.join(optimised_dest_dir, "main.js")),
             read(os.path.join(unoptimised_dest_dir, "main.js")),
         )
+
+
+def _node_js_platform(optimise):
+    bindings = injection.create_bindings()
+    bindings.bind(nodejs.optimise).to_instance(optimise)
+    return zuice.Injector(bindings).get(NodeJs)
 
 
 @istest
