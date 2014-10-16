@@ -1,10 +1,10 @@
 import zuice
 
 from .name_declaration import DeclarationFinder
-from .check import ModuleChecker
+from .check import ModuleChecker, SourceChecker
 from .source import SourceTree, CachedSourceTree, TransformingSourceTree, FileSystemSourceTree
 from .transformers import CollectionsNamedTupleTransform
-from . import environment, builtins, inference
+from . import environment, builtins, inference, types
 
 
 def create_bindings():
@@ -25,7 +25,21 @@ def create_bindings():
     bindings.bind(ModuleChecker).to_provider(lambda injector:
         ModuleChecker(injector.get(SourceTree), injector.get(inference.TypeChecker))
     )
+    bindings.bind(types.TypeLookupFactory).to_provider(_provide_type_lookup_factory)
     return bindings
+
+
+def _provide_type_lookup_factory(injector):
+    return SourceCheckerToTypeLookupFactoryAdaptor(injector.get(ModuleChecker))
+
+
+# Eurgh!
+class SourceCheckerToTypeLookupFactoryAdaptor(object):
+    def __init__(self, module_checker):
+        self._module_checker = module_checker
+    
+    def for_module(self, module):
+        return self._module_checker.type_lookup(module)
 
 
 def create_injector():

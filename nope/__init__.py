@@ -1,10 +1,7 @@
-import collections
-import os
-
 import zuice
 
 from . import platforms, errors, injection
-from .check import ModuleChecker
+from .check import SourceChecker
 from .platforms import nodejs
 from .source import SourceTree
 
@@ -17,30 +14,6 @@ def check(path):
 def compile(source_path, destination_dir, platform):
     compiler = injection.create_injector().get(Compiler)
     return compiler.compile(source_path, destination_dir, platform)
-
-
-def _source_paths(path):
-    if os.path.isfile(path):
-        yield path
-    else:
-        for root, dirs, filenames in os.walk(path):
-            for filename in filenames:
-                yield os.path.abspath(os.path.join(root, filename))
-
-
-class SourceChecker(zuice.Base):
-    _source_tree = zuice.dependency(SourceTree)
-    _module_checker = zuice.dependency(ModuleChecker)
-    
-    def check(self, path):
-        try:
-            for source_path in _source_paths(path):
-                module = self._source_tree.module(source_path)
-                self._module_checker.check(module)
-        except (errors.TypeCheckError, SyntaxError) as error:
-            return Result(is_valid=False, error=error, value=None)
-        
-        return Result(is_valid=True, error=None, value=(self._source_tree, self._module_checker))
 
 
 class Compiler(zuice.Base):
@@ -64,8 +37,4 @@ class Compiler(zuice.Base):
             
             platform = platform_injector.get(platforms.find_platform_by_name(platform))
             
-        platform.generate_code(source_path, checker, destination_dir)
-        
-
-
-Result = collections.namedtuple("Result", ["is_valid", "error", "value"])
+        platform.generate_code(source_path, destination_dir)

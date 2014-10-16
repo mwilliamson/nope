@@ -1,4 +1,10 @@
-from . import loop_control
+import os
+import collections
+
+import zuice
+
+from . import loop_control, errors
+from .source import SourceTree
 
 
 class ModuleChecker(object):
@@ -27,3 +33,30 @@ class ModuleChecker(object):
     def _uncached_check(self, module):
         loop_control.check_loop_control(module.node, in_loop=False)
         return self._type_checker.check_module(module, self)
+
+
+class SourceChecker(zuice.Base):
+    _source_tree = zuice.dependency(SourceTree)
+    _module_checker = zuice.dependency(ModuleChecker)
+    
+    def check(self, path):
+        try:
+            for source_path in _source_paths(path):
+                module = self._source_tree.module(source_path)
+                self._module_checker.check(module)
+        except (errors.TypeCheckError, SyntaxError) as error:
+            return Result(is_valid=False, error=error, value=None)
+        
+        return Result(is_valid=True, error=None, value=(self._source_tree, self._module_checker))
+        
+
+Result = collections.namedtuple("Result", ["is_valid", "error", "value"])
+
+
+def _source_paths(path):
+    if os.path.isfile(path):
+        yield path
+    else:
+        for root, dirs, filenames in os.walk(path):
+            for filename in filenames:
+                yield os.path.abspath(os.path.join(root, filename))

@@ -14,8 +14,9 @@ from ...module_resolution import ModuleResolverFactory
 class CodeGenerator(zuice.Base):
     _source_tree = zuice.dependency(SourceTree)
     _module_resolver_factory = zuice.dependency(ModuleResolverFactory)
+    _type_lookup_factory = zuice.dependency(types.TypeLookupFactory)
     
-    def generate_files(self, source_path, checker, destination_dir, optimise=True):
+    def generate_files(self, source_path, destination_dir, optimise=True):
         def handle_dir(path, relative_path):
             files.mkdir_p(os.path.join(destination_dir, relative_path))
         
@@ -28,7 +29,7 @@ class CodeGenerator(zuice.Base):
                 path,
                 relative_path,
                 module.node,
-                checker.type_lookup(module),
+                self._type_lookup_factory.for_module(module),
                 destination_dir,
                 optimise=optimise,
             )

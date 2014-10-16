@@ -1,5 +1,7 @@
 import collections
 
+import zuice
+
 from .identity_dict import IdentityDict
 
 
@@ -560,6 +562,10 @@ class TypeLookup(object):
     
     def type_of(self, node):
         return self._types.get(node)
+
+
+TypeLookupFactory = zuice.key("TypeLookupFactory")
+
 
 from .builtin_types import (
     none_type,
