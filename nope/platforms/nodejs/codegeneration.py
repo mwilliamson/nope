@@ -7,19 +7,22 @@ import zuice
 from . import js
 from ... import nodes, types, name_declaration, returns, modules, module_resolution, builtins, files
 from ...walk import walk_tree
+from ...source import SourceTree
 
 
 class CodeGenerator(zuice.Base):
-    def generate_files(self, source_path, source_tree, checker, destination_dir, optimise=True):
+    _source_tree = zuice.dependency(SourceTree)
+    
+    def generate_files(self, source_path, checker, destination_dir, optimise=True):
         def handle_dir(path, relative_path):
             files.mkdir_p(os.path.join(destination_dir, relative_path))
         
         def handle_file(path, relative_path):
-            module = source_tree.module(path)
+            module = self._source_tree.module(path)
             
             module_exports = modules.ModuleExports(name_declaration.DeclarationFinder())
             module_resolver = module_resolution.ModuleResolver(
-                source_tree,
+                self._source_tree,
                 builtins.builtin_modules,
                 module_exports,
                 module,

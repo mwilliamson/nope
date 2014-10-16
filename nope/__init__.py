@@ -64,7 +64,7 @@ class Compiler(zuice.Base):
             
             platform = platform_injector.get(platforms.find_platform_by_name(platform))
             
-        platform.generate_code(source_path, source_tree, checker, destination_dir)
+        platform.generate_code(source_path, checker, destination_dir)
         
 
 

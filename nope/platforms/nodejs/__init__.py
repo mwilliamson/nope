@@ -14,5 +14,5 @@ class NodeJs(zuice.Base):
     binary = "node"
     extension = "js"
     
-    def generate_code(self, source_path, source_tree, checker, destination_dir):
-        self._code_generator.generate_files(source_path, source_tree, checker, destination_dir, optimise=self._optimise)
+    def generate_code(self, source_path, checker, destination_dir):
+        self._code_generator.generate_files(source_path, checker, destination_dir, optimise=self._optimise)
