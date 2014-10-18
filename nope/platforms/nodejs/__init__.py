@@ -3,7 +3,7 @@ import zuice
 from . import codegeneration
 
 
-optimise = zuice.Key("optimise")
+optimise = zuice.key("optimise")
 
 
 class NodeJs(zuice.Base):

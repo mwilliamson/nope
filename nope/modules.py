@@ -3,13 +3,17 @@ import zuice
 from . import nodes, errors, name_declaration
 
 
-class LocalModule(object):
+class Module(object):
+    pass
+
+
+class LocalModule(Module):
     def __init__(self, path, node):
         self.path = path
         self.node = node
 
 
-class BuiltinModule(object):
+class BuiltinModule(Module):
     def __init__(self, name, type_):
         self.name = name
         self.type = type_

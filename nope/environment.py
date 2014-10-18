@@ -1,6 +1,6 @@
 import zuice
 
 
-Builtins = zuice.Key("Builtins")
+Builtins = zuice.key("Builtins")
 InitialDeclarations = zuice.key("InitialDeclarations")
 BuiltinModules = zuice.key("BuiltinModules")

@@ -12,14 +12,14 @@ class ModuleResolverFactory(zuice.Base):
     _injector = zuice.dependency(zuice.Injector)
 
     def for_module(self, module):
-        return self._injector.get(ModuleResolver, module=module)
+        return self._injector.get(ModuleResolver, {modules.Module: module})
 
 
 class ModuleResolver(zuice.Base):
     _source_tree = zuice.dependency(SourceTree)
     _builtin_modules = zuice.dependency(environment.BuiltinModules)
     _module_exports = zuice.dependency(modules.ModuleExports)
-    _module = zuice.argument()
+    _module = zuice.dependency(modules.Module)
     
     def resolve_import_value(self, names, value_name):
         imported_module = self.resolve_import_path(names)

@@ -45,4 +45,4 @@ class CircularImportError(Exception):
     pass
 
 
-SourceTree = zuice.Key("SourceTree")
+SourceTree = zuice.key("SourceTree")
