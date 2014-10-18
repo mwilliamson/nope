@@ -47,7 +47,7 @@ class SourceChecker(zuice.Base):
         except (errors.TypeCheckError, SyntaxError) as error:
             return Result(is_valid=False, error=error, value=None)
         
-        return Result(is_valid=True, error=None, value=(self._source_tree, self._module_checker))
+        return Result(is_valid=True, error=None, value=None)
         
 
 Result = collections.namedtuple("Result", ["is_valid", "error", "value"])
