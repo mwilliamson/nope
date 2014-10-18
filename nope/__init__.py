@@ -29,12 +29,8 @@ class Compiler(zuice.Base):
         source_tree, checker = result.value
         
         if isinstance(platform, str):
-            # TODO: support proper injector extension in zuice
-            platform_bindings = self._injector._bindings.copy()
-            # TODO: remove this ugly hack. Introduce default bindings to platforms?
-            platform_bindings.bind(nodejs.optimise).to_instance(True)
-            platform_injector = zuice.Injector(platform_bindings)
-            
-            platform = platform_injector.get(platforms.find_platform_by_name(platform))
+            platform_class = platforms.find_platform_by_name(platform)
+            # TODO: remove explicit mention of nodejs. Introduce default bindings to platforms?
+            platform = self._injector.get(platform_class, {nodejs.optimise: True})
             
         platform.generate_code(source_path, destination_dir)
