@@ -4,8 +4,7 @@ from . import nodes
 
 
 class Visitor(object):
-    def __init__(self, visit_explicit_types=True, generate=False):
-        self._generate = generate
+    def __init__(self, visit_explicit_types=True):
         self._default_visitors = {
             nodes.NoneExpression: self._visit_nothing,
             nodes.BooleanExpression: self._visit_nothing,
@@ -84,15 +83,13 @@ class Visitor(object):
             
         result = self._visitors[node_type](node, *args)
         
-        if explicit_type_result is not None and result is not None and self._generate:
-            # TODO: this mutates, which is not the desired result when we're generating new nodes
+        if explicit_type_result is not None and result is not None:
             result = nodes.typed(explicit_type_result, result)
         
         if node_type in self._after:
             self._after[node_type](self, node, *args)
         
-        if self._generate:
-            return result
+        return result
 
     
     def _visit_statements(self, statements, *args):

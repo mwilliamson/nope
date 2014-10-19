@@ -9,7 +9,7 @@ class CollectionsNamedTupleTransform(zuice.Base):
     def __call__(self, module_node):
         references = self._name_resolver.resolve(module_node)
         
-        visitor = visit.Visitor(visit_explicit_types=True, generate=True)
+        visitor = visit.Visitor(visit_explicit_types=True)
         visitor.replace(nodes.Assignment, _assignment)
         # TODO: don't delete imports, fix node.js backend to include collections builtin module
         visitor.replace(nodes.Import, _import)
