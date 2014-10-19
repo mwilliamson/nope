@@ -21,7 +21,7 @@ setup(
     install_requires=[
         "funcparserlib==0.3.6",
         "dodge>=0.1.6,<0.2",
-        "zuice>=0.3.0-pre2,<0.4",
+        "zuice>=0.3.0-pre4,<0.4",
     ],
     keywords="nope static type",
     classifiers=[

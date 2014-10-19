@@ -5,35 +5,16 @@ import shutil
 import zuice
 
 from ...source import SourceTree
-from ...module_resolution import ModuleResolverFactory
 from ... import types, files
-from .transform import transform
+from ...modules import Module
+from .transform import NodeTransformer
 from . import js, operations
 from ...walk import walk_tree
 
 
-optimise = zuice.key("optimise")
-
-
-class ModuleCodeGenerator(zuice.Base):
-    _optimise = zuice.dependency(optimise)
-    _module_resolver_factory = zuice.dependency(ModuleResolverFactory)
-    _type_lookup_factory = zuice.dependency(types.TypeLookupFactory)
-    
-    def generate(self, module):
-        return transform(
-            module.node,
-            self._type_lookup_factory.for_module(module),
-            self._module_resolver_factory.for_module(module),
-            optimise=self._optimise
-        )
-
-
 class CodeGenerator(zuice.Base):
-    _module_code_generator = zuice.dependency(ModuleCodeGenerator)
     _source_tree = zuice.dependency(SourceTree)
-    _module_resolver_factory = zuice.dependency(ModuleResolverFactory)
-    _type_lookup_factory = zuice.dependency(types.TypeLookupFactory)
+    _node_transformer_factory = zuice.dependency(zuice.factory(NodeTransformer))
     
     def generate_files(self, source_path, destination_root):
         def handle_dir(path, relative_path):
@@ -42,7 +23,6 @@ class CodeGenerator(zuice.Base):
         def handle_file(path, relative_path):
             module = self._source_tree.module(path)
             
-            module_resolver = self._module_resolver_factory.for_module(module)
             destination_dir = os.path.dirname(os.path.join(destination_root, relative_path))
             
             source_filename = os.path.basename(path)
@@ -50,7 +30,8 @@ class CodeGenerator(zuice.Base):
             dest_path = os.path.join(destination_dir, dest_filename)
             with open(dest_path, "w") as dest_file:
                 _generate_prelude(dest_file, module.node.is_executable, relative_path)
-                js.dump(self._module_code_generator.generate(module), dest_file)
+                node_transformer = self._node_transformer_factory({Module: module})
+                js.dump(node_transformer.transform(module.node), dest_file)
         
         _write_nope_js(destination_root)
         _write_builtins(destination_root)

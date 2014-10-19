@@ -1,27 +1,25 @@
-from ... import modules, name_declaration, nodes, returns, types
+import zuice
+
+from ... import nodes, returns, types
+from ...modules import ModuleExports, BuiltinModule
+from ...name_declaration import DeclarationFinder
+from ...module_resolution import ModuleResolver
 from . import js, operations
 from .internals import call_internal
 
 
-def transform(nope_node, type_lookup, module_resolver, optimise=True):
-    module_exports = modules.ModuleExports(name_declaration.DeclarationFinder())
-    transformer = Transformer(
-        type_lookup,
-        module_resolver,
-        module_exports,
-        optimise=optimise,
-    )
-    return transformer.transform(nope_node)
+optimise = zuice.key("optimise")
 
 
-class Transformer(object):
-    def __init__(self, type_lookup, module_resolver, module_exports, optimise):
-        self._type_lookup = type_lookup
-        self._module_resolver = module_resolver
-        self._module_exports = module_exports
-        self._declarations = name_declaration.DeclarationFinder()
-        self._optimise = optimise
-        
+class NodeTransformer(zuice.Base):
+    _type_lookup = zuice.dependency(types.TypeLookup)
+    _module_resolver = zuice.dependency(ModuleResolver)
+    _module_exports = zuice.dependency(ModuleExports)
+    _declarations = zuice.dependency(DeclarationFinder)
+    _optimise = zuice.dependency(optimise)
+    
+    @zuice.init
+    def init(self):
         self._transformers = {
             nodes.Module: self._module,
             nodes.Import: self._import,
@@ -142,7 +140,7 @@ class Transformer(object):
         if module_path.endswith("."):
             module_path += "/"
         
-        if isinstance(resolved_import.module, modules.BuiltinModule):
+        if isinstance(resolved_import.module, BuiltinModule):
             module_path = "__builtins/{}".format(module_path)
         
         module_expr = js.call(js.ref("$require"), [js.string(module_path)])

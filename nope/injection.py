@@ -5,6 +5,7 @@ from .check import ModuleChecker, SourceChecker
 from .source import SourceTree, CachedSourceTree, TransformingSourceTree, FileSystemSourceTree
 from .transformers import CollectionsNamedTupleTransform
 from . import environment, builtins, inference, types
+from .modules import Module
 
 
 def create_bindings():
@@ -25,21 +26,12 @@ def create_bindings():
     bindings.bind(ModuleChecker).to_provider(lambda injector:
         ModuleChecker(injector.get(SourceTree), injector.get(inference.TypeChecker))
     )
-    bindings.bind(types.TypeLookupFactory).to_provider(_provide_type_lookup_factory)
+    bindings.bind(types.TypeLookup).to_provider(_type_lookup_provider)
     return bindings
 
 
-def _provide_type_lookup_factory(injector):
-    return SourceCheckerToTypeLookupFactoryAdaptor(injector.get(ModuleChecker))
-
-
-# Eurgh!
-class SourceCheckerToTypeLookupFactoryAdaptor(object):
-    def __init__(self, module_checker):
-        self._module_checker = module_checker
-    
-    def for_module(self, module):
-        return self._module_checker.type_lookup(module)
+def _type_lookup_provider(injector):
+    return injector.get(ModuleChecker).type_lookup(injector.get(Module))
 
 
 def create_injector():

@@ -2,11 +2,13 @@ import slimit.parser
 from nose.tools import istest, assert_equal
 
 from nope.platforms.nodejs import codegeneration, js
+from nope.platforms.nodejs.transform import NodeTransformer
 from nope import nodes, types
 from nope.parser.typing import parse_explicit_type
 from nope.identity_dict import IdentityDict
 from nope.module_resolution import ResolvedImport
-from nope.modules import BuiltinModule
+from nope.modules import BuiltinModule, ModuleExports
+from nope.name_declaration import DeclarationFinder
 
 
 @istest
@@ -961,7 +963,7 @@ def _transform_node(nope, type_lookup=None, module_resolver=None, optimise=True)
     if module_resolver is None:
         module_resolver = FakeModuleResolver()
     
-    return codegeneration.transform(nope,
+    return _transform(nope,
         type_lookup=type_lookup,
         module_resolver=module_resolver, 
         optimise=optimise,
@@ -995,3 +997,15 @@ def _normalise_js(js):
         return parser.parse(js).to_ecma()
     except SyntaxError as error:
         raise SyntaxError("{}\nin:\n{}".format(error, js))
+
+
+def _transform(nope_node, type_lookup, module_resolver, optimise):
+    declaration_finder = DeclarationFinder()
+    transformer = NodeTransformer(
+        type_lookup=type_lookup,
+        module_resolver=module_resolver,
+        module_exports=ModuleExports(declaration_finder),
+        declarations=declaration_finder,
+        optimise=optimise,
+    )
+    return transformer.transform(nope_node)
