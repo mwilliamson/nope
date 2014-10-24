@@ -65,7 +65,7 @@ class ModuleExports(zuice.Base):
 
 
 def _extract_string_value_from_literal(statement, node):
-    if isinstance(node, nodes.StringExpression):
+    if isinstance(node, nodes.StringLiteral):
         return node.value
     else:
         raise _all_wrong_type_error(statement)

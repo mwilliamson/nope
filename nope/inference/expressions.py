@@ -8,10 +8,10 @@ class ExpressionTypeInferer(object):
         self._type_lookup = type_lookup
         
         self._inferers = {
-            nodes.NoneExpression: self._infer_none,
-            nodes.BooleanExpression: self._infer_bool,
-            nodes.IntExpression: self._infer_int,
-            nodes.StringExpression: self._infer_str,
+            nodes.NoneLiteral: self._infer_none,
+            nodes.BooleanLiteral: self._infer_bool,
+            nodes.IntLiteral: self._infer_int,
+            nodes.StringLiteral: self._infer_str,
             nodes.TupleLiteral: self._infer_tuple_literal,
             nodes.ListLiteral: self._infer_list_literal,
             nodes.DictLiteral: self._infer_dict_literal,

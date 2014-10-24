@@ -10,10 +10,10 @@ def _create_node(name, fields):
     return dodge.data_class(name, fields)
 
 
-NoneExpression = _create_node("NoneExpression", [])
-BooleanExpression = _create_node("BooleanExpression", ["value"])
-IntExpression = _create_node("IntExpression", ["value"])
-StringExpression = _create_node("StringExpression", ["value"])
+NoneLiteral = _create_node("NoneLiteral", [])
+BooleanLiteral = _create_node("BooleanLiteral", ["value"])
+IntLiteral = _create_node("IntLiteral", ["value"])
+StringLiteral = _create_node("StringLiteral", ["value"])
 TupleLiteral = _create_node("TupleLiteral", ["elements"])
 ListLiteral = _create_node("ListLiteral", ["elements"])
 DictLiteral = _create_node("DictLiteral", ["items"])
@@ -117,14 +117,14 @@ Module = _create_node("Module", ["body", "is_executable"])
 
 
 def none():
-    return NoneExpression()
+    return NoneLiteral()
 
 
 def int(value):
-    return IntExpression(value)
+    return IntLiteral(value)
 
-boolean = BooleanExpression
-string = StringExpression
+boolean = BooleanLiteral
+string = StringLiteral
 tuple_literal = TupleLiteral
 list_literal = ListLiteral
 dict_literal = DictLiteral

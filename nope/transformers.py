@@ -52,12 +52,12 @@ def _assignment(visitor, node, references):
     assert len(call.args) == 2
     name, attribute_list = call.args
     
-    assert isinstance(name, nodes.StringExpression)
+    assert isinstance(name, nodes.StringLiteral)
     assert name.value == target.name
     assert isinstance(attribute_list, nodes.ListLiteral)
     
     def _read_attribute(attribute_node):
-        assert isinstance(attribute_node, nodes.StringExpression)
+        assert isinstance(attribute_node, nodes.StringLiteral)
         explicit_type = nodes.explicit_type_of(attribute_node)
         if explicit_type is None:
             raise Exception("fields of collections.namedtuple must have explicit type")

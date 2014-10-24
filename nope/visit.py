@@ -6,10 +6,10 @@ from . import nodes
 class Visitor(object):
     def __init__(self, visit_explicit_types=True):
         self._default_visitors = {
-            nodes.NoneExpression: self._visit_nothing,
-            nodes.BooleanExpression: self._visit_nothing,
-            nodes.IntExpression: self._visit_nothing,
-            nodes.StringExpression: self._visit_nothing,
+            nodes.NoneLiteral: self._visit_nothing,
+            nodes.BooleanLiteral: self._visit_nothing,
+            nodes.IntLiteral: self._visit_nothing,
+            nodes.StringLiteral: self._visit_nothing,
             nodes.VariableReference: self._visit_nothing,
             nodes.TupleLiteral: self._visit_tuple_literal,
             nodes.ListLiteral: self._visit_list_literal,
