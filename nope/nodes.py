@@ -190,19 +190,10 @@ _typed_node_type_key = "_typed_node_type_key"
 def typed(type_, node):
     # TODO: This feels extremely hacktastic, but having this as a separate node
     # is also inconvenient. What's a better solution?
-    typed_node = _dodge_copy(node)
+    typed_node = dodge.copy(node)
     # TODO: should we be extending rather than copying (so that dodge can keep track of the extra field(s))?
     setattr(typed_node, _typed_node_type_key, type_)
     return typed_node
-
-
-# TODO: move into dodge
-def _dodge_copy(value):
-    args = [
-        getattr(value, field.name)
-        for field in dodge._fields(value)
-    ]
-    return type(value)(*args)
 
 
 def explicit_type_of(node):
