@@ -3,20 +3,27 @@ import sys
 import dodge
 
 
-NoneExpression = dodge.data_class("NoneExpression", [])
-BooleanExpression = dodge.data_class("BooleanExpression", ["value"])
-IntExpression = dodge.data_class("IntExpression", ["value"])
-StringExpression = dodge.data_class("StringExpression", ["value"])
-TupleLiteral = dodge.data_class("TupleLiteral", ["elements"])
-ListLiteral = dodge.data_class("ListLiteral", ["elements"])
-DictLiteral = dodge.data_class("DictLiteral", ["items"])
-VariableReference = dodge.data_class("VariableReference", ["name"])
+def _create_node(name, fields):
+    fields = fields[:]
+    fields.append(dodge.field("explicit_type", default=None, show_default=False))
+    
+    return dodge.data_class(name, fields)
 
-Call = dodge.data_class("Call", ["func", "args", "kwargs"])
-AttributeAccess = dodge.data_class("AttributeAccess", ["value", "attr"])
-TypeApplication = dodge.data_class("TypeApplication", ["generic_type", "params"])
 
-unary_operation = UnaryOperation = dodge.data_class("UnaryOperation", ["operator", "operand"])
+NoneExpression = _create_node("NoneExpression", [])
+BooleanExpression = _create_node("BooleanExpression", ["value"])
+IntExpression = _create_node("IntExpression", ["value"])
+StringExpression = _create_node("StringExpression", ["value"])
+TupleLiteral = _create_node("TupleLiteral", ["elements"])
+ListLiteral = _create_node("ListLiteral", ["elements"])
+DictLiteral = _create_node("DictLiteral", ["items"])
+VariableReference = _create_node("VariableReference", ["name"])
+
+Call = _create_node("Call", ["func", "args", "kwargs"])
+AttributeAccess = _create_node("AttributeAccess", ["value", "attr"])
+TypeApplication = _create_node("TypeApplication", ["generic_type", "params"])
+
+unary_operation = UnaryOperation = _create_node("UnaryOperation", ["operator", "operand"])
 
 unary_operators = ["neg", "pos", "invert", "bool_not"]
 
@@ -36,7 +43,7 @@ def _create_unary_operators():
 _create_unary_operators()
 
 
-binary_operation = BinaryOperation = dodge.data_class("BinaryOperation", ["operator", "left", "right"])
+binary_operation = BinaryOperation = _create_node("BinaryOperation", ["operator", "left", "right"])
 
 binary_operators = [
     "add", "sub", "mul", "truediv", "floordiv", "mod", "pow",
@@ -63,38 +70,38 @@ def _create_binary_operators():
 
 _create_binary_operators()
 
-subscript = Subscript = dodge.data_class("Subscript", ["value", "slice"])
-slice = Slice = dodge.data_class("Slice", ["start", "stop", "step"])
+subscript = Subscript = _create_node("Subscript", ["value", "slice"])
+slice = Slice = _create_node("Slice", ["start", "stop", "step"])
 
-list_comprehension = ListComprehension = dodge.data_class("ListComprehension", ["element", "generator"])
-generator_expression = GeneratorExpression = dodge.data_class("GeneratorExpression", ["element", "generator"])
-comprehension = Comprehension = dodge.data_class("Comprehension", ["target", "iterable"])
+list_comprehension = ListComprehension = _create_node("ListComprehension", ["element", "generator"])
+generator_expression = GeneratorExpression = _create_node("GeneratorExpression", ["element", "generator"])
+comprehension = Comprehension = _create_node("Comprehension", ["target", "iterable"])
 
-ReturnStatement = dodge.data_class("ReturnStatement", ["value"])
-ExpressionStatement = dodge.data_class("ExpressionStatement", ["value"])
-Assignment = dodge.data_class("Assignment", ["targets", "value"])
-IfElse = dodge.data_class("IfElse", ["condition", "true_body", "false_body"])
-WhileLoop = dodge.data_class("WhileLoop", ["condition", "body", "else_body"])
-ForLoop = dodge.data_class("ForLoop", ["target", "iterable", "body", "else_body"])
-BreakStatement = dodge.data_class("BreakStatement", [])
-ContinueStatement = dodge.data_class("ContinueStatement", [])
-TryStatement = dodge.data_class("TryStatement", ["body", "handlers", "finally_body"])
-ExceptHandler = dodge.data_class("ExceptHandler", ["type", "target", "body"])
-RaiseStatement = dodge.data_class("RaiseStatement", ["value"])
-AssertStatement = dodge.data_class("AssertStatement", ["condition", "message"])
-WithStatement = dodge.data_class("WithStatement", ["value", "target", "body"])
+ReturnStatement = _create_node("ReturnStatement", ["value"])
+ExpressionStatement = _create_node("ExpressionStatement", ["value"])
+Assignment = _create_node("Assignment", ["targets", "value"])
+IfElse = _create_node("IfElse", ["condition", "true_body", "false_body"])
+WhileLoop = _create_node("WhileLoop", ["condition", "body", "else_body"])
+ForLoop = _create_node("ForLoop", ["target", "iterable", "body", "else_body"])
+BreakStatement = _create_node("BreakStatement", [])
+ContinueStatement = _create_node("ContinueStatement", [])
+TryStatement = _create_node("TryStatement", ["body", "handlers", "finally_body"])
+ExceptHandler = _create_node("ExceptHandler", ["type", "target", "body"])
+RaiseStatement = _create_node("RaiseStatement", ["value"])
+AssertStatement = _create_node("AssertStatement", ["condition", "message"])
+WithStatement = _create_node("WithStatement", ["value", "target", "body"])
 
-FunctionDef = dodge.data_class("FunctionDef", ["name", "args", "body"])
-FunctionSignature = dodge.data_class("FunctionSignature", ["type_params", "args", "returns"])
-SignatureArgument = dodge.data_class("SignatureArgument", ["name", "type"])
-Arguments = dodge.data_class("Arguments", ["args"])
-Argument = dodge.data_class("Argument", ["name"])
+FunctionDef = _create_node("FunctionDef", ["name", "args", "body"])
+FunctionSignature = _create_node("FunctionSignature", ["type_params", "args", "returns"])
+SignatureArgument = _create_node("SignatureArgument", ["name", "type"])
+Arguments = _create_node("Arguments", ["args"])
+Argument = _create_node("Argument", ["name"])
 
-ClassDefinition = dodge.data_class("ClassDefinition", ["name", "body", "base_classes"])
+ClassDefinition = _create_node("ClassDefinition", ["name", "body", "base_classes"])
 
-Import = dodge.data_class("Import", ["names"])
-ImportFrom = dodge.data_class("ImportFrom", ["module", "names"])
-class ImportAlias(dodge.data_class("ImportAlias", ["name", "asname"])):
+Import = _create_node("Import", ["names"])
+ImportFrom = _create_node("ImportFrom", ["module", "names"])
+class ImportAlias(_create_node("ImportAlias", ["name", "asname"])):
     @property
     def value_name(self):
         if self.asname is None:
@@ -106,7 +113,7 @@ class ImportAlias(dodge.data_class("ImportAlias", ["name", "asname"])):
     def name_parts(self):
         return self.name.split(".")
 
-Module = dodge.data_class("Module", ["body", "is_executable"])
+Module = _create_node("Module", ["body", "is_executable"])
 
 
 def none():
@@ -185,19 +192,15 @@ def assert_statement(condition, message=None):
 with_statement = WithStatement
 
 
-_typed_node_type_key = "_typed_node_type_key"
-
 def typed(type_, node):
-    # TODO: This feels extremely hacktastic, but having this as a separate node
-    # is also inconvenient. What's a better solution?
-    typed_node = dodge.copy(node)
-    # TODO: should we be extending rather than copying (so that dodge can keep track of the extra field(s))?
-    setattr(typed_node, _typed_node_type_key, type_)
-    return typed_node
+    return dodge.copy(node, explicit_type=type_)
 
 
 def explicit_type_of(node):
-    return getattr(node, _typed_node_type_key, None)
+    if node is None:
+        return None
+    else:
+        return node.explicit_type
 
 
 def func(name, args, body):
