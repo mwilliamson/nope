@@ -95,7 +95,7 @@ def _generate_prelude(fileobj, is_executable, relative_path):
     fileobj.write("""var $exports = exports;\n""".format(relative_path));
     if is_executable:
         fileobj.write(_main_require)
-    fileobj.write("""var $require = global.$nopeRequire || require;\n""")
+    fileobj.write(_define_require)
     
     for builtin_name in _builtin_names:
         builtin_assign = js.expression_statement(js.assign(
@@ -116,19 +116,19 @@ def _path_depth(path):
 
 _main_require = """
 (function() {
-    if (require.main === module) {
-        var originalRequire = require;
-        global.$nopeRequire = function(name) {
-            if (isAbsoluteImport(name)) {
-                var relativeImportName = "./" + name;
-                if (isValidModulePath(relativeImportName)) {
-                    return $require(relativeImportName);
-                }
+    // This assumes that executable modules are never imported as ordinary modules
+    global.$nopeRequire = function(name) {
+        if (isAbsoluteImport(name)) {
+            var relativeImportName = "./" + name;
+            (function() {
+                var fs = require("fs");
+                var path = require("path");
+            })();
+            if (isValidModulePath(relativeImportName)) {
+                return require(relativeImportName);
             }
-            
-            return originalRequire(name);
-        };
-    }
+        }
+    };
 
     function isAbsoluteImport(name) {
         return name.indexOf(".") !== 0;
@@ -136,11 +136,23 @@ _main_require = """
 
     function isValidModulePath(name) {
         try {
-            originalRequire.resolve(name);
+            require.resolve(name);
             return true;
         } catch(error) {
             return false;
         }
     }
 })();
+"""
+
+_define_require = """
+function $require(module) {
+    if (global.$nopeRequire) {
+        var result = global.$nopeRequire(module);
+        if (result) {
+            return result;
+        }
+    }
+    return require(module);
+}
 """

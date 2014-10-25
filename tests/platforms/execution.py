@@ -3,6 +3,7 @@ import os
 from nose.tools import istest, nottest, assert_equal, assert_not_equal, assert_in
 import tempman
 import zuice
+import spur
 
 from .. import testing
 from ..testing import program_path
@@ -730,5 +731,11 @@ f(user.id, user.username)
         if hasattr(self, "create_bindings"):
             self.create_bindings(bindings)
         injector = zuice.Injector(bindings)
+        platform = injector.get(self.platform)
         
-        return testing.compile_and_run(injector.get(self.platform), path, program, allow_error=allow_error)
+        with testing.compiled(platform, path, program) as output:
+            return self.run(platform, output.cwd, output.main, allow_error)
+            
+    def run(self, platform, cwd, main, allow_error):
+        local = spur.LocalShell()
+        return local.run([platform.binary, main], cwd=cwd, allow_error=allow_error)
