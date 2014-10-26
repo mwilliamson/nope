@@ -4,7 +4,6 @@ import collections
 import zuice
 
 from . import errors, environment, modules
-from .identity_dict import IdentityDict
 from .source import SourceTree
 
 

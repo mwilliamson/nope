@@ -649,13 +649,6 @@ def _call_builtin(name, args):
     return call_internal(["builtins", name], args)
 
 
-def _generate_vars(statements):
-    return [
-        js.var(name)
-        for name in util.declared_locals(statements)
-    ]
-
-
 def _ref(ref):
     return js.ref(ref.name)
 

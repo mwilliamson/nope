@@ -5,7 +5,7 @@ import shutil
 import zuice
 
 from ...source import SourceTree
-from ... import types, files
+from ... import files
 from ...modules import Module
 from .transform import NodeTransformer
 from . import js, operations

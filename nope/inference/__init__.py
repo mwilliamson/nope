@@ -1,6 +1,6 @@
 import zuice
 
-from .. import nodes, types, name_declaration, name_resolution, name_binding, builtins, module_resolution, modules
+from .. import types, name_declaration, name_resolution, name_binding, builtins, module_resolution, modules
 from .expressions import ExpressionTypeInferer
 from .statements import StatementTypeChecker
 from ..identity_dict import IdentityDict

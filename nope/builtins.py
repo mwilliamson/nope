@@ -1,5 +1,4 @@
-from . import types, name_declaration, name_resolution, name_binding, context
-from .identity_dict import IdentityDict
+from . import types, name_declaration, context
 from .modules import BuiltinModule
 
 

@@ -1,6 +1,6 @@
 import os
 
-from .. import nodes, types, returns, errors, name_declaration
+from .. import nodes, types, returns, errors
 from . import ephemeral
 from .assignment import Assignment
 
@@ -138,7 +138,6 @@ class StatementTypeChecker(object):
         
         def add_attr_to_type(attr_name, attr_type):
             is_init_method = attr_name == "__init__"
-            is_func_type = types.is_func_type(attr_type)
             
             if types.is_func_type(attr_type):
                 self._check_method_receiver_argument(node, class_type, attr_name, attr_type)
@@ -325,7 +324,7 @@ class StatementTypeChecker(object):
             types.union(types.traceback_type, types.none_type)
         ]
         
-        exit_return_type = self._infer_magic_method_call(
+        self._infer_magic_method_call(
             node.value,
             "exit",
             node.value,

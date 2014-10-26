@@ -1,5 +1,4 @@
 from nope import nodes, errors, visit, name_declaration, types
-from nope.identity_dict import IdentityDict
 
 
 def check_bindings(node, references, type_lookup, is_definitely_bound):

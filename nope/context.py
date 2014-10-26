@@ -1,6 +1,4 @@
-import collections
-
-from . import types, errors, name_resolution
+from . import errors
 
 
 class Context(object):
