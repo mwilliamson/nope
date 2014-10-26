@@ -8,29 +8,33 @@ var streamBuffers = require("stream-buffers");
 
 
 var server = http.createServer(function(request, response) {
-    var bodyChunks = [];
-    request.on("data", function(data) {
-        bodyChunks.push(data);
-    });
-    request.on("end", function() {
-        try {
-            var body = bodyChunks.join("");
-            var args = querystring.parse(body);
-            var result = runProgram(args.cwd, args.main);
-            response.writeHead(200, {
-               "Content-Type": "application/json" 
-            });
-            response.end(JSON.stringify(result));
-        } catch (error) {
-            response.writeHead(500, {
-               "Content-Type": "application/json" 
-            });
-            response.end(JSON.stringifiy({
-                error: error.toString()
-            }));
-        }
-        
-    });
+    if (request.method === "POST") {
+        var bodyChunks = [];
+        request.on("data", function(data) {
+            bodyChunks.push(data);
+        });
+        request.on("end", function() {
+            try {
+                var body = bodyChunks.join("");
+                var args = querystring.parse(body);
+                var result = runProgram(args.cwd, args.main);
+                response.writeHead(200, {
+                   "Content-Type": "application/json" 
+                });
+                response.end(JSON.stringify(result));
+            } catch (error) {
+                response.writeHead(500, {
+                   "Content-Type": "application/json" 
+                });
+                response.end(JSON.stringifiy({
+                    error: error.toString()
+                }));
+            }
+        });
+    } else {
+        response.writeHead(200, {"Content-Type": "plain/text"});
+        response.end("OK");
+    }
 });
 
 server.listen(process.argv[2]);

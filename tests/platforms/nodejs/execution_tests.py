@@ -12,6 +12,7 @@ from nope.platforms.nodejs import NodeJs
 from nope.platforms import nodejs
 from nope import injection
 from .. import execution
+from ...retry import retry
 
 
 _fast_test = os.environ.get("TEST_FAST")
@@ -19,6 +20,7 @@ _fast_test = os.environ.get("TEST_FAST")
 if _fast_test:
     _runner = [None]
     _port = 8112
+    _url = "http://localhost:{}".format(_port)
 
     def setup_module():
         local = spur.LocalShell()
@@ -27,9 +29,8 @@ if _fast_test:
             ["node", runner_path, str(_port)],
             allow_error=True,
         )
-        # TODO: implement proper retry
-        import time
-        time.sleep(0.1)
+        
+        retry(lambda: requests.get(_url + "/heartbeat"), ConnectionError)
         
     def teardown_module():
         _runner[0].send_signal(signal.SIGINT)
@@ -81,8 +82,7 @@ class NodeJsExecutionTests(execution.ExecutionTests):
     if _fast_test:
         def run(self, platform, cwd, main, allow_error):
             
-            url = "http://localhost:{}".format(_port)
-            response = requests.post(url, data={"cwd": cwd, "main": main})
+            response = requests.post(_url, data={"cwd": cwd, "main": main})
             response_body = response.json()
             result = ExecutionResult(
                 int(response_body["returnCode"]),
