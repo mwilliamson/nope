@@ -746,6 +746,10 @@ f(user.id, user.username)
             cls._runner = cls.create_fast_runner()
         else:
             cls._runner = SubprocessRunner(cls.platform.binary)
+    
+    @classmethod
+    def teardown_class(cls):
+        cls._runner.stop()
 
 
 class SubprocessRunner(object):
