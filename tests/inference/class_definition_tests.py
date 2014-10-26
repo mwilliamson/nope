@@ -1,10 +1,9 @@
 from nose.tools import istest, assert_equal
 
 from nope import types, nodes, errors
-from nope.context import Context
 from nope.identity_dict import IdentityDict
 
-from .util import assert_type_mismatch, update_context, SingleScopeReferences
+from .util import update_context
 
 
 @istest
@@ -27,7 +26,7 @@ def error_if_base_class_is_not_object():
     type_bindings = {"Person": types.meta_type(types.scalar_type("Person"))}
     node = nodes.class_def("User", [], base_classes=[nodes.ref("Person")])
     try:
-        class_type = _infer_class_type(node, [], type_bindings=type_bindings)
+        _infer_class_type(node, [], type_bindings=type_bindings)
         assert False, "Expected error"
     except errors.UnsupportedError as error:
         assert_equal("base classes other than 'object' are not supported", str(error))

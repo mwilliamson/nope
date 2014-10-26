@@ -1,8 +1,7 @@
-from nose.tools import istest, assert_equal, assert_is
+from nose.tools import istest, assert_equal
 
-from nope import types, nodes, errors
-from nope.inference import ephemeral
-from .util import assert_type_mismatch, infer
+from nope import types, nodes
+from .util import infer
 
 
 @istest

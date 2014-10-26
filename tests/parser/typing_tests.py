@@ -1,6 +1,6 @@
-from nose.tools import istest, assert_equal, assert_raises_regexp
+from nose.tools import istest, assert_equal
 
-from nope import parser, nodes
+from nope import nodes
 from nope.parser.typing import parse_explicit_type
 
 

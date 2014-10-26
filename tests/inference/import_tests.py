@@ -69,7 +69,6 @@ def can_import_value_from_relative_module_using_import_from_syntax():
 @istest
 def can_import_module_using_import_from_syntax():
     node = nodes.import_from(["."], [nodes.import_alias("message", None)])
-    root_module = module_type([])
     message_module = module_type([types.attr("value", types.str_type)])
     
     context = _update_blank_context(node, {
@@ -82,8 +81,6 @@ def can_import_module_using_import_from_syntax():
 @istest
 def can_import_module_using_import_from_syntax_with_alias():
     node = nodes.import_from([".", "message"], [nodes.import_alias("value", "v")])
-    
-    module = _create_module()
     
     context = _update_blank_context(node, {
         (".", "message"): module_type([types.attr("value", types.str_type)]),

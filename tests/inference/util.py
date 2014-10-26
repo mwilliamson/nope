@@ -2,7 +2,6 @@ from nose.tools import assert_equal
 
 from nope import types, errors, nodes, inference, name_declaration, modules
 from nope.context import Context
-from nope.name_declaration import Declarations
 from nope.modules import LocalModule
 from nope.module_resolution import ResolvedImport
 
@@ -163,16 +162,6 @@ def assert_type_mismatch(func, expected, actual, node):
         assert mismatch.node is node
 
 
-
-def assert_variable_remains_unbound(create_node):
-    assignment = nodes.assign("x", nodes.int(1))
-    node = create_node(assignment)
-    context = bound_context({"x": None})
-    update_context(node, context)
-    assert not context.is_bound("x")
-    assert_equal(types.int_type, context.lookup("x", allow_unbound=True))
-
-
 def assert_statement_type_checks(statement, type_bindings):
     update_context(statement, type_bindings=type_bindings)
 
@@ -209,16 +198,6 @@ def assert_subexpression_is_type_checked(create_node):
     except errors.TypeCheckError as error:
         assert_equal(bad_ref, error.node)
         assert_equal("bad", error.name)
-    
-
-
-def assert_variable_is_bound(create_node):
-    assignment = nodes.assign("x", nodes.int(1))
-    node = create_node(assignment)
-    context = bound_context({"x": None})
-    update_context(node, context)
-    assert context.is_bound("x")
-    assert_equal(types.int_type, context.lookup("x"))
 
 
 

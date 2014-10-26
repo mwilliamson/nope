@@ -1,4 +1,4 @@
-from nose.tools import istest, assert_equal, assert_raises_regexp
+from nose.tools import istest, assert_equal
 
 from nope import parser, nodes
 
@@ -39,7 +39,7 @@ from __future__ import blah
 """
     
     try:
-        module_node = parser.parse(source)
+        parser.parse(source)
         assert False
     except SyntaxError as error:
         assert_equal("Unknown __future__ import: 'blah'", error.msg)

@@ -2,7 +2,6 @@ from nose.tools import istest, assert_equal
 
 from nope import types, nodes, errors
 from nope.inference import ephemeral
-from nope.context import Context
 from .util import update_context
 
 
@@ -90,7 +89,7 @@ def assignment_to_tuple_must_have_correct_length_tuple():
         nodes.ref("value")
     )
     try:
-        context = update_context(node, type_bindings={
+        update_context(node, type_bindings={
             "value": types.tuple(types.int_type),
         })
         assert False, "Expected error"

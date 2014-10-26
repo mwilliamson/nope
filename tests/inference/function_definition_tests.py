@@ -1,9 +1,8 @@
 from nose.tools import istest, assert_equal
 
 from nope import types, nodes, errors
-from nope.context import Context
 
-from .util import assert_type_mismatch, update_context, SingleScopeReferences
+from .util import assert_type_mismatch, update_context
 
 
 @istest

@@ -1,7 +1,7 @@
 import slimit.parser
 from nose.tools import istest, assert_equal
 
-from nope.platforms.nodejs import codegeneration, js
+from nope.platforms.nodejs import js
 from nope.platforms.nodejs.transform import NodeTransformer
 from nope import nodes, types
 from nope.parser.typing import parse_explicit_type

@@ -1,9 +1,6 @@
-from nose.tools import istest
-
-
 from nose.tools import istest, assert_equal
 
-from nope import types, nodes, errors
+from nope import nodes, errors
 from nope.loop_control import check_loop_control
 
 

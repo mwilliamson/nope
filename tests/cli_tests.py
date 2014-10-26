@@ -4,9 +4,6 @@ from nose.tools import istest, assert_equal
 import spur
 import tempman
 
-import nope
-from .testing import program_path
-
 
 _local = spur.LocalShell()
 

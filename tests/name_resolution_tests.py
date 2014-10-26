@@ -3,7 +3,6 @@ from nose.tools import istest, assert_is, assert_is_not, assert_equal
 from nope import nodes, errors
 from nope.name_declaration import VariableDeclarationNode, DeclarationFinder, Declarations
 from nope.name_resolution import NameResolver
-from nope.identity_dict import IdentityDict
 
 
 @istest
@@ -28,7 +27,6 @@ def str_has_no_references():
 
 @istest
 def variable_reference_has_name_resolved():
-    definition_node = nodes.ref("x")
     ref = nodes.ref("x")
     declarations = _create_declarations(["x"])
     references = resolve(ref, declarations)

@@ -3,8 +3,8 @@ from nose.tools import istest, assert_equal
 from nope import types, nodes
 
 from .util import (
-    assert_type_mismatch, assert_variable_remains_unbound,
-    assert_statement_is_type_checked, assert_variable_is_bound,
+    assert_type_mismatch,
+    assert_statement_is_type_checked,
     update_context)
 
 

@@ -1,6 +1,6 @@
 from nose.tools import istest, assert_equal
 
-from nope import types, nodes, errors
+from nope import nodes, errors
 
 from .util import assert_statement_is_type_checked, update_context
 

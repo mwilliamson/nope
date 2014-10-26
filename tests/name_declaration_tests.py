@@ -1,4 +1,4 @@
-from nose.tools import istest, assert_is, assert_is_not, assert_equal
+from nose.tools import istest, assert_equal
 
 from nope import nodes, errors, name_declaration
 from nope.name_declaration import Declarations, DeclarationFinder, _declare as declare

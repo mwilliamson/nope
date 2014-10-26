@@ -3,7 +3,6 @@ from nose.tools import istest, assert_equal
 from nope import types, nodes, errors
 
 from .util import (
-    assert_type_mismatch,
     assert_statement_type_checks,
     assert_statement_is_type_checked,
     assert_expression_is_type_checked,
