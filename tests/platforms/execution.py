@@ -734,8 +734,20 @@ f(user.id, user.username)
         platform = injector.get(self.platform)
         
         with testing.compiled(platform, path, program) as output:
-            return self.run(platform, output.cwd, output.main, allow_error)
+            return self._run(platform, output.cwd, output.main, allow_error)
             
-    def run(self, platform, cwd, main, allow_error):
+    def _run(self, platform, cwd, main, allow_error):
+        return self.runner.run(main=main, cwd=cwd, allow_error=allow_error)
+
+
+
+class SubprocessRunner(object):
+    def __init__(self, binary):
+        self._binary = binary
+    
+    def run(self, cwd, main, allow_error):
         local = spur.LocalShell()
-        return local.run([platform.binary, main], cwd=cwd, allow_error=allow_error)
+        return local.run([self._binary, main], cwd=cwd, allow_error=allow_error)
+    
+    def stop(self):
+        pass
