@@ -9,16 +9,7 @@ from nope.platforms.nodejs import NodeJs
 from nope.platforms import nodejs
 from nope import injection
 from .. import execution
-from .runner import start_runner
-
-
-_runner = [None]
-
-def setup_module():
-    _runner[0] = start_runner()
-    
-def teardown_module():
-    _runner[0].stop()
+from .runner import SingleProcessRunner
 
 
 @istest
@@ -57,9 +48,10 @@ def _node_js_platform(optimise):
 
 class NodeJsExecutionTests(execution.ExecutionTests):
     platform = NodeJs
-    @property
-    def runner(self):
-        return _runner[0]
+    
+    @staticmethod
+    def create_fast_runner():
+        return SingleProcessRunner.start()
     
     test_getitem_dict = None
     test_slice_list = None

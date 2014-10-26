@@ -5,15 +5,6 @@ import spur
 import requests
 
 from ...retry import retry
-from ..execution import SubprocessRunner
-
-
-def start_runner():
-    fast_test = os.environ.get("TEST_FAST")
-    if fast_test:
-        return SingleProcessRunner.start()
-    else:
-        return SubprocessRunner("node")
 
 
 class SingleProcessRunner(object):

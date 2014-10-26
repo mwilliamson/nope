@@ -737,8 +737,15 @@ f(user.id, user.username)
             return self._run(platform, output.cwd, output.main, allow_error)
             
     def _run(self, platform, cwd, main, allow_error):
-        return self.runner.run(main=main, cwd=cwd, allow_error=allow_error)
+        return self._runner.run(main=main, cwd=cwd, allow_error=allow_error)
 
+    @classmethod
+    def setup_class(cls):
+        fast_test = os.environ.get("TEST_FAST")
+        if fast_test and hasattr(cls, "create_fast_runner"):
+            cls._runner = cls.create_fast_runner()
+        else:
+            cls._runner = SubprocessRunner(cls.platform.binary)
 
 
 class SubprocessRunner(object):
