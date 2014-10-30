@@ -19,7 +19,7 @@ class SingleProcessRunner(object):
             allow_error=True,
         )
         
-        retry(lambda: requests.get(url + "/heartbeat"), ConnectionError)
+        retry(lambda: requests.get(url + "/heartbeat"), requests.ConnectionError)
         return SingleProcessRunner(process, url)
     
     def __init__(self, process, url):
