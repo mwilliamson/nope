@@ -250,3 +250,14 @@ such as ``int`` and ``list``.
 This restraint means a value of type ``int`` is guaranteed to have the concrete type ``int`` rather than a subclass of ``int``,
 allowing certain optimisations to be used when generating code.
 
+
+Tests
+-----
+
+Run the tests with the command `make test`.
+
+By default, backends are tested by spawning a new process for each test program.
+Set the environment variable `TEST_FAST` to `1` (e.g. `TEST_FAST=1 make test`) to
+reuse the same process for multiple programs.
+This should make the tests run significantly faster,
+at the cost of test isolation.
