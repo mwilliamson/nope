@@ -20,6 +20,7 @@ ifneq ($(wildcard test-requirements.txt),)
 	_virtualenv/bin/pip install -r test-requirements.txt
 endif
 	make clean
+	cd tests/platforms/nodejs/runner; npm install
 
 _virtualenv: 
 	virtualenv _virtualenv --python=python3
