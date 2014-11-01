@@ -727,11 +727,7 @@ f(user.id, user.username)
         
     
     def _run_program(self, path, program, allow_error=False):
-        bindings = injection.create_bindings()
-        if hasattr(self, "create_bindings"):
-            self.create_bindings(bindings)
-        injector = zuice.Injector(bindings)
-        platform = injector.get(self.platform)
+        platform = injection.injector.get(self.platform, getattr(self, "bound_values", lambda: {})())
         
         with testing.compiled(platform, path, program) as output:
             return self._run(platform, output.cwd, output.main, allow_error)

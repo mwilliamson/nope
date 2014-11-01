@@ -7,12 +7,9 @@ from .source import SourceTree
 
 
 def check(path):
-    checker = injection.create_injector().get(SourceChecker)
     return checker.check(path)
 
-
 def compile(source_path, destination_dir, platform):
-    compiler = injection.create_injector().get(Compiler)
     return compiler.compile(source_path, destination_dir, platform)
 
 
@@ -32,3 +29,7 @@ class Compiler(zuice.Base):
             platform = self._injector.get(platform_class, {nodejs.optimise: True})
             
         platform.generate_code(source_path, destination_dir)
+
+
+checker = injection.injector.get(SourceChecker)
+compiler = injection.injector.get(Compiler)

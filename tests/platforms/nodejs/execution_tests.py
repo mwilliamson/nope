@@ -62,12 +62,12 @@ class NodeJsExecutionTests(execution.ExecutionTests):
 @istest
 class OptimisedNodeJsExecutionTests(NodeJsExecutionTests):
     @staticmethod
-    def create_bindings(bindings):
-        bindings.bind(nodejs.optimise).to_instance(True)
+    def bound_values():
+        return {nodejs.optimise: True}
 
 
 @istest
 class UnoptimisedNodeJsExecutionTests(NodeJsExecutionTests):
     @staticmethod
-    def create_bindings(bindings):
-        bindings.bind(nodejs.optimise).to_instance(False)
+    def bound_values():
+        return {nodejs.optimise: False}

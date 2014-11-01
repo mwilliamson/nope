@@ -15,17 +15,17 @@ def create_bindings():
     
     bindings = zuice.Bindings()
     bindings.bind(DeclarationFinder).to_instance(declaration_finder)
-    bindings.bind(SourceTree).to_provider(_source_tree_provider)
+    bindings.bind(SourceTree).to_provider(_source_tree_provider).singleton()
     bindings.bind(environment.Builtins).to_instance(builtins)
     bindings.bind(environment.InitialDeclarations).to_provider(lambda injector:
         injector.get(environment.Builtins).declarations()
-    )
+    ).singleton()
     bindings.bind(environment.BuiltinModules).to_provider(lambda injector:
         injector.get(environment.Builtins).builtin_modules
-    )
+    ).singleton()
     bindings.bind(ModuleChecker).to_provider(lambda injector:
         ModuleChecker(injector.get(SourceTree), injector.get(inference.TypeChecker))
-    )
+    ).singleton()
     bindings.bind(types.TypeLookup).to_provider(_type_lookup_provider)
     return bindings
 
@@ -46,3 +46,5 @@ def _source_tree_provider(injector):
             create_injector().get(CollectionsNamedTupleTransform)
         )
     )
+
+injector = create_injector()
