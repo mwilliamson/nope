@@ -54,12 +54,19 @@ _commands = [
 
 def _print_error(error):
     if isinstance(error, SyntaxError):
-        print("File '{}', line {}, col {}".format(error.filename, error.lineno, error.offset))
-        print()
-        with open(error.filename) as source_file:
-            print("  " + textseek.seek_line(source_file, error.lineno))
-        print(" " * (2 + error.offset) + "^")
+        _print_location(error)
         print()
         print("{}: {}".format(type(error).__name__, error.msg))
+    elif hasattr(error, "node"):
+        _print_location(error.node)
+        print(error)
     else:
         print(error)
+    
+
+def _print_location(location):
+    print("File '{}', line {}, col {}".format(location.filename, location.lineno, location.offset))
+    print()
+    with open(location.filename) as source_file:
+        print("  " + textseek.seek_line(source_file, location.lineno))
+    print(" " * (2 + location.offset) + "^")
