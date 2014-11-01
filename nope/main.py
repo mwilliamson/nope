@@ -65,6 +65,10 @@ def _print_error(error):
     
 
 def _print_location(location):
+    for attr in ["filename", "lineno", "offset"]:
+        if not hasattr(location, attr):
+            return
+            
     print("File '{}', line {}, col {}".format(location.filename, location.lineno, location.offset))
     print()
     with open(location.filename) as source_file:
