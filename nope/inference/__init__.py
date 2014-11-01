@@ -37,8 +37,8 @@ class _TypeCheckerForModule(object):
     def type_lookup(self):
         return types.TypeLookup(self._type_lookup)
     
-    def infer(self, expression, context):
-        return self._expression_type_inferer.infer(expression, context)
+    def infer(self, expression, context, hint=None):
+        return self._expression_type_inferer.infer(expression, context, hint=hint)
 
     def update_context(self, statement, context):
         self._statement_type_checker.update_context(statement, context)

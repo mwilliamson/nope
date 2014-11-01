@@ -25,35 +25,40 @@ class ExpressionTypeInferer(object):
             nodes.Slice: self._infer_slice,
             nodes.ListComprehension: self._infer_list_comprehension,
             nodes.GeneratorExpression: self._infer_generator_expression,
-            ephemeral.FormalArgumentConstraint: lambda node, context: node.type,
+            ephemeral.FormalArgumentConstraint: lambda node, context, hint: node.type,
         }
     
-    def infer(self, expression, context):
-        expression_type = self._inferers[type(expression)](expression, context)
+    def infer(self, expression, context, hint=None):
+        expression_type = self._inferers[type(expression)](expression, context, hint)
         self._type_lookup[expression] = expression_type
         return expression_type
     
-    def _infer_none(self, node, context):
+    def _infer_none(self, node, context, hint):
         return types.none_type
     
-    def _infer_bool(self, node, context):
+    def _infer_bool(self, node, context, hint):
         return types.boolean_type
     
-    def _infer_int(self, node, context):
+    def _infer_int(self, node, context, hint):
         return types.int_type
 
-    def _infer_str(self, node, context):
+    def _infer_str(self, node, context, hint):
         return types.str_type
     
-    def _infer_tuple_literal(self, node, context):
+    def _infer_tuple_literal(self, node, context, hint):
         element_types = [self.infer(element, context) for element in node.elements]
         return types.tuple(*element_types)
     
-    def _infer_list_literal(self, node, context):
+    def _infer_list_literal(self, node, context, hint):
         element_types = [self.infer(element, context) for element in node.elements]
-        return types.list_type(types.common_super_type(element_types))
+        common_super_type = types.common_super_type(element_types)
+        
+        if hint is not None and types.list_type.is_instantiated_type(hint) and types.is_sub_type(hint.params[0], common_super_type):
+            return hint
+        else:
+            return types.list_type(common_super_type)
 
-    def _infer_dict_literal(self, node, context):
+    def _infer_dict_literal(self, node, context, hint):
         key_types = [self.infer(key, context) for key, value in node.items]
         value_types = [self.infer(value, context) for key, value in node.items]
         return types.dict_type(
@@ -61,10 +66,10 @@ class ExpressionTypeInferer(object):
             types.common_super_type(value_types)
         )
 
-    def _infer_ref(self, node, context):
+    def _infer_ref(self, node, context, hint):
         return context.lookup(node)
 
-    def _infer_call(self, node, context):
+    def _infer_call(self, node, context, hint):
         callee_type = self.infer(node.func, context)
         return self._infer_call_with_callee_type(node, callee_type, context)
     
@@ -189,7 +194,7 @@ class ExpressionTypeInferer(object):
         return actual_args
     
 
-    def _infer_attr(self, node, context):
+    def _infer_attr(self, node, context, hint):
         value_type = self.infer(node.value, context)
         if node.attr in value_type.attrs:
             return value_type.attrs.type_of(node.attr)
@@ -197,7 +202,7 @@ class ExpressionTypeInferer(object):
             raise errors.NoSuchAttributeError(node, str(value_type), node.attr)
 
 
-    def _infer_type_application(self, node, context):
+    def _infer_type_application(self, node, context, hint):
         generic_type = self.infer_type_value(node.generic_type, context)
         type_params = [
             self.infer_type_value(param, context)
@@ -215,7 +220,7 @@ class ExpressionTypeInferer(object):
         return meta_type.type
         
 
-    def _infer_binary_operation(self, node, context):
+    def _infer_binary_operation(self, node, context, hint):
         if node.operator in ["bool_and", "bool_or"]:
             return types.common_super_type([
                 self.infer(node.left, context),
@@ -228,30 +233,30 @@ class ExpressionTypeInferer(object):
         else:
             return self.infer_magic_method_call(node, node.operator, node.left, [node.right], context)
     
-    def _infer_unary_operation(self, node, context):
+    def _infer_unary_operation(self, node, context, hint):
         if node.operator == "bool_not":
             self.infer(node.operand, context)
             return types.boolean_type
         else:
             return self.infer_magic_method_call(node, node.operator, node.operand, [], context)
     
-    def _infer_subscript(self, node, context):
+    def _infer_subscript(self, node, context, hint):
         return self.infer_magic_method_call(node, "getitem", node.value, [node.slice], context)
     
     
-    def _infer_slice(self, node, context):
+    def _infer_slice(self, node, context, hint):
         return types.slice_type(
             self.infer(node.start, context),
             self.infer(node.stop, context),
             self.infer(node.step, context),
         )
     
-    def _infer_list_comprehension(self, node, context):
+    def _infer_list_comprehension(self, node, context, hint):
         self._infer_comprehension(node.generator, context)
         element_type = self.infer(node.element, context)
         return types.list_type(element_type)
     
-    def _infer_generator_expression(self, node, context):
+    def _infer_generator_expression(self, node, context, hint):
         self._infer_comprehension(node.generator, context)
         element_type = self.infer(node.element, context)
         return types.iterator(element_type)
@@ -269,7 +274,7 @@ class ExpressionTypeInferer(object):
             ephemeral.attr(receiver, method_name),
             actual_args,
         )
-        return self._infer_call(call_node, context)
+        return self._infer_call(call_node, context, hint=None)
     
     def _type_check_args(self, node, actual_args, type_params, formal_arg_types, context):
         for actual_arg, formal_arg_type in zip(actual_args, formal_arg_types):

@@ -389,6 +389,9 @@ def is_sub_type(super_type, sub_type, unify=None):
         if super_type == object_type:
             return True
         
+        if sub_type == bottom_type:
+            return True
+        
         if isinstance(sub_type, _UnionType):
             return all(
                 is_sub_type(super_type, possible_sub_type)

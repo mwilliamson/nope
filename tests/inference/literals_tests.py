@@ -45,6 +45,38 @@ def empty_list_has_elements_of_type_bottom():
 
 
 @istest
+def empty_list_can_be_typed_using_type_hint():
+    assert_equal(
+        types.list_type(types.int_type),
+        infer(nodes.list_literal([]), hint=types.list_type(types.int_type))
+    )
+
+
+@istest
+def empty_list_type_hint_is_ignored_if_type_hint_is_not_list():
+    assert_equal(
+        types.list_type(types.bottom_type),
+        infer(nodes.list_literal([]), hint=types.int_type)
+    )
+
+
+@istest
+def non_empty_list_can_be_typed_using_type_hint():
+    assert_equal(
+        types.list_type(types.object_type),
+        infer(nodes.list_literal([nodes.int(1)]), hint=types.list_type(types.object_type))
+    )
+
+
+@istest
+def list_type_hint_is_ignored_if_not_super_type_of_elements():
+    assert_equal(
+        types.list_type(types.int_type),
+        infer(nodes.list_literal([nodes.int(1)]), hint=types.list_type(types.none_type))
+    )
+
+
+@istest
 def type_of_dict_is_determined_by_unifying_types_of_keys_and_values():
     assert_equal(
         types.dict_type(types.str_type, types.int_type),

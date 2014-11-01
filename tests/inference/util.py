@@ -22,13 +22,13 @@ def update_context(statement, *, type_bindings=None, module_resolver=None, modul
     return context
 
 
-def infer(expression, type_bindings=None):
+def infer(expression, type_bindings=None, hint=None):
     if type_bindings is None:
         type_bindings = {}
     
     declaration_finder, context = _create_context(type_bindings)
     checker = _create_type_checker(declaration_finder=declaration_finder)
-    return checker.infer(expression, context)
+    return checker.infer(expression, context, hint=hint)
     
 
 def _create_type_checker(declaration_finder=None, module_types=None, module_resolver=None, module_path=None, is_executable=False):
