@@ -130,3 +130,11 @@ def variables_can_be_reassigned_if_type_is_consistent():
     type_bindings = {"x": types.object_type}
     context = update_context(node, type_bindings=type_bindings)
     assert_equal(types.object_type, context.lookup_name("x"))
+
+
+@istest
+def when_target_already_has_type_that_type_is_used_as_type_hint():
+    node = nodes.assign([nodes.ref("x")], nodes.list_literal([nodes.string("Hello")]))
+    type_bindings = {"x": types.list_type(types.object_type)}
+    context = update_context(node, type_bindings=type_bindings)
+    assert_equal(types.list_type(types.object_type), context.lookup_name("x"))

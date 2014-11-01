@@ -222,7 +222,12 @@ class StatementTypeChecker(object):
 
 
     def _check_assignment(self, node, context):
-        value_type = self._infer(node.value, context)
+        if len(node.targets) == 1 and isinstance(node.targets[0], nodes.VariableReference):
+            hint = context.lookup(node.targets[0], allow_unbound=True)
+        else:
+            hint = None
+        
+        value_type = self._infer(node.value, context, hint=hint)
         for target in node.targets:
             self._assign(node, target, value_type, context)
     
@@ -397,8 +402,8 @@ class StatementTypeChecker(object):
             import_path + ".py"
         )
         
-    def _infer(self, node, context):
-        return self._expression_type_inferer.infer(node, context)
+    def _infer(self, node, context, hint=None):
+        return self._expression_type_inferer.infer(node, context, hint=hint)
     
     def _check_list(self, statements, context):
         for statement in statements:
