@@ -361,6 +361,16 @@ def class_definition_is_resolved_to_class_declaration():
     declarations = _create_declarations(["User"])
     references = resolve(node, declarations)
     assert_is(declarations.declaration("User"), references.referenced_declaration(node))
+    
+
+@istest
+def class_definition_base_classes_are_resolved():
+    ref = nodes.ref("object")
+    node = nodes.class_def("User", [], base_classes=[ref])
+    
+    declarations = _create_declarations(["User", "object"])
+    references = resolve(node, declarations)
+    assert_is(declarations.declaration("object"), references.referenced_declaration(ref))
 
 
 @istest

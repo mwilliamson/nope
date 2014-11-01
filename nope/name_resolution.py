@@ -72,6 +72,9 @@ def _resolve_function_def(visitor, node, context):
 
 
 def _resolve_class_definition(visitor, node, context):
+    for base_class in node.base_classes:
+        visitor.visit(base_class, context)
+    
     context.add_reference(node, node.name)
     
     body_context = context.enter_class(node)
