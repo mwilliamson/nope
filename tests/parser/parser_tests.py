@@ -636,9 +636,9 @@ class(**bases):
 def nodes_have_position():
     node = _parse_expression("\nNone", filename="take-it-easy.py")
     
-    assert_equal("take-it-easy.py", node.filename)
-    assert_equal(2, node.lineno)
-    assert_equal(0, node.offset)
+    assert_equal("take-it-easy.py", node.location.filename)
+    assert_equal(2, node.location.lineno)
+    assert_equal(0, node.location.offset)
 
 
 @istest

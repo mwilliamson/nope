@@ -57,18 +57,14 @@ def _print_error(error):
         _print_location(error)
         print()
         print("{}: {}".format(type(error).__name__, error.msg))
-    elif hasattr(error, "node"):
-        _print_location(error.node)
+    elif hasattr(error, "node") and hasattr(error.node, "location"):
+        _print_location(error.node.location)
         print(error)
     else:
         print(error)
     
 
 def _print_location(location):
-    for attr in ["filename", "lineno", "offset"]:
-        if not hasattr(location, attr):
-            return
-            
     print("File '{}', line {}, col {}".format(location.filename, location.lineno, location.offset))
     print()
     with open(location.filename) as source_file:

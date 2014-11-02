@@ -1,17 +1,41 @@
 import ast
 
-from .. import nodes
+from .. import nodes as _nodes
 
 
 def python_to_nope(python_ast, comment_seeker, is_executable, filename=None):
     converter = Converter(comment_seeker, is_executable, filename=filename)
     return converter.convert(python_ast)
 
+
+class _NodeBuilder(object):
+    def __init__(self, location):
+        self._location = location
+    
+    def __getattr__(self, key):
+        create_node = getattr(_nodes, key)
+        def create_node_with_location(*args, **kwargs):
+            node = create_node(*args, **kwargs)
+            node.location = self._location
+            return node
+        
+        return create_node_with_location
+
+
+class _Location(object):
+    def __init__(self, filename, lineno, offset):
+        self.filename = filename
+        self.lineno = lineno
+        self.offset = offset
+
+
 class Converter(object):
     def __init__(self, comment_seeker, is_executable, filename):
         self._comment_seeker = comment_seeker
         self._is_executable = is_executable
         self._filename = filename
+        
+        self._node_builders = []
 
         self._converters = {
             ast.Module: self._module,
@@ -71,45 +95,46 @@ class Converter(object):
 
     
     def convert(self, node, allowed=None):
+        filename = self._filename
+        lineno = getattr(node, "lineno", None)
+        col_offset = getattr(node, "col_offset", None)
+        
+        self._nodes = _NodeBuilder(_Location(filename, lineno, col_offset))
+        self._node_builders.append(self._nodes)
         try:
-            lineno = getattr(node, "lineno", None)
-            col_offset = getattr(node, "col_offset", None)
             signature = self._comment_seeker.consume_explicit_type(lineno, col_offset)
             
             nope_node = self._converters[type(node)](node)
             
             if signature is not None:
-                nope_node = nodes.typed(signature, nope_node)
+                nope_node = self._nodes.typed(signature, nope_node)
             
             if allowed is not None and not isinstance(nope_node, allowed):
                 raise SyntaxError("{} node is not supported in current context".format(type(nope_node).__name__))
                 
+            return nope_node
         except SyntaxError as error:
+            if error.filename is None:
+                error.filename = filename
             if error.lineno is None:
-                error.lineno = node.lineno
+                error.lineno = lineno
             if error.offset is None:
-                error.offset = node.col_offset
+                error.offset = col_offset
             
             raise
-        
-        if nope_node is None:
-            return
-        
-        if hasattr(node, "lineno"):
-            nope_node.lineno = node.lineno
-        if hasattr(node, "col_offset"):
-            nope_node.offset = node.col_offset
-            
-        nope_node.filename = self._filename
-        
-        return nope_node
+        finally:
+            self._node_builders.pop()
+            if self._node_builders:
+                self._nodes = self._node_builders[-1]
+            else:
+                self._nodes = None
     
     def _module(self, node):
-        return nodes.module(self._mapped(node.body), is_executable=self._is_executable)
+        return self._nodes.module(self._mapped(node.body), is_executable=self._is_executable)
 
 
     def _import(self, node):
-        return nodes.Import(self._mapped(node.names))
+        return self._nodes.Import(self._mapped(node.names))
 
 
     def _import_from(self, node):
@@ -138,11 +163,11 @@ class Converter(object):
         if node.module:
             module_path += node.module.split(".")
         
-        return nodes.import_from(module_path, self._mapped(node.names))
+        return self._nodes.import_from(module_path, self._mapped(node.names))
     
     
     def _import_alias(self, node):
-        return nodes.import_alias(node.name, node.asname)
+        return self._nodes.import_alias(node.name, node.asname)
 
 
     def _func(self, node):
@@ -162,12 +187,12 @@ class Converter(object):
             name = getattr(node.args.kwarg, "arg", node.args.kwarg)
             raise SyntaxError("arguments in the form '**{}' are not supported".format(name))
         
-        args = nodes.arguments([
-            nodes.argument(arg.arg)
+        args = self._nodes.arguments([
+            self._nodes.argument(arg.arg)
             for arg in node.args.args
         ])
         
-        return nodes.func(
+        return self._nodes.func(
             name=node.name,
             args=args,
             body=self._mapped(node.body),
@@ -175,21 +200,21 @@ class Converter(object):
 
 
     def _expr(self, node):
-        return nodes.expression_statement(self.convert(node.value))
+        return self._nodes.expression_statement(self.convert(node.value))
 
     
     def _return(self, node):
-        return nodes.ret(self._convert_or_none_node(node.value))
+        return self._nodes.ret(self._convert_or_none_node(node.value))
     
     
     def _assign(self, node):
         targets = [self.convert(target) for target in node.targets]
         
-        return nodes.assign(targets, self.convert(node.value))
+        return self._nodes.assign(targets, self.convert(node.value))
     
     
     def _if(self, node):
-        return nodes.if_else(
+        return self._nodes.if_else(
             self.convert(node.test),
             self._mapped(node.body),
             self._mapped(node.orelse),
@@ -197,7 +222,7 @@ class Converter(object):
     
     
     def _while(self, node):
-        return nodes.while_loop(
+        return self._nodes.while_loop(
             self.convert(node.test),
             self._mapped(node.body),
             self._mapped(node.orelse),
@@ -205,7 +230,7 @@ class Converter(object):
     
     
     def _for(self, node):
-        return nodes.for_loop(
+        return self._nodes.for_loop(
             self.convert(node.target),
             self.convert(node.iter),
             self._mapped(node.body),
@@ -214,18 +239,18 @@ class Converter(object):
     
     
     def _break(self, node):
-        return nodes.break_statement()
+        return self._nodes.break_statement()
     
     
     def _continue(self, node):
-        return nodes.continue_statement()
+        return self._nodes.continue_statement()
     
     
     def _try(self, node):
         if getattr(node, "orelse", None):
             raise SyntaxError("'else' clause in 'try' statement is unsupported")
         
-        return nodes.try_statement(
+        return self._nodes.try_statement(
             self._mapped(node.body),
             handlers=self._mapped(getattr(node, "handlers", [])),
             finally_body=self._mapped(getattr(node, "finalbody", [])),
@@ -238,7 +263,7 @@ class Converter(object):
         else:
             type_ = self.convert(node.type)
             
-        return nodes.except_handler(
+        return self._nodes.except_handler(
             type_,
             node.name,
             self._mapped(node.body),
@@ -246,7 +271,7 @@ class Converter(object):
     
     
     def _raise(self, node):
-        return nodes.raise_statement(self.convert(node.exc))
+        return self._nodes.raise_statement(self.convert(node.exc))
     
     
     def _assert(self, node):
@@ -255,7 +280,7 @@ class Converter(object):
             message = None
         else:
             message = self.convert(node.msg)
-        return nodes.assert_statement(condition, message)
+        return self._nodes.assert_statement(condition, message)
 
 
     def _with(self, node):
@@ -273,7 +298,7 @@ class Converter(object):
             else:
                 target = self.convert(item.optional_vars)
             
-            result = [nodes.with_statement(
+            result = [self._nodes.with_statement(
                 self.convert(item.context_expr),
                 target,
                 result,
@@ -290,55 +315,55 @@ class Converter(object):
         if node.decorator_list:
             raise SyntaxError("class decorators are not supported")
         
-        body = self._mapped(node.body, allowed=(nodes.Assignment, nodes.FunctionDef))
+        body = self._mapped(node.body, allowed=(_nodes.Assignment, _nodes.FunctionDef))
         base_classes = self._mapped(node.bases)
-        return nodes.class_def(node.name, body, base_classes=base_classes)
+        return self._nodes.class_def(node.name, body, base_classes=base_classes)
     
 
     def _str_literal(self, node):
-        return nodes.string(node.s)
+        return self._nodes.string(node.s)
 
 
     def _num_literal(self, node):
         value = node.n
         if isinstance(value, int):
-            return nodes.int(value)
+            return self._nodes.int(value)
     
     
     def _tuple_literal(self, node):
-        return nodes.tuple_literal(self._mapped(node.elts))
+        return self._nodes.tuple_literal(self._mapped(node.elts))
     
     
     def _list_literal(self, node):
-        return nodes.list_literal(self._mapped(node.elts))
+        return self._nodes.list_literal(self._mapped(node.elts))
 
 
     def _dict_literal(self, node):
-        return nodes.dict_literal(list(zip(self._mapped(node.keys), self._mapped(node.values))))
+        return self._nodes.dict_literal(list(zip(self._mapped(node.keys), self._mapped(node.values))))
 
 
     def _name(self, node):
         if node.id == "None":
-            return nodes.none()
+            return self._nodes.none()
         elif node.id == "True":
-            return nodes.boolean(True)
+            return self._nodes.boolean(True)
         elif node.id == "False":
-            return nodes.boolean(False)
+            return self._nodes.boolean(False)
         else:
-            return nodes.ref(node.id)
+            return self._nodes.ref(node.id)
     
     
     def _name_constant(self, node):
         if node.value is None:
-            return nodes.none()
+            return self._nodes.none()
         elif isinstance(node.value, bool):
-            return nodes.boolean(node.value)
+            return self._nodes.boolean(node.value)
         else:
             raise ValueError("Unrecognised constant: {}".format(node.value))
     
 
     def _call(self, node):
-        return nodes.call(
+        return self._nodes.call(
             self.convert(node.func),
             self._mapped(node.args),
             dict(
@@ -349,7 +374,7 @@ class Converter(object):
     
     
     def _attr(self, node):
-        return nodes.attr(self.convert(node.value), node.attr)
+        return self._nodes.attr(self.convert(node.value), node.attr)
     
     
     def _bin_op(self, node):
@@ -369,7 +394,7 @@ class Converter(object):
             if compare_node is None:
                 compare_node = comparison
             else:
-                compare_node = nodes.bool_and(compare_node, comparison)
+                compare_node = self._nodes.bool_and(compare_node, comparison)
             
         return compare_node
     
@@ -380,48 +405,48 @@ class Converter(object):
     
     def _operator(self, operator):
         operators = {
-            ast.Add: nodes.add,
-            ast.Sub: nodes.sub,
-            ast.Mult: nodes.mul,
-            ast.Div: nodes.truediv,
-            ast.FloorDiv: nodes.floordiv,
-            ast.Mod: nodes.mod,
-            ast.Pow: nodes.pow,
-            ast.LShift: nodes.lshift,
-            ast.RShift: nodes.rshift,
-            ast.BitAnd: nodes.and_,
-            ast.BitOr: nodes.or_,
-            ast.BitXor: nodes.xor_,
+            ast.Add: self._nodes.add,
+            ast.Sub: self._nodes.sub,
+            ast.Mult: self._nodes.mul,
+            ast.Div: self._nodes.truediv,
+            ast.FloorDiv: self._nodes.floordiv,
+            ast.Mod: self._nodes.mod,
+            ast.Pow: self._nodes.pow,
+            ast.LShift: self._nodes.lshift,
+            ast.RShift: self._nodes.rshift,
+            ast.BitAnd: self._nodes.and_,
+            ast.BitOr: self._nodes.or_,
+            ast.BitXor: self._nodes.xor_,
             
-            ast.USub: nodes.neg,
-            ast.UAdd: nodes.pos,
-            ast.Invert: nodes.invert,
+            ast.USub: self._nodes.neg,
+            ast.UAdd: self._nodes.pos,
+            ast.Invert: self._nodes.invert,
             
-            ast.Eq: nodes.eq,
-            ast.NotEq: nodes.ne,
-            ast.Lt: nodes.lt,
-            ast.LtE: nodes.le,
-            ast.Gt: nodes.gt,
-            ast.GtE: nodes.ge,
+            ast.Eq: self._nodes.eq,
+            ast.NotEq: self._nodes.ne,
+            ast.Lt: self._nodes.lt,
+            ast.LtE: self._nodes.le,
+            ast.Gt: self._nodes.gt,
+            ast.GtE: self._nodes.ge,
             
-            ast.And: nodes.bool_and,
-            ast.Or: nodes.bool_or,
-            ast.Not: nodes.bool_not,
+            ast.And: self._nodes.bool_and,
+            ast.Or: self._nodes.bool_or,
+            ast.Not: self._nodes.bool_not,
             
-            ast.Is: nodes.is_,
+            ast.Is: self._nodes.is_,
             
-            ast.In: nodes.contains,
+            ast.In: self._nodes.contains,
         }
         return operators[type(operator)]
     
     def _subscript(self, node):
-        return nodes.subscript(self.convert(node.value), self.convert(node.slice))
+        return self._nodes.subscript(self.convert(node.value), self.convert(node.slice))
     
     def _index(self, node):
         return self.convert(node.value)
     
     def _slice(self, node):
-        return nodes.slice(
+        return self._nodes.slice(
             self._convert_or_none_node(node.lower),
             self._convert_or_none_node(node.upper),
             self._convert_or_none_node(node.step),
@@ -438,17 +463,17 @@ class Converter(object):
     
     def _list_comprehension(self, node):
         generator, = node.generators
-        return nodes.list_comprehension(self.convert(node.elt), self.convert(generator))
+        return self._nodes.list_comprehension(self.convert(node.elt), self.convert(generator))
     
     def _generator_expression(self, node):
         # TODO: support nested fors
         generator, = node.generators
-        return nodes.generator_expression(self.convert(node.elt), self.convert(generator))
+        return self._nodes.generator_expression(self.convert(node.elt), self.convert(generator))
     
     def _comprehension(self, node):
         # TODO: support ifs
         assert not node.ifs
-        return nodes.comprehension(self.convert(node.target), self.convert(node.iter))
+        return self._nodes.comprehension(self.convert(node.target), self.convert(node.iter))
 
     def _mapped(self, nodes, allowed=None):
         return list(filter(None, (
@@ -458,7 +483,7 @@ class Converter(object):
         )))
     
     def _convert_or_none_node(self, node):
-        return self._convert_or_default(node, nodes.none)
+        return self._convert_or_default(node, self._nodes.none)
     
     def _convert_or_default(self, node, default):
         if node is None:
