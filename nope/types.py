@@ -367,6 +367,15 @@ def is_overloaded_func_type(type_):
     return isinstance(type_, _OverloadedFunctionType)
 
 
+class _UnknownType(object):
+    pass
+
+unknown_type = _UnknownType()
+
+def is_unknown(type_):
+    return type_ is unknown_type
+
+
 def is_sub_type(super_type, sub_type, unify=None):
     if unify is None:
         unify = set()

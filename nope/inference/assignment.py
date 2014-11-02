@@ -36,11 +36,13 @@ class Assignment(object):
 
     def _assign_attr(self, node, target, value_type, context):
         target_type = self._infer(target, context)
+        obj_type = self._infer(target.value, context)
         
-        if not types.is_sub_type(target_type, value_type):
+        if types.is_unknown(target_type):
+            obj_type.attrs.get(target.attr).type = value_type
+        elif not types.is_sub_type(target_type, value_type):
             raise errors.UnexpectedTargetTypeError(target, value_type=value_type, target_type=target_type)
         
-        obj_type = self._infer(target.value, context)
         if obj_type.attrs.get(target.attr).read_only:
             raise errors.ReadOnlyAttributeError(target, obj_type, target.attr)
     

@@ -183,7 +183,6 @@ class StatementTypeChecker(object):
         declarations_in_function = self._declaration_finder.declarations_in_function(node)
         self_arg_name = node.args.args[0].name
         self_declaration = declarations_in_function.declaration(self_arg_name)
-        # TODO: relax this constraint
         if isinstance(statement, nodes.Assignment):
             for target in statement.targets:
                 is_self_attr_assignment = (
@@ -191,8 +190,7 @@ class StatementTypeChecker(object):
                     context.referenced_declaration(target.value) == self_declaration
                 )
                 if is_self_attr_assignment:
-                    value_type = self._infer(statement.value, context)
-                    class_type.attrs.add(target.attr, value_type)
+                    class_type.attrs.add(target.attr, types.unknown_type)
                 
     
     def _function_type_to_method_type(self, func_type):
