@@ -43,6 +43,18 @@ _int_or_none = union(int_type, none_type)
 
 str_type = scalar_type("str")
 str_type.attrs.add("find", func([str_type], int_type), read_only=True)
+str_type.attrs.add(
+    "format",
+    overloaded_func(
+        func([object_type], str_type),
+        func([object_type, object_type], str_type),
+        func([object_type, object_type, object_type], str_type),
+        func([object_type, object_type, object_type, object_type], str_type),
+        func([object_type, object_type, object_type, object_type, object_type], str_type),
+        func([object_type, object_type, object_type, object_type, object_type, object_type], str_type),
+    ),
+    read_only=True,
+)
 
 str_meta_type = meta_type(str_type, [
     attr("__call__", func([any_type], str_type), read_only=True),
@@ -59,6 +71,8 @@ iterator.attrs.add("__next__", lambda T: func([], T), read_only=True)
 iterable = generic_structural_type("iterable", ["T"])
 iterable.attrs.add("__iter__", lambda T: func([], iterator(T)), read_only=True)
 
+str_type.attrs.add("join", func([iterable(str_type)], str_type), read_only=True)
+
 has_len = structural_type("has_len")
 has_len.attrs.add("__len__", func([], int_type), read_only=True)
 
@@ -73,6 +87,7 @@ list_type = generic_class("list", ["T"], [
     attr("__iter__", lambda T: func([], iterator(T)), read_only=True),
     attr("__contains__", lambda T: func([object_type], boolean_type), read_only=True),
     attr("append", lambda T: func([T], none_type), read_only=True),
+    attr("pop", lambda T: func([], T), read_only=True),
 ])
 list_type.attrs.add(
     "__getitem__",
@@ -85,10 +100,24 @@ list_type.attrs.add(
 
 list_meta_type = meta_type(list_type)
 
+
+def _create_tuple_class(length):
+    return generic_class(
+        "tuple{}".format(length),
+        [chr(ord("A") + index) for index in range(length)]
+    )
+
+_tuple_types = [_create_tuple_class(index) for index in range(0, 10)]
+
+def tuple(*args):
+    return _tuple_types[len(args)](*args)
+
+
 dict_type = generic_class("dict", ["K", "V"], [
     attr("__getitem__", lambda K, V: func([K], V), read_only=True),
     attr("__setitem__", lambda K, V: func([K, V], none_type), read_only=True),
     attr("__iter__", lambda K, V: func([], iterator(K)), read_only=True),
+    attr("items", lambda K, V: func([], iterable(tuple(K, V))), read_only=True),
 ])
 
 dict_meta_type = meta_type(dict_type)
@@ -104,16 +133,4 @@ assertion_error_type = scalar_type("AssertionError", base_classes=[exception_typ
 assertion_error_meta_type = meta_type(assertion_error_type, [
     attr("__call__", func([str_type], assertion_error_type)),
 ])
-
-
-def _create_tuple_class(length):
-    return generic_class(
-        "tuple{}".format(length),
-        [chr(ord("A") + index) for index in range(length)]
-    )
-
-_tuple_types = [_create_tuple_class(index) for index in range(0, 10)]
-
-def tuple(*args):
-    return _tuple_types[len(args)](*args)
 

@@ -26,11 +26,10 @@ class TypeSubstitutionTests(object):
     
     @istest
     def scalar_type_is_unchanged_by_type_substitution(self):
-        # TODO: scalar types should be updated
         scalar_type = types.scalar_type("Blah", [types.attr("x", _formal_param)])
         replacement_type = types.scalar_type("Counter")
         new_type = types._substitute_types(scalar_type, {_formal_param: replacement_type})
-        assert_equal(scalar_type, new_type)
+        assert_equal(types.scalar_type("Blah", [types.attr("x", replacement_type)]), new_type)
     
     @istest
     def function_type_arguments_are_substituted(self):

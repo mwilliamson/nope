@@ -54,6 +54,9 @@ class _Attributes(object):
     
     def names(self):
         return self._attrs.keys()
+    
+    def __repr__(self):
+        return "_Attributes({!r})".format(self._attrs)
 
 
 class _GenericTypeAttributes(object):
@@ -77,10 +80,23 @@ class _ScalarType(object):
         return self.name
     
     def __repr__(self):
-        return str(self)
+        return "scalar_type({!r}, _Attributes(...), {!r})".format(self.name, self.base_classes)
     
     def substitute_types(self, type_map):
-        return self
+        # TODO: create a builder for types to allow circular references without mutability (in the final type)
+        # This then allows the free variables to be captured AOT, so when type substitution occurs,
+        # we don't generate new types for types that aren't affected by the substitution
+        # This also allows us to know if two types are equivalent after replacement
+        # (without the free variables, we wouldn't know that, say, int[x -> y] and int[x -> z]
+        # are equivalent assuming x does not occur in int)
+        new_type = _ScalarType(self.name, _Attributes({}), [])
+        type_map[id(self)] = new_type
+        new_type.attrs = _substitute_types(self.attrs, type_map)
+        new_type.base_classes = [
+            _substitute_types(base_class, type_map)
+            for base_class in self.base_classes
+        ]
+        return new_type
 
 
 def scalar_type(name, attrs=None, base_classes=None):
@@ -152,7 +168,11 @@ def generic_class(name, params, attrs=None):
 
 
 def _substitute_types(type_, type_map):
-    return type_.substitute_types(type_map)
+    # TODO: use identity map or similar
+    if id(type_) in type_map:
+        return type_map[id(type_)]
+    else:
+        return type_.substitute_types(type_map)
 
 
 class _Variance(object):
