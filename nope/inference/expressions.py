@@ -61,10 +61,21 @@ class ExpressionTypeInferer(object):
     def _infer_dict_literal(self, node, context, hint):
         key_types = [self.infer(key, context) for key, value in node.items]
         value_types = [self.infer(value, context) for key, value in node.items]
-        return types.dict_type(
-            types.common_super_type(key_types),
-            types.common_super_type(value_types)
+        
+        key_super_type = types.common_super_type(key_types)
+        value_super_type = types.common_super_type(value_types)
+        
+        hint_is_valid = (
+            hint is not None and
+            types.dict_type.is_instantiated_type(hint) and
+            types.is_sub_type(hint.params[0], key_super_type) and
+            types.is_sub_type(hint.params[1], value_super_type)
         )
+        
+        if hint_is_valid:
+            return hint
+        else:
+            return types.dict_type(key_super_type, value_super_type)
 
     def _infer_ref(self, node, context, hint):
         return context.lookup(node)

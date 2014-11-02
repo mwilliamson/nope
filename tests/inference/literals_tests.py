@@ -93,3 +93,43 @@ def empty_dict_has_key_and_value_type_of_bottom():
         types.dict_type(types.bottom_type, types.bottom_type),
         infer(nodes.dict_literal([]))
     )
+
+
+@istest
+def dict_literal_uses_type_hint_when_valid():
+    assert_equal(
+        types.dict_type(types.object_type, types.int_type),
+        infer(nodes.dict_literal([
+            (nodes.string("Hello"), nodes.int(42)),
+        ]), hint=types.dict_type(types.object_type, types.int_type))
+    )
+    assert_equal(
+        types.dict_type(types.str_type, types.object_type),
+        infer(nodes.dict_literal([
+            (nodes.string("Hello"), nodes.int(42)),
+        ]), hint=types.dict_type(types.str_type, types.object_type))
+    )
+
+
+@istest
+def dict_literal_type_hint_is_ignored_if_hint_type_is_not_dict():
+    assert_equal(
+        types.dict_type(types.bottom_type, types.bottom_type),
+        infer(nodes.dict_literal([]), hint=types.int_type)
+    )
+
+
+@istest
+def dict_literal_type_hint_is_ignored_if_hint_item_type_is_not_super_type_of_actual_item_types():
+    assert_equal(
+        types.dict_type(types.str_type, types.int_type),
+        infer(nodes.dict_literal([
+            (nodes.string("Hello"), nodes.int(42)),
+        ]), hint=types.dict_type(types.bottom_type, types.int_type))
+    )
+    assert_equal(
+        types.dict_type(types.str_type, types.int_type),
+        infer(nodes.dict_literal([
+            (nodes.string("Hello"), nodes.int(42)),
+        ]), hint=types.dict_type(types.str_type, types.bottom_type))
+    )
