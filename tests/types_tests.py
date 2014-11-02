@@ -178,6 +178,20 @@ class SubTypeTests(object):
         assert not types.is_sub_type(cls, structural_type)
         
     @istest
+    def instantiated_generic_structural_type_is_sub_type_of_other_instantiated_generic_structural_type_if_it_has_matching_attributes(self):
+        iterator = types.generic_structural_type("iterator", ["T"])
+        iterator.attrs.add("__iter__", lambda T: types.func([], iterator(T)), read_only=True)
+        iterator.attrs.add("__next__", lambda T: types.func([], T), read_only=True)
+
+        iterable = types.generic_structural_type("iterable", ["T"])
+        iterable.attrs.add("__iter__", lambda T: types.func([], iterator(T)), read_only=True)
+        
+        assert types.is_sub_type(
+            iterable(types.int_type),
+            iterator(types.int_type),
+        )
+        
+    @istest
     def type_is_subtype_of_union_type_if_it_appears_in_union_type(self):
         scalar_type = types.scalar_type("User")
         union_type = types.union(scalar_type, types.none_type)
@@ -192,6 +206,14 @@ class SubTypeTests(object):
         
         assert types.is_sub_type(larger_union_type, smaller_union_type)
         assert not types.is_sub_type(smaller_union_type, larger_union_type)
+        
+    @istest
+    def instantiated_union_type_is_subtype_of_other_instantiated_union_type_if_its_types_are_a_subset(self):
+        smaller_union_type = types.generic(["T"], lambda T: types.union(T, types.none_type))
+        larger_union_type = types.generic(["T"], lambda T: types.union(T, types.none_type, types.str_type))
+        
+        assert types.is_sub_type(larger_union_type(types.int_type), smaller_union_type(types.int_type))
+        assert not types.is_sub_type(smaller_union_type(types.int_type), larger_union_type(types.int_type))
         
     @istest
     def union_of_union_is_treated_the_same_as_flat_union(self):

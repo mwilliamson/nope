@@ -107,7 +107,10 @@ class _GenericType(object):
     
     def instantiate(self, params):
         param_map = dict(zip(self.params, params))
-        instantiated_attrs = _substitute_types(self.underlying_type.attrs, param_map)
+        if hasattr(self.underlying_type, "attrs"):
+            instantiated_attrs = _substitute_types(self.underlying_type.attrs, param_map)
+        else:
+            instantiated_attrs = None
         return InstantiatedType(self, params, instantiated_attrs)
     
     def is_instantiated_type(self, other):
@@ -190,7 +193,7 @@ def contravariant(name):
 
 class InstantiatedType(object):
     def __init__(self, generic_type, params, attrs):
-        assert isinstance(attrs, _Attributes)
+        assert isinstance(attrs, _Attributes) or isinstance(attrs, type(None))
         
         self.generic_type = generic_type
         self.params = params
@@ -205,6 +208,12 @@ class InstantiatedType(object):
         ]
         instantiated_attrs = _substitute_types(self.attrs, type_map)
         return InstantiatedType(self.generic_type, instantiated_params, instantiated_attrs)
+    
+    def reify(self):
+        return _substitute_types(
+            self.generic_type.underlying_type,
+            dict(zip(self.generic_type.params, self.params))
+        )
     
     def __eq__(self, other):
         if not isinstance(other, InstantiatedType):
@@ -228,6 +237,9 @@ class _StructuralType(object):
         
         self.name = name
         self.attrs = attrs
+    
+    def substitute_types(self, type_map):
+        return _StructuralType(self.name, _substitute_types(self.attrs, type_map))
 
 
 def structural_type(name, attrs=None):
@@ -395,6 +407,9 @@ def is_sub_type(super_type, sub_type, unify=None):
             return is_sub_type(super_type_param, sub_type_param) and is_sub_type(sub_type_param, super_type_param)
     
     def is_sub_type(super_type, sub_type):
+        assert super_type is not None
+        assert sub_type is not None
+        
         if super_type == object_type:
             return True
         
@@ -414,14 +429,8 @@ def is_sub_type(super_type, sub_type, unify=None):
         
         if isinstance(super_type, _StructuralType):
             return all(
-                is_sub_type(attr.type, sub_type.attrs.type_of(attr.name))
+                attr.name in sub_type.attrs and is_sub_type(attr.type, sub_type.attrs.type_of(attr.name))
                 for attr in super_type.attrs
-            )
-        
-        if isinstance(super_type, _UnionType):
-            return any(
-                is_sub_type(possible_super_type, sub_type)
-                for possible_super_type in super_type._types
             )
         
         if (isinstance(super_type, InstantiatedType) and
@@ -429,6 +438,18 @@ def is_sub_type(super_type, sub_type, unify=None):
                 super_type.generic_type == sub_type.generic_type):
             return all(map(is_matching_type, super_type.generic_type.params, super_type.params, sub_type.params))
         
+        if isinstance(super_type, InstantiatedType):
+            return is_sub_type(super_type.reify(), sub_type)
+            
+        if isinstance(sub_type, InstantiatedType):
+            return is_sub_type(super_type, sub_type.reify())
+        
+        if isinstance(super_type, _UnionType):
+            return any(
+                is_sub_type(possible_super_type, sub_type)
+                for possible_super_type in super_type._types
+            )
+            
         if isinstance(super_type, _FormalParameter) and super_type in unify:
             constraints.constrain_type_param_to_super_type(super_type, sub_type)
             return True
