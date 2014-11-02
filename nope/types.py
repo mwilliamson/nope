@@ -99,8 +99,7 @@ class _GenericType(object):
     def __init__(self, params, underlying_type):
         self.underlying_type = underlying_type
         self.params = params
-        if hasattr(underlying_type, "attrs"):
-            self.attrs = _GenericTypeAttributes(params, underlying_type.attrs)
+        self.attrs = _GenericTypeAttributes(params, underlying_type.attrs)
     
     def __call__(self, *args):
         return self.instantiate(list(args))
@@ -193,7 +192,7 @@ def contravariant(name):
 
 class InstantiatedType(object):
     def __init__(self, generic_type, params, attrs):
-        assert isinstance(attrs, _Attributes) or isinstance(attrs, type(None))
+        assert isinstance(attrs, _Attributes)
         
         self.generic_type = generic_type
         self.params = params
@@ -256,6 +255,7 @@ class _FunctionType(object):
     def __init__(self, args, return_type):
         self.args = args
         self.return_type = return_type
+        self.attrs = _Attributes({})
     
     def substitute_types(self, type_map):
         return _FunctionType(
@@ -334,6 +334,7 @@ def is_generic_func_type(type_):
 class _UnionTypeBase(object):
     def __init__(self, types):
         self._types = list(types)
+        self.attrs = _Attributes({})
     
     def substitute_types(self, type_map):
         return type(self)([_substitute_types(type_, type_map) for type_ in self._types])
