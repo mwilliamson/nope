@@ -83,6 +83,9 @@ class Visitor(object):
             
         result = self._visitors[node_type](node, *args)
         
+        if result is not None and getattr(result, "location", None) is None and hasattr(node, "location"):
+            result.location = node.location
+        
         if explicit_type_result is not None and result is not None:
             result = nodes.typed(explicit_type_result, result)
         
