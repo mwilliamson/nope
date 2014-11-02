@@ -152,3 +152,34 @@ def when_target_has_explicit_type_that_type_is_used_as_type_hint():
         "object": types.meta_type(types.object_type),
     })
     assert_equal(types.list_type(types.object_type), context.lookup_name("x"))
+
+
+@istest
+def target_can_have_explicit_type_if_it_matches_existing_type():
+    node = nodes.assign(
+        [nodes.ref("x")],
+        nodes.none(),
+        explicit_type=nodes.ref("none"),
+    )
+    context = update_context(node, type_bindings={
+        "x": types.none_type,
+        "none": types.meta_type(types.none_type),
+    })
+    assert_equal(types.none_type, context.lookup_name("x"))
+
+
+@istest
+def error_if_target_has_explicit_type_and_already_has_conflicting_type():
+    node = nodes.assign(
+        [nodes.ref("x")],
+        nodes.none(),
+        explicit_type=nodes.ref("none"),
+    )
+    try:
+        update_context(node, type_bindings={
+            "x": types.int_type,
+            "none": types.meta_type(types.none_type),
+        })
+        assert False, "Expected error"
+    except errors.UnexpectedTargetTypeError as error:
+        assert_equal(node, error.node)
