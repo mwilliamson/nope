@@ -416,23 +416,6 @@ def is_sub_type(super_type, sub_type, unify=None):
         if sub_type == bottom_type:
             return True
         
-        if isinstance(sub_type, _UnionType):
-            return all(
-                is_sub_type(super_type, possible_sub_type)
-                for possible_sub_type in sub_type._types
-            )
-        
-        if (isinstance(sub_type, _ScalarType) and
-                any(is_sub_type(super_type, base_class)
-                for base_class in sub_type.base_classes)):
-            return True
-        
-        if isinstance(super_type, _StructuralType):
-            return all(
-                attr.name in sub_type.attrs and is_sub_type(attr.type, sub_type.attrs.type_of(attr.name))
-                for attr in super_type.attrs
-            )
-        
         if (isinstance(super_type, InstantiatedType) and
                 isinstance(sub_type, InstantiatedType) and
                 super_type.generic_type == sub_type.generic_type):
@@ -444,10 +427,27 @@ def is_sub_type(super_type, sub_type, unify=None):
         if isinstance(sub_type, InstantiatedType):
             return is_sub_type(super_type, sub_type.reify())
         
+        if isinstance(sub_type, _UnionType):
+            return all(
+                is_sub_type(super_type, possible_sub_type)
+                for possible_sub_type in sub_type._types
+            )
+        
         if isinstance(super_type, _UnionType):
             return any(
                 is_sub_type(possible_super_type, sub_type)
                 for possible_super_type in super_type._types
+            )
+        
+        if (isinstance(sub_type, _ScalarType) and
+                any(is_sub_type(super_type, base_class)
+                for base_class in sub_type.base_classes)):
+            return True
+        
+        if isinstance(super_type, _StructuralType):
+            return all(
+                attr.name in sub_type.attrs and is_sub_type(attr.type, sub_type.attrs.type_of(attr.name))
+                for attr in super_type.attrs
             )
             
         if isinstance(super_type, _FormalParameter) and super_type in unify:
