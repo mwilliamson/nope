@@ -7,10 +7,11 @@ def retry(func, exceptions):
     
     start = time.time()
     
-    try:
-        return func()
-    except exceptions:
-        if time.time() > start + max_wait_time:
-            raise
-        else:
-            time.sleep(interval)
+    while True:
+        try:
+            return func()
+        except exceptions:
+            if time.time() > start + max_wait_time:
+                raise
+            else:
+                time.sleep(interval)
