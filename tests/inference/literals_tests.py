@@ -85,3 +85,11 @@ def type_of_dict_is_determined_by_unifying_types_of_keys_and_values():
             (nodes.string("Blah"), nodes.int(16)),
         ]))
     )
+
+
+@istest
+def empty_dict_has_key_and_value_type_of_bottom():
+    assert_equal(
+        types.dict_type(types.bottom_type, types.bottom_type),
+        infer(nodes.dict_literal([]))
+    )
