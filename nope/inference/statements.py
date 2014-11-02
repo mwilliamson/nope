@@ -222,6 +222,12 @@ class StatementTypeChecker(object):
 
 
     def _check_assignment(self, node, context):
+        if node.explicit_type is not None:
+            explicit_type = self._infer_type_value(node.explicit_type, context)
+            for target in node.targets:
+                if isinstance(target, nodes.VariableReference):
+                    context.update_type(target, explicit_type)
+        
         if len(node.targets) == 1 and isinstance(node.targets[0], nodes.VariableReference):
             hint = context.lookup(node.targets[0], allow_unbound=True)
         else:

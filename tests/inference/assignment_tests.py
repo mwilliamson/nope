@@ -138,3 +138,17 @@ def when_target_already_has_type_that_type_is_used_as_type_hint():
     type_bindings = {"x": types.list_type(types.object_type)}
     context = update_context(node, type_bindings=type_bindings)
     assert_equal(types.list_type(types.object_type), context.lookup_name("x"))
+
+
+@istest
+def when_target_has_explicit_type_that_type_is_used_as_type_hint():
+    node = nodes.assign(
+        [nodes.ref("x")],
+        nodes.list_literal([nodes.string("Hello")]),
+        explicit_type=nodes.type_apply(nodes.ref("list"), [nodes.ref("object")])
+    )
+    context = update_context(node, type_bindings={
+        "list": types.meta_type(types.list_type),
+        "object": types.meta_type(types.object_type),
+    })
+    assert_equal(types.list_type(types.object_type), context.lookup_name("x"))

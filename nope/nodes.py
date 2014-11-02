@@ -143,12 +143,12 @@ ret = ReturnStatement
 expression_statement = ExpressionStatement
 
 
-def assign(targets, value):
+def assign(targets, value, *, explicit_type=None):
     target_nodes = [
         ref(target) if isinstance(target, str) else target
         for target in targets
     ]
-    return Assignment(target_nodes, value)
+    return Assignment(target_nodes, value, explicit_type=explicit_type)
 
 
 if_else = IfElse
