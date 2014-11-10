@@ -52,11 +52,11 @@ bool_meta_type = meta_type(boolean_type, [
     attr("__call__", func([any_type], boolean_type)),
 ])
 
-iterator = generic_structural_type("iterator", ["T"])
+iterator = generic_structural_type("iterator", [covariant("T")])
 iterator.attrs.add("__iter__", lambda T: func([], iterator(T)))
 iterator.attrs.add("__next__", lambda T: func([], T))
 
-iterable = generic_structural_type("iterable", ["T"])
+iterable = generic_structural_type("iterable", [covariant("T")])
 iterable.attrs.add("__iter__", lambda T: func([], iterator(T)))
 
 has_len = structural_type("has_len")
