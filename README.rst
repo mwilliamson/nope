@@ -250,6 +250,13 @@ such as ``int`` and ``list``.
 This restraint means a value of type ``int`` is guaranteed to have the concrete type ``int`` rather than a subclass of ``int``,
 allowing certain optimisations to be used when generating code.
 
+Nested classes
+~~~~~~~~~~~~~~
+
+Nope currently only supports classes defined in module scope.
+Although definitions within other statements, such as a function,
+aren't prohibited, they are likely to exhibit strange behaviour with
+respect to the type system.
 
 Tests
 -----
