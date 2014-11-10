@@ -142,7 +142,6 @@ def _generic_type(params, underlying_type, attrs=None):
 
 def generic(params, create_underlying_type):
     formal_params = [_formal_param(param) for param in params]
-    param_map = dict(zip(params, formal_params))
     return _GenericType(formal_params, create_underlying_type(*formal_params))
 
 
