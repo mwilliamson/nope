@@ -190,7 +190,7 @@ class StatementTypeChecker(object):
                     context.referenced_declaration(target.value) == self_declaration
                 )
                 if is_self_attr_assignment:
-                    class_type.attrs.add(target.attr, types.unknown_type)
+                    class_type.attrs.add(target.attr, types.unknown_type, read_only=False)
                 
     
     def _function_type_to_method_type(self, func_type):

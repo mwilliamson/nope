@@ -6,7 +6,7 @@ from .identity_dict import IdentityDict
 
 
 class _Attribute(object):
-    def __init__(self, name, type_, read_only=False):
+    def __init__(self, name, type_, read_only=True):
         self.name = name
         self.type = type_
         self.read_only = read_only
@@ -25,7 +25,7 @@ class _Attributes(object):
     def __init__(self, attrs):
         self._attrs = attrs
     
-    def add(self, name, type_, read_only=False):
+    def add(self, name, type_, read_only=True):
         self._attrs[name] = _Attribute(name, type_, read_only=read_only)
     
     def get(self, name):
@@ -61,7 +61,7 @@ class _GenericTypeAttributes(object):
         self._params = params
         self._attrs = attrs
     
-    def add(self, name, type_, read_only=False):
+    def add(self, name, type_, read_only=True):
         self._attrs.add(name, type_(*self._params), read_only=read_only)
 
 

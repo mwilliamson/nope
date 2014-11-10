@@ -43,7 +43,7 @@ def assignment_to_list_does_not_allow_supertype():
 
 @istest
 def assignment_to_attribute_allows_subtype():
-    cls = types.scalar_type("X", [types.attr("y", types.object_type)])
+    cls = types.scalar_type("X", [types.attr("y", types.object_type, read_only=False)])
     
     node = nodes.assign([nodes.attr(nodes.ref("x"), "y")], nodes.string("Hello"))
     type_bindings = {"x": cls}
@@ -52,7 +52,7 @@ def assignment_to_attribute_allows_subtype():
 
 @istest
 def assignment_to_attribute_does_not_allow_strict_supertype():
-    cls = types.scalar_type("X", [types.attr("y", types.str_type)])
+    cls = types.scalar_type("X", [types.attr("y", types.str_type, read_only=True)])
     
     attr_node = nodes.attr(nodes.ref("x"), "y")
     node = nodes.assign([attr_node], nodes.ref("obj"))
