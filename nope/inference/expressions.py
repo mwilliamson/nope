@@ -53,7 +53,7 @@ class ExpressionTypeInferer(object):
         element_types = [self.infer(element, context) for element in node.elements]
         common_super_type = types.common_super_type(element_types)
         
-        if hint is not None and types.list_type.is_instantiated_type(hint) and types.is_sub_type(hint.params[0], common_super_type):
+        if hint is not None and types.list_type.is_instantiated_type(hint) and types.is_sub_type(hint.type_params[0], common_super_type):
             return hint
         else:
             return types.list_type(common_super_type)
@@ -68,8 +68,8 @@ class ExpressionTypeInferer(object):
         hint_is_valid = (
             hint is not None and
             types.dict_type.is_instantiated_type(hint) and
-            types.is_sub_type(hint.params[0], key_super_type) and
-            types.is_sub_type(hint.params[1], value_super_type)
+            types.is_sub_type(hint.type_params[0], key_super_type) and
+            types.is_sub_type(hint.type_params[1], value_super_type)
         )
         
         if hint_is_valid:
@@ -103,7 +103,7 @@ class ExpressionTypeInferer(object):
             # duplicated in this class and in types.is_sub_type, and the user gets
             # less informative errors in the generic case
             type_map = types.is_sub_type(actual_func_type, call_function_type, unify=type_params)
-            return call_function_type.substitute_types(type_map).return_type
+            return call_function_type.instantiate_with_type_map(type_map).return_type
         else:
             formal_arg_types = [
                 arg.type
@@ -122,8 +122,8 @@ class ExpressionTypeInferer(object):
     def _get_call_type(self, node, callee_type):
         if types.is_func_type(callee_type):
             return [], callee_type
-        elif types.is_generic_type(callee_type) and types.is_func_type(callee_type.underlying_type):
-            return callee_type.params, callee_type.underlying_type
+        elif types.is_generic_func(callee_type):
+            return callee_type.formal_type_params, callee_type
         elif "__call__" in callee_type.attrs:
             return self._get_call_type(node, callee_type.attrs.type_of("__call__"))
         else:
@@ -313,7 +313,7 @@ class ExpressionTypeInferer(object):
             if not types.iterator.is_instantiated_type(iterator_type):
                 raise errors.BadSignatureError(node, "__iter__ should return an iterator")
             
-            element_type, = iterator_type.params
+            element_type, = iterator_type.type_params
             return element_type
         elif "__getitem__" in iterable_type.attrs:
             args = [ephemeral.formal_arg_constraint(types.int_type)]

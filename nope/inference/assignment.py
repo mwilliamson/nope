@@ -56,10 +56,11 @@ class Assignment(object):
         )
     
     def _assign_tuple_literal(self, node, target, value_type, context):
-        if len(target.elements) != len(value_type.params):
-            raise errors.UnpackError(target, len(target.elements), len(value_type.params))
+        # TODO: check value is a tuple
+        if len(target.elements) != len(value_type.type_params):
+            raise errors.UnpackError(target, len(target.elements), len(value_type.type_params))
         
-        for element, element_type in zip(target.elements, value_type.params):
+        for element, element_type in zip(target.elements, value_type.type_params):
             self.assign(node, element, element_type, context)
         
     def _infer(self, node, context):

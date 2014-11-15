@@ -69,7 +69,7 @@ def return_type_is_common_super_type_of_possible_return_types_of_overloaded_func
 
 @istest
 def callee_can_be_generic_func():
-    type_bindings = {"f": types.generic(["T"], lambda T:
+    type_bindings = {"f": types.generic_func(["T"], lambda T:
         types.func([T], types.int_type),
     )}
     node = nodes.call(nodes.ref("f"), [nodes.string("")])
@@ -78,7 +78,7 @@ def callee_can_be_generic_func():
 
 @istest
 def generic_type_arguments_are_covariant():
-    type_bindings = {"f": types.generic(["T"], lambda T:
+    type_bindings = {"f": types.generic_func(["T"], lambda T:
         types.func([T, T], T),
     )}
     node = nodes.call(nodes.ref("f"), [nodes.string(""), nodes.none()])

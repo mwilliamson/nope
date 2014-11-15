@@ -52,42 +52,45 @@ bool_meta_type = meta_type(boolean_type, [
     attr("__call__", func([any_type], boolean_type)),
 ])
 
-iterator = generic_structural_type("iterator", [covariant("T")])
-iterator.attrs.add("__iter__", lambda T: func([], iterator(T)))
-iterator.attrs.add("__next__", lambda T: func([], T))
+iterator = generic_structural_type("iterator", [covariant("T")], lambda T: [
+    attr("__iter__", func([], iterator(T))),
+    attr("__next__", func([], T)),
+])
 
-iterable = generic_structural_type("iterable", [covariant("T")])
-iterable.attrs.add("__iter__", lambda T: func([], iterator(T)))
+iterable = generic_structural_type("iterable", [covariant("T")], lambda T: [
+    attr("__iter__", func([], iterator(T))),
+])
 
 has_len = structural_type("has_len")
 has_len.attrs.add("__len__", func([], int_type))
 
-slice_type = generic_class("slice", [covariant("A"), covariant("B"), covariant("C")], {
-    attr("start", lambda A, B, C: A),
-    attr("stop", lambda A, B, C: B),
-    attr("step", lambda A, B, C: C),
-})
+slice_type = generic_class(
+    "slice",
+    [covariant("A"), covariant("B"), covariant("C")],
+    lambda A, B, C: [
+        attr("start", A),
+        attr("stop", B),
+        attr("step", C),
+    ]
+)
 
-list_type = generic_class("list", ["T"], [
-    attr("__setitem__", lambda T: func([int_type, T], none_type)),
-    attr("__iter__", lambda T: func([], iterator(T))),
-    attr("__contains__", lambda T: func([object_type], boolean_type)),
-    attr("append", lambda T: func([T], none_type)),
-])
-list_type.attrs.add(
-    "__getitem__",
-    lambda T: overloaded_func(
+list_type = generic_class("list", ["T"], lambda T: [
+    attr("__setitem__", func([int_type, T], none_type)),
+    attr("__iter__", func([], iterator(T))),
+    attr("__contains__", func([object_type], boolean_type)),
+    attr("append", func([T], none_type)),
+    attr("__getitem__", overloaded_func(
         func([int_type], T),
         func([slice_type(_int_or_none, _int_or_none, _int_or_none)], list_type(T)),
-    ),
-)
+    )),
+])
 
 list_meta_type = meta_type(list_type)
 
-dict_type = generic_class("dict", ["K", "V"], [
-    attr("__getitem__", lambda K, V: func([K], V)),
-    attr("__setitem__", lambda K, V: func([K, V], none_type)),
-    attr("__iter__", lambda K, V: func([], iterator(K))),
+dict_type = generic_class("dict", ["K", "V"], lambda K, V: [
+    attr("__getitem__", func([K], V)),
+    attr("__setitem__", func([K, V], none_type)),
+    attr("__iter__", func([], iterator(K))),
 ])
 
 dict_meta_type = meta_type(dict_type)

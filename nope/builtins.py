@@ -21,13 +21,13 @@ _builtin_types = {
     "divmod": types.func([types.int_type, types.int_type], types.tuple_type(types.int_type, types.int_type)),
     "range": types.func([types.int_type, types.int_type], types.iterable(types.int_type)),
     
-    "enumerate": types.generic(["T"], lambda T: types.func(
+    "enumerate": types.generic_func(["T"], lambda T: types.func(
         [types.iterable(T)],
         types.iterable(types.tuple_type(types.int_type, T)),
     )),
     
     # TODO: varargs (or overload)
-    "zip": types.generic(["T1", "T2"], lambda T1, T2: types.func(
+    "zip": types.generic_func(["T1", "T2"], lambda T1, T2: types.func(
         [types.iterable(T1), types.iterable(T2)],
         types.iterable(types.tuple_type(T1, T2))
     )),

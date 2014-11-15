@@ -11,47 +11,6 @@ none_type = types.none_type
 
 
 @istest
-class TypeSubstitutionTests(object):
-    @istest
-    def type_substitution_replaces_formal_parameters_with_value_set_in_type_map(self):
-        replacement_type = types.scalar_type("Counter")
-        new_type = types._substitute_types(_formal_param, {_formal_param: replacement_type})
-        assert_equal(replacement_type, new_type)
-    
-    @istest
-    def formal_type_parameter_is_unchanged_if_not_in_type_map(self):
-        replacement_type = types.scalar_type("Counter")
-        new_type = types._substitute_types(_formal_param, {types.invariant("T"): replacement_type})
-        assert_equal(_formal_param, new_type)
-    
-    @istest
-    def scalar_type_is_unchanged_by_type_substitution(self):
-        # TODO: scalar types should be updated
-        scalar_type = types.scalar_type("Blah", [types.attr("x", _formal_param)])
-        replacement_type = types.scalar_type("Counter")
-        new_type = types._substitute_types(scalar_type, {_formal_param: replacement_type})
-        assert_equal(scalar_type, new_type)
-    
-    @istest
-    def function_type_arguments_are_substituted(self):
-        func_type = types.func([_formal_param, str_type], none_type)
-        new_type = types._substitute_types(func_type, {_formal_param: int_type})
-        assert_equal(types.func([int_type, str_type], none_type), new_type)
-    
-    @istest
-    def function_type_return_type_is_substituted(self):
-        func_type = types.func([], _formal_param)
-        new_type = types._substitute_types(func_type, {_formal_param: int_type})
-        assert_equal(types.func([], int_type), new_type)
-    
-    @istest
-    def union_type_substitutes_types_in_unioned_types(self):
-        replacement_type = types.scalar_type("Counter")
-        new_type = types._substitute_types(types.union(types.int_type, _formal_param), {_formal_param: replacement_type})
-        assert_equal(types.union(int_type, replacement_type), new_type)
-        
-
-@istest
 class TypeEqualityTests(object):
     @istest
     def scalar_type_is_equal_to_itself(self):
@@ -179,12 +138,14 @@ class SubTypeTests(object):
         
     @istest
     def instantiated_generic_structural_type_is_sub_type_of_other_instantiated_generic_structural_type_if_it_has_matching_attributes(self):
-        iterator = types.generic_structural_type("iterator", ["T"])
-        iterator.attrs.add("__iter__", lambda T: types.func([], iterator(T)), read_only=True)
-        iterator.attrs.add("__next__", lambda T: types.func([], T), read_only=True)
+        iterator = types.generic_structural_type("iterator", [types.covariant("T")], lambda T: [
+            types.attr("__iter__", types.func([], iterator(T))),
+            types.attr("__next__", types.func([], T)),
+        ])
 
-        iterable = types.generic_structural_type("iterable", ["T"])
-        iterable.attrs.add("__iter__", lambda T: types.func([], iterator(T)), read_only=True)
+        iterable = types.generic_structural_type("iterable", [types.covariant("T")], lambda T: [
+            types.attr("__iter__", types.func([], iterator(T))),
+        ])
         
         assert types.is_sub_type(
             iterable(types.int_type),
