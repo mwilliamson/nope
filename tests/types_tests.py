@@ -275,6 +275,19 @@ class SubTypeTests(object):
         assert_equal(types.bottom_type, type_map[contravariant_type_param])
         
     @istest
+    def invariant_type_parameter_can_be_unified_when_part_of_recursive_structural_type(self):
+        invariant_type_param = types.invariant("T")
+        recursive = types.generic_structural_type("recursive", [types.covariant("T")], lambda T: [
+            types.attr("__iter__", types.func([], recursive(T))),
+        ])
+        
+        assert types.is_sub_type(
+            recursive(invariant_type_param),
+            recursive(types.int_type),
+            unify=[invariant_type_param]
+        )
+        
+    @istest
     def func_type_is_sub_type_of_itself(self):
         func_type = lambda: types.func([int_type], str_type)
         

@@ -411,7 +411,7 @@ def is_sub_type(super_type, sub_type, unify=None):
                 for base_class in sub_type.base_classes)):
             return True
         
-        if _instance_of_generic_scalar_type(super_type, sub_type):
+        if _instance_of_same_generic_type(super_type, sub_type):
             return all(map(is_matching_type, super_type.generic_type.params, super_type.type_params, sub_type.type_params))
         
         if isinstance(super_type, _StructuralType):
@@ -449,14 +449,10 @@ def is_sub_type(super_type, sub_type, unify=None):
         return None
 
 
-def _instance_of_generic_scalar_type(first, second):
-    if not isinstance(first, _ScalarType):
-        return False
-        
-    if not isinstance(second, _ScalarType):
-        return False
-    
-    return first.generic_type is not None and first.generic_type == second.generic_type
+def _instance_of_same_generic_type(first, second):
+    first_generic_type = getattr(first, "generic_type", None)
+    second_generic_type = getattr(second, "generic_type", None)
+    return first_generic_type is not None and first_generic_type == second_generic_type
 
 
 class Constraints(object):
