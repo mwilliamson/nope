@@ -113,6 +113,6 @@ def _create_tuple_class(length):
 
 _tuple_types = [_create_tuple_class(index) for index in range(0, 10)]
 
-def tuple(*args):
+def tuple_type(*args):
     return _tuple_types[len(args)](*args)
 

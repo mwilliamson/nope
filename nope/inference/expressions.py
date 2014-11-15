@@ -47,7 +47,7 @@ class ExpressionTypeInferer(object):
     
     def _infer_tuple_literal(self, node, context, hint):
         element_types = [self.infer(element, context) for element in node.elements]
-        return types.tuple(*element_types)
+        return types.tuple_type(*element_types)
     
     def _infer_list_literal(self, node, context, hint):
         element_types = [self.infer(element, context) for element in node.elements]

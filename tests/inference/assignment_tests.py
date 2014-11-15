@@ -74,7 +74,7 @@ def assignment_to_tuple_unpacks_tuple_type():
         nodes.ref("value")
     )
     context = update_context(node, type_bindings={
-        "value": types.tuple(types.int_type, types.str_type),
+        "value": types.tuple_type(types.int_type, types.str_type),
     })
     assert_equal(types.int_type, context.lookup_name("x"))
     assert_equal(types.str_type, context.lookup_name("y"))
@@ -90,7 +90,7 @@ def assignment_to_tuple_must_have_correct_length_tuple():
     )
     try:
         update_context(node, type_bindings={
-            "value": types.tuple(types.int_type),
+            "value": types.tuple_type(types.int_type),
         })
         assert False, "Expected error"
     except errors.UnpackError as error:

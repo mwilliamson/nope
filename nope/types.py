@@ -606,7 +606,7 @@ from .builtin_types import (
     str_type, str_meta_type,
     list_type, list_meta_type,
     dict_type, dict_meta_type,
-    tuple,
+    tuple_type,
     slice_type,
     iterable,
     iterator,
