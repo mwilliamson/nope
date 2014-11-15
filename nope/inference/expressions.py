@@ -103,6 +103,13 @@ class ExpressionTypeInferer(object):
             # duplicated in this class and in types.is_sub_type, and the user gets
             # less informative errors in the generic case
             type_map = types.is_sub_type(actual_func_type, call_function_type, unify=type_params)
+            if type_map is None:
+                print(actual_func_type)
+                print(call_function_type)
+                print(type_params)
+                error = errors.TypeCheckError()
+                error.node = node
+                raise error
             return call_function_type.substitute_types(type_map).return_type
         else:
             formal_arg_types = [

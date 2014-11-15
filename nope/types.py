@@ -522,6 +522,7 @@ class Constraints(object):
             return next(iter(types))
         
         relations = set(relation for relation, type_ in constraints)
+        print(constraints)
         if relations == set(["super"]):
             return common_super_type(types)
         elif relations == set(["sub"]):
@@ -552,6 +553,9 @@ class TypeMap(object):
     
     def get(self, key, default):
         return self._type_map.get(key, default)
+    
+    def __contains__(self, key):
+        return key in self._type_map
 
 
 def meta_type(type_, attrs=None):

@@ -68,7 +68,7 @@ iterator = generic_structural_type("iterator", ["T"])
 iterator.attrs.add("__iter__", lambda T: func([], iterator(T)), read_only=True)
 iterator.attrs.add("__next__", lambda T: func([], T), read_only=True)
 
-iterable = generic_structural_type("iterable", ["T"])
+iterable = generic_structural_type("iterable", [covariant("T")])
 iterable.attrs.add("__iter__", lambda T: func([], iterator(T)), read_only=True)
 
 str_type.attrs.add("join", func([iterable(str_type)], str_type), read_only=True)
