@@ -137,6 +137,18 @@ class SubTypeTests(object):
         assert not types.is_sub_type(cls, structural_type)
         
     @istest
+    def rescursive_structural_types_do_not_cause_stack_overflow(self):
+        recursive1 = types.structural_type("recursive1")
+        recursive1.attrs.add("uh_oh", types.func([], recursive1))
+        recursive2 = types.structural_type("recursive2")
+        recursive2.attrs.add("uh_oh", types.func([], recursive2))
+        
+        assert not types.is_sub_type(
+            recursive1,
+            recursive2,
+        )
+        
+    @istest
     def instantiated_generic_structural_type_is_sub_type_of_other_instantiated_generic_structural_type_if_it_has_matching_attributes(self):
         iterator = types.generic_structural_type("iterator", [types.covariant("T")], lambda T: [
             types.attr("__iter__", types.func([], iterator(T))),
@@ -150,6 +162,17 @@ class SubTypeTests(object):
         assert types.is_sub_type(
             iterable(types.int_type),
             iterator(types.int_type),
+        )
+        
+    @istest
+    def recursive_instantiated_generic_structural_type_is_sub_type_of_same_instantiated_generic_structural_type_if_it_has_matching_attributes(self):
+        recursive = types.generic_structural_type("recursive", [types.covariant("T")], lambda T: [
+            types.attr("__iter__", types.func([], recursive(T))),
+        ])
+        
+        assert types.is_sub_type(
+            recursive(types.int_type),
+            recursive(types.int_type),
         )
         
     @istest

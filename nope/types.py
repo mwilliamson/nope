@@ -3,6 +3,7 @@ import collections
 import zuice
 
 from .identity_dict import IdentityDict
+from . import caching
 
 
 class _Attribute(object):
@@ -155,6 +156,9 @@ class _GenericFunc(object):
         ]
         return self._create_func(*params)
     
+    def __str__(self):
+        return "[{}] => {}".format(", ".join(map(str, self.formal_type_params)), self._generic_signature)
+    
 
 def generic_func(formal_type_params, create_func):
     formal_type_params = [_formal_param(param) for param in formal_type_params]
@@ -229,7 +233,7 @@ def structural_type(name, attrs=None):
 def generic_structural_type(name, formal_params, attrs=None):
     return generic(
         formal_params,
-        lambda *params: structural_type(name),
+        lambda *params: structural_type(_instantiated_type_name(name, params)),
         attrs=attrs,
     )
 
@@ -239,7 +243,7 @@ MetaType = collections.namedtuple("MetaType", ["type", "attrs"])
 
 class _FunctionType(object):
     def __init__(self, args, return_type):
-        self.args = args
+        self.args = tuple(args)
         self.return_type = return_type
         self.attrs = _Attributes({})
     
@@ -251,6 +255,9 @@ class _FunctionType(object):
     
     def __neq__(self, other):
         return not (self == other)
+    
+    def __hash__(self):
+        return hash((self.args, self.return_type))
     
     def __str__(self):
         args_str = ", ".join(map(str, self.args))
@@ -273,6 +280,9 @@ class _FunctionTypeArgument(object):
     
     def __neq__(self, other):
         return not (self == other)
+    
+    def __hash__(self):
+        return hash((self.name, self.type))
     
     def __str__(self):
         if self.name is None:
@@ -381,6 +391,7 @@ def is_sub_type(super_type, sub_type, unify=None):
             # type equality using sub-typing or implementing type substitution)
             return is_sub_type(super_type_param, sub_type_param) and is_sub_type(sub_type_param, super_type_param)
     
+    @caching.cached(cycle_value=False)
     def is_sub_type(super_type, sub_type):
         assert super_type is not None
         assert sub_type is not None
