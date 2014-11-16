@@ -42,7 +42,14 @@ int_type.attrs.add("__ge__", func([int_type], boolean_type))
 _int_or_none = union(int_type, none_type)
 
 str_type = scalar_type("str")
+str_type.attrs.add("__eq__", func([str_type], boolean_type))
 str_type.attrs.add("find", func([str_type], int_type))
+str_type.attrs.add("format", overloaded_func(
+    func([object_type], str_type),
+    func([object_type, object_type], str_type),
+    func([object_type, object_type, object_type], str_type),
+    func([object_type, object_type, object_type, object_type], str_type),
+))
 
 str_meta_type = meta_type(str_type, [
     attr("__call__", func([any_type], str_type)),
@@ -60,6 +67,7 @@ iterator = generic_structural_type("iterator", [covariant("T")], lambda T: [
 iterable = generic_structural_type("iterable", [covariant("T")], lambda T: [
     attr("__iter__", func([], iterator(T))),
 ])
+str_type.attrs.add("join", func([iterable(str_type)], str_type))
 
 has_len = structural_type("has_len")
 has_len.attrs.add("__len__", func([], int_type))
@@ -78,11 +86,13 @@ list_type = generic_class("list", ["T"], lambda T: [
     attr("__setitem__", func([int_type, T], none_type)),
     attr("__iter__", func([], iterator(T))),
     attr("__contains__", func([object_type], boolean_type)),
+    attr("__len__", func([], int_type)),
     attr("append", func([T], none_type)),
     attr("__getitem__", overloaded_func(
         func([int_type], T),
         func([slice_type(_int_or_none, _int_or_none, _int_or_none)], list_type(T)),
     )),
+    attr("pop", func([], T))
 ])
 
 list_meta_type = meta_type(list_type)
@@ -91,6 +101,8 @@ dict_type = generic_class("dict", ["K", "V"], lambda K, V: [
     attr("__getitem__", func([K], V)),
     attr("__setitem__", func([K, V], none_type)),
     attr("__iter__", func([], iterator(K))),
+    attr("get", func([K, V], V)),
+    attr("items", func([], iterator(tuple_type(K, V)))),
 ])
 
 dict_meta_type = meta_type(dict_type)

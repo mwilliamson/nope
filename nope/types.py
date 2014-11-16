@@ -437,7 +437,7 @@ def is_sub_type(super_type, sub_type, unify=None):
         
         if sub_type == bottom_type:
             return True
-        
+            
         if super_type == any_meta_type and is_meta_type(sub_type):
             return True
             

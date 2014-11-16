@@ -31,6 +31,8 @@ _builtin_types = {
         [types.iterable(T1), types.iterable(T2)],
         types.iterable(types.tuple_type(T1, T2))
     )),
+    
+    "isinstance": types.func([types.object_type], types.any_meta_type),
 }
 
 
@@ -58,8 +60,17 @@ def module_bindings(references):
 
 builtin_modules = {
     "cgi": BuiltinModule("cgi", types.module("cgi", [
-        types.attr("escape", types.func([types.str_type], types.str_type), read_only=True)
+        types.attr(
+            "escape",
+            types.func(
+                [types.str_type, types.func_arg("quote", types.boolean_type, optional=True)],
+                types.str_type
+            ),
+            read_only=True
+        )
     ])),
     "collections": BuiltinModule("collections", types.module("collections", [
+    ])),
+    "dodge": BuiltinModule("dodge", types.module("dodge", [
     ]))
 }
