@@ -414,6 +414,14 @@ def is_sub_type(super_type, sub_type, unify=None):
         
         if sub_type == bottom_type:
             return True
+            
+        if isinstance(super_type, _FormalParameter) and super_type in unify:
+            constraints.constrain_type_param_to_super_type(super_type, sub_type)
+            return True
+        
+        if isinstance(sub_type, _FormalParameter) and sub_type in unify:
+            constraints.constrain_type_param_to_sub_type(sub_type, super_type)
+            return True
         
         if _instance_of_same_generic_type(super_type, sub_type):
             return all(map(is_matching_type, super_type.generic_type.params, super_type.type_params, sub_type.type_params))
@@ -446,14 +454,6 @@ def is_sub_type(super_type, sub_type, unify=None):
                 attr.name in sub_type.attrs and is_sub_type(attr.type, sub_type.attrs.type_of(attr.name))
                 for attr in super_type.attrs
             )
-            
-        if isinstance(super_type, _FormalParameter) and super_type in unify:
-            constraints.constrain_type_param_to_super_type(super_type, sub_type)
-            return True
-        
-        if isinstance(sub_type, _FormalParameter) and sub_type in unify:
-            constraints.constrain_type_param_to_sub_type(sub_type, super_type)
-            return True
         
         if isinstance(super_type, _FunctionType) and (sub_type, _FunctionType):
             if len(super_type.args) != len(sub_type.args):
