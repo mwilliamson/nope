@@ -42,6 +42,7 @@ int_type.attrs.add("__ge__", func([int_type], boolean_type))
 _int_or_none = union(int_type, none_type)
 
 str_type = scalar_type("str")
+str_type.attrs.add("__eq__", func([str_type], boolean_type))
 str_type.attrs.add("find", func([str_type], int_type))
 str_type.attrs.add("format", overloaded_func(
     func([object_type], str_type),
@@ -85,6 +86,7 @@ list_type = generic_class("list", ["T"], lambda T: [
     attr("__setitem__", func([int_type, T], none_type)),
     attr("__iter__", func([], iterator(T))),
     attr("__contains__", func([object_type], boolean_type)),
+    attr("__len__", func([], int_type)),
     attr("append", func([T], none_type)),
     attr("__getitem__", overloaded_func(
         func([int_type], T),
@@ -99,6 +101,7 @@ dict_type = generic_class("dict", ["K", "V"], lambda K, V: [
     attr("__getitem__", func([K], V)),
     attr("__setitem__", func([K, V], none_type)),
     attr("__iter__", func([], iterator(K))),
+    attr("get", func([K, V], V)),
     attr("items", func([], iterator(tuple_type(K, V)))),
 ])
 

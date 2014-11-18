@@ -2,6 +2,7 @@ import argparse
 
 import nope
 from nope import textseek
+from nope.inference import ephemeral
 
 
 def main():
@@ -57,8 +58,8 @@ def _print_error(error):
         _print_location(error)
         print()
         print("{}: {}".format(type(error).__name__, error.msg))
-    elif hasattr(error, "node") and hasattr(error.node, "location"):
-        _print_location(error.node.location)
+    elif hasattr(error, "node"):
+        _print_location(ephemeral.root_node(error.node).location)
         print(error)
     else:
         print(error)
