@@ -59,7 +59,10 @@ def _print_error(error):
         print()
         print("{}: {}".format(type(error).__name__, error.msg))
     elif hasattr(error, "node"):
-        _print_location(ephemeral.root_node(error.node).location)
+        node = ephemeral.root_node(error.node)
+        location = getattr(node, "location", None)
+        if location is not None:
+            _print_location(location)
         print(error)
     else:
         print(error)
