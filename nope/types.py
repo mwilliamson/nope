@@ -119,17 +119,17 @@ class _InstantiatedType(object):
     def __init__(self, generic_type, type_params, underlying_type):
         self.generic_type = generic_type
         self.type_params = type_params
-        self.underlying_type = underlying_type
+        self._underlying_type = underlying_type
     
     @property
     def attrs(self):
-        return self.underlying_type.attrs
+        return self._underlying_type.attrs
     
     def reify(self):
-        return self.underlying_type
+        return self._underlying_type
         
     def __str__(self):
-        return str(self.underlying_type)
+        return str(self._underlying_type)
 
 
 def is_generic_type(type_):
