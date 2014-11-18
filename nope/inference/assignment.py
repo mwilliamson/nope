@@ -57,8 +57,6 @@ class Assignment(object):
     
     def _assign_tuple_literal(self, node, target, value_type, context):
         # TODO: check value is a tuple
-        print(value_type)
-        print(type(value_type))
         if len(target.elements) != len(value_type.type_params):
             raise errors.UnpackError(target, len(target.elements), len(value_type.type_params))
         
