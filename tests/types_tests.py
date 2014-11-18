@@ -255,6 +255,12 @@ class SubTypeTests(object):
         assert_equal(_scalar_type, type_map[_formal_param])
     
     @istest
+    def unification_occurs_before_reification(self):
+        instantiated_type = types.generic_class("blah", ["T"])(int_type)
+        type_map = types.is_sub_type(_formal_param, instantiated_type, unify=[_formal_param])
+        assert_equal(instantiated_type, type_map[_formal_param])
+    
+    @istest
     def invariant_type_parameter_cannot_have_different_values_in_same_is_sub_type_relation(self):
         invariant_type_param = types.invariant("T")
         first_scalar_type = types.scalar_type("User")
