@@ -127,6 +127,9 @@ class _InstantiatedType(object):
     
     def reify(self):
         return self.underlying_type
+        
+    def __str__(self):
+        return str(self.underlying_type)
 
 
 def is_generic_type(type_):
