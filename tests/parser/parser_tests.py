@@ -178,44 +178,139 @@ def g():
 
 
 @istest
-def default_argument_can_be_none():
-    source = """
+class DefaultArgumentTests(object):
+    @istest
+    def default_argument_can_be_none(self):
+        source = """
 #:: str -> str
 def f(x=None):
     pass
 """
-    
-    module_node = parser.parse(source)
-    expected = nodes.args([nodes.arg("x", default=nodes.none())])
-    assert_equal(expected, module_node.body[0].args)
+        
+        module_node = parser.parse(source)
+        expected = nodes.args([nodes.arg("x", default=nodes.none())])
+        assert_equal(expected, module_node.body[0].args)
 
 
-@istest
-def default_argument_cannot_be_expression_other_than_none():
-    source = """
+    @istest
+    def default_argument_cannot_be_expression_other_than_none(self):
+        source = """
 #:: str -> str
 def f(x=1):
     pass
 """
-    _assert_syntax_error("default argument must be None", source)
+        _assert_syntax_error("default argument must be None", source)
 
 
-@istest
-def can_have_non_default_arguments_before_default_arguments():
-    source = """
+    @istest
+    def argument_can_have_default_expression_if_immediately_reassigned_from_none(self):
+        source = """
+#:: str -> str
+def f(x=None):
+    if x is None:
+        x = ["blah"]
+"""
+        
+        module_node = parser.parse(source)
+        expected = nodes.args([nodes.arg("x", default=nodes.list_literal([nodes.string("blah")]))])
+        assert_equal(expected, module_node.body[0].args)
+        assert_equal([], module_node.body[0].body)
+
+
+    @istest
+    def conditional_must_have_exactly_one_statement_in_true_branch_to_be_default_expression(self):
+        source = """
+#:: str -> str
+def f(x=None):
+    if x is None:
+        x = ["blah"]
+        x = []
+"""
+        self._assert_has_no_default_assignment_expression(source)
+
+
+    @istest
+    def conditional_must_not_have_else_branch_to_be_default_expression(self):
+        source = """
+#:: str -> str
+def f(x=None):
+    if x is None:
+        x = ["blah"]
+    else:
+        x = 2
+"""
+        self._assert_has_no_default_assignment_expression(source)
+
+
+    @istest
+    def conditional_must_use_is_operator_to_be_default_expression(self):
+        source = """
+#:: str -> str
+def f(x=None):
+    if x != None:
+        x = ["blah"]
+"""
+        self._assert_has_no_default_assignment_expression(source)
+
+
+    @istest
+    def conditional_must_check_for_none_to_be_default_expression(self):
+        source = """
+#:: str -> str
+def f(x=None):
+    if x is 1:
+        x = ["blah"]
+"""
+        self._assert_has_no_default_assignment_expression(source)
+
+
+    @istest
+    def condition_must_check_same_name_as_assignment(self):
+        source = """
+#:: str -> str
+def f(x=None):
+    if y is None:
+        x = ["blah"]
+"""
+        self._assert_has_no_default_assignment_expression(source)
+
+
+    @istest
+    def assigned_name_must_be_name_of_argument_with_default(self):
+        source = """
+#:: str -> str
+def f(x, y=None):
+    if x is None:
+        x = ["blah"]
+"""
+        module_node = parser.parse(source)
+        expected = nodes.args([nodes.arg("x"), nodes.arg("y", default=nodes.none())])
+        assert_equal(expected, module_node.body[0].args)
+        assert len(module_node.body[0].body) > 0
+
+    def _assert_has_no_default_assignment_expression(self, source):
+        module_node = parser.parse(source)
+        expected = nodes.args([nodes.arg("x", default=nodes.none())])
+        assert_equal(expected, module_node.body[0].args)
+        assert len(module_node.body[0].body) > 0
+
+
+    @istest
+    def can_have_non_default_arguments_before_default_arguments(self):
+        source = """
 #:: str -> str
 def f(a, b, c=None, d=None):
     pass
 """
-    
-    module_node = parser.parse(source)
-    expected = nodes.args([
-        nodes.arg("a"),
-        nodes.arg("b"),
-        nodes.arg("c", default=nodes.none()),
-        nodes.arg("d", default=nodes.none()),
-    ])
-    assert_equal(expected, module_node.body[0].args)
+        
+        module_node = parser.parse(source)
+        expected = nodes.args([
+            nodes.arg("a"),
+            nodes.arg("b"),
+            nodes.arg("c", default=nodes.none()),
+            nodes.arg("d", default=nodes.none()),
+        ])
+        assert_equal(expected, module_node.body[0].args)
 
 
 @istest

@@ -188,14 +188,77 @@ class Converter(object):
             name = getattr(node.args.kwarg, "arg", node.args.kwarg)
             raise SyntaxError("arguments in the form '**{}' are not supported".format(name))
         
-        args = self.convert(node.args)
+        args, body = self._find_default_setters(
+            self.convert(node.args),
+            self._mapped(node.body)
+        )
         
         return self._nodes.func(
             name=node.name,
             args=args,
-            body=self._mapped(node.body),
+            body=body,
         )
-
+    
+    def _find_default_setters(self, args, body):
+        body = body.copy()
+        
+        defaults = dict(
+            (arg.name, arg.default)
+            for arg in args.args
+            if arg.default is not None
+        )
+        
+        while True:
+            setter = self._next_default_setter(defaults, body)
+            
+            if setter is None:
+                updated_args = self._nodes.arguments([
+                    self._nodes.arg(arg.name, defaults.get(arg.name))
+                    for arg in args.args
+                ])
+                return updated_args, body
+            
+            target_name, value = setter
+            defaults[target_name] = value
+            body.pop(0)
+    
+    def _next_default_setter(self, defaults, body):
+        if not body:
+            return None
+        
+        statement = body[0]
+        
+        if not isinstance(statement, _nodes.IfElse):
+            return None
+        
+        condition = statement.condition
+        if (
+                not isinstance(condition, _nodes.BinaryOperation) or
+                not isinstance(condition.left, _nodes.VariableReference) or
+                condition.operator != "is" or
+                not isinstance(condition.right, _nodes.NoneLiteral)
+            ):
+            return None
+        
+        target_name = condition.left.name
+        if target_name not in defaults:
+            return None
+        
+        if statement.false_body or len(statement.true_body) != 1:
+            return None
+        
+        assignment, = statement.true_body
+        
+        if not isinstance(assignment, _nodes.Assignment) or len(assignment.targets) != 1:
+            return None
+        
+        target, = assignment.targets
+        
+        if not isinstance(target, _nodes.VariableReference) or target.name != target_name:
+            return None
+            
+        return target.name, assignment.value
+    
 
     def _arguments(self, node):
         defaults = self._mapped(node.defaults)
