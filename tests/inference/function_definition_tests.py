@@ -123,6 +123,18 @@ def type_of_default_value_argument_is_unioned_with_signature_type():
 
 
 @istest
+def default_expression_uses_type_of_arg_as_hint():
+    signature = nodes.signature(
+        args=[nodes.signature_arg(nodes.type_apply(nodes.ref("list"), [nodes.ref("int")]))],
+        returns=nodes.type_apply(nodes.ref("list"), [nodes.ref("int")]),
+    )
+    args = nodes.arguments([nodes.argument("x", nodes.list_literal([]))])
+    body = [nodes.ret(nodes.ref("x"))]
+    node = nodes.typed(signature, nodes.func("f", args, body))
+    _infer_func_type(node)
+
+
+@istest
 def error_if_name_of_argument_does_not_match_name_in_signature():
     signature = nodes.signature(
         args=[nodes.signature_arg("y", nodes.ref("int"))],
@@ -172,5 +184,6 @@ def _infer_func_type(func_node):
         "int": types.meta_type(types.int_type),
         "str": types.meta_type(types.str_type),
         "none": types.meta_type(types.none_type),
+        "list": types.meta_type(types.list_type),
     })
     return context.lookup(func_node)
