@@ -106,6 +106,23 @@ def function_adds_arguments_to_context():
 
 
 @istest
+def type_of_default_value_argument_is_unioned_with_signature_type():
+    signature = nodes.signature(
+        args=[nodes.signature_arg(nodes.ref("int"))],
+        returns=nodes.ref("int")
+    )
+    args = nodes.arguments([nodes.argument("x", nodes.none())])
+    body = [nodes.ret(nodes.ref("x"))]
+    node = nodes.typed(signature, nodes.func("f", args, body))
+    try:
+        _infer_func_type(node)
+        assert False, "Expected error"
+    except errors.UnexpectedValueTypeError as error:
+        assert_equal(types.int_type, error.expected)
+        assert_equal(types.union(types.int_type, types.none_type), error.actual)
+
+
+@istest
 def error_if_name_of_argument_does_not_match_name_in_signature():
     signature = nodes.signature(
         args=[nodes.signature_arg("y", nodes.ref("int"))],
