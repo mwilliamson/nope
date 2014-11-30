@@ -45,6 +45,7 @@ class Converter(object):
             ast.alias: self._import_alias,
             
             ast.FunctionDef: self._func,
+            ast.arguments: self._arguments,
             ast.Expr: self._expr,
             ast.Return: self._return,
             ast.Assign: self._assign,
@@ -187,16 +188,27 @@ class Converter(object):
             name = getattr(node.args.kwarg, "arg", node.args.kwarg)
             raise SyntaxError("arguments in the form '**{}' are not supported".format(name))
         
-        args = self._nodes.arguments([
-            self._nodes.argument(arg.arg)
-            for arg in node.args.args
-        ])
+        args = self.convert(node.args)
         
         return self._nodes.func(
             name=node.name,
             args=args,
             body=self._mapped(node.body),
         )
+
+
+    def _arguments(self, node):
+        defaults = self._mapped(node.defaults)
+        for default in defaults:
+            if not isinstance(default, _nodes.NoneLiteral):
+                raise SyntaxError("default argument must be None")
+        
+        arg_defaults = [None] * (len(node.args) - len(defaults)) + defaults
+        
+        return self._nodes.arguments([
+            self._nodes.argument(arg.arg, default)
+            for arg, default in zip(node.args, arg_defaults)
+        ])
 
 
     def _expr(self, node):
