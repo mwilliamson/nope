@@ -88,7 +88,11 @@ class StatementTypeChecker(object):
         body_context = context.enter_func(return_type)
         
         for arg, formal_arg in zip(node.args.args, func_type.args):
-            body_context.update_type(arg, formal_arg.type)
+            if arg.default is None:
+                arg_type = formal_arg.type
+            else:
+                arg_type = types.union(formal_arg.type, self._infer(arg.default, None))
+            body_context.update_type(arg, arg_type)
         
         for statement in node.body:
             if context.is_class and node.name == "__init__":    

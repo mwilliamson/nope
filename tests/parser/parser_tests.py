@@ -178,6 +178,47 @@ def g():
 
 
 @istest
+def default_argument_can_be_none():
+    source = """
+#:: str -> str
+def f(x=None):
+    pass
+"""
+    
+    module_node = parser.parse(source)
+    expected = nodes.args([nodes.arg("x", default=nodes.none())])
+    assert_equal(expected, module_node.body[0].args)
+
+
+@istest
+def default_argument_cannot_be_expression_other_than_none():
+    source = """
+#:: str -> str
+def f(x=1):
+    pass
+"""
+    _assert_syntax_error("default argument must be None", source)
+
+
+@istest
+def can_have_non_default_arguments_before_default_arguments():
+    source = """
+#:: str -> str
+def f(a, b, c=None, d=None):
+    pass
+"""
+    
+    module_node = parser.parse(source)
+    expected = nodes.args([
+        nodes.arg("a"),
+        nodes.arg("b"),
+        nodes.arg("c", default=nodes.none()),
+        nodes.arg("d", default=nodes.none()),
+    ])
+    assert_equal(expected, module_node.body[0].args)
+
+
+@istest
 def function_decorators_are_not_supported():
     source = """
 #:: -> str
