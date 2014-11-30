@@ -91,7 +91,7 @@ class StatementTypeChecker(object):
             if arg.default is None:
                 arg_type = formal_arg.type
             else:
-                arg_type = types.union(formal_arg.type, self._infer(arg.default, None))
+                arg_type = types.union(formal_arg.type, self._infer(arg.default, None, hint=formal_arg.type))
             body_context.update_type(arg, arg_type)
         
         for statement in node.body:
