@@ -382,3 +382,9 @@ class IsFuncTypeTests(object):
         ])
         assert not types.is_func_type(scalar_type)
         
+
+@istest
+class UnionTypeTests(object):
+    @istest
+    def duplicate_types_are_collapsed_in_type_union(self):
+        assert_equal(types.int_type, types.union(types.int_type, types.int_type))

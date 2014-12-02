@@ -363,10 +363,16 @@ class _OverloadedFunctionType(_UnionTypeBase):
 
 
 def union(*types):
-    if len(types) == 1:
-        return types[0]
+    unique_types = collections.OrderedDict()
+    
+    for type_ in types:
+        if type_ not in unique_types:
+            unique_types[type_] = True
+    
+    if len(unique_types) == 1:
+        return next(iter(unique_types))
     else:
-        return _UnionType(types)
+        return _UnionType(list(unique_types.keys()))
 
 
 def is_union_type(type_):
