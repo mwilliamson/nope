@@ -19,6 +19,7 @@ class ExpressionTypeInferer(object):
             nodes.Call: self._infer_call,
             nodes.AttributeAccess: self._infer_attr,
             nodes.TypeApplication: self._infer_type_application,
+            nodes.TypeUnion: self._infer_type_union,
             nodes.BinaryOperation: self._infer_binary_operation,
             nodes.UnaryOperation: self._infer_unary_operation,
             nodes.Subscript: self._infer_subscript,
@@ -220,6 +221,13 @@ class ExpressionTypeInferer(object):
             for param in node.params
         ]
         return types.meta_type(generic_type(*type_params))
+    
+    def _infer_type_union(self, node, context, hint):
+        constituent_types = [
+            self.infer_type_value(type_node, context)
+            for type_node in node.types
+        ]
+        return types.meta_type(types.union(*constituent_types))
     
     def infer_type_value(self, node, context):
         meta_type = self.infer(node, context)

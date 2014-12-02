@@ -364,6 +364,14 @@ def is_union_type(type_):
     return isinstance(type_, _UnionType)
 
 
+def remove(original, to_remove):
+    if is_union_type(original):
+        types = tuple(type_ for type_ in original._types if type_ != to_remove)
+        return union(*types)
+    else:
+        return original
+
+
 def overloaded_func(*func_types):
     for func_type in func_types:
         assert is_func_type(func_type)

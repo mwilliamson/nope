@@ -188,7 +188,7 @@ class Converter(object):
             name = getattr(node.args.kwarg, "arg", node.args.kwarg)
             raise SyntaxError("arguments in the form '**{}' are not supported".format(name))
         
-        args, body = self._find_default_setters(
+        args, body = self._find_ifnone_setters(
             self.convert(node.args),
             self._mapped(node.body)
         )
@@ -199,30 +199,32 @@ class Converter(object):
             body=body,
         )
     
-    def _find_default_setters(self, args, body):
+    def _find_ifnone_setters(self, args, body):
         body = body.copy()
         
-        defaults = dict(
-            (arg.name, arg.default)
-            for arg in args.args
-            if arg.default is not None
-        )
+        arg_names = set(arg.name for arg in args.args)
+        
+        setters = {}
         
         while True:
-            setter = self._next_default_setter(defaults, body)
+            setter = self._next_ifnone_setter(arg_names, body)
             
             if setter is None:
                 updated_args = self._nodes.arguments([
-                    self._nodes.arg(arg.name, defaults.get(arg.name))
+                    self._nodes.arg(
+                        arg.name,
+                        optional=arg.optional,
+                        if_none=setters.get(arg.name)
+                    )
                     for arg in args.args
                 ])
                 return updated_args, body
             
             target_name, value = setter
-            defaults[target_name] = value
+            setters[target_name] = value
             body.pop(0)
     
-    def _next_default_setter(self, defaults, body):
+    def _next_ifnone_setter(self, arg_names, body):
         if not body:
             return None
         
@@ -241,7 +243,7 @@ class Converter(object):
             return None
         
         target_name = condition.left.name
-        if target_name not in defaults:
+        if target_name not in arg_names:
             return None
         
         if statement.false_body or len(statement.true_body) != 1:
@@ -269,7 +271,7 @@ class Converter(object):
         arg_defaults = [None] * (len(node.args) - len(defaults)) + defaults
         
         return self._nodes.arguments([
-            self._nodes.argument(arg.arg, default)
+            self._nodes.argument(arg.arg, default is not None)
             for arg, default in zip(node.args, arg_defaults)
         ])
 
