@@ -62,6 +62,24 @@ def can_infer_type_of_function_with_named_arg():
 
 
 @istest
+def can_infer_type_of_function_with_optional_arg():
+    signature = nodes.signature(
+        args=[
+            nodes.signature_arg(nodes.ref("int"), optional=True),
+        ],
+        returns=nodes.ref("none")
+    )
+    args = nodes.arguments([
+        nodes.argument("x", optional=True),
+    ])
+    node = nodes.typed(signature, nodes.func("f", args=args, body=[]))
+    assert_equal(
+        types.func([types.func_arg(None, types.int_type, optional=True)], types.none_type),
+        _infer_func_type(node)
+    )
+
+
+@istest
 def type_mismatch_if_return_type_is_incorrect():
     return_node = nodes.ret(nodes.string("!"))
     node = nodes.typed(

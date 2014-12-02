@@ -278,27 +278,33 @@ class _FunctionType(object):
 
 
 class _FunctionTypeArgument(object):
-    def __init__(self, name, type_):
+    def __init__(self, name, type_, optional):
         self.name = name
         self.type = type_
+        self.optional = optional
     
     def __eq__(self, other):
         if not isinstance(other, _FunctionTypeArgument):
             return False
         
-        return (self.name, self.type) == (other.name, other.type)
+        return (self.name, self.type, self.optional) == (other.name, other.type, other.optional)
     
     def __neq__(self, other):
         return not (self == other)
     
     def __hash__(self):
-        return hash((self.name, self.type))
+        return hash((self.name, self.type, self.optional))
     
     def __str__(self):
         if self.name is None:
-            return str(self.type)
+            with_name = str(self.type)
         else:
-            return "{}: {}".format(self.name, self.type)
+            with_name = "{}: {}".format(self.name, self.type)
+        
+        if self.optional:
+            return "?" + with_name
+        else:
+            return with_name
 
 
 def func(args, return_type):
@@ -306,13 +312,13 @@ def func(args, return_type):
         if isinstance(arg, _FunctionTypeArgument):
             return arg
         else:
-            return _FunctionTypeArgument(None, arg)
+            return _FunctionTypeArgument(None, arg, optional=False)
     
     return _FunctionType(list(map(convert_arg, args)), return_type)
 
 
-def func_arg(name, type):
-    return _FunctionTypeArgument(name, type)
+def func_arg(name, type, optional=False):
+    return _FunctionTypeArgument(name, type, optional=optional)
 
 
 def is_func_type(type_):

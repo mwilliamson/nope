@@ -60,6 +60,7 @@ class StatementTypeChecker(object):
         return types.func_arg(
             arg.name,
             self._infer_type_value(arg.type, context),
+            optional=arg.optional,
         )
     
     def _check_signature(self, signature, node):
