@@ -79,6 +79,11 @@ class StatementTypeChecker(object):
                     signature_arg,
                     "argument '{}' has name '{}' in signature".format(def_arg.name, signature_arg.name)
                 )
+            if signature_arg.optional and not def_arg.optional:
+                raise errors.ArgumentsError(
+                    signature_arg,
+                    "optional argument '{}' must have default value".format(def_arg.name)
+                )
 
     def _check_function_def(self, node, context):
         func_type = self._infer_function_def(node, context)

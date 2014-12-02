@@ -94,7 +94,7 @@ WithStatement = _create_node("WithStatement", ["value", "target", "body"])
 
 FunctionDef = _create_node("FunctionDef", ["name", "args", "body"])
 FunctionSignature = _create_node("FunctionSignature", ["type_params", "args", "returns"])
-SignatureArgument = _create_node("SignatureArgument", ["name", "type"])
+SignatureArgument = _create_node("SignatureArgument", ["name", "type", "optional"])
 Arguments = _create_node("Arguments", ["args"])
 Argument = _create_node("Argument", ["name", "optional", "if_none"])
 
@@ -231,12 +231,12 @@ def signature(*, type_params=None, args=None, returns=None):
     return FunctionSignature(type_params=type_params, args=args, returns=returns)
 
 
-def signature_arg(name, type_=None):
+def signature_arg(name, type_=None, optional=False):
     if type_ is None:
         type_ = name
         name = None
     
-    return SignatureArgument(name, type_)
+    return SignatureArgument(name, type_, optional=optional)
 
 args = arguments = Arguments
 
