@@ -81,19 +81,28 @@ def _make_signature(result):
         args=result[1],
         returns=result[3],
     )
-    
+
+
+def _make_union_type(result):
+    if result[1]:
+        return nodes.type_union([result[0]] + [extra_type[1] for extra_type in result[1]])
+    else:
+        return result[0]
 
 
 def _create_explicit_type_rule():
     comma = _token_type("comma")
     colon = _token_type("colon")
+    question_mark = _token_type("question-mark")
+    bar = _token_type("bar")
+    
     type_name = arg_name = _token_type("name") >> _make_name
 
     type_ = forward_decl()
     type_ref = type_name >> _make_type
     applied_type = (type_ref + _token_type("open") + type_ + many(comma + type_) + _token_type("close")) >> _make_apply
     
-    arg = (maybe(_token_type("question-mark")) + maybe(arg_name + skip(colon)) + type_) >> _make_arg
+    arg = (maybe(question_mark) + maybe(arg_name + skip(colon)) + type_) >> _make_arg
     
     generic_params = maybe(type_name + _token_type("fat-arrow")) >> _make_params
     args = maybe(arg + many(comma + arg)) >> _make_args
@@ -102,7 +111,9 @@ def _create_explicit_type_rule():
     
     type_.define(sub_signature | applied_type | type_ref)
     
-    return (signature | type_) + finished >> (lambda result: result[0])
+    union_type = (type_ + many(bar + type_)) >> _make_union_type
+    
+    return (signature | union_type) + finished >> (lambda result: result[0])
 
 
 _explicit_type = _create_explicit_type_rule()
@@ -121,6 +132,7 @@ def _tokenize_explicit_type(sig_str):
         ('paren-close', (r'\)', )),
         ('colon', (r':', )),
         ('question-mark', (r'\?', )),
+        ('bar', (r'\|', )),
     ]
     ignore = ['space']
     tokenizer = make_tokenizer(specs)

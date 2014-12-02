@@ -101,3 +101,11 @@ def can_parse_signature_with_function_type_as_argument():
         returns=nodes.ref("none")
     )
     assert_equal(expected_signature, parse_explicit_type("(int -> str) -> none"))
+
+
+@istest
+def can_parse_type_union():
+    assert_equal(
+        nodes.type_union([nodes.ref("none"), nodes.ref("str"), nodes.ref("int")]),
+        parse_explicit_type("none | str | int")
+    )
