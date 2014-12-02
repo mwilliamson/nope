@@ -96,7 +96,11 @@ class StatementTypeChecker(object):
             if arg.if_none is None:
                 body_arg_type = formal_arg_type
             else:
-                body_arg_type = types.remove(formal_arg_type, types.none_type)
+                narrowed_type = types.remove(formal_arg_type, types.none_type)
+                body_arg_type = types.union(
+                    narrowed_type,
+                    self._infer(arg.if_none, None, hint=narrowed_type)
+                )
             
             body_context.update_type(arg, body_arg_type)
         

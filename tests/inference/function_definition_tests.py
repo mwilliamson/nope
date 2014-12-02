@@ -136,6 +136,23 @@ def argument_type_does_not_have_none_if_if_none_expression_is_set():
 
 
 @istest
+def argument_type_in_body_is_unioned_with_if_none_expression_type():
+    signature = nodes.signature(
+        args=[nodes.signature_arg(nodes.ref("int"))],
+        returns=nodes.ref("int")
+    )
+    args = nodes.arguments([nodes.argument("x", if_none=nodes.string("blah"))])
+    body = [nodes.ret(nodes.ref("x"))]
+    node = nodes.typed(signature, nodes.func("f", args, body))
+    try:
+        _infer_func_type(node)
+        assert False, "Expected error"
+    except errors.UnexpectedValueTypeError as error:
+        assert_equal(types.int_type, error.expected)
+        assert_equal(types.union(types.int_type, types.str_type), error.actual)
+
+
+@istest
 def default_expression_uses_type_of_arg_without_none_as_hint():
     arg_type = nodes.type_union([nodes.type_apply(nodes.ref("list"), [nodes.ref("int")]), nodes.ref("none")])
     signature = nodes.signature(

@@ -357,7 +357,10 @@ class _OverloadedFunctionType(_UnionTypeBase):
 
 
 def union(*types):
-    return _UnionType(types)
+    if len(types) == 1:
+        return types[0]
+    else:
+        return _UnionType(types)
 
 
 def is_union_type(type_):
