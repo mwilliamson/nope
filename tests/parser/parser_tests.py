@@ -180,9 +180,9 @@ def g():
 @istest
 class OptionalArgumentTests(object):
     @istest
-    def arg_is_optional_if_default_is_none(self):
+    def optional_arg_can_have_default_value_of_none(self):
         source = """
-#:: str -> str
+#:: ?str -> str
 def f(x=None):
     pass
 """
@@ -195,7 +195,7 @@ def f(x=None):
     @istest
     def default_argument_cannot_be_expression_other_than_none(self):
         source = """
-#:: str -> str
+#:: ?str -> str
 def f(x=1):
     pass
 """
@@ -205,7 +205,7 @@ def f(x=1):
     @istest
     def can_have_required_arguments_before_optional_arguments(self):
         source = """
-#:: str -> str
+#:: str, str, ?str, ?str -> str
 def f(a, b, c=None, d=None):
     pass
 """

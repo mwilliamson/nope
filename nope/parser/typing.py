@@ -65,7 +65,7 @@ def _make_params(result):
 
 
 def _make_arg(result):
-    return nodes.signature_arg(result[0], result[1])
+    return nodes.signature_arg(result[1], result[2], optional=result[0] is not None)
     
 
 def _make_args(result):
@@ -93,7 +93,7 @@ def _create_explicit_type_rule():
     type_ref = type_name >> _make_type
     applied_type = (type_ref + _token_type("open") + type_ + many(comma + type_) + _token_type("close")) >> _make_apply
     
-    arg = (maybe(arg_name + skip(colon)) + type_) >> _make_arg
+    arg = (maybe(_token_type("question-mark")) + maybe(arg_name + skip(colon)) + type_) >> _make_arg
     
     generic_params = maybe(type_name + _token_type("fat-arrow")) >> _make_params
     args = maybe(arg + many(comma + arg)) >> _make_args
@@ -120,6 +120,7 @@ def _tokenize_explicit_type(sig_str):
         ('paren-open', (r'\(', )),
         ('paren-close', (r'\)', )),
         ('colon', (r':', )),
+        ('question-mark', (r'\?', )),
     ]
     ignore = ['space']
     tokenizer = make_tokenizer(specs)

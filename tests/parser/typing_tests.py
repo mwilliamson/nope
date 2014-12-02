@@ -46,6 +46,15 @@ def can_parse_signature_with_named_arg():
 
 
 @istest
+def can_parse_signature_with_optional_arg():
+    expected_signature = nodes.signature(
+        args=[nodes.signature_arg(nodes.ref("int"), optional=True)],
+        returns=nodes.ref("str")
+    )
+    assert_equal(expected_signature, parse_explicit_type("?int -> str"))
+
+
+@istest
 def can_parse_explicit_type_with_type_application_with_one_generic_parameter():
     assert_equal(
         nodes.type_apply(nodes.ref("list"), [nodes.ref("str")]),
