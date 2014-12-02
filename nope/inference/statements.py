@@ -88,11 +88,17 @@ class StatementTypeChecker(object):
         body_context = context.enter_func(return_type)
         
         for arg, formal_arg in zip(node.args.args, func_type.args):
-            if arg.default is None:
-                arg_type = formal_arg.type
+            if arg.optional:
+                formal_arg_type = types.union(formal_arg.type, types.none_type)
             else:
-                arg_type = types.union(formal_arg.type, self._infer(arg.default, None, hint=formal_arg.type))
-            body_context.update_type(arg, arg_type)
+                formal_arg_type = formal_arg.type
+            
+            if arg.if_none is None:
+                body_arg_type = formal_arg_type
+            else:
+                body_arg_type = types.remove(formal_arg_type, types.none_type)
+            
+            body_context.update_type(arg, body_arg_type)
         
         for statement in node.body:
             if context.is_class and node.name == "__init__":    

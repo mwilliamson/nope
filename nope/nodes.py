@@ -22,6 +22,7 @@ VariableReference = _create_node("VariableReference", ["name"])
 Call = _create_node("Call", ["func", "args", "kwargs"])
 AttributeAccess = _create_node("AttributeAccess", ["value", "attr"])
 TypeApplication = _create_node("TypeApplication", ["generic_type", "params"])
+TypeUnion = _create_node("TypeUnion", ["types"])
 
 unary_operation = UnaryOperation = _create_node("UnaryOperation", ["operator", "operand"])
 
@@ -95,7 +96,7 @@ FunctionDef = _create_node("FunctionDef", ["name", "args", "body"])
 FunctionSignature = _create_node("FunctionSignature", ["type_params", "args", "returns"])
 SignatureArgument = _create_node("SignatureArgument", ["name", "type"])
 Arguments = _create_node("Arguments", ["args"])
-Argument = _create_node("Argument", ["name", "default"])
+Argument = _create_node("Argument", ["name", "optional", "if_none"])
 
 ClassDefinition = _create_node("ClassDefinition", ["name", "body", "base_classes"])
 
@@ -123,6 +124,8 @@ def none():
 def int(value):
     return IntLiteral(value)
 
+int_literal = int
+
 boolean = BooleanLiteral
 string = StringLiteral
 tuple_literal = TupleLiteral
@@ -138,6 +141,7 @@ def call(func, args, kwargs=None):
 
 attr = AttributeAccess
 type_apply = TypeApplication
+type_union = TypeUnion
 
 ret = ReturnStatement
 expression_statement = ExpressionStatement
@@ -236,8 +240,8 @@ def signature_arg(name, type_=None):
 
 args = arguments = Arguments
 
-def argument(name, default=None):
-    return Argument(name, default)
+def argument(name, optional=False, if_none=None):
+    return Argument(name, optional=optional, if_none=if_none)
 
 arg = argument
 

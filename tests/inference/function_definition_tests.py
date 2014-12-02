@@ -106,12 +106,12 @@ def function_adds_arguments_to_context():
 
 
 @istest
-def type_of_default_value_argument_is_unioned_with_signature_type():
+def argument_type_in_signature_is_unioned_with_none_if_argument_is_optional():
     signature = nodes.signature(
         args=[nodes.signature_arg(nodes.ref("int"))],
         returns=nodes.ref("int")
     )
-    args = nodes.arguments([nodes.argument("x", nodes.none())])
+    args = nodes.arguments([nodes.argument("x", optional=True)])
     body = [nodes.ret(nodes.ref("x"))]
     node = nodes.typed(signature, nodes.func("f", args, body))
     try:
@@ -123,12 +123,26 @@ def type_of_default_value_argument_is_unioned_with_signature_type():
 
 
 @istest
-def default_expression_uses_type_of_arg_as_hint():
+def argument_type_does_not_have_none_if_if_none_expression_is_set():
+    arg_type = nodes.type_union([nodes.ref("int"), nodes.ref("none")])
     signature = nodes.signature(
-        args=[nodes.signature_arg(nodes.type_apply(nodes.ref("list"), [nodes.ref("int")]))],
+        args=[nodes.signature_arg(arg_type)],
+        returns=nodes.ref("int"),
+    )
+    args = nodes.arguments([nodes.argument("x", if_none=nodes.int_literal(42))])
+    body = [nodes.ret(nodes.ref("x"))]
+    node = nodes.typed(signature, nodes.func("f", args, body))
+    _infer_func_type(node)
+
+
+@istest
+def default_expression_uses_type_of_arg_without_none_as_hint():
+    arg_type = nodes.type_union([nodes.type_apply(nodes.ref("list"), [nodes.ref("int")]), nodes.ref("none")])
+    signature = nodes.signature(
+        args=[nodes.signature_arg(arg_type)],
         returns=nodes.type_apply(nodes.ref("list"), [nodes.ref("int")]),
     )
-    args = nodes.arguments([nodes.argument("x", nodes.list_literal([]))])
+    args = nodes.arguments([nodes.argument("x", if_none=nodes.list_literal([]))])
     body = [nodes.ret(nodes.ref("x"))]
     node = nodes.typed(signature, nodes.func("f", args, body))
     _infer_func_type(node)
