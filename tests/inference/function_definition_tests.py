@@ -62,6 +62,24 @@ def can_infer_type_of_function_with_named_arg():
 
 
 @istest
+def can_infer_type_of_function_with_optional_arg():
+    signature = nodes.signature(
+        args=[
+            nodes.signature_arg(nodes.ref("int"), optional=True),
+        ],
+        returns=nodes.ref("none")
+    )
+    args = nodes.arguments([
+        nodes.argument("x", optional=True),
+    ])
+    node = nodes.typed(signature, nodes.func("f", args=args, body=[]))
+    assert_equal(
+        types.func([types.func_arg(None, types.int_type, optional=True)], types.none_type),
+        _infer_func_type(node)
+    )
+
+
+@istest
 def type_mismatch_if_return_type_is_incorrect():
     return_node = nodes.ret(nodes.string("!"))
     node = nodes.typed(
@@ -136,6 +154,23 @@ def argument_type_does_not_have_none_if_if_none_expression_is_set():
 
 
 @istest
+def argument_type_in_body_is_unioned_with_if_none_expression_type():
+    signature = nodes.signature(
+        args=[nodes.signature_arg(nodes.ref("int"))],
+        returns=nodes.ref("int")
+    )
+    args = nodes.arguments([nodes.argument("x", if_none=nodes.string("blah"))])
+    body = [nodes.ret(nodes.ref("x"))]
+    node = nodes.typed(signature, nodes.func("f", args, body))
+    try:
+        _infer_func_type(node)
+        assert False, "Expected error"
+    except errors.UnexpectedValueTypeError as error:
+        assert_equal(types.int_type, error.expected)
+        assert_equal(types.union(types.int_type, types.str_type), error.actual)
+
+
+@istest
 def default_expression_uses_type_of_arg_without_none_as_hint():
     arg_type = nodes.type_union([nodes.type_apply(nodes.ref("list"), [nodes.ref("int")]), nodes.ref("none")])
     signature = nodes.signature(
@@ -191,6 +226,22 @@ def error_if_type_signature_is_missing_from_function_with_args():
         assert False, "Expected error"
     except errors.ArgumentsError as error:
         assert_equal("signature is missing from function definition", str(error))
+
+
+@istest
+def error_if_type_signature_argument_is_optional_but_def_argument_is_not_optional():
+    signature = nodes.signature(
+        args=[nodes.signature_arg(nodes.ref("int"), optional=True)],
+        returns=nodes.type_union([nodes.ref("int"), nodes.ref("none")])
+    )
+    args = nodes.arguments([nodes.argument("x")])
+    body = [nodes.ret(nodes.ref("x"))]
+    node = nodes.typed(signature, nodes.func("f", args, body))
+    try:
+        _infer_func_type(node)
+        assert False, "Expected error"
+    except errors.ArgumentsError as error:
+        assert_equal("optional argument 'x' must have default value", str(error))
 
 
 def _infer_func_type(func_node):

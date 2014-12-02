@@ -60,6 +60,7 @@ class StatementTypeChecker(object):
         return types.func_arg(
             arg.name,
             self._infer_type_value(arg.type, context),
+            optional=arg.optional,
         )
     
     def _check_signature(self, signature, node):
@@ -79,6 +80,11 @@ class StatementTypeChecker(object):
                     signature_arg,
                     "argument '{}' has name '{}' in signature".format(def_arg.name, signature_arg.name)
                 )
+            if signature_arg.optional and not def_arg.optional:
+                raise errors.ArgumentsError(
+                    signature_arg,
+                    "optional argument '{}' must have default value".format(def_arg.name)
+                )
 
     def _check_function_def(self, node, context):
         func_type = self._infer_function_def(node, context)
@@ -96,7 +102,11 @@ class StatementTypeChecker(object):
             if arg.if_none is None:
                 body_arg_type = formal_arg_type
             else:
-                body_arg_type = types.remove(formal_arg_type, types.none_type)
+                narrowed_type = types.remove(formal_arg_type, types.none_type)
+                body_arg_type = types.union(
+                    narrowed_type,
+                    self._infer(arg.if_none, None, hint=narrowed_type)
+                )
             
             body_context.update_type(arg, body_arg_type)
         

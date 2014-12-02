@@ -175,9 +175,8 @@ class ExpressionTypeInferer(object):
         kwarg_nodes = node.kwargs.copy()
         actual_args = []
         
-        formal_arg_names = [arg.name for arg in formal_args]
-        
-        for index, formal_arg_name in enumerate(formal_arg_names):
+        for index, formal_arg in enumerate(formal_args):
+            formal_arg_name = formal_arg.name
             positional_arg = None
             keyword_arg = None
             
@@ -192,7 +191,7 @@ class ExpressionTypeInferer(object):
                 actual_args.append(read_actual_arg(positional_arg, index))
             elif keyword_arg is not None:
                 actual_args.append(read_actual_arg(keyword_arg, index))
-            else:
+            elif not formal_arg.optional:
                 if formal_arg_name is None:
                     message = "missing {} positional argument".format(_ordinal(index + 1))
                 else:
