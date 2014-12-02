@@ -98,7 +98,10 @@ def _create_explicit_type_rule():
     
     type_name = arg_name = _token_type("name") >> _make_name
 
-    type_ = forward_decl()
+    primary_type = forward_decl()
+    union_type = (primary_type + many(bar + primary_type)) >> _make_union_type
+    type_ = union_type
+    
     type_ref = type_name >> _make_type
     applied_type = (type_ref + _token_type("open") + type_ + many(comma + type_) + _token_type("close")) >> _make_apply
     
@@ -109,11 +112,9 @@ def _create_explicit_type_rule():
     signature = (generic_params + args + _token_type("arrow") + type_) >> _make_signature
     sub_signature = (_token_type("paren-open") + signature + _token_type("paren-close")) >> (lambda result: result[1])
     
-    type_.define(sub_signature | applied_type | type_ref)
+    primary_type.define(sub_signature | applied_type | type_ref)
     
-    union_type = (type_ + many(bar + type_)) >> _make_union_type
-    
-    return (signature | union_type) + finished >> (lambda result: result[0])
+    return (signature | type_) + finished >> (lambda result: result[0])
 
 
 _explicit_type = _create_explicit_type_rule()
