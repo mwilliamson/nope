@@ -17,6 +17,7 @@ class Visitor(object):
             nodes.Call: self._visit_call,
             nodes.AttributeAccess: self._visit_attribute_access,
             nodes.TypeApplication: self._visit_type_application,
+            nodes.TypeUnion: self._visit_type_union,
             nodes.UnaryOperation: self._visit_unary_operation,
             nodes.BinaryOperation: self._visit_binary_operation,
             nodes.Subscript: self._visit_subscript,
@@ -131,6 +132,9 @@ class Visitor(object):
             self.visit(node.generic_type, *args),
             self._visit_all(node.params, *args),
         )
+    
+    def _visit_type_union(self, node, *args):
+        return nodes.type_union(self._visit_all(node.types, *args))
 
     def _visit_unary_operation(self, node, *args):
         return nodes.unary_operation(
