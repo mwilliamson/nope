@@ -254,7 +254,7 @@ class Visitor(object):
         )
     
     def _visit_signature_argument(self, node, *args):
-        return nodes.signature_arg(node.name, self.visit(node.type, *args))
+        return nodes.signature_arg(node.name, self.visit(node.type, *args), optional=node.optional)
     
     def _visit_class_definition(self, node, *args):
         base_classes = self._visit_all(node.base_classes, *args)
