@@ -20,6 +20,7 @@ class ExpressionTypeInferer(object):
             nodes.AttributeAccess: self._infer_attr,
             nodes.TypeApplication: self._infer_type_application,
             nodes.TypeUnion: self._infer_type_union,
+            nodes.FunctionSignature: self._infer_function_signature,
             nodes.BinaryOperation: self._infer_binary_operation,
             nodes.UnaryOperation: self._infer_unary_operation,
             nodes.Subscript: self._infer_subscript,
@@ -227,6 +228,18 @@ class ExpressionTypeInferer(object):
             for type_node in node.types
         ]
         return types.meta_type(types.union(*constituent_types))
+    
+    def _infer_function_signature(self, node, context, hint):
+        args = [self._read_signature_arg(arg, context) for arg in node.args]
+        return_type = self.infer_type_value(node.returns, context)
+        return types.meta_type(types.func(args, return_type))
+    
+    def _read_signature_arg(self, arg, context):
+        return types.func_arg(
+            arg.name,
+            self.infer_type_value(arg.type, context),
+            optional=arg.optional,
+        )
     
     def infer_type_value(self, node, context):
         meta_type = self.infer(node, context)
