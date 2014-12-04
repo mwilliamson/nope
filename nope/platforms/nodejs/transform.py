@@ -549,8 +549,10 @@ class NodeTransformer(zuice.Base):
         for index, formal_arg in enumerate(call_func_type.args):
             if index < len(call.args):
                 actual_arg_node = call.args[index]
-            else:
+            elif formal_arg.name in call.kwargs:
                 actual_arg_node = call.kwargs[formal_arg.name]
+            else:
+                actual_arg_node = nodes.none()
                 
             args.append(self.transform(actual_arg_node))
             

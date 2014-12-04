@@ -750,6 +750,23 @@ def test_transform_call_with_keyword_arguments():
 
 
 @istest
+def test_transform_call_with_optional_positional_argument():
+    func_node = nodes.ref("f")
+    type_lookup = types.TypeLookup(IdentityDict([
+        (func_node, types.func(
+            [types.str_type, types.func_arg(None, types.str_type, optional=True)],
+            types.none_type
+        ))
+    ]))
+    
+    _assert_transform(
+        nodes.call(func_node, [nodes.ref("x")]),
+        js.call(js.ref("f"), [js.ref("x"), js.null]),
+        type_lookup=type_lookup,
+    )
+
+
+@istest
 def test_transform_property_access():
     _assert_transform(
         nodes.attr(nodes.ref("x"), "y"),
