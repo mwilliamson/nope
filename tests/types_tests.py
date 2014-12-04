@@ -362,6 +362,15 @@ class SubTypeTests(object):
         assert types.is_sub_type(super_type, sub_type)
         assert not types.is_sub_type(sub_type, super_type)
         
+    @istest
+    def any_meta_type_is_super_type_of_meta_types(self):
+        assert types.is_sub_type(types.any_meta_type, types.meta_type(types.int_type))
+        assert not types.is_sub_type(types.meta_type(types.int_type), types.any_meta_type)
+        
+    @istest
+    def any_meta_type_is_not_super_type_of_non_meta_types(self):
+        assert not types.is_sub_type(types.any_meta_type, types.int_type)
+        
 
 @istest
 class IsFuncTypeTests(object):
