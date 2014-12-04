@@ -171,7 +171,7 @@ def argument_type_in_body_is_unioned_with_if_none_expression_type():
 
 
 @istest
-def default_expression_uses_type_of_arg_without_none_as_hint():
+def if_none_expression_uses_type_of_arg_without_none_as_hint():
     arg_type = nodes.type_union([nodes.type_apply(nodes.ref("list"), [nodes.ref("int")]), nodes.ref("none")])
     signature = nodes.signature(
         args=[nodes.signature_arg(arg_type)],
