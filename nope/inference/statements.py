@@ -1,6 +1,6 @@
 import os
 
-from .. import nodes, types, returns, errors
+from .. import nodes, types, returns, errors, branches
 from . import ephemeral
 from .assignment import Assignment
 
@@ -103,18 +103,9 @@ class StatementTypeChecker(object):
     
     def _infer_function_def_arg_type(self, arg, formal_arg, context):
         if arg.optional:
-            formal_arg_type = types.union(formal_arg.type, types.none_type)
+            return types.union(formal_arg.type, types.none_type)
         else:
-            formal_arg_type = formal_arg.type
-        
-        if arg.if_none is None:
-            return formal_arg_type
-        else:
-            narrowed_type = types.remove(formal_arg_type, types.none_type)
-            return types.union(
-                narrowed_type,
-                self._infer(arg.if_none, context, hint=narrowed_type)
-            )
+            return formal_arg.type
     
     def _check_class_definition(self, node, context):
         base_classes = [
@@ -264,24 +255,52 @@ class StatementTypeChecker(object):
             if value_type is not submodule:
                 raise errors.ImportedValueRedeclaration(target, target.name)
     
+    def _check_branches(self, branches, context):
+        branch_contexts = []
+        
+        for branch in branches.branches:
+            branch_contexts.append(self._check_branch(branch, context))
+        
+        if branches.conditional:
+            branch_contexts.append(context)
+        
+        context.update_declaration_types(branch_contexts)
+    
+    
+    def _check_branch(self, branch, context):
+        branch_context = context.enter_statement()
+        for before in branch.before:
+            before(branch_context)
+        self._check_list(branch.statements, branch_context)
+        return branch_context
+    
     
     def _check_if_else(self, node, context):
         self._infer(node.condition, context)
-        self._check_list(node.true_body, context)
-        self._check_list(node.false_body, context)
-
+        
+        self._check_branches(
+            branches.if_else(node),
+            context,
+        )
 
     def _check_while_loop(self, node, context):
         self._infer(node.condition, context)
-        self._check_list(node.body, context)
-        self._check_list(node.else_body, context)
-    
+        
+        self._check_branches(
+            branches.while_loop(node),
+            context,
+        )
     
     def _check_for_loop(self, node, context):
         element_type = self._infer_for_loop_element_type(node, context)
-        self._assign(node, node.target, element_type, context)
-        self._check_list(node.body, context)
-        self._check_list(node.else_body, context)
+        
+        def update_target(branch_context):
+            return self._assign(node, node.target, element_type, branch_context)
+        
+        self._check_branches(
+            branches.for_loop(node, update_target),
+            context,
+        )
     
     
     def _infer_for_loop_element_type(self, node, context):
@@ -297,15 +316,15 @@ class StatementTypeChecker(object):
     
     
     def _check_try(self, node, context):
-        self._check_list(node.body, context)
-        
-        for handler in node.handlers:
+        def before_handler(handler, branch_context):
             exception_type = self._infer_handler_exception_type(handler, context)
             if handler.target is not None:
                 self._assign(handler, handler.target, exception_type, context)
-            self._check_list(handler.body, context)
-        
-        self._check_list(node.finally_body, context)
+            
+        self._check_branches(
+            branches.try_statement(node, before_handler=before_handler),
+            context,
+        )
 
         
     def _infer_handler_exception_type(self, handler, context):
@@ -345,7 +364,7 @@ class StatementTypeChecker(object):
             types.union(types.traceback_type, types.none_type)
         ]
         
-        self._infer_magic_method_call(
+        exit_type = self._infer_magic_method_call(
             node.value,
             "exit",
             node.value,
@@ -356,10 +375,14 @@ class StatementTypeChecker(object):
             context,
         )
         
-        if node.target is not None:
-            self._assign(node.target, node.target, enter_return_type, context)
+        def before_body(branch_context):
+            if node.target is not None:
+                self._assign(node.target, node.target, enter_return_type, branch_context)
         
-        self._check_list(node.body, context)
+        self._check_branches(
+            branches.with_statement(node, before_body, exit_type),
+            context
+        )
 
     def _check_import(self, node, context):
         for alias in node.names:

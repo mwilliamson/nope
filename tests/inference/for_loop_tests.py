@@ -188,3 +188,17 @@ def else_body_of_for_loop_is_type_checked():
             "xs": types.list_type(types.str_type),
         }
     )
+
+
+@istest
+def after_while_loop_variables_could_have_previous_type_or_assigned_type():
+    node = nodes.for_loop(nodes.ref("x"), nodes.ref("xs"),
+        [nodes.assign([nodes.ref("y")], nodes.none())],
+        [nodes.assign([nodes.ref("y")], nodes.none())],
+    )
+    type_bindings = {
+        "xs": types.list_type(types.str_type),
+        "y": types.int_type,
+    }
+    context = update_context(node, type_bindings=type_bindings)
+    assert_equal(types.common_super_type([types.int_type, types.none_type]), context.lookup_name("y"))

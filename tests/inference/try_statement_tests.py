@@ -74,3 +74,13 @@ def try_finally_body_is_type_checked():
     assert_statement_is_type_checked(
         lambda bad_statement: nodes.try_statement([], finally_body=[bad_statement])
     )
+
+
+@istest
+def after_try_statement_variables_could_have_previous_type_or_assigned_type():
+    node = nodes.try_statement([], finally_body=[
+        nodes.assign([nodes.ref("x")], nodes.none())
+    ])
+    type_bindings = {"x": types.int_type}
+    context = update_context(node, type_bindings=type_bindings)
+    assert_equal(types.common_super_type([types.int_type, types.none_type]), context.lookup_name("x"))

@@ -114,22 +114,11 @@ def cannot_reassign_read_only_attribute():
 
 
 @istest
-def variables_cannot_change_type():
+def variables_can_change_type():
     node = nodes.assign(["x"], nodes.int(1))
     type_bindings = {"x": types.none_type}
-    try:
-        update_context(node, type_bindings=type_bindings)
-        assert False, "Expected error"
-    except errors.UnexpectedTargetTypeError as error:
-        assert_equal(node, error.node)
-
-
-@istest
-def variables_can_be_reassigned_if_type_is_consistent():
-    node = nodes.assign(["x"], nodes.int(1))
-    type_bindings = {"x": types.object_type}
     context = update_context(node, type_bindings=type_bindings)
-    assert_equal(types.object_type, context.lookup_name("x"))
+    assert_equal(types.int_type, context.lookup_name("x"))
 
 
 @istest
@@ -152,34 +141,3 @@ def when_target_has_explicit_type_that_type_is_used_as_type_hint():
         "object": types.meta_type(types.object_type),
     })
     assert_equal(types.list_type(types.object_type), context.lookup_name("x"))
-
-
-@istest
-def target_can_have_explicit_type_if_it_matches_existing_type():
-    node = nodes.assign(
-        [nodes.ref("x")],
-        nodes.none(),
-        explicit_type=nodes.ref("none"),
-    )
-    context = update_context(node, type_bindings={
-        "x": types.none_type,
-        "none": types.meta_type(types.none_type),
-    })
-    assert_equal(types.none_type, context.lookup_name("x"))
-
-
-@istest
-def error_if_target_has_explicit_type_and_already_has_conflicting_type():
-    node = nodes.assign(
-        [nodes.ref("x")],
-        nodes.none(),
-        explicit_type=nodes.ref("none"),
-    )
-    try:
-        update_context(node, type_bindings={
-            "x": types.int_type,
-            "none": types.meta_type(types.none_type),
-        })
-        assert False, "Expected error"
-    except errors.UnexpectedTargetTypeError as error:
-        assert_equal(node, error.node)

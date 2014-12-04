@@ -1,4 +1,4 @@
-from nope import nodes, errors, visit, name_declaration, types
+from nope import nodes, errors, visit, name_declaration, types, branches
 
 
 def check_bindings(node, references, type_lookup, is_definitely_bound):
@@ -65,23 +65,13 @@ class _BindingChecker(object):
     def _update_if_else(self, visitor, node, context):
         visitor.visit(node.condition, context)
         
-        self._update_branches(
-            visitor,
-            [_branch(node.true_body), _branch(node.false_body)],
-            context,
-            bind=True,
-        )
+        self._update_branches(visitor, branches.if_else(node), context)
 
 
     def _update_while_loop(self, visitor, node, context):
         visitor.visit(node.condition, context)
         
-        self._update_branches(
-            visitor,
-            [_branch(node.body), _branch(node.else_body)],
-            context,
-            bind=False,
-        )
+        self._update_branches(visitor, branches.while_loop(node), context)
 
 
     def _update_for_loop(self, visitor, node, context):
@@ -92,65 +82,47 @@ class _BindingChecker(object):
         
         self._update_branches(
             visitor,
-            [
-                _branch(node.body, before=update_for_loop_target),
-                _branch(node.else_body)
-            ],
+            branches.for_loop(node, update_for_loop_target),
             context,
-            bind=False,
         )
 
 
     def _update_try(self, visitor, node, context):
-        branches = [_branch(node.body), _branch(node.finally_body)]
-        
-        def create_handler_branch(handler):
-            if handler.type is not None:
-                visitor.visit(handler.type, context)
-                
-            def update_handler_target(branch_context):
-                if handler.target is not None:
-                    self._update_target(visitor, handler.target, branch_context)
-                    branch_context.add_exception_handler_target(handler.target)
-            
-            def delete_handler_target(branch_context):
-                if handler.target is not None:
-                    context.delete_exception_handler_target(handler.target)
-            
-            return _branch(
-                handler.body,
-                before=update_handler_target,
-                after=delete_handler_target,
-            )
-        
         for handler in node.handlers:
-            branches.append(create_handler_branch(handler))
+            visitor.visit(handler.type, context)
         
+        def update_handler_target(handler, branch_context):
+            if handler.target is not None:
+                self._update_target(visitor, handler.target, branch_context)
+                branch_context.add_exception_handler_target(handler.target)
+        
+        def delete_handler_target(handler, branch_context):
+            if handler.target is not None:
+                context.delete_exception_handler_target(handler.target)
+                    
         self._update_branches(
             visitor,
-            branches,
+            branches.try_statement(node, update_handler_target, delete_handler_target),
             context,
-            bind=False,
         )
 
 
     def _update_with(self, visitor, node, context):
         visitor.visit(node.value, context)
         
+        def update_with_target(branch_context):
+            if node.target is not None:
+                self._update_target(visitor, node.target, branch_context)
+        
         exit_type = self._type_of(node.value).attrs.type_of("__exit__")
         # TODO: this is duplicated in codegeneration
         while not types.is_func_type(exit_type):
             exit_type = exit_type.attrs.type_of("__call__")
         
-        def update_with_target(branch_context):
-            if node.target is not None:
-                self._update_target(visitor, node.target, branch_context)
-        
         self._update_branches(
             visitor,
-            [_branch(node.body, before=update_with_target)],
+            branches.with_statement(node, update_with_target, exit_type.return_type),
             context,
-            bind=exit_type.return_type == types.none_type,
         )
 
 
@@ -180,21 +152,26 @@ class _BindingChecker(object):
             context.bind(alias)
         
 
-    def _update_branches(self, visitor, branches, context, bind=False):
+    def _update_branches(self, visitor, branches, context):
         branch_contexts = [
             self._update_branch(visitor, branch, context)
-            for branch in branches
+            for branch in branches.branches
         ]
-        if bind:
+        if not branches.conditional:
             context.unify(branch_contexts)
 
-
     def _update_branch(self, visitor, branch, context):
-        branch_context = branch.enter_context(context)
+        branch_context = context.enter_branch()
+        
+        for before in branch.before:
+            before(branch_context)
+        
         self._update_statements(visitor, branch.statements, branch_context)
-        branch.exit_context(context)
+        
+        for after in branch.after:
+            after(branch_context)
+        
         return branch_context
-
 
     def _update_statements(self, visitor, statements, context):
         for statement in statements:
@@ -203,24 +180,6 @@ class _BindingChecker(object):
     def _type_of(self, node):
         return self._type_lookup.type_of(node)
 
-
-class _Branch(object):
-    def __init__(self, statements, before=None, after=None):
-        self.statements = statements
-        self._before = before
-        self._after = after
-    
-    def enter_context(self, context):
-        branch_context = context.enter_branch()
-        if self._before is not None:
-            self._before(branch_context)
-        return branch_context
-    
-    def exit_context(self, context):
-        if self._after is not None:
-            self._after(context)
-
-_branch = _Branch
 
 
 class _Context(object):

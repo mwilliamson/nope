@@ -23,12 +23,7 @@ class Assignment(object):
     
     def _assign_ref(self, node, target, value_type, context):
         var_type = context.lookup(target, allow_unbound=True)
-        if var_type is not None and not types.is_sub_type(var_type, value_type):
-            raise errors.UnexpectedTargetTypeError(node, target_type=var_type, value_type=value_type)
-        
-        # TODO: add test demonstrating necessity of `if var_type is None`
-        if var_type is None:
-            context.update_type(target, value_type)
+        context.update_type(target, value_type)
         
         if self._on_ref is not None:
             self._on_ref(target, value_type, context)

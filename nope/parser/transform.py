@@ -188,80 +188,12 @@ class Converter(object):
             name = getattr(node.args.kwarg, "arg", node.args.kwarg)
             raise SyntaxError("arguments in the form '**{}' are not supported".format(name))
         
-        args, body = self._find_ifnone_setters(
-            self.convert(node.args),
-            self._mapped(node.body)
-        )
-        
         return self._nodes.func(
             name=node.name,
-            args=args,
-            body=body,
+            args=self.convert(node.args),
+            body=self._mapped(node.body),
         )
     
-    def _find_ifnone_setters(self, args, body):
-        body = body.copy()
-        
-        arg_names = set(arg.name for arg in args.args)
-        
-        setters = {}
-        
-        while True:
-            setter = self._next_ifnone_setter(arg_names, body)
-            
-            if setter is None:
-                updated_args = self._nodes.arguments([
-                    self._nodes.arg(
-                        arg.name,
-                        optional=arg.optional,
-                        if_none=setters.get(arg.name)
-                    )
-                    for arg in args.args
-                ])
-                return updated_args, body
-            
-            target_name, value = setter
-            setters[target_name] = value
-            body.pop(0)
-    
-    def _next_ifnone_setter(self, arg_names, body):
-        if not body:
-            return None
-        
-        statement = body[0]
-        
-        if not isinstance(statement, _nodes.IfElse):
-            return None
-        
-        condition = statement.condition
-        if (
-                not isinstance(condition, _nodes.BinaryOperation) or
-                not isinstance(condition.left, _nodes.VariableReference) or
-                condition.operator != "is" or
-                not isinstance(condition.right, _nodes.NoneLiteral)
-            ):
-            return None
-        
-        target_name = condition.left.name
-        if target_name not in arg_names:
-            return None
-        
-        if statement.false_body or len(statement.true_body) != 1:
-            return None
-        
-        assignment, = statement.true_body
-        
-        if not isinstance(assignment, _nodes.Assignment) or len(assignment.targets) != 1:
-            return None
-        
-        target, = assignment.targets
-        
-        if not isinstance(target, _nodes.VariableReference) or target.name != target_name:
-            return None
-            
-        return target.name, assignment.value
-    
-
     def _arguments(self, node):
         defaults = self._mapped(node.defaults)
         for default in defaults:

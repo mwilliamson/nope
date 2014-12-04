@@ -61,18 +61,3 @@ def target_can_be_supertype_of_return_type_of_enter_method():
     
     type_bindings = {"x": context_manager_class(types.int_type), "y": types.any_type}
     assert_statement_type_checks(node, type_bindings=type_bindings)
-
-
-@istest
-def target_cannot_be_strict_subtype_of_return_type_of_enter_method():
-    target_node = nodes.ref("y")
-    node = nodes.with_statement(nodes.ref("x"), target_node, [])
-    
-    type_bindings = {"x": context_manager_class(types.any_type), "y": types.int_type}
-    try:
-        update_context(node, type_bindings=type_bindings)
-        assert False, "Expected error"
-    except errors.UnexpectedTargetTypeError as error:
-        assert_equal(target_node, error.node)
-        assert_equal(types.any_type, error.value_type)
-        assert_equal(types.int_type, error.target_type)

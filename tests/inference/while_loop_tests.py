@@ -1,6 +1,6 @@
 from nose.tools import istest, assert_equal
 
-from nope import nodes, errors
+from nope import nodes, errors, types
 
 from .util import assert_statement_is_type_checked, update_context
 
@@ -32,3 +32,14 @@ def while_loop_has_else_body_type_checked():
         lambda bad_statement:
             nodes.while_loop(nodes.boolean(True), [], [bad_statement])
     )
+
+
+@istest
+def after_while_loop_variables_could_have_previous_type_or_assigned_type():
+    node = nodes.while_loop(nodes.boolean(True),
+        [nodes.assign([nodes.ref("x")], nodes.none())],
+        [nodes.assign([nodes.ref("x")], nodes.none())],
+    )
+    type_bindings = {"x": types.int_type}
+    context = update_context(node, type_bindings=type_bindings)
+    assert_equal(types.common_super_type([types.int_type, types.none_type]), context.lookup_name("x"))

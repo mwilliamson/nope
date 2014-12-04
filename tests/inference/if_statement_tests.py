@@ -53,11 +53,11 @@ def assignment_in_both_branches_of_if_statement_is_added_to_context():
 
 
 @istest
-def type_of_variable_uses_type_of_first_assignment():
+def type_of_variable_is_common_super_type_of_variables_in_both_branches():
     node = nodes.if_else(
         nodes.int(1),
-        [nodes.assign("x", nodes.ref("y"))],
+        [nodes.assign("x", nodes.int_literal(42))],
         [nodes.assign("x", nodes.string("blah"))],
     )
-    context = update_context(node, type_bindings={"y": types.object_type})
+    context = update_context(node)
     assert_equal(types.object_type, context.lookup_name("x"))

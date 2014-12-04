@@ -96,7 +96,7 @@ FunctionDef = _create_node("FunctionDef", ["name", "args", "body"])
 FunctionSignature = _create_node("FunctionSignature", ["type_params", "args", "returns"])
 SignatureArgument = _create_node("SignatureArgument", ["name", "type", "optional"])
 Arguments = _create_node("Arguments", ["args"])
-Argument = _create_node("Argument", ["name", "optional", "if_none"])
+Argument = _create_node("Argument", ["name", "optional"])
 
 ClassDefinition = _create_node("ClassDefinition", ["name", "body", "base_classes"])
 
@@ -240,8 +240,8 @@ def signature_arg(name, type_=None, optional=False):
 
 args = arguments = Arguments
 
-def argument(name, optional=False, if_none=None):
-    return Argument(name, optional=optional, if_none=if_none)
+def argument(name, optional=False):
+    return Argument(name, optional=optional)
 
 arg = argument
 
