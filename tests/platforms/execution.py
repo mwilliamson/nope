@@ -54,6 +54,31 @@ f([42, 45])
         self._test_program_string(program, b"[42, 45]\n")
         
     @istest
+    def function_call_with_default_value(self):
+        program = """
+#:: x: int, ?y: str -> none
+def f(x, y=None):
+    print(x)
+    print(y)
+
+f(42)
+"""
+        self._test_program_string(program, b"42\nNone\n")
+        
+    @istest
+    def function_definition_with_if_none_assignment(self):
+        program = """
+#:: int | none -> int
+def f(x):
+    if x is None:
+        x = 42
+    return x
+
+print(f(42))
+"""
+        self._test_program_string(program, b"42\n")
+        
+    @istest
     def fib_program_prints_result_to_stdout(self):
         result = self._run_program(path=program_path("valid/fib.py"), program="fib")
         assert_equal(b"55\n", result.output)
