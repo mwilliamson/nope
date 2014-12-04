@@ -437,6 +437,9 @@ def is_sub_type(super_type, sub_type, unify=None):
         
         if sub_type == bottom_type:
             return True
+        
+        if super_type == any_meta_type and is_meta_type(sub_type):
+            return True
             
         if isinstance(super_type, _FormalParameter) and super_type in unify:
             constraints.constrain_type_param_to_super_type(super_type, sub_type)
@@ -572,6 +575,7 @@ def is_meta_type(type_):
 
 
 any_type = object_type = scalar_type("object")
+any_meta_type = scalar_type("type")
 
 bottom_type = scalar_type("bottom")
 
