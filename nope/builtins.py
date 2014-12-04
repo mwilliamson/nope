@@ -32,7 +32,7 @@ _builtin_types = {
         types.iterable(types.tuple_type(T1, T2))
     )),
     
-    "isinstance": types.func(types.object_type, types.any_meta_type),
+    "isinstance": types.func([types.object_type], types.any_meta_type),
 }
 
 
