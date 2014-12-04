@@ -55,7 +55,7 @@ class ClassBuilderTransform(zuice.Base):
             assert isinstance(attribute_node, nodes.StringLiteral)
             explicit_type = nodes.explicit_type_of(attribute_node)
             if explicit_type is None:
-                raise Exception("fields of collections.namedtuple must have explicit type")
+                raise Exception("fields of {}.{} must have explicit type".format(self._module_name, self._func_name))
             return attribute_node.value, explicit_type
         
         attributes = list(map(_read_attribute, attribute_list.elements))
