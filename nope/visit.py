@@ -43,7 +43,7 @@ class Visitor(object):
             nodes.Arguments: self._visit_arguments,
             nodes.FunctionSignature: self._visit_function_signature,
             nodes.SignatureArgument: self._visit_signature_argument,
-            nodes.Argument: self._visit_nothing,
+            nodes.Argument: self._visit_argument,
             nodes.ClassDefinition: self._visit_class_definition,
             
             nodes.Import: self._visit_nothing,
@@ -255,6 +255,9 @@ class Visitor(object):
     
     def _visit_signature_argument(self, node, *args):
         return nodes.signature_arg(node.name, self.visit(node.type, *args), optional=node.optional)
+    
+    def _visit_argument(self, node, *args):
+        return nodes.arg(node.name, optional=node.optional, if_none=self.visit(node.if_none, *args))
     
     def _visit_class_definition(self, node, *args):
         base_classes = self._visit_all(node.base_classes, *args)

@@ -352,6 +352,21 @@ def function_definitions_assignments_shadow_variables_of_same_name_in_outer_scop
     
     references = resolve(node, declarations)
     assert_is_not(declarations.declaration("x"), references.referenced_declaration(ref))
+
+
+@istest
+def function_definition_if_none_expression_is_resolved_in_body_context():
+    first_arg = nodes.argument("x")
+    ref = nodes.ref("x")
+    second_arg = nodes.argument("y", if_none=ref)
+    args = nodes.arguments([first_arg, second_arg])
+    node = nodes.func("f", args, [])
+    
+    declarations = _create_declarations(["x", "f"])
+    
+    references = resolve(node, declarations)
+    assert_is(references.referenced_declaration(first_arg), references.referenced_declaration(ref))
+    assert_is_not(declarations.declaration("x"), references.referenced_declaration(ref))
     
 
 @istest

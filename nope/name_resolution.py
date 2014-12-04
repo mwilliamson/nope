@@ -64,7 +64,9 @@ def _resolve_function_def(visitor, node, context):
     context.add_reference(node, node.name)
     
     body_context = context.enter_function(node)
+    
     for arg in node.args.args:
+        visitor.visit(arg, body_context)
         body_context.add_reference(arg, arg.name)
     
     for statement in node.body:
