@@ -24,14 +24,15 @@ class CheckCommand(object):
     
     @staticmethod
     def create_parser(parser):
-        parser.add_argument("path")
+        parser.add_argument("path", nargs="+")
     
     @staticmethod
     def execute(args):
-        result = nope.check(args.path)
-        if not result.is_valid:
-            _print_error(result.error)
-            return 1
+        for path in args.path:
+            result = nope.check(path)
+            if not result.is_valid:
+                _print_error(result.error)
+                return 1
 
 
 class CompileCommand(object):
