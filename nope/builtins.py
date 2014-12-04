@@ -60,7 +60,14 @@ def module_bindings(references):
 
 builtin_modules = {
     "cgi": BuiltinModule("cgi", types.module("cgi", [
-        types.attr("escape", types.func([types.str_type, types.func_arg("quote", types.boolean_type)], types.str_type), read_only=True)
+        types.attr(
+            "escape",
+            types.func(
+                [types.str_type, types.func_arg("quote", types.boolean_type, optional=True)],
+                types.str_type
+            ),
+            read_only=True
+        )
     ])),
     "collections": BuiltinModule("collections", types.module("collections", [
     ])),
