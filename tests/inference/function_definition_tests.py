@@ -1,4 +1,4 @@
-from nose.tools import istest, assert_equal
+from nose.tools import istest, assert_equal, assert_is
 
 from nope import types, nodes, errors
 
@@ -171,7 +171,7 @@ def argument_type_in_body_is_unioned_with_if_none_expression_type():
 
 
 @istest
-def default_expression_uses_type_of_arg_without_none_as_hint():
+def if_none_expression_uses_type_of_arg_without_none_as_hint():
     arg_type = nodes.type_union([nodes.type_apply(nodes.ref("list"), [nodes.ref("int")]), nodes.ref("none")])
     signature = nodes.signature(
         args=[nodes.signature_arg(arg_type)],
@@ -181,6 +181,29 @@ def default_expression_uses_type_of_arg_without_none_as_hint():
     body = [nodes.ret(nodes.ref("x"))]
     node = nodes.typed(signature, nodes.func("f", args, body))
     _infer_func_type(node)
+
+
+@istest
+def if_none_expressions_are_evaluated_in_function_body_context_before_args_are_added():
+    signature = nodes.signature(
+        args=[
+            nodes.signature_arg(nodes.ref("int")),
+            nodes.signature_arg(nodes.ref("int"))
+        ],
+        returns=nodes.ref("int")
+    )
+    ref_node = nodes.ref("a")
+    args = nodes.arguments([
+        nodes.arg("a"),
+        nodes.arg("b", if_none=ref_node),
+    ])
+    body = [nodes.ret(nodes.ref("a"))]
+    node = nodes.typed(signature, nodes.func("f", args, body))
+    try:
+        _infer_func_type(node)
+        assert False, "Expected error"
+    except errors.UnboundLocalError as error:
+        assert_is(ref_node, error.node)
 
 
 @istest

@@ -83,21 +83,12 @@ class StatementTypeChecker(object):
         
         body_context = context.enter_func(return_type)
         
-        for arg, formal_arg in zip(node.args.args, func_type.args):
-            if arg.optional:
-                formal_arg_type = types.union(formal_arg.type, types.none_type)
-            else:
-                formal_arg_type = formal_arg.type
+        body_arg_types = [
+            self._infer_function_def_arg_type(arg, formal_arg, body_context)
+            for arg, formal_arg in zip(node.args.args, func_type.args)
+        ]
             
-            if arg.if_none is None:
-                body_arg_type = formal_arg_type
-            else:
-                narrowed_type = types.remove(formal_arg_type, types.none_type)
-                body_arg_type = types.union(
-                    narrowed_type,
-                    self._infer(arg.if_none, None, hint=narrowed_type)
-                )
-            
+        for arg, body_arg_type in zip(node.args.args, body_arg_types):
             body_context.update_type(arg, body_arg_type)
         
         for statement in node.body:
@@ -109,7 +100,21 @@ class StatementTypeChecker(object):
             raise errors.MissingReturnError(node, return_type)
         
         context.update_type(node, func_type)
+    
+    def _infer_function_def_arg_type(self, arg, formal_arg, context):
+        if arg.optional:
+            formal_arg_type = types.union(formal_arg.type, types.none_type)
+        else:
+            formal_arg_type = formal_arg.type
         
+        if arg.if_none is None:
+            return formal_arg_type
+        else:
+            narrowed_type = types.remove(formal_arg_type, types.none_type)
+            return types.union(
+                narrowed_type,
+                self._infer(arg.if_none, context, hint=narrowed_type)
+            )
     
     def _check_class_definition(self, node, context):
         base_classes = [
