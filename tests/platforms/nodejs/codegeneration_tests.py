@@ -767,6 +767,20 @@ def test_transform_call_with_optional_positional_argument():
 
 
 @istest
+def test_transform_call_magic_method():
+    func_node = nodes.ref("str")
+    type_lookup = types.TypeLookup(IdentityDict([
+        (func_node, types.str_meta_type)
+    ]))
+    
+    _assert_transform(
+        nodes.call(func_node, [nodes.ref("x")]),
+        """$nope.builtins.getattr(str, "__call__")(x);""",
+        type_lookup=type_lookup,
+    )
+
+
+@istest
 def test_transform_property_access():
     _assert_transform(
         nodes.attr(nodes.ref("x"), "y"),

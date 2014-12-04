@@ -6,6 +6,10 @@ function isString(value) {
     return Object.prototype.toString.call(value) == "[object String]";
 }
 
+function isFunction(value) {
+    return Object.prototype.toString.call(value) == "[object Function]";
+}
+
 function getattr(value, propertyName) {
     var methods = builtinMethods[Object.prototype.toString.call(value)];
     if (methods) {
@@ -15,6 +19,8 @@ function getattr(value, propertyName) {
         } else {
             return method.bind(value);
         }
+    } else if (!(propertyName in value) && propertyName === "__call__" && isFunction(value)) {
+        return value;
     } else {
         // TODO: bind this if the property is a function
         return value[propertyName];
