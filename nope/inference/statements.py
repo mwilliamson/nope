@@ -280,7 +280,7 @@ class StatementTypeChecker(object):
     def _check_if_else(self, node, context):
         self._infer(node.condition, context)
         
-        variable_node, true_type, false_type = self._extract_type_condition(node.condition, context)
+        variable_node, true_type, false_type = self._extract_variable_type_in_branches(node.condition, context)
         
         def before_true(true_context):
             if variable_node is not None:
@@ -298,14 +298,39 @@ class StatementTypeChecker(object):
             context,
         )
     
-    def _extract_type_condition(self, condition, context):
-        if not self._is_is_none_expression(condition) or not isinstance(condition.left, nodes.VariableReference):
+    def _extract_variable_type_in_branches(self, condition, context):
+        if self._is_boolean_negation(condition):
+            ref, false_type, true_type = self._extract_variable_type_in_branches(condition.operand, context)
+            return ref, true_type, false_type
+            
+        ref, true_branch_type = self._extract_type_condition(condition)
+        if ref is None:
             return None, None, None
         
-        ref = condition.left
         current_type = context.lookup(ref)
+        return condition.left, true_branch_type, types.remove(current_type, true_branch_type)
+    
+    
+    def _extract_type_condition(self, condition):
+        ref = self._extract_variable_name_from_is_none_condition(condition)
+        if ref is not None:
+            return ref, types.none_type
         
-        return condition.left, types.none_type, types.remove(current_type, types.none_type)
+        return None, None
+    
+    
+    def _is_boolean_negation(self, expression):
+        return isinstance(expression, nodes.UnaryOperation) and expression.operator == "bool_not"
+    
+    
+    def _extract_variable_name_from_is_none_condition(self, condition):
+        if not self._is_is_none_expression(condition):
+            return None
+            
+        if not isinstance(condition.left, nodes.VariableReference):
+            return None
+        
+        return condition.left
     
     def _is_is_none_expression(self, expression):
         return (

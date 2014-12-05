@@ -74,3 +74,16 @@ def type_of_variable_is_narrowed_if_reassigned_in_if_body_with_is_none_condition
         "x": types.union(types.none_type, types.int_type)
     })
     assert_equal(types.int_type, context.lookup_name("x"))
+
+
+@istest
+def type_of_variable_is_narrowed_if_reassigned_in_if_body_with_is_not_none_condition():
+    node = nodes.if_else(
+        nodes.bool_not(nodes.is_(nodes.ref("x"), nodes.none())),
+        [nodes.assign("x", nodes.string("blah"))],
+        [],
+    )
+    context = update_context(node, type_bindings={
+        "x": types.union(types.none_type, types.int_type)
+    })
+    assert_equal(types.union(types.str_type, types.none_type), context.lookup_name("x"))
