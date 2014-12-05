@@ -60,7 +60,7 @@ def type_of_variable_is_common_super_type_of_variables_in_both_branches():
         [nodes.assign("x", nodes.string("blah"))],
     )
     context = update_context(node)
-    assert_equal(types.object_type, context.lookup_name("x"))
+    assert_equal(types.union(types.int_type, types.str_type), context.lookup_name("x"))
 
 
 @istest

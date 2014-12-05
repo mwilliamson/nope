@@ -345,10 +345,10 @@ class _UnionTypeBase(object):
     def __eq__(self, other):
         if not isinstance(other, _UnionTypeBase):
             return False
-        return (self._union_type_name, self._types) == (other._union_type_name, other._types)
+        return (self._union_type_name, frozenset(self._types)) == (other._union_type_name, frozenset(other._types))
     
     def __hash__(self):
-        return hash((self._union_type_name, self._types))
+        return hash((self._union_type_name, frozenset(self._types)))
     
     def __neq__(self, other):
         return not (self == other)
@@ -592,7 +592,7 @@ def common_super_type(types):
     )
     
     if super_type is None:
-        return object_type
+        return union(*types)
     else:
         return super_type
 

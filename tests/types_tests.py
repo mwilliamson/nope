@@ -286,7 +286,7 @@ class SubTypeTests(object):
             generic_class(first_scalar_type, second_scalar_type),
             unify=[covariant_type_param]
         )
-        assert_equal(types.object_type, type_map[covariant_type_param])
+        assert_equal(types.union(first_scalar_type, second_scalar_type), type_map[covariant_type_param])
     
     @istest
     def contravariant_type_parameter_is_substituted_with_common_sub_type_of_actual_type_params(self):
@@ -396,6 +396,13 @@ class CommonSuperTypeTests(object):
             types.attr("a", types.int_type),
         ])
         assert_equal(second_type, types.common_super_type([first_type, second_type]))
+        
+    @istest
+    def common_super_type_of_unrelated_types_is_union_of_those_types(self):
+        assert_equal(
+            types.union(types.int_type, types.str_type),
+            types.common_super_type([types.int_type, types.str_type]),
+        )
         
 
 @istest
