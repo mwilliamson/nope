@@ -1,6 +1,6 @@
 import os
 
-from .. import nodes, types, returns, errors, branches
+from .. import nodes, types, returns, errors, branches, builtins
 from . import ephemeral
 from .assignment import Assignment
 
@@ -243,7 +243,7 @@ class StatementTypeChecker(object):
         assignment.assign(node, target, value_type, context)
     
     def _check_ref(self, target, value_type, context):
-        if self._is_package() and context.is_module_scope:
+        if context.is_module_scope and self._is_package():
             self._check_for_package_value_and_module_name_clashes(target, value_type)
 
     def _is_package(self):
@@ -303,24 +303,24 @@ class StatementTypeChecker(object):
             ref, false_type, true_type = self._extract_variable_type_in_branches(condition.operand, context)
             return ref, true_type, false_type
             
-        ref, true_branch_type = self._extract_type_condition(condition)
+        ref, true_branch_type = self._extract_type_condition(condition, context)
         if ref is None:
             return None, None, None
         
         current_type = context.lookup(ref)
-        return condition.left, true_branch_type, types.remove(current_type, true_branch_type)
-    
-    
-    def _extract_type_condition(self, condition):
-        ref = self._extract_variable_name_from_is_none_condition(condition)
-        if ref is not None:
-            return ref, types.none_type
-        
-        return None, None
+        return ref, true_branch_type, types.remove(current_type, true_branch_type)
     
     
     def _is_boolean_negation(self, expression):
         return isinstance(expression, nodes.UnaryOperation) and expression.operator == "bool_not"
+    
+    
+    def _extract_type_condition(self, condition, context):
+        ref = self._extract_variable_name_from_is_none_condition(condition)
+        if ref is not None:
+            return ref, types.none_type
+        
+        return self._extract_isinstance_type_condition(condition, context)
     
     
     def _extract_variable_name_from_is_none_condition(self, condition):
@@ -338,6 +338,20 @@ class StatementTypeChecker(object):
             expression.operator == "is" and
             isinstance(expression.right, nodes.NoneLiteral)
         )
+
+
+    def _extract_isinstance_type_condition(self, condition, context):
+        if self._is_isinstance_call(condition, context):
+            return condition.args[0], context.lookup(condition.args[1]).type
+        else:
+            return None, None
+
+    def _is_isinstance_call(self, condition, context):
+        if not isinstance(condition, nodes.Call):
+            return False
+        
+        isinstance_declaration = builtins.declarations().declaration("isinstance")
+        return context.referenced_declaration(condition.func) == isinstance_declaration
 
     def _check_while_loop(self, node, context):
         self._infer(node.condition, context)

@@ -1,6 +1,8 @@
 from nose.tools import istest, assert_equal
 
-from nope import types, nodes, errors
+from nope import types, nodes, errors, inference, builtins, name_declaration
+from nope.context import Context
+from nope.name_resolution import References
 
 from .util import (
     assert_statement_is_type_checked,
@@ -87,3 +89,38 @@ def type_of_variable_is_narrowed_if_reassigned_in_if_body_with_is_not_none_condi
         "x": types.union(types.none_type, types.int_type)
     })
     assert_equal(types.union(types.str_type, types.none_type), context.lookup_name("x"))
+
+
+@istest
+def type_of_variable_is_narrowed_if_reassigned_in_if_body_with_isinstance_condition():
+    isinstance_ref = nodes.ref("isinstance")
+    variable_in_condition_ref = nodes.ref("x")
+    variable_in_assignment_ref = nodes.ref("x")
+    str_type_ref = nodes.ref("str")
+    variable_declaration = name_declaration.VariableDeclarationNode("x")
+    
+    node = nodes.if_else(
+        nodes.call(isinstance_ref, [variable_in_condition_ref, str_type_ref]),
+        [nodes.assign([variable_in_assignment_ref], nodes.int_literal(42))],
+        [],
+    )
+    type_checker = inference._TypeCheckerForModule(
+        declaration_finder=None,
+        name_resolver=None,
+        module_exports=None,
+        module_resolver=None,
+        module_types=None,
+        module=None,
+    )
+    builtin_declarations = builtins.declarations()
+    
+    references = References([
+        (isinstance_ref, builtin_declarations.declaration("isinstance")),
+        (str_type_ref, builtin_declarations.declaration("str")),
+        (variable_in_condition_ref, variable_declaration),
+        (variable_in_assignment_ref, variable_declaration),
+    ])
+    context = builtins.module_context(references).enter_func(types.none_type)
+    context.update_type(variable_in_condition_ref, types.union(types.str_type, types.none_type))
+    type_checker.update_context(node, context)
+    assert_equal(types.union(types.int_type, types.none_type), context.lookup_declaration(variable_declaration))
