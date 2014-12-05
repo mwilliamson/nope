@@ -163,13 +163,13 @@ class _BindingChecker(object):
     def _update_branch(self, visitor, branch, context):
         branch_context = context.enter_branch()
         
-        for before in branch.before:
-            before(branch_context)
+        if branch.before is not None:
+            branch.before(branch_context)
         
         self._update_statements(visitor, branch.statements, branch_context)
         
-        for after in branch.after:
-            after(branch_context)
+        if branch.after is not None:
+            branch.after(branch_context)
         
         return branch_context
 

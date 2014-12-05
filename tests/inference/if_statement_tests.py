@@ -61,3 +61,16 @@ def type_of_variable_is_common_super_type_of_variables_in_both_branches():
     )
     context = update_context(node)
     assert_equal(types.object_type, context.lookup_name("x"))
+
+
+@istest
+def type_of_variable_is_narrowed_if_reassigned_in_if_body_with_is_none_condition():
+    node = nodes.if_else(
+        nodes.is_(nodes.ref("x"), nodes.none()),
+        [nodes.assign("x", nodes.int_literal(42))],
+        [],
+    )
+    context = update_context(node, type_bindings={
+        "x": types.union(types.none_type, types.int_type)
+    })
+    assert_equal(types.int_type, context.lookup_name("x"))

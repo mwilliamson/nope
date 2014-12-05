@@ -64,9 +64,8 @@ def f(x, y=None):
 f(42)
 """
         self._test_program_string(program, b"42\nNone\n")
-    
-    # TODO: re-enable after fixing regression
-    #~ @istest
+        
+    @istest
     def function_definition_with_if_none_assignment(self):
         program = """
 #:: int | none -> int

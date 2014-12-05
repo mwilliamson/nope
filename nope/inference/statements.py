@@ -269,18 +269,49 @@ class StatementTypeChecker(object):
     
     def _check_branch(self, branch, context):
         branch_context = context.enter_statement()
-        for before in branch.before:
-            before(branch_context)
+        if branch.before is not None:
+            branch.before(branch_context)
         self._check_list(branch.statements, branch_context)
+        if branch.after is not None:
+            branch.after(branch_context)
         return branch_context
     
     
     def _check_if_else(self, node, context):
         self._infer(node.condition, context)
         
+        variable_node, true_type, false_type = self._extract_type_condition(node.condition, context)
+        
+        def before_true(true_context):
+            if variable_node is not None:
+                true_context.update_type(variable_node, true_type)
+            
+        def before_false(false_context):
+            if variable_node is not None:
+                false_context.update_type(variable_node, false_type)
+        
         self._check_branches(
-            branches.if_else(node),
+            branches.if_else(node,
+                before_true=before_true,
+                before_false=before_false,
+            ),
             context,
+        )
+    
+    def _extract_type_condition(self, condition, context):
+        if not self._is_is_none_expression(condition) or not isinstance(condition.left, nodes.VariableReference):
+            return None, None, None
+        
+        ref = condition.left
+        current_type = context.lookup(ref)
+        
+        return condition.left, types.none_type, types.remove(current_type, types.none_type)
+    
+    def _is_is_none_expression(self, expression):
+        return (
+            isinstance(expression, nodes.BinaryOperation) and
+            expression.operator == "is" and
+            isinstance(expression.right, nodes.NoneLiteral)
         )
 
     def _check_while_loop(self, node, context):
