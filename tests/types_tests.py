@@ -370,6 +370,32 @@ class SubTypeTests(object):
     @istest
     def any_meta_type_is_not_super_type_of_non_meta_types(self):
         assert not types.is_sub_type(types.any_meta_type, types.int_type)
+
+
+@istest
+class CommonSuperTypeTests(object):
+    @istest
+    def common_super_type_of_one_type_is_same_type(self):
+        assert_equal(types.none_type, types.common_super_type([types.none_type]))
+        
+    @istest
+    def common_super_type_of_zero_types_is_bottom_type(self):
+        assert_equal(types.bottom_type, types.common_super_type([]))
+        
+    @istest
+    def common_super_type_of_types_is_object_if_any_type_is_object(self):
+        assert_equal(types.object_type, types.common_super_type([types.int_type, types.object_type]))
+        
+    @istest
+    def common_super_type_of_types_is_passed_type_that_is_super_type_of_all_other_types(self):
+        first_type = types.structural_type("first", [
+            types.attr("a", types.int_type),
+            types.attr("b", types.str_type),
+        ])
+        second_type = types.structural_type("second", [
+            types.attr("a", types.int_type),
+        ])
+        assert_equal(second_type, types.common_super_type([first_type, second_type]))
         
 
 @istest

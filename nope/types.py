@@ -583,13 +583,24 @@ def common_super_type(types):
     if len(types) == 0:
         return bottom_type
     
-    first_type = next(iter(types))
+    super_type = _find(
+        lambda possible_super_type: all(
+            is_sub_type(possible_super_type, type_)
+            for type_ in types
+        ),
+        types,
+    )
     
-    for type_ in types:
-        if not is_sub_type(first_type, type_):
-            return object_type
-    
-    return first_type
+    if super_type is None:
+        return object_type
+    else:
+        return super_type
+
+
+def _find(predicate, iterable):
+    for value in iterable:
+        if predicate(value):
+            return value
 
 
 def common_sub_type(types):
