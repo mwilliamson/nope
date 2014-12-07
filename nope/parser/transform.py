@@ -104,11 +104,16 @@ class Converter(object):
         self._node_builders.append(self._nodes)
         try:
             signature = self._comment_seeker.consume_explicit_type(lineno, col_offset)
+            type_definition = self._comment_seeker.consume_type_definition(lineno, col_offset)
             
             nope_node = self._converters[type(node)](node)
             
             if signature is not None:
                 nope_node = self._nodes.typed(signature, nope_node)
+            
+            if type_definition is not None:
+                assert nope_node == self._nodes.assign([self._nodes.ref(type_definition.name)], self._nodes.none())
+                nope_node = type_definition
             
             if allowed is not None and not isinstance(nope_node, allowed):
                 raise SyntaxError("{} node is not supported in current context".format(type(nope_node).__name__))
@@ -484,27 +489,14 @@ class Converter(object):
         assert not node.ifs
         return self._nodes.comprehension(self.convert(node.target), self.convert(node.iter))
 
-
-    def _statements(self, nodes, allowed=None):
-        return list(self._statements_generator(nodes, allowed=allowed))
-
-    def _statements_generator(self, nodes, allowed=None):
-        statements = self._mapped(nodes, allowed=allowed)
-        for statement in statements:
-            lineno = statement.location.lineno
-            col_offset = statement.location.offset
-            
-            for type_statement in self._comment_seeker.consume_type_statements(lineno, col_offset):
-                yield type_statement
-            
-            yield statement
-
     def _mapped(self, nodes, allowed=None):
         return list(filter(None, (
             self.convert(node, allowed=allowed)
             for node in nodes
             if not isinstance(node, ast.Pass)
         )))
+    
+    _statements = _mapped
     
     def _convert_or_none_node(self, node):
         return self._convert_or_default(node, self._nodes.none)

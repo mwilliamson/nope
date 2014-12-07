@@ -3,7 +3,7 @@ import io
 from nose.tools import istest, assert_equal
 
 from nope import nodes
-from nope.parser.typing import parse_explicit_type, parse_type_statements
+from nope.parser.typing import parse_explicit_type, parse_type_comments
 
 
 @istest
@@ -123,7 +123,9 @@ x = 1
         "Identifier",
         nodes.type_union([nodes.ref("int"), nodes.ref("str")])
     )
+    
+    _, type_definitions = parse_type_comments(io.StringIO(source))
     assert_equal(
-        {(3, 0): [expected_node]},
-        parse_type_statements(io.StringIO(source))
+        {(3, 0): ((2, 0), expected_node)},
+        type_definitions
     )

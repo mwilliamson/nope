@@ -1,6 +1,5 @@
 import tokenize
 import token
-import ast
 
 from funcparserlib.lexer import make_tokenizer
 from funcparserlib.parser import (some, many, maybe, finished, forward_decl, skip)
@@ -8,64 +7,39 @@ from funcparserlib.parser import (some, many, maybe, finished, forward_decl, ski
 from .. import nodes
 
 
-def parse_type_statements(source):
-    type_statements = sorted(_type_statements(source), key=lambda item: item[0], reverse=True)
+def parse_type_comments(source):
+    explicit_types = {}
+    type_definitions = {}
     
-    result = {}
+    for attached_node_position, (position, prefix, type_comment) in _type_comments(source):
+        if prefix == "#:type":
+            type_definitions[attached_node_position] = position, type_comment
+        else:
+            explicit_types[attached_node_position] = position, type_comment
     
-    def consume_type_statements_before_node(node):
-        while type_statements and type_statements[-1][0] < (node.lineno, node.col_offset):
-            yield type_statements.pop()[1]
-    
-    class _TypeStatementVisitor(ast.NodeVisitor):
-        def generic_visit(self, node):
-            if hasattr(node, "lineno"):
-                statements = list(consume_type_statements_before_node(node))
-                if statements:
-                    result[(node.lineno, node.col_offset)] = statements
-            ast.NodeVisitor.generic_visit(self, node)
-            
-            
-    _TypeStatementVisitor().visit(ast.parse(source.getvalue()))
-    
-    return result
+    return explicit_types, type_definitions
     
 
 
-_type_statement_prefix = "#:type"
-
-def _type_statements(source):
+def _type_comments(source):
     tokens = tokenize.generate_tokens(source.readline)
+    last_type_comment = None
     
     for token_type, token_str, position, _, _ in tokens:
-        if _is_semantic_comment(_type_statement_prefix, token_type, token_str):
-            yield position, _parse_type_definition(token_str[len(_type_statement_prefix):].strip())
-    
-
-def parse_explicit_types(source):
-    return dict(_explicit_types(source))
-
-
-_comment_prefix = "#::"
-
-def _explicit_types(source):
-    tokens = tokenize.generate_tokens(source.readline)
-    last_explicit_type = None
-    
-    for token_type, token_str, position, _, _ in tokens:
-        if _is_signature_comment(token_type, token_str):
-            last_explicit_type = position, parse_explicit_type(token_str[len(_comment_prefix):].strip())
-        elif last_explicit_type is not None and _is_part_of_node(token_type):
-            yield position, last_explicit_type
-            last_explicit_type = None
+        semantic_comment = _extract_semantic_comment(token_type, token_str)
+        if semantic_comment is not None:
+            prefix, parser = semantic_comment
+            last_type_comment = position, prefix, parser(token_str[len(prefix):].strip())
+        elif last_type_comment is not None and _is_part_of_node(token_type):
+            yield position, last_type_comment
+            last_type_comment = None
 
 
-def _is_signature_comment(token_type, token_str):
-    return _is_semantic_comment(_comment_prefix, token_type, token_str)
-
-
-def _is_semantic_comment(prefix, token_type, token_str):
-    return token_type == tokenize.COMMENT and token_str.startswith(prefix)
+def _extract_semantic_comment(token_type, token_str):
+    if token_type == tokenize.COMMENT:
+        for prefix, parser in _type_comment_parsers.items():
+            if token_str.startswith(prefix):
+                return prefix, parser
 
 
 def _is_part_of_node(token_type):
@@ -192,3 +166,8 @@ def _tokenize_type_string(sig_str):
     tokenizer = make_tokenizer(specs)
     return [token for token in tokenizer(sig_str) if token.type not in ignore]
 
+
+_type_comment_parsers = {
+    "#:type": _parse_type_definition,
+    "#::": parse_explicit_type,
+}

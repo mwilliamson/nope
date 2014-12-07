@@ -747,24 +747,8 @@ def test_error_if_signature_is_not_consumed():
 @istest
 def test_type_definitions_can_appear_between_statements():
     source = """
-x = 1
 #:type Identifier = int | str
-x = 2
-"""
-    module_node = parser.parse(source)
-    expected_node = nodes.TypeDefinition(
-        "Identifier",
-        nodes.type_union([nodes.ref("int"), nodes.ref("str")])
-    )
-    assert_equal(expected_node, module_node.body[1])
-
-
-@istest
-def test_type_definitions_do_not_appear_before_first_nested_statement_of_next_statement():
-    source = """
-#:type Identifier = int | str
-if x:
-    y = 2
+Identifier = None
 """
     module_node = parser.parse(source)
     expected_node = nodes.TypeDefinition(
@@ -772,6 +756,7 @@ if x:
         nodes.type_union([nodes.ref("int"), nodes.ref("str")])
     )
     assert_equal(expected_node, module_node.body[0])
+    assert_equal(1, len(module_node.body))
 
 
 def _assert_expression_parse(expected, source):

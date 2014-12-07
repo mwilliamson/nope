@@ -702,6 +702,7 @@ except:
     def type_definition_using_type_union(self):
         program = """
 #:type Identifier = int | str
+Identifier = None
 
 #:: Identifier -> none
 def f(x):

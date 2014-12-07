@@ -2,13 +2,12 @@ import ast
 import io
 
 from . import transform
-from .typing import parse_explicit_types, parse_type_statements
+from .typing import parse_type_comments
 
 
 def parse(source, filename=None):
     try:
-        explicit_types = parse_explicit_types(io.StringIO(source))
-        type_statements = parse_type_statements(io.StringIO(source))
+        explicit_types, type_statements = parse_type_comments(io.StringIO(source))
         comment_seeker = CommentSeeker(explicit_types, type_statements)
         
         python_ast = ast.parse(source)
@@ -28,9 +27,9 @@ class CommentSeeker(object):
     def __init__(self, explicit_types, type_statements):
         self._explicit_types = explicit_types
         self._type_statements = type_statements
-
+    
     def consume_explicit_type(self, lineno, col_offset):
         return self._explicit_types.pop((lineno, col_offset), (None, None))[1]
     
-    def consume_type_statements(self, lineno, col_offset):
-        return self._type_statements.pop((lineno, col_offset), [])
+    def consume_type_definition(self, lineno, col_offset):
+        return self._type_statements.pop((lineno, col_offset), (None, None))[1]
