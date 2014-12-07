@@ -28,6 +28,7 @@ class NodeTransformer(zuice.Base):
             nodes.ExpressionStatement:self. _expression_statement,
             nodes.Assignment: self._assign,
             nodes.ClassDefinition: self._class_definition,
+            nodes.TypeDefinition: lambda *args, **kwargs: None,
             nodes.FunctionDef: self._function_def,
             nodes.ReturnStatement: self._return_statement,
             nodes.IfElse: self._if_else,
@@ -634,7 +635,7 @@ class NodeTransformer(zuice.Base):
 
 
     def _transform_all(self, nodes):
-        return list(map(self.transform, nodes))
+        return list(filter(None, map(self.transform, nodes)))
     
     
     def _type_of(self, node):

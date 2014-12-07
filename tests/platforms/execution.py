@@ -697,6 +697,20 @@ except:
     print("Exception handler")
 """
         self._test_program_string(program, b"Exception handler\n")
+        
+    @istest
+    def type_definition_using_type_union(self):
+        program = """
+#:type Identifier = int | str
+
+#:: Identifier -> none
+def f(x):
+    print(x)
+
+f(42)
+f("blah")
+"""
+        self._test_program_string(program, b"42\nblah\n")
     
     
     @istest
