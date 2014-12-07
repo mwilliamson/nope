@@ -107,6 +107,25 @@ def attributes_with_function_type_defined_in_class_definition_body_are_bound_to_
 
 
 @istest
+def self_argument_in_method_signature_can_be_explicit_name_of_class():
+    node = nodes.class_def("User", [
+        nodes.typed(
+            nodes.signature(
+                args=[nodes.signature_arg(nodes.ref("User"))],
+                returns=nodes.ref("bool")
+            ),
+            nodes.func(
+                name="is_person",
+                args=nodes.args([nodes.arg("self")]),
+                body=[nodes.ret(nodes.boolean(True))],
+            ),
+        )
+    ])
+    class_type = _infer_class_type(node, ["is_person"])
+    assert_equal(types.func([], types.boolean_type), class_type.attrs.type_of("is_person"))
+
+
+@istest
 def self_argument_in_method_signature_cannot_be_unrelated_type():
     func_node = nodes.typed(
         nodes.signature(

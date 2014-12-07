@@ -126,6 +126,7 @@ class StatementTypeChecker(object):
             class_declarations.declaration("Self"),
             meta_type
         )
+        context.update_type(node, meta_type)
         
         function_definitions = []
         assignments = []
@@ -183,7 +184,6 @@ class StatementTypeChecker(object):
             constructor_type = types.func([], class_type)
         
         meta_type.attrs.add("__call__", constructor_type, read_only=True)
-        context.update_type(node, meta_type)
     
     def _check_init_statement(self, node, statement, context, class_type):
         declarations_in_function = self._declaration_finder.declarations_in_function(node)
