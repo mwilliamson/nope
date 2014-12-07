@@ -219,6 +219,9 @@ def class_def(name, body, base_classes=None):
     return ClassDefinition(name, body, base_classes)
 
 
+type_definition = TypeDefinition
+
+
 def signature(*, type_params=None, args=None, returns=None):
     if type_params is None:
         type_params = []
