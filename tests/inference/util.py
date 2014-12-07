@@ -53,7 +53,7 @@ class SingleScopeReferences(object):
         self._references = references
     
     def referenced_declaration(self, node):
-        if isinstance(node, (nodes.VariableReference, nodes.Argument, nodes.FunctionDef, nodes.ClassDefinition)):
+        if isinstance(node, (nodes.VariableReference, nodes.Argument, nodes.FunctionDef, nodes.ClassDefinition, nodes.TypeDefinition)):
             name = node.name
         elif isinstance(node, nodes.ImportAlias):
             name = node.value_name

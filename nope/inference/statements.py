@@ -28,6 +28,7 @@ class StatementTypeChecker(object):
             nodes.WithStatement: self._check_with,
             nodes.FunctionDef: self._check_function_def,
             nodes.ClassDefinition: self._check_class_definition,
+            nodes.TypeDefinition: self._check_type_definition,
             nodes.Import: self._check_import,
             nodes.ImportFrom: self._check_import_from,
             list: self._check_list,
@@ -212,7 +213,11 @@ class StatementTypeChecker(object):
                 class_node,
                 receiver_type=formal_receiver_type,
             )
-
+    
+    
+    def _check_type_definition(self, node, context):
+        context.update_type(node, self._infer(node.value, context))
+    
 
     def _check_expression_statement(self, node, context):
         self._infer(node.value, context)
