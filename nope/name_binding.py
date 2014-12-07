@@ -26,6 +26,7 @@ class _BindingChecker(object):
         visitor.replace(nodes.FunctionDef, self._update_function_definition)
         visitor.before(nodes.Argument, self._update_argument)
         visitor.replace(nodes.ClassDefinition, self._update_class_definition)
+        visitor.after(nodes.TypeDefinition, self._update_type_definition)
         visitor.before(nodes.Import, self._update_import)
         visitor.before(nodes.ImportFrom, self._update_import)
         
@@ -145,6 +146,10 @@ class _BindingChecker(object):
         body_context = context.enter_new_namespace()
         for statement in node.body:
             visitor.visit(statement, body_context)
+    
+    
+    def _update_type_definition(self, visitor, node, context):
+        context.bind(node)
     
     
     def _update_import(self, visitor, node, context):

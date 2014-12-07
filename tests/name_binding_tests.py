@@ -572,6 +572,30 @@ def body_of_class_is_checked():
 
 
 @istest
+def type_name_is_definitely_bound_after_type_definition():
+    int_ref = nodes.ref("int")
+    str_ref = nodes.ref("str")
+    
+    int_declaration = name_declaration.VariableDeclarationNode("int")
+    str_declaration = name_declaration.VariableDeclarationNode("str")
+    
+    node = nodes.type_definition("Identifier", nodes.type_union([int_ref, str_ref]))
+    declaration = name_declaration.TypeDeclarationNode("Identifier")
+    
+    references = References([
+        (node, declaration),
+        (int_ref, int_declaration),
+        (str_ref, str_declaration),
+    ])
+    
+    bindings = _updated_bindings(node, references, is_definitely_bound={
+        int_declaration: True,
+        str_declaration: True,
+    })
+    assert_equal(True, bindings.is_definitely_bound(node))
+
+
+@istest
 def import_name_is_definitely_bound_after_import_statement():
     alias_node = nodes.import_alias("x.y", None)
     node = nodes.Import([alias_node])
