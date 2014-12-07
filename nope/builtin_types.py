@@ -98,11 +98,13 @@ list_type = generic_class("list", ["T"], lambda T: [
 list_meta_type = meta_type(list_type)
 
 dict_type = generic_class("dict", ["K", "V"], lambda K, V: [
+    attr("__eq__", func([object_type], boolean_type)),
     attr("__getitem__", func([K], V)),
     attr("__setitem__", func([K, V], none_type)),
     attr("__iter__", func([], iterator(K))),
     attr("get", func([K, V], V)),
     attr("items", func([], iterator(tuple_type(K, V)))),
+    attr("copy", func([], dict_type(K, V))),
 ])
 
 dict_meta_type = meta_type(dict_type)
