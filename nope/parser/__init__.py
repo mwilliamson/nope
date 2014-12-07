@@ -27,11 +27,10 @@ def parse(source, filename=None):
 class CommentSeeker(object):
     def __init__(self, explicit_types, type_statements):
         self._explicit_types = explicit_types
-        self._type_statements = sorted(type_statements.items(), key=lambda item: item[0], reverse=True)
+        self._type_statements = type_statements
 
     def consume_explicit_type(self, lineno, col_offset):
         return self._explicit_types.pop((lineno, col_offset), (None, None))[1]
     
-    def consume_type_statements_before(self, lineno, col_offset):
-        while self._type_statements and self._type_statements[-1][0] < (lineno, col_offset):
-            yield self._type_statements.pop()[1]
+    def consume_type_statements(self, lineno, col_offset):
+        return self._type_statements.pop((lineno, col_offset), [])

@@ -759,6 +759,21 @@ x = 2
     assert_equal(expected_node, module_node.body[1])
 
 
+@istest
+def test_type_definitions_do_not_appear_before_first_nested_statement_of_next_statement():
+    source = """
+#:type Identifier = int | str
+if x:
+    y = 2
+"""
+    module_node = parser.parse(source)
+    expected_node = nodes.TypeDefinition(
+        "Identifier",
+        nodes.type_union([nodes.ref("int"), nodes.ref("str")])
+    )
+    assert_equal(expected_node, module_node.body[0])
+
+
 def _assert_expression_parse(expected, source):
     assert_equal(expected, _parse_expression(source))
 

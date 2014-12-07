@@ -117,12 +117,13 @@ def can_parse_type_union():
 def test_types_can_be_defined_with_type_statement():
     source = """
 #:type Identifier = int | str
+x = 1
 """
     expected_node = nodes.TypeDefinition(
         "Identifier",
         nodes.type_union([nodes.ref("int"), nodes.ref("str")])
     )
     assert_equal(
-        {(2, 0): expected_node},
+        {(3, 0): [expected_node]},
         parse_type_statements(io.StringIO(source))
     )

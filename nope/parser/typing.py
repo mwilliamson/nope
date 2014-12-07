@@ -1,5 +1,6 @@
 import tokenize
 import token
+import ast
 
 from funcparserlib.lexer import make_tokenizer
 from funcparserlib.parser import (some, many, maybe, finished, forward_decl, skip)
@@ -8,7 +9,27 @@ from .. import nodes
 
 
 def parse_type_statements(source):
-    return dict(_type_statements(source))
+    type_statements = sorted(_type_statements(source), key=lambda item: item[0], reverse=True)
+    
+    result = {}
+    
+    def consume_type_statements_before_node(node):
+        while type_statements and type_statements[-1][0] < (node.lineno, node.col_offset):
+            yield type_statements.pop()[1]
+    
+    class _TypeStatementVisitor(ast.NodeVisitor):
+        def generic_visit(self, node):
+            if hasattr(node, "lineno"):
+                statements = list(consume_type_statements_before_node(node))
+                if statements:
+                    result[(node.lineno, node.col_offset)] = statements
+            ast.NodeVisitor.generic_visit(self, node)
+            
+            
+    _TypeStatementVisitor().visit(ast.parse(source.getvalue()))
+    
+    return result
+    
 
 
 _type_statement_prefix = "#:type"

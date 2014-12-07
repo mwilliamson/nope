@@ -494,7 +494,7 @@ class Converter(object):
             lineno = statement.location.lineno
             col_offset = statement.location.offset
             
-            for type_statement in self._comment_seeker.consume_type_statements_before(lineno, col_offset):
+            for type_statement in self._comment_seeker.consume_type_statements(lineno, col_offset):
                 yield type_statement
             
             yield statement
