@@ -753,7 +753,7 @@ x = 2
 """
     module_node = parser.parse(source)
     expected_node = nodes.TypeDefinition(
-        "Identifier",
+        nodes.ref("Identifier"),
         nodes.type_union([nodes.ref("int"), nodes.ref("str")])
     )
     assert_equal(expected_node, module_node.body[1])
@@ -768,7 +768,7 @@ if x:
 """
     module_node = parser.parse(source)
     expected_node = nodes.TypeDefinition(
-        "Identifier",
+        nodes.ref("Identifier"),
         nodes.type_union([nodes.ref("int"), nodes.ref("str")])
     )
     assert_equal(expected_node, module_node.body[0])

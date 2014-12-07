@@ -120,7 +120,7 @@ def test_types_can_be_defined_with_type_statement():
 x = 1
 """
     expected_node = nodes.TypeDefinition(
-        "Identifier",
+        nodes.ref("Identifier"),
         nodes.type_union([nodes.ref("int"), nodes.ref("str")])
     )
     assert_equal(

@@ -164,7 +164,7 @@ def _create_type_rules():
     primary_type.define(sub_signature | applied_type | type_ref)
     explicit_type = (signature | type_) + finished >> (lambda result: result[0])
     
-    type_definition = (type_name + skip(equals) + type_ + skip(finished))  >> _make_type_definition
+    type_definition = (type_ref + skip(equals) + type_ + skip(finished))  >> _make_type_definition
     
     return explicit_type, type_definition
 
