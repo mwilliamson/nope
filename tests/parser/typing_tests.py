@@ -1,7 +1,9 @@
+import io
+
 from nose.tools import istest, assert_equal
 
 from nope import nodes
-from nope.parser.typing import parse_explicit_type
+from nope.parser.typing import parse_explicit_type, parse_type_statements
 
 
 @istest
@@ -108,4 +110,19 @@ def can_parse_type_union():
     assert_equal(
         nodes.type_union([nodes.ref("none"), nodes.ref("str"), nodes.ref("int")]),
         parse_explicit_type("none | str | int")
+    )
+
+
+@istest
+def test_types_can_be_defined_with_type_statement():
+    source = """
+#:type Identifier = int | str
+"""
+    expected_node = nodes.TypeDefinition(
+        "Identifier",
+        nodes.type_union([nodes.ref("int"), nodes.ref("str")])
+    )
+    assert_equal(
+        {(2, 0): expected_node},
+        parse_type_statements(io.StringIO(source))
     )

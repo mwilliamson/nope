@@ -7,6 +7,20 @@ from funcparserlib.parser import (some, many, maybe, finished, forward_decl, ski
 from .. import nodes
 
 
+def parse_type_statements(source):
+    return dict(_type_statements(source))
+
+
+_type_statement_prefix = "#:type"
+
+def _type_statements(source):
+    tokens = tokenize.generate_tokens(source.readline)
+    
+    for token_type, token_str, position, _, _ in tokens:
+        if _is_semantic_comment(_type_statement_prefix, token_type, token_str):
+            yield position, _parse_type_definition(token_str[len(_type_statement_prefix):].strip())
+    
+
 def parse_explicit_types(source):
     return dict(_explicit_types(source))
 
@@ -26,7 +40,11 @@ def _explicit_types(source):
 
 
 def _is_signature_comment(token_type, token_str):
-    return token_type == tokenize.COMMENT and token_str.startswith(_comment_prefix)
+    return _is_semantic_comment(_comment_prefix, token_type, token_str)
+
+
+def _is_semantic_comment(prefix, token_type, token_str):
+    return token_type == tokenize.COMMENT and token_str.startswith(prefix)
 
 
 def _is_part_of_node(token_type):
@@ -35,8 +53,13 @@ def _is_part_of_node(token_type):
     )
 
 
+def _parse_type_definition(type_definition_str):
+    tokens = _tokenize_type_string(type_definition_str)
+    return _type_definition.parse(tokens)
+
+
 def parse_explicit_type(sig_str):
-    tokens = _tokenize_explicit_type(sig_str)
+    tokens = _tokenize_type_string(sig_str)
     return _explicit_type.parse(tokens)
 
 
@@ -48,7 +71,7 @@ def _make_name(result):
     return result.value
 
 
-def _make_type(result):
+def _make_type_ref(result):
     return nodes.ref(result)
 
 
@@ -90,11 +113,16 @@ def _make_union_type(result):
         return result[0]
 
 
-def _create_explicit_type_rule():
+def _make_type_definition(result):
+    return nodes.TypeDefinition(result[0], result[1])
+
+
+def _create_type_rules():
     comma = _token_type("comma")
     colon = _token_type("colon")
     question_mark = _token_type("question-mark")
     bar = _token_type("bar")
+    equals = _token_type("equals")
     
     type_name = arg_name = _token_type("name") >> _make_name
 
@@ -102,7 +130,7 @@ def _create_explicit_type_rule():
     union_type = (primary_type + many(bar + primary_type)) >> _make_union_type
     type_ = union_type
     
-    type_ref = type_name >> _make_type
+    type_ref = type_name >> _make_type_ref
     applied_type = (type_ref + _token_type("open") + type_ + many(comma + type_) + _token_type("close")) >> _make_apply
     
     arg = (maybe(question_mark) + maybe(arg_name + skip(colon)) + type_) >> _make_arg
@@ -113,14 +141,17 @@ def _create_explicit_type_rule():
     sub_signature = (_token_type("paren-open") + signature + _token_type("paren-close")) >> (lambda result: result[1])
     
     primary_type.define(sub_signature | applied_type | type_ref)
+    explicit_type = (signature | type_) + finished >> (lambda result: result[0])
     
-    return (signature | type_) + finished >> (lambda result: result[0])
+    type_definition = (type_name + skip(equals) + type_ + skip(finished))  >> _make_type_definition
+    
+    return explicit_type, type_definition
 
 
-_explicit_type = _create_explicit_type_rule()
+_explicit_type, _type_definition  = _create_type_rules()
     
     
-def _tokenize_explicit_type(sig_str):
+def _tokenize_type_string(sig_str):
     specs = [
         ('space', (r'[ \t]+', )),
         ('name', (r'[A-Za-z_][A-Za-z_0-9]*', )),
@@ -134,6 +165,7 @@ def _tokenize_explicit_type(sig_str):
         ('colon', (r':', )),
         ('question-mark', (r'\?', )),
         ('bar', (r'\|', )),
+        ('equals', (r'=', )),
     ]
     ignore = ['space']
     tokenizer = make_tokenizer(specs)
