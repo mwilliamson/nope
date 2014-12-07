@@ -10,6 +10,7 @@ def _declare(node, declarations):
     visitor.before(nodes.WithStatement, _declare_with)
     visitor.replace(nodes.FunctionDef, _declare_function_def)
     visitor.replace(nodes.ClassDefinition, _declare_class_definition)
+    visitor.before(nodes.TypeDefinition, _declare_type_definition)
     visitor.before(nodes.Argument, _declare_argument)
     visitor.before(nodes.Import, _declare_import)
     visitor.before(nodes.ImportFrom, _declare_import)
@@ -51,6 +52,10 @@ def _declare_function_def(visitor, node, declarations):
 
 def _declare_class_definition(visitor, node, declarations):
     declarations.declare(node.name, node, target_type=ClassDeclarationNode)
+
+
+def _declare_type_definition(visitor, node, declarations):
+    declarations.declare(node.name, node, target_type=TypeDeclarationNode)
 
 
 def _declare_argument(visitor, node, declarations):
@@ -128,6 +133,13 @@ class FunctionDeclarationNode(object):
 
 class ClassDeclarationNode(object):
     description = "class declaration"
+    
+    def __init__(self, name):
+        self.name = name
+
+
+class TypeDeclarationNode(object):
+    description = "type declaration"
     
     def __init__(self, name):
         self.name = name

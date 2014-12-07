@@ -109,6 +109,16 @@ def names_in_class_are_not_declared():
 
 
 @istest
+def type_definition_is_declared():
+    node = nodes.type_definition("Identifier", nodes.type_union([nodes.ref("int"), nodes.ref("str")]))
+    
+    declarations = _new_declarations()
+    declare(node, declarations)
+    assert_equal("Identifier", declarations.declaration("Identifier").name)
+    assert isinstance(declarations.declaration("Identifier"), name_declaration.TypeDeclarationNode)
+
+
+@istest
 def argument_adds_declaration_to_declarations():
     declarations = _new_declarations()
     node = nodes.arg("x")
