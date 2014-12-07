@@ -34,7 +34,7 @@ def _resolve(node, context):
     visitor.replace(nodes.GeneratorExpression, _resolve_comprehension)
     visitor.replace(nodes.FunctionDef, _resolve_function_def)
     visitor.replace(nodes.ClassDefinition, _resolve_class_definition)
-    visitor.replace(nodes.TypeDefinition, _resolve_type_definition)
+    visitor.after(nodes.TypeDefinition, _resolve_type_definition)
     visitor.replace(nodes.Import, _resolve_import)
     visitor.replace(nodes.ImportFrom, _resolve_import)
     visitor.replace(nodes.Module, _resolve_module)
