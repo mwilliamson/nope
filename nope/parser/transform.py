@@ -131,7 +131,7 @@ class Converter(object):
                 self._nodes = None
     
     def _module(self, node):
-        return self._nodes.module(self._mapped(node.body), is_executable=self._is_executable)
+        return self._nodes.module(self._statements(node.body), is_executable=self._is_executable)
 
 
     def _import(self, node):
@@ -191,7 +191,7 @@ class Converter(object):
         return self._nodes.func(
             name=node.name,
             args=self.convert(node.args),
-            body=self._mapped(node.body),
+            body=self._statements(node.body),
         )
     
     def _arguments(self, node):
@@ -225,16 +225,16 @@ class Converter(object):
     def _if(self, node):
         return self._nodes.if_else(
             self.convert(node.test),
-            self._mapped(node.body),
-            self._mapped(node.orelse),
+            self._statements(node.body),
+            self._statements(node.orelse),
         )
     
     
     def _while(self, node):
         return self._nodes.while_loop(
             self.convert(node.test),
-            self._mapped(node.body),
-            self._mapped(node.orelse),
+            self._statements(node.body),
+            self._statements(node.orelse),
         )
     
     
@@ -242,8 +242,8 @@ class Converter(object):
         return self._nodes.for_loop(
             self.convert(node.target),
             self.convert(node.iter),
-            self._mapped(node.body),
-            self._mapped(node.orelse),
+            self._statements(node.body),
+            self._statements(node.orelse),
         )
     
     
@@ -260,9 +260,9 @@ class Converter(object):
             raise SyntaxError("'else' clause in 'try' statement is unsupported")
         
         return self._nodes.try_statement(
-            self._mapped(node.body),
+            self._statements(node.body),
             handlers=self._mapped(getattr(node, "handlers", [])),
-            finally_body=self._mapped(getattr(node, "finalbody", [])),
+            finally_body=self._statements(getattr(node, "finalbody", [])),
         )
     
     
@@ -275,7 +275,7 @@ class Converter(object):
         return self._nodes.except_handler(
             type_,
             node.name,
-            self._mapped(node.body),
+            self._statements(node.body),
         )
     
     
@@ -293,7 +293,7 @@ class Converter(object):
 
 
     def _with(self, node):
-        result = self._mapped(node.body)
+        result = self._statements(node.body)
         
         if hasattr(node, "items"):
             # Python >= 3.3
@@ -324,7 +324,7 @@ class Converter(object):
         if node.decorator_list:
             raise SyntaxError("class decorators are not supported")
         
-        body = self._mapped(node.body, allowed=(_nodes.Assignment, _nodes.FunctionDef))
+        body = self._statements(node.body, allowed=(_nodes.Assignment, _nodes.FunctionDef))
         base_classes = self._mapped(node.bases)
         return self._nodes.class_def(node.name, body, base_classes=base_classes)
     
@@ -483,6 +483,21 @@ class Converter(object):
         # TODO: support ifs
         assert not node.ifs
         return self._nodes.comprehension(self.convert(node.target), self.convert(node.iter))
+
+
+    def _statements(self, nodes, allowed=None):
+        return list(self._statements_generator(nodes, allowed=allowed))
+
+    def _statements_generator(self, nodes, allowed=None):
+        statements = self._mapped(nodes, allowed=allowed)
+        for statement in statements:
+            lineno = statement.location.lineno
+            col_offset = statement.location.offset
+            
+            for type_statement in self._comment_seeker.consume_type_statements_before(lineno, col_offset):
+                yield type_statement
+            
+            yield statement
 
     def _mapped(self, nodes, allowed=None):
         return list(filter(None, (

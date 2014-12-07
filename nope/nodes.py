@@ -99,6 +99,7 @@ Arguments = _create_node("Arguments", ["args"])
 Argument = _create_node("Argument", ["name", "optional"])
 
 ClassDefinition = _create_node("ClassDefinition", ["name", "body", "base_classes"])
+TypeDefinition = _create_node("TypeDefinition", ["name", "value"])
 
 Import = _create_node("Import", ["names"])
 ImportFrom = _create_node("ImportFrom", ["module", "names"])

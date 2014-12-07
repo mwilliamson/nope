@@ -744,6 +744,21 @@ def test_error_if_signature_is_not_consumed():
         assert_equal(0, error.offset)
 
 
+@istest
+def test_type_definitions_can_appear_between_statements():
+    source = """
+x = 1
+#:type Identifier = int | str
+x = 2
+"""
+    module_node = parser.parse(source)
+    expected_node = nodes.TypeDefinition(
+        "Identifier",
+        nodes.type_union([nodes.ref("int"), nodes.ref("str")])
+    )
+    assert_equal(expected_node, module_node.body[1])
+
+
 def _assert_expression_parse(expected, source):
     assert_equal(expected, _parse_expression(source))
 
