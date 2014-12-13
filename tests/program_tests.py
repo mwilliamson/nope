@@ -39,7 +39,6 @@ def calling_function_with_wrong_type_is_invalid():
 @istest
 def calling_function_with_correct_type_is_valid():
     assert nope.check(path=program_path("valid/call.py")).is_valid
-    assert nope.check(path=program_path("valid/call_comment_signature.py")).is_valid
 
 
 @istest
