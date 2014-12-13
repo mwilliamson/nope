@@ -40,8 +40,13 @@ class SourceChecker(zuice.Base):
     _module_checker = zuice.dependency(ModuleChecker)
     
     def check(self, path):
+        if isinstance(path, str):
+            roots = [path]
+        else:
+            roots = path
+        
         try:
-            for source_path in _source_paths(path):
+            for source_path in _source_paths(roots):
                 module = self._source_tree.module(source_path)
                 self._module_checker.check(module)
         except (errors.TypeCheckError, SyntaxError) as error:
@@ -53,5 +58,9 @@ class SourceChecker(zuice.Base):
 Result = collections.namedtuple("Result", ["is_valid", "error", "value"])
 
 
-def _source_paths(path):
-    return paths.find_files(path)
+def _source_paths(roots):
+    return set(
+        path
+        for root in roots
+        for path in paths.find_files(root)
+    )

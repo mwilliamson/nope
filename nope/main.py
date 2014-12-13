@@ -28,11 +28,10 @@ class CheckCommand(object):
     
     @staticmethod
     def execute(args):
-        for path in args.path:
-            result = nope.check(path)
-            if not result.is_valid:
-                _print_error(result.error)
-                return 1
+        result = nope.check(args.path)
+        if not result.is_valid:
+            _print_error(result.error)
+            return 1
 
 
 class CompileCommand(object):
