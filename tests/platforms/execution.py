@@ -316,6 +316,14 @@ True
         self._test_expression("[11, 12, 13, 14, 15, 16][::2]", b"[11, 13, 15]")
     
     @istest
+    def test_slice_list_with_negative_step_reverses_direction_of_list(self):
+        self._test_expression("[11, 12, 13, 14, 15, 16][4:1:-2]", b"[15, 13]")
+    
+    @istest
+    def test_slice_list_swaps_default_start_and_stop_when_step_is_negative(self):
+        self._test_expression("[11, 12, 13, 14, 15, 16][::-3]", b"[16, 13]")
+    
+    @istest
     def test_settitem_list(self):
         self._test_program_string("x = [1]\nx[0] = 2\nprint(x[0])", b"2\n")
     

@@ -80,13 +80,24 @@ var arrayMethods = {
         // TODO: exceptions
         if (isinstance(key, slice)) {
             // TODO: exception on step of 0
-            // TODO: handle negative slice values
             var result = [];
-            var start = key.start === null ? 0 : key.start;
-            var stop = key.stop === null ? this.length : key.stop;
+            
             var step = key.step === null ? 1 : key.step;
-            for (var i = start; i < stop; i += step) {
-                result.push(this[i]);
+            
+            if (step < 0) {
+                var start = key.start === null ? this.length - 1 : key.start;
+                var stop = key.stop === null ? -1 : key.stop;
+                
+                for (var i = start; i > stop; i += step) {
+                    result.push(this[i]);
+                }
+            } else {
+                var start = key.start === null ? 0 : key.start;
+                var stop = key.stop === null ? this.length : key.stop;
+                
+                for (var i = start; i < stop; i += step) {
+                    result.push(this[i]);
+                }
             }
             return result;
         } else {
