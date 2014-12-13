@@ -54,6 +54,8 @@ Result = collections.namedtuple("Result", ["is_valid", "error", "value"])
 
 
 def _source_paths(path):
+    if not os.path.exists(path):
+        raise Exception("{}: No such file or directory".format(path))
     if os.path.isfile(path):
         yield path
     else:
