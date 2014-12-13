@@ -54,7 +54,6 @@ class NodeJsExecutionTests(execution.ExecutionTests):
         return SingleProcessRunner.start()
     
     test_getitem_dict = None
-    test_slice_list = None
     test_unnested_list_comprehension = None
     test_unnested_generator_expression = None
 

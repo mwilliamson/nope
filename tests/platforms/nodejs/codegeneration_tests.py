@@ -969,6 +969,14 @@ def test_transform_tuple_literal():
     )
 
 
+@istest
+def test_transform_slice():
+    _assert_transform(
+        nodes.slice(nodes.ref("x"), nodes.ref("y"), nodes.none()),
+        "$nope.builtins.slice(x, y, null)",
+    )
+
+
 def _assert_transform(nope, expected_js, type_lookup=None, module_resolver=None, optimise=True):
     transformed_js = _transform_node(nope,
         type_lookup=type_lookup,

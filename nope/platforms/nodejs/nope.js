@@ -76,9 +76,19 @@ var stringMethods = {
 };
 
 var arrayMethods = {
-    __getitem__: function(slice) {
+    __getitem__: function(key) {
         // TODO: exceptions
-        return this[slice];
+        if (isinstance(key, slice)) {
+            // TODO: handle defaults
+            // TODO: handle negative step
+            var result = [];
+            for (var i = key.start; i < key.stop; i += key.step) {
+                result.push(this[i]);
+            }
+            return result;
+        } else {
+            return this[key];
+        }
     },
     __setitem__: function(slice, value) {
         this[slice] = value;
@@ -264,6 +274,11 @@ function issubclass(cls, clsinfo) {
         return true;
     }
     
+    if (!cls) {
+        // TODO: add types to builtins
+        return false;
+    }
+    
     for (var i = 0; i < cls.$baseClasses.length; i++) {
         if (issubclass(cls.$baseClasses[i], clsinfo)) {
             return true;
@@ -272,6 +287,16 @@ function issubclass(cls, clsinfo) {
     
     return false;
 }
+
+var slice = function(start, stop, step) {
+    // TODO: this could be implemented in pure Python/nope
+    return {
+        $nopeType: slice,
+        start: start,
+        stop: stop,
+        step: step
+    };
+};
 
 var builtins = {
     str: str,
@@ -286,7 +311,8 @@ var builtins = {
     Exception: Exception,
     AssertionError: AssertionError,
     type: type,
-    isinstance: isinstance
+    isinstance: isinstance,
+    slice: slice
 };
 
 function instanceAttribute(self, attr) {

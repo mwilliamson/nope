@@ -46,6 +46,7 @@ class NodeTransformer(zuice.Base):
             nodes.BinaryOperation: self._binary_operation,
             nodes.UnaryOperation: self._unary_operation,
             nodes.Subscript: self._subscript,
+            nodes.Slice: self._slice,
             nodes.VariableReference: _ref,
             nodes.NoneLiteral: _none,
             nodes.BooleanLiteral: _bool,
@@ -615,6 +616,10 @@ class NodeTransformer(zuice.Base):
     
     def _subscript(self, subscript):
         return self._operation("getitem", [subscript.value, subscript.slice])
+    
+    
+    def _slice(self, node):
+        return _call_builtin("slice", self._transform_all([node.start, node.stop, node.step]))
 
 
     def _list_literal(self, node):
