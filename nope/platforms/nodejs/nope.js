@@ -90,7 +90,11 @@ var arrayMethods = {
             }
             return result;
         } else {
-            return this[key];
+            if (key < 0) {
+                return this[this.length + key];
+            } else {
+                return this[key];
+            }
         }
     },
     __setitem__: function(slice, value) {

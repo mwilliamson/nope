@@ -296,6 +296,10 @@ True
         self._test_expression("[42, 53, 75][1]", b"53")
     
     @istest
+    def test_getitem_list_with_negative_integer(self):
+        self._test_expression("[42, 53, 75][-1]", b"75")
+    
+    @istest
     def test_slice_list(self):
         self._test_expression("[11, 12, 13, 14, 15, 16][1:4:2]", b"[12, 14]")
     
