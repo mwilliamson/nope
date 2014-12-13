@@ -300,6 +300,18 @@ True
         self._test_expression("[11, 12, 13, 14, 15, 16][1:4:2]", b"[12, 14]")
     
     @istest
+    def test_slice_list_with_slice_start(self):
+        self._test_expression("[11, 12, 13, 14, 15, 16][4:]", b"[15, 16]")
+    
+    @istest
+    def test_slice_list_with_slice_stop(self):
+        self._test_expression("[11, 12, 13, 14, 15, 16][:2]", b"[11, 12]")
+    
+    @istest
+    def test_slice_list_with_slice_step(self):
+        self._test_expression("[11, 12, 13, 14, 15, 16][::2]", b"[11, 13, 15]")
+    
+    @istest
     def test_settitem_list(self):
         self._test_program_string("x = [1]\nx[0] = 2\nprint(x[0])", b"2\n")
     

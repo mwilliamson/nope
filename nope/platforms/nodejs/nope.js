@@ -79,10 +79,13 @@ var arrayMethods = {
     __getitem__: function(key) {
         // TODO: exceptions
         if (isinstance(key, slice)) {
-            // TODO: handle defaults
-            // TODO: handle negative step
+            // TODO: exception on step of 0
+            // TODO: handle negative slice values
             var result = [];
-            for (var i = key.start; i < key.stop; i += key.step) {
+            var start = key.start === null ? 0 : key.start;
+            var stop = key.stop === null ? this.length : key.stop;
+            var step = key.step === null ? 1 : key.step;
+            for (var i = start; i < stop; i += step) {
                 result.push(this[i]);
             }
             return result;
