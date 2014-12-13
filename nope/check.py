@@ -3,7 +3,7 @@ import collections
 
 import zuice
 
-from . import loop_control, errors
+from . import loop_control, errors, paths
 from .source import SourceTree
 
 
@@ -54,11 +54,4 @@ Result = collections.namedtuple("Result", ["is_valid", "error", "value"])
 
 
 def _source_paths(path):
-    if not os.path.exists(path):
-        raise Exception("{}: No such file or directory".format(path))
-    if os.path.isfile(path):
-        yield path
-    else:
-        for root, dirs, filenames in os.walk(path):
-            for filename in filenames:
-                yield os.path.abspath(os.path.join(root, filename))
+    return paths.find_files(path)
