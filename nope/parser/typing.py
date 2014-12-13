@@ -7,6 +7,12 @@ from funcparserlib.parser import (some, many, maybe, finished, forward_decl, ski
 from .. import nodes
 
 
+class TypeComments(object):
+    def __init__(self, explicit_types, type_definitions):
+        self.explicit_types = explicit_types
+        self.type_definitions = type_definitions
+
+
 def parse_type_comments(source):
     explicit_types = {}
     type_definitions = {}
@@ -17,7 +23,7 @@ def parse_type_comments(source):
         else:
             explicit_types[attached_node_position] = position, type_comment
     
-    return explicit_types, type_definitions
+    return TypeComments(explicit_types, type_definitions)
     
 
 

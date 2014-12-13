@@ -124,8 +124,8 @@ x = 1
         nodes.type_union([nodes.ref("int"), nodes.ref("str")])
     )
     
-    _, type_definitions = parse_type_comments(io.StringIO(source))
+    type_comments = parse_type_comments(io.StringIO(source))
     assert_equal(
         {(3, 0): ((2, 0), expected_node)},
-        type_definitions
+        type_comments.type_definitions
     )
