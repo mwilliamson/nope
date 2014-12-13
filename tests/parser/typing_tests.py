@@ -129,3 +129,31 @@ x = 1
         {(3, 0): ((2, 0), expected_node)},
         type_comments.type_definitions
     )
+
+
+@istest
+def generic_specifiers_use_generic_keyword():
+    source = """
+#:generic T
+class A:
+    pass
+"""
+    type_comments = parse_type_comments(io.StringIO(source))
+    assert_equal(
+        {(3, 0): ((2, 0), ["T"])},
+        type_comments.generics
+    )
+
+
+@istest
+def generic_specifiers_can_define_multiple_formal_type_parameters():
+    source = """
+#:generic T1, T2, R
+class A:
+    pass
+"""
+    type_comments = parse_type_comments(io.StringIO(source))
+    assert_equal(
+        {(3, 0): ((2, 0), ["T1", "T2", "R"])},
+        type_comments.generics
+    )

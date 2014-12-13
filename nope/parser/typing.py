@@ -8,22 +8,30 @@ from .. import nodes
 
 
 class TypeComments(object):
-    def __init__(self, explicit_types, type_definitions):
+    def __init__(self, explicit_types, type_definitions, generics):
         self.explicit_types = explicit_types
         self.type_definitions = type_definitions
+        self.generics = generics
 
 
 def parse_type_comments(source):
     explicit_types = {}
     type_definitions = {}
+    generics = {}
     
     for attached_node_position, (position, prefix, type_comment) in _type_comments(source):
         if prefix == "#:type":
-            type_definitions[attached_node_position] = position, type_comment
+            store = type_definitions
+        elif prefix == "#:generic":
+            store = generics
+        elif prefix == "#::":
+            store = explicit_types
         else:
-            explicit_types[attached_node_position] = position, type_comment
+            raise Exception("Unhandled case")
+        
+        store[attached_node_position] = position, type_comment
     
-    return TypeComments(explicit_types, type_definitions)
+    return TypeComments(explicit_types, type_definitions, generics)
     
 
 
@@ -43,9 +51,9 @@ def _type_comments(source):
 
 def _extract_semantic_comment(token_type, token_str):
     if token_type == tokenize.COMMENT:
-        for prefix, parser in _type_comment_parsers.items():
+        for prefix, rule in _type_comment_parsers.items():
             if token_str.startswith(prefix):
-                return prefix, parser
+                return prefix, lambda string: _parse(string, rule)
 
 
 def _is_part_of_node(token_type):
@@ -54,14 +62,13 @@ def _is_part_of_node(token_type):
     )
 
 
-def _parse_type_definition(type_definition_str):
-    tokens = _tokenize_type_string(type_definition_str)
-    return _type_definition.parse(tokens)
-
-
 def parse_explicit_type(sig_str):
-    tokens = _tokenize_type_string(sig_str)
-    return _explicit_type.parse(tokens)
+    return _parse(sig_str, _explicit_type)
+
+
+def _parse(string, rule):
+    tokens = _tokenize_type_string(string)
+    return rule.parse(tokens)
 
 
 def _token_type(token_type):
@@ -146,10 +153,22 @@ def _create_type_rules():
     
     type_definition = (type_name + skip(equals) + type_ + skip(finished))  >> _make_type_definition
     
-    return explicit_type, type_definition
+    generic = _one_or_more_with_separator(type_name, comma) + skip(finished)
+    
+    return explicit_type, type_definition, generic
 
 
-_explicit_type, _type_definition  = _create_type_rules()
+def _one_or_more_with_separator(repeated, separator):
+    return (repeated + many(separator + repeated)) >> _make_separated
+
+def _make_separated(result):
+    if result[1]:
+        return [result[0]] + [extra[1] for extra in result[1]]
+    else:
+        return [result[0]]
+
+
+_explicit_type, _type_definition, _generic  = _create_type_rules()
     
     
 def _tokenize_type_string(sig_str):
@@ -174,6 +193,7 @@ def _tokenize_type_string(sig_str):
 
 
 _type_comment_parsers = {
-    "#:type": _parse_type_definition,
-    "#::": parse_explicit_type,
+    "#:type": _type_definition,
+    "#:generic": _generic,
+    "#::": _explicit_type,
 }
