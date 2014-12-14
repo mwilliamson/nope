@@ -130,18 +130,20 @@ class StatementTypeChecker(object):
         assignments = filter_by_type(nodes.Assignment, node.body)
         body_context = self._enter_class_body_context(node, context, types.unknown_type)
         for assignment in assignments:
-            for target in assignment.targets:
-                if isinstance(target, nodes.VariableReference) and target.name == "__init__":
-                    raise errors.InitAttributeMustBeFunctionDefinitionError(assignment)
             self.update_context(assignment, body_context)       
         
-        return dict(
+        attrs = dict(
             (target.name, (assignment, context.lookup(target)))
             for assignment in assignments
             for target in assignment.targets
             if isinstance(target, nodes.VariableReference)
         )
-    
+        
+        init = attrs.get("__init__")
+        if init is not None:
+            raise errors.InitAttributeMustBeFunctionDefinitionError(init[0])
+        
+        return attrs
     
     def _infer_class_type(self, node, context, class_attr_types):
         class_type = types.scalar_type(node.name)
