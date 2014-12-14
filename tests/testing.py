@@ -1,7 +1,10 @@
 import os
 import contextlib
+import functools
 
 import tempman
+from nose.plugins.attrib import attr
+from nose.plugins.skip import SkipTest
 
 import nope
 
@@ -23,3 +26,14 @@ class CompiledCode(object):
 
 def program_path(path):
     return os.path.join(os.path.dirname(__file__), "programs", path)
+
+
+def wip(func):
+    @functools.wraps(func)
+    def run_test(*args, **kwargs):
+        try:
+            func(*args, **kwargs)
+        except Exception as e:
+            raise SkipTest("WIP test failed: " + str(e))
+        assert False, "test passed but marked as work in progress"
+    return attr('wip')(run_test)

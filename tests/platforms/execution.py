@@ -6,7 +6,7 @@ import zuice
 import spur
 
 from .. import testing
-from ..testing import program_path
+from ..testing import program_path, wip
 from nope import injection
 
 
@@ -638,6 +638,25 @@ class A:
 A(42)
 """
         self._test_program_string(program, b"42\n")
+    
+    
+    @wip
+    @istest
+    def test_generic_class_type_parameters_are_inferred_from_init_method(self):
+        program = """
+#:: int -> int
+def inc(value):
+    return value + 1
+
+#:generic T
+class A:
+    #:: Self, T -> none
+    def __init__(self, x):
+        self.x = x
+
+print(inc(A(42).x))
+"""
+        self._test_program_string(program, b"43\n")
     
     
     @istest
