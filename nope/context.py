@@ -40,7 +40,7 @@ class Context(object):
             is_module_scope=False,
         )
     
-    def enter_class(self, class_type):
+    def enter_class(self):
         return Context(
             self._references,
             self._declaration_types,

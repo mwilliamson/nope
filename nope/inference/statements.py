@@ -197,7 +197,7 @@ class StatementTypeChecker(object):
     
     
     def _enter_class_body_context(self, node, context, meta_type):
-        body_context = context.enter_class(meta_type.type)
+        body_context = context.enter_class()
         class_declarations = self._declaration_finder.declarations_in_class(node)
         body_context.update_declaration_type(
             class_declarations.declaration("Self"),
