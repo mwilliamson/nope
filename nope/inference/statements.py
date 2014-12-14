@@ -159,19 +159,24 @@ class StatementTypeChecker(object):
             self._add_attr_to_type(method_node, meta_type, method_name, func_type)
             
         init = method_func_types.get("__init__")
-        if init is None:
-            constructor_type = types.func([], class_type)
-        else:
+        
+        if init is not None:
             init_node, init_func_type = init
             for statement in init_node.body:
                 self._check_init_statement(init_node, statement, body_context, class_type)
-            
-            init_method_type = self._function_type_to_method_type(init_func_type)
-            constructor_type = types.func(init_method_type.args, class_type)
         
+        constructor_type = self._constructor_type(init, class_type)
         meta_type.attrs.add("__call__", constructor_type, read_only=True)
         
         return meta_type
+    
+    def _constructor_type(self, init, class_type):
+        if init is None:
+            return types.func([], class_type)
+        else:
+            init_node, init_func_type = init
+            init_method_type = self._function_type_to_method_type(init_func_type)
+            return types.func(init_method_type.args, class_type)
     
     def _check_class_methods(self, node, context, meta_type):
         body_context = self._enter_class_body_context(node, context, meta_type)
