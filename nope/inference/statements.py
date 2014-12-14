@@ -109,34 +109,13 @@ class StatementTypeChecker(object):
     
     def _check_class_definition(self, node, context):
         self._check_base_classes(node, context)
+        class_attr_types = self._check_class_assignments(node, context)
         
-        meta_type = self._infer_class_type(node, context)
+        meta_type = self._infer_class_type(node, context, class_attr_types)
         
         body_context = self._enter_class_body_context(node, context, meta_type)
         
-        function_definitions = []
-        assignments = []
-        for statement in node.body:
-            if isinstance(statement, nodes.FunctionDef):
-                function_definitions.append(statement)
-            elif isinstance(statement, nodes.Assignment):
-                for target in statement.targets:
-                    if isinstance(target, nodes.VariableReference) and target.name == "__init__":
-                        raise errors.InitAttributeMustBeFunctionDefinitionError(statement)
-                assignments.append(statement)
-            else:
-                # The type of statements in a class body should have
-                # been verified in an earlier stage.
-                raise Exception("Unexpected statement in class body")
-        
-        for assignment in assignments:
-            self.update_context(assignment, body_context)        
-            attr_type = self._infer(assignment.value, body_context)
-            for target in assignment.targets:
-                if isinstance(target, nodes.VariableReference):
-                    self._add_attr_to_type(assignment, meta_type, target.name, attr_type)
-        
-        for function_definition in function_definitions:
+        for function_definition in filter_by_type(nodes.FunctionDef, node.body):
             self.update_context(function_definition, body_context)
     
     def _check_base_classes(self, node, context):
@@ -147,8 +126,24 @@ class StatementTypeChecker(object):
         if any(base_class != types.object_type for base_class in base_classes):
             raise errors.UnsupportedError("base classes other than 'object' are not supported")
     
+    def _check_class_assignments(self, node, context):
+        assignments = filter_by_type(nodes.Assignment, node.body)
+        body_context = self._enter_class_body_context(node, context, types.unknown_type)
+        for assignment in assignments:
+            for target in assignment.targets:
+                if isinstance(target, nodes.VariableReference) and target.name == "__init__":
+                    raise errors.InitAttributeMustBeFunctionDefinitionError(assignment)
+            self.update_context(assignment, body_context)       
+        
+        return dict(
+            (target.name, (assignment, context.lookup(target)))
+            for assignment in assignments
+            for target in assignment.targets
+            if isinstance(target, nodes.VariableReference)
+        )
     
-    def _infer_class_type(self, node, context):
+    
+    def _infer_class_type(self, node, context, class_attr_types):
         class_type = types.scalar_type(node.name)
         meta_type = types.meta_type(class_type)
         
@@ -161,7 +156,9 @@ class StatementTypeChecker(object):
             (method_node.name, (method_node, self._infer_function_def(method_node, body_context)))
             for method_node in method_nodes
         )
-        for method_name, (method_node, func_type) in method_func_types.items():
+        attr_types = class_attr_types.copy()
+        attr_types.update(method_func_types)
+        for method_name, (method_node, func_type) in attr_types.items():
             self._add_attr_to_type(method_node, meta_type, method_name, func_type)
             
         init = method_func_types.get("__init__")
