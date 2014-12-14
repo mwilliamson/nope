@@ -84,8 +84,7 @@ def _make_type_ref(result):
 
 
 def _make_apply(result):
-    extra_params = [param[1] for param in result[3]]
-    return nodes.type_apply(result[0], [result[2]] + extra_params)
+    return nodes.type_apply(result[0], result[1])
 
 
 def _make_params(result):
@@ -115,10 +114,10 @@ def _make_signature(result):
 
 
 def _make_union_type(result):
-    if result[1]:
-        return nodes.type_union([result[0]] + [extra_type[1] for extra_type in result[1]])
-    else:
+    if len(result) == 1:
         return result[0]
+    else:
+        return nodes.type_union(result)
 
 
 def _make_type_definition(result):
@@ -135,11 +134,16 @@ def _create_type_rules():
     type_name = arg_name = _token_type("name") >> _make_name
 
     primary_type = forward_decl()
-    union_type = (primary_type + many(bar + primary_type)) >> _make_union_type
+    union_type = _one_or_more_with_separator(primary_type, bar) >> _make_union_type
     type_ = union_type
     
     type_ref = type_name >> _make_type_ref
-    applied_type = (type_ref + _token_type("open") + type_ + many(comma + type_) + _token_type("close")) >> _make_apply
+    applied_type = (
+        type_ref +
+        skip(_token_type("open")) +
+        _one_or_more_with_separator(type_, comma) +
+        skip(_token_type("close"))
+    ) >> _make_apply
     
     arg = (maybe(question_mark) + maybe(arg_name + skip(colon)) + type_) >> _make_arg
     
@@ -159,11 +163,11 @@ def _create_type_rules():
 
 
 def _one_or_more_with_separator(repeated, separator):
-    return (repeated + many(separator + repeated)) >> _make_separated
+    return (repeated + many(skip(separator) + repeated)) >> _make_separated
 
 def _make_separated(result):
     if result[1]:
-        return [result[0]] + [extra[1] for extra in result[1]]
+        return [result[0]] + result[1]
     else:
         return [result[0]]
 
