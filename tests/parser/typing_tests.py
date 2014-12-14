@@ -140,7 +140,7 @@ class A:
 """
     type_comments = parse_type_comments(io.StringIO(source))
     assert_equal(
-        {(3, 0): ((2, 0), ["T"])},
+        {(3, 0): ((2, 0), [nodes.formal_type_parameter("T")])},
         type_comments.generics
     )
 
@@ -153,7 +153,12 @@ class A:
     pass
 """
     type_comments = parse_type_comments(io.StringIO(source))
+    expected = [
+        nodes.formal_type_parameter("T1"),
+        nodes.formal_type_parameter("T2"),
+        nodes.formal_type_parameter("R"),
+    ]
     assert_equal(
-        {(3, 0): ((2, 0), ["T1", "T2", "R"])},
+        {(3, 0): ((2, 0), expected)},
         type_comments.generics
     )

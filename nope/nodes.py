@@ -99,6 +99,7 @@ Arguments = _create_node("Arguments", ["args"])
 Argument = _create_node("Argument", ["name", "optional"])
 
 ClassDefinition = _create_node("ClassDefinition", ["name", "body", "base_classes", "type_params"])
+FormalTypeParameter = _create_node("FormalTypeParameter", ["name"])
 TypeDefinition = _create_node("TypeDefinition", ["name", "value"])
 
 Import = _create_node("Import", ["names"])
@@ -220,6 +221,9 @@ def class_def(name, body, *, base_classes=None, type_params=None):
         type_params = []
     
     return ClassDefinition(name, body, base_classes=base_classes, type_params=type_params)
+
+
+formal_type_parameter = FormalTypeParameter
 
 
 type_definition = TypeDefinition

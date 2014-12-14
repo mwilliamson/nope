@@ -124,6 +124,10 @@ def _make_type_definition(result):
     return nodes.TypeDefinition(result[0], result[1])
 
 
+def _make_generic(result):
+    return list(map(nodes.formal_type_parameter, result))
+
+
 def _create_type_rules():
     comma = _token_type("comma")
     colon = _token_type("colon")
@@ -157,7 +161,7 @@ def _create_type_rules():
     
     type_definition = (type_name + skip(equals) + type_ + skip(finished))  >> _make_type_definition
     
-    generic = _one_or_more_with_separator(type_name, comma) + skip(finished)
+    generic = (_one_or_more_with_separator(type_name, comma) + skip(finished)) >> _make_generic
     
     return explicit_type, type_definition, generic
 

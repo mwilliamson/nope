@@ -704,7 +704,7 @@ def test_parse_class_with_base_classes():
 
 @istest
 def test_parse_class_with_generics():
-    expected_node = nodes.class_def("Option", [], type_params=["T"])
+    expected_node = nodes.class_def("Option", [], type_params=[nodes.formal_type_parameter("T")])
     _assert_statement_parse(expected_node, "#:generic T\nclass Option:\n  pass")
 
 
