@@ -222,6 +222,14 @@ def declarations_in_class_include_self_class():
 
 
 @istest
+def declarations_in_class_include_formal_type_parameters():
+    node = nodes.class_def("Option", [], type_params=[nodes.formal_type_parameter("T")])
+    
+    declarations = declarations_in_class(node)
+    assert isinstance(declarations.declaration("T"), name_declaration.TypeDeclarationNode)
+
+
+@istest
 def declarations_in_class_are_variable_reference_targets():
     node = nodes.comprehension(
         nodes.tuple_literal([nodes.ref("target"), nodes.attr(nodes.ref("other"), "name")]),

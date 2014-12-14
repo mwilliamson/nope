@@ -203,6 +203,9 @@ def _declarations_in_function(node):
 def _declarations_in_class(node):
     declarations = Declarations({})
     
+    for type_param in node.type_params:
+        _declare(type_param, declarations)
+    
     declarations.declare("Self", node, target_type=SelfTypeDeclarationNode)
     
     for statement in node.body:
