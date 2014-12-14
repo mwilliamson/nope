@@ -142,12 +142,7 @@ class StatementTypeChecker(object):
                     self._add_attr_to_type(assignment, meta_type, target.name, attr_type)
         
         for function_definition in function_definitions:
-            if function_definition.name == "__init__":
-                self.update_context(function_definition, body_context)
-        
-        for function_definition in function_definitions:
-            if function_definition.name != "__init__":
-                self.update_context(function_definition, body_context)
+            self.update_context(function_definition, body_context)
     
     def _check_base_classes(self, node, context):
         base_classes = [
