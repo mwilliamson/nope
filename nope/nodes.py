@@ -98,7 +98,7 @@ SignatureArgument = _create_node("SignatureArgument", ["name", "type", "optional
 Arguments = _create_node("Arguments", ["args"])
 Argument = _create_node("Argument", ["name", "optional"])
 
-ClassDefinition = _create_node("ClassDefinition", ["name", "body", "base_classes"])
+ClassDefinition = _create_node("ClassDefinition", ["name", "body", "base_classes", "type_params"])
 TypeDefinition = _create_node("TypeDefinition", ["name", "value"])
 
 Import = _create_node("Import", ["names"])
@@ -212,11 +212,14 @@ def func(name, args, body):
     return FunctionDef(name, args, body)
 
 
-def class_def(name, body, base_classes=None):
+def class_def(name, body, *, base_classes=None, type_params=None):
     if base_classes is None:
         base_classes = []
     
-    return ClassDefinition(name, body, base_classes)
+    if type_params is None:
+        type_params = []
+    
+    return ClassDefinition(name, body, base_classes=base_classes, type_params=type_params)
 
 
 type_definition = TypeDefinition
