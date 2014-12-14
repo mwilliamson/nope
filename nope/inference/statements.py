@@ -2,7 +2,6 @@ import os
 
 from .. import nodes, types, returns, errors, branches, builtins, visit
 from ..lists import filter_by_type
-from ..iterables import find
 from . import ephemeral
 from .assignment import Assignment
 
@@ -112,7 +111,6 @@ class StatementTypeChecker(object):
         self._check_base_classes(node, context)
         
         meta_type = self._infer_class_type(node, context)
-        class_type = meta_type.type
         
         body_context = self._enter_class_body_context(node, context, meta_type)
         
