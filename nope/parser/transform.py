@@ -97,8 +97,7 @@ class Converter(object):
     
     def convert(self, node, allowed=None):
         filename = self._filename
-        lineno = getattr(node, "lineno", None)
-        col_offset = getattr(node, "col_offset", None)
+        lineno, col_offset = self._node_location(node)
         
         self._nodes = _NodeBuilder(_Location(filename, lineno, col_offset))
         self._node_builders.append(self._nodes)
@@ -134,6 +133,9 @@ class Converter(object):
                 self._nodes = self._node_builders[-1]
             else:
                 self._nodes = None
+    
+    def _node_location(self, node):
+        return getattr(node, "lineno", None), getattr(node, "col_offset", None)
     
     def _module(self, node):
         return self._nodes.module(self._statements(node.body), is_executable=self._is_executable)
@@ -331,7 +333,9 @@ class Converter(object):
         
         body = self._statements(node.body, allowed=(_nodes.Assignment, _nodes.FunctionDef))
         base_classes = self._mapped(node.bases)
-        return self._nodes.class_def(node.name, body, base_classes=base_classes)
+        lineno, col_offset = self._node_location(node)
+        generics = self._comment_seeker.consume_generic(lineno, col_offset)
+        return self._nodes.class_def(node.name, body, base_classes=base_classes, type_params=generics)
     
 
     def _str_literal(self, node):

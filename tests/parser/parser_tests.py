@@ -703,6 +703,12 @@ def test_parse_class_with_base_classes():
 
 
 @istest
+def test_parse_class_with_generics():
+    expected_node = nodes.class_def("Option", [], type_params=["T"])
+    _assert_statement_parse(expected_node, "#:generic T\nclass Option:\n  pass")
+
+
+@istest
 def test_error_when_class_body_is_not_assignment_nor_function_definition():
     _assert_syntax_error(
         "IfElse node is not supported in current context",

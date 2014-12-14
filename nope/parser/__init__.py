@@ -27,9 +27,17 @@ class CommentSeeker(object):
     def __init__(self, type_comments):
         self._explicit_types = type_comments.explicit_types
         self._type_definitions = type_comments.type_definitions
+        self._generics = type_comments.generics
     
     def consume_explicit_type(self, lineno, col_offset):
+        return self._consume(self._explicit_types, lineno, col_offset)
         return self._explicit_types.pop((lineno, col_offset), (None, None))[1]
     
     def consume_type_definition(self, lineno, col_offset):
-        return self._type_definitions.pop((lineno, col_offset), (None, None))[1]
+        return self._consume(self._type_definitions, lineno, col_offset)
+    
+    def consume_generic(self, lineno, col_offset):
+        return self._consume(self._generics, lineno, col_offset)
+    
+    def _consume(self, values, lineno, col_offset):
+        return values.pop((lineno, col_offset), (None, None))[1]
