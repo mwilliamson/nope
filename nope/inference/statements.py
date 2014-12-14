@@ -2,6 +2,7 @@ import os
 
 from .. import nodes, types, returns, errors, branches, builtins, visit
 from ..lists import filter_by_type
+from ..iterables import find
 from . import ephemeral
 from .assignment import Assignment
 
@@ -94,8 +95,6 @@ class StatementTypeChecker(object):
             body_context.update_type(arg, body_arg_type)
         
         for statement in node.body:
-            if context.is_class and node.name == "__init__":    
-                self._check_init_statement(node, statement, body_context, context.class_type)
             self.update_context(statement, body_context)
         
         if return_type != types.none_type and not returns.has_unconditional_return(node.body):
@@ -181,6 +180,11 @@ class StatementTypeChecker(object):
         for method_node in method_nodes:
             func_type = self._infer_function_def(method_node, body_context)
             self._add_attr_to_type(method_node, meta_type, method_node.name, func_type)
+            
+        init = find(lambda method: method.name == "__init__", method_nodes)
+        if init is not None:
+            for statement in init.body:
+                self._check_init_statement(init, statement, body_context, class_type)
         
         return meta_type
         
