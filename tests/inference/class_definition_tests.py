@@ -345,6 +345,41 @@ def attributes_assigned_in_init_can_be_used_in_methods():
     _infer_class_type(node, ["__init__", "g"], [(init_func, ["self_init"])])
 
 
+@istest
+def attributes_assigned_in_init_can_be_used_in_methods_when_init_method_is_defined_after_other_method():
+    init_func = nodes.typed(
+        nodes.signature(
+            args=[nodes.signature_arg(nodes.ref("Self"))],
+            returns=nodes.ref("none")
+        ),
+        nodes.func(
+            name="__init__",
+            args=nodes.args([nodes.arg("self_init")]),
+            body=[
+                nodes.assign(
+                    [nodes.attr(nodes.ref("self_init"), "message")],
+                    nodes.string("Hello")
+                )
+            ],
+        )
+    )
+    node = nodes.class_def("User", [
+        nodes.typed(
+            nodes.signature(
+                args=[nodes.signature_arg(nodes.ref("Self"))],
+                returns=nodes.ref("str")
+            ),
+            nodes.func(
+                name="g",
+                args=nodes.args([nodes.arg("self_g")]),
+                body=[nodes.ret(nodes.attr(nodes.ref("self_g"), "message"))],
+            )
+        ),
+        init_func,
+    ])
+    _infer_class_type(node, ["__init__", "g"], [(init_func, ["self_init"])])
+
+
 def _create_class_with_init(signature, args, body):
     return nodes.class_def("User", [
         nodes.typed(

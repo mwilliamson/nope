@@ -110,13 +110,8 @@ class StatementTypeChecker(object):
     def _check_class_definition(self, node, context):
         self._check_base_classes(node, context)
         class_attr_types = self._check_class_assignments(node, context)
-        
         meta_type = self._infer_class_type(node, context, class_attr_types)
-        
-        body_context = self._enter_class_body_context(node, context, meta_type)
-        
-        for function_definition in filter_by_type(nodes.FunctionDef, node.body):
-            self.update_context(function_definition, body_context)
+        self._check_class_methods(node, context, meta_type)
     
     def _check_base_classes(self, node, context):
         base_classes = [
@@ -177,7 +172,19 @@ class StatementTypeChecker(object):
         meta_type.attrs.add("__call__", constructor_type, read_only=True)
         
         return meta_type
+    
+    def _check_class_methods(self, node, context, meta_type):
+        body_context = self._enter_class_body_context(node, context, meta_type)
         
+        functions = filter_by_type(nodes.FunctionDef, node.body)
+        for index, function in enumerate(functions):
+            if function.name == "__init__":
+                functions.insert(0, functions.pop(index))
+        
+        for function_definition in functions:
+            self.update_context(function_definition, body_context)
+        
+    
     def _add_attr_to_type(self, node, meta_type, attr_name, attr_type):
         class_type = meta_type.type
         is_init_method = attr_name == "__init__"
