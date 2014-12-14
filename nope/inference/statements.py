@@ -148,16 +148,6 @@ class StatementTypeChecker(object):
         for function_definition in function_definitions:
             if function_definition.name != "__init__":
                 self.update_context(function_definition, body_context)
-        
-        if "__init__" in attr_names:
-            init_declaration = class_declarations.declaration("__init__")
-            init_func_type = body_context.lookup_declaration(init_declaration)
-            init_method_type = self._function_type_to_method_type(init_func_type)
-            constructor_type = types.func(init_method_type.args, class_type)
-        else:
-            constructor_type = types.func([], class_type)
-        
-        meta_type.attrs.add("__call__", constructor_type, read_only=True)
     
     def _check_base_classes(self, node, context):
         base_classes = [
@@ -177,14 +167,25 @@ class StatementTypeChecker(object):
         method_nodes = filter_by_type(nodes.FunctionDef, node.body)
         
         body_context = self._enter_class_body_context(node, context, meta_type)
-        for method_node in method_nodes:
-            func_type = self._infer_function_def(method_node, body_context)
-            self._add_attr_to_type(method_node, meta_type, method_node.name, func_type)
+        method_func_types = dict(
+            (method_node.name, (method_node, self._infer_function_def(method_node, body_context)))
+            for method_node in method_nodes
+        )
+        for method_name, (method_node, func_type) in method_func_types.items():
+            self._add_attr_to_type(method_node, meta_type, method_name, func_type)
             
-        init = find(lambda method: method.name == "__init__", method_nodes)
-        if init is not None:
-            for statement in init.body:
-                self._check_init_statement(init, statement, body_context, class_type)
+        init = method_func_types.get("__init__")
+        if init is None:
+            constructor_type = types.func([], class_type)
+        else:
+            init_node, init_func_type = init
+            for statement in init_node.body:
+                self._check_init_statement(init_node, statement, body_context, class_type)
+            
+            init_method_type = self._function_type_to_method_type(init_func_type)
+            constructor_type = types.func(init_method_type.args, class_type)
+        
+        meta_type.attrs.add("__call__", constructor_type, read_only=True)
         
         return meta_type
         
