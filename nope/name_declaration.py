@@ -11,6 +11,7 @@ def _declare(node, declarations):
     visitor.replace(nodes.FunctionDef, _declare_function_def)
     visitor.replace(nodes.ClassDefinition, _declare_class_definition)
     visitor.before(nodes.TypeDefinition, _declare_type_definition)
+    visitor.before(nodes.FormalTypeParameter, _declare_formal_type_parameter)
     visitor.before(nodes.Argument, _declare_argument)
     visitor.before(nodes.Import, _declare_import)
     visitor.before(nodes.ImportFrom, _declare_import)
@@ -55,6 +56,10 @@ def _declare_class_definition(visitor, node, declarations):
 
 
 def _declare_type_definition(visitor, node, declarations):
+    declarations.declare(node.name, node, target_type=TypeDeclarationNode)
+
+
+def _declare_formal_type_parameter(visitor, node, declarations):
     declarations.declare(node.name, node, target_type=TypeDeclarationNode)
 
 

@@ -119,6 +119,16 @@ def type_definition_is_declared():
 
 
 @istest
+def formal_type_parameter_is_declared():
+    node = nodes.formal_type_parameter("T")
+    
+    declarations = _new_declarations()
+    declare(node, declarations)
+    assert_equal("T", declarations.declaration("T").name)
+    assert isinstance(declarations.declaration("T"), name_declaration.TypeDeclarationNode)
+
+
+@istest
 def argument_adds_declaration_to_declarations():
     declarations = _new_declarations()
     node = nodes.arg("x")
