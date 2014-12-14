@@ -96,6 +96,14 @@ class InitMethodsMustReturnNoneError(TypeCheckError):
         return "__init__ methods must return None"
 
 
+class InitMethodCannotGetSelfAttributes(TypeCheckError):
+    def __init__(self, node):
+        self.node = node
+    
+    def __str__(self):
+        return "__init__ methods cannot get attributes of self"
+
+
 class InitAttributeMustBeFunctionDefinitionError(TypeCheckError):
     def __init__(self, node):
         self.node = node

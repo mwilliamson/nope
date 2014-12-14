@@ -1,6 +1,7 @@
 import os
 
-from .. import nodes, types, returns, errors, branches, builtins
+from .. import nodes, types, returns, errors, branches, builtins, visit
+from ..lists import filter_by_type
 from . import ephemeral
 from .assignment import Assignment
 
@@ -111,18 +112,13 @@ class StatementTypeChecker(object):
     def _check_class_definition(self, node, context):
         self._check_base_classes(node, context)
         
-        class_type = types.scalar_type(node.name)
-        meta_type = types.meta_type(class_type)
+        meta_type = self._infer_class_type(node, context)
+        class_type = meta_type.type
         
         class_declarations = self._declaration_finder.declarations_in_class(node)
         attr_names = class_declarations.names()
         
-        body_context = context.enter_class(class_type)
-        body_context.update_declaration_type(
-            class_declarations.declaration("Self"),
-            meta_type
-        )
-        context.update_type(node, meta_type)
+        body_context = self._enter_class_body_context(node, context, meta_type)
         
         function_definitions = []
         assignments = []
@@ -139,31 +135,14 @@ class StatementTypeChecker(object):
                 # been verified in an earlier stage.
                 raise Exception("Unexpected statement in class body")
         
-        def add_attr_to_type(attr_name, attr_type):
-            is_init_method = attr_name == "__init__"
-            
-            if types.is_func_type(attr_type):
-                self._check_method_receiver_argument(node, class_type, attr_name, attr_type)
-                method_type = self._function_type_to_method_type(attr_type)
-                if is_init_method:
-                    if method_type.return_type != types.none_type:
-                        raise errors.InitMethodsMustReturnNoneError(node)
-                else:
-                    class_type.attrs.add(attr_name, method_type)
-            else:
-                class_type.attrs.add(attr_name, attr_type)
-                meta_type.attrs.add(attr_name, attr_type)
-        
         for assignment in assignments:
             self.update_context(assignment, body_context)        
             attr_type = self._infer(assignment.value, body_context)
             for target in assignment.targets:
                 if isinstance(target, nodes.VariableReference):
-                    add_attr_to_type(target.name, attr_type)
+                    self._add_attr_to_type(assignment, meta_type, target.name, attr_type)
         
         for function_definition in function_definitions:
-            func_type = self._infer_function_def(function_definition, body_context)
-            add_attr_to_type(function_definition.name, func_type)
             if function_definition.name == "__init__":
                 self.update_context(function_definition, body_context)
         
@@ -188,20 +167,79 @@ class StatementTypeChecker(object):
         ]
         if any(base_class != types.object_type for base_class in base_classes):
             raise errors.UnsupportedError("base classes other than 'object' are not supported")
+    
+    
+    def _infer_class_type(self, node, context):
+        class_type = types.scalar_type(node.name)
+        meta_type = types.meta_type(class_type)
         
+        context.update_type(node, meta_type)
+        
+        method_nodes = filter_by_type(nodes.FunctionDef, node.body)
+        
+        body_context = self._enter_class_body_context(node, context, meta_type)
+        for method_node in method_nodes:
+            func_type = self._infer_function_def(method_node, body_context)
+            self._add_attr_to_type(method_node, meta_type, method_node.name, func_type)
+        
+        return meta_type
+        
+    def _add_attr_to_type(self, node, meta_type, attr_name, attr_type):
+        class_type = meta_type.type
+        is_init_method = attr_name == "__init__"
+        
+        if types.is_func_type(attr_type):
+            self._check_method_receiver_argument(node, class_type, attr_name, attr_type)
+            method_type = self._function_type_to_method_type(attr_type)
+            if is_init_method:
+                if method_type.return_type != types.none_type:
+                    raise errors.InitMethodsMustReturnNoneError(node)
+            else:
+                class_type.attrs.add(attr_name, method_type)
+        else:
+            class_type.attrs.add(attr_name, attr_type)
+            meta_type.attrs.add(attr_name, attr_type)
+    
+    
+    def _enter_class_body_context(self, node, context, meta_type):
+        body_context = context.enter_class(meta_type.type)
+        class_declarations = self._declaration_finder.declarations_in_class(node)
+        body_context.update_declaration_type(
+            class_declarations.declaration("Self"),
+            meta_type
+        )
+        return body_context
+        
+    
     
     def _check_init_statement(self, node, statement, context, class_type):
         declarations_in_function = self._declaration_finder.declarations_in_function(node)
         self_arg_name = node.args.args[0].name
         self_declaration = declarations_in_function.declaration(self_arg_name)
+        
+        def is_self(ref):
+            return context.referenced_declaration(ref) == self_declaration
+        
+        self_targets = []
+        
         if isinstance(statement, nodes.Assignment):
             for target in statement.targets:
                 is_self_attr_assignment = (
                     isinstance(target, nodes.AttributeAccess) and
-                    context.referenced_declaration(target.value) == self_declaration
+                    is_self(target.value)
                 )
                 if is_self_attr_assignment:
                     class_type.attrs.add(target.attr, types.unknown_type, read_only=False)
+                    self_targets.append(target.value)
+        
+        
+        def check_self_reference_is_assignment_target(visitor, node):
+            if is_self(node) and node not in self_targets:
+                raise errors.InitMethodCannotGetSelfAttributes(node)
+        
+        visitor = visit.Visitor()
+        visitor.before(nodes.VariableReference, check_self_reference_is_assignment_target)
+        visitor.visit(statement)
                 
     
     def _function_type_to_method_type(self, func_type):

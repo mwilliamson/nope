@@ -143,7 +143,7 @@ def self_argument_in_method_signature_cannot_be_unrelated_type():
         _infer_class_type(node, ["is_person"])
         assert False, "Expected error"
     except errors.UnexpectedReceiverTypeError as error:
-        assert_equal(node, error.node)
+        assert_equal(func_node, error.node)
         assert_equal(types.boolean_type, error.receiver_type)
         assert_equal("first argument of methods should have Self type but was 'bool'", str(error))
 
@@ -166,7 +166,7 @@ def methods_must_have_at_least_one_argument():
         _infer_class_type(node, ["is_person"])
         assert False, "Expected error"
     except errors.MethodHasNoArgumentsError as error:
-        assert_equal(node, error.node)
+        assert_equal(func_node, error.node)
         assert_equal("'is_person' method must have at least one argument", str(error))
 
 
@@ -180,7 +180,7 @@ def method_signature_is_checked_when_defined_by_assignment():
         })
         assert False, "Expected error"
     except errors.MethodHasNoArgumentsError as error:
-        assert_equal(node, error.node)
+        assert_equal(func_node, error.node)
         assert_equal("is_person", error.attr_name)
 
 
@@ -226,7 +226,7 @@ def init_method_must_return_none():
         _infer_meta_type(node, ["__init__"])
         assert False, "Expected error"
     except errors.InitMethodsMustReturnNoneError as error:
-        assert_equal(node, error.node)
+        assert_equal(node.body[0], error.node)
 
 
 @istest
@@ -306,9 +306,8 @@ def init_method_cannot_call_other_methods():
     try:
         _infer_class_type(node, ["__init__", "g"])
         assert False, "Expected error"
-    except errors.NoSuchAttributeError as error:
-        # TODO: design a slightly more accurate error
-        assert_equal("'User' object has no attribute 'g'", str(error))
+    except errors.InitMethodCannotGetSelfAttributes as error:
+        assert_equal("__init__ methods cannot get attributes of self", str(error))
 
 
 @istest
