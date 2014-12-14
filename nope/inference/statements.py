@@ -109,12 +109,7 @@ class StatementTypeChecker(object):
             return formal_arg.type
     
     def _check_class_definition(self, node, context):
-        base_classes = [
-            self._infer_type_value(base_class, context)
-            for base_class in node.base_classes
-        ]
-        if any(base_class != types.object_type for base_class in base_classes):
-            raise errors.UnsupportedError("base classes other than 'object' are not supported")
+        self._check_base_classes(node, context)
         
         class_type = types.scalar_type(node.name)
         meta_type = types.meta_type(class_type)
@@ -185,6 +180,15 @@ class StatementTypeChecker(object):
             constructor_type = types.func([], class_type)
         
         meta_type.attrs.add("__call__", constructor_type, read_only=True)
+    
+    def _check_base_classes(self, node, context):
+        base_classes = [
+            self._infer_type_value(base_class, context)
+            for base_class in node.base_classes
+        ]
+        if any(base_class != types.object_type for base_class in base_classes):
+            raise errors.UnsupportedError("base classes other than 'object' are not supported")
+        
     
     def _check_init_statement(self, node, statement, context, class_type):
         declarations_in_function = self._declaration_finder.declarations_in_function(node)
