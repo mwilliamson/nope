@@ -114,9 +114,6 @@ class StatementTypeChecker(object):
         meta_type = self._infer_class_type(node, context)
         class_type = meta_type.type
         
-        class_declarations = self._declaration_finder.declarations_in_class(node)
-        attr_names = class_declarations.names()
-        
         body_context = self._enter_class_body_context(node, context, meta_type)
         
         function_definitions = []
