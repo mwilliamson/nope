@@ -2,7 +2,7 @@ from . import errors, types
 
 
 class Context(object):
-    def __init__(self, references, declaration_types, return_type=None, is_module_scope=False, class_type=None):
+    def __init__(self, references, declaration_types, return_type=None, is_module_scope=False):
         if isinstance(declaration_types, dict):
             declaration_types = DiffDict(declaration_types)
         
@@ -10,7 +10,6 @@ class Context(object):
         self._declaration_types = declaration_types
         self.return_type = return_type
         self.is_module_scope = is_module_scope
-        self.class_type = class_type
     
     def update_type(self, node, type_):
         declaration = self._references.referenced_declaration(node)
@@ -47,7 +46,6 @@ class Context(object):
             self._declaration_types,
             return_type=None,
             is_module_scope=False,
-            class_type=class_type,
         )
     
     def enter_module(self):
@@ -64,7 +62,6 @@ class Context(object):
             DiffDict(self._declaration_types),
             return_type=self.return_type,
             is_module_scope=self.is_module_scope,
-            class_type=self.class_type,
         )
     
     def update_declaration_types(self, other_contexts):
