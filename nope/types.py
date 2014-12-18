@@ -83,7 +83,6 @@ def _generate_attrs(attrs):
     return _Attributes(dict((attr.name, attr) for attr in (attrs or [])))
 
 
-# TODO: number of type params
 class _GenericType(object):
     def __init__(self, params, create_type, complete_type):
         self.params = params
@@ -98,6 +97,9 @@ class _GenericType(object):
         return self.instantiate(args)
     
     def instantiate(self, params):
+        if len(params) != len(self.params):
+            raise Exception("generic type requires exactly {} type parameter(s)".format(len(self.params)))
+        
         params = tuple(params)
         
         if params not in self._generic_cache:

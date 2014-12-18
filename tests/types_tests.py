@@ -424,6 +424,17 @@ class IsFuncTypeTests(object):
         ])
         assert not types.is_func_type(scalar_type)
         
+@istest
+class GenericTypeTests(object):
+    @istest
+    def cannot_instantiate_generic_type_with_wrong_number_of_type_parameters(self):
+        generic_type = types.generic_class("Option", ["T"])
+        try:
+            generic_type(types.int_type, types.int_type)
+            assert False, "Expected error"
+        except Exception as error:
+            assert_equal("generic type requires exactly 1 type parameter(s)", str(error))
+
 
 @istest
 class UnionTypeTests(object):
