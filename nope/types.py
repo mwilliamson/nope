@@ -653,7 +653,7 @@ from .builtin_types import (
     list_type, list_meta_type,
     dict_type, dict_meta_type,
     tuple_type,
-    slice_type,
+    slice_type, is_tuple,
     iterable,
     iterator,
     has_len,

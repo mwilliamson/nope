@@ -133,3 +133,9 @@ _tuple_types = [_create_tuple_class(index) for index in range(0, 10)]
 def tuple_type(*args):
     return _tuple_types[len(args)](*args)
 
+
+def is_tuple(type_):
+    return any(
+        tuple_type.is_instantiated_type(type_)
+        for tuple_type in _tuple_types
+    )

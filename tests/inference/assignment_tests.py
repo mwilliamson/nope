@@ -98,6 +98,24 @@ def assignment_to_tuple_must_have_correct_length_tuple():
         assert_equal("need 2 values to unpack, but only have 1" , str(error))
 
 
+
+@istest
+def assignment_to_tuple_must_have_tuple_value():
+    tuple_node = nodes.tuple_literal([nodes.ref("x")])
+    node = nodes.assign(
+        [tuple_node],
+        nodes.ref("value")
+    )
+    try:
+        update_context(node, type_bindings={
+            "value": types.list_type(types.int_type),
+        })
+        assert False, "Expected error"
+    except errors.CanOnlyUnpackTuplesError as error:
+        assert_equal(tuple_node, error.node)
+        assert_equal("only tuples can be unpacked" , str(error))
+
+
 @istest
 def cannot_reassign_read_only_attribute():
     cls = types.scalar_type("X", [types.attr("y", types.str_type, read_only=True)])

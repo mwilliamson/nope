@@ -88,6 +88,14 @@ class UnpackError(TypeCheckError):
         return "need {} values to unpack, but only have {}".format(self._target_length, self._value_length)
 
 
+class CanOnlyUnpackTuplesError(TypeCheckError):
+    def __init__(self, node):
+        self.node = node
+    
+    def __str__(self):
+        return "only tuples can be unpacked"
+
+
 class InitMethodsMustReturnNoneError(TypeCheckError):
     def __init__(self, node):
         self.node = node
