@@ -110,11 +110,13 @@ class _GenericType(object):
         return self._generic_cache[params]
     
     def is_instantiated_type(self, other):
-        # TODO: handle sub-typing
         return (
             isinstance(other, _InstantiatedType) and
             other.generic_type == self
         )
+    
+    def is_instantiated_sub_type(self, other):
+        return is_sub_type(self.instantiate(self.params), other, unify=self.params)
 
 
 class _InstantiatedType(object):

@@ -434,6 +434,27 @@ class GenericTypeTests(object):
             assert False, "Expected error"
         except Exception as error:
             assert_equal("generic type requires exactly 1 type parameter(s)", str(error))
+    
+    @istest
+    def type_is_instance_of_generic_type_when_type_is_direct_instantiation(self):
+        generic_type = types.generic_structural_type("box", ["T"], lambda T: [
+            types.attr("value", T)
+        ])
+        scalar_type = types.scalar_type("boxed_int", [types.attr("value", "int")])
+        
+        assert generic_type.is_instantiated_type(generic_type(types.int_type))
+        assert not generic_type.is_instantiated_type(scalar_type)
+    
+    @istest
+    def type_is_subtype_instance_of_generic_type_when_type_is_not_direct_instantiation(self):
+        generic_type = types.generic_structural_type("box", ["T"], lambda T: [
+            types.attr("value", T)
+        ])
+        scalar_type = types.scalar_type("boxed_int", [types.attr("value", "int")])
+        
+        assert generic_type.is_instantiated_sub_type(scalar_type)
+        assert generic_type.is_instantiated_sub_type(generic_type(types.int_type))
+        assert not generic_type.is_instantiated_sub_type(types.scalar_type("empty"))
 
 
 @istest
