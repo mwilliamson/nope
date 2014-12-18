@@ -280,18 +280,16 @@ class StatementTypeChecker(object):
 
     def _check_assignment(self, node, context):
         if node.explicit_type is not None:
-            hint = self._infer_type_value(node.explicit_type, context)
+            required_type = self._infer_type_value(node.explicit_type, context)
+            hint = None
         elif len(node.targets) == 1 and isinstance(node.targets[0], nodes.VariableReference):
+            required_type = None
             hint = context.lookup(node.targets[0], allow_unbound=True)
         else:
+            required_type = None
             hint = None
         
-        value_type = self._infer(node.value, context, hint=hint)
-        
-        if node.explicit_type is not None and not types.is_sub_type(hint, value_type):
-            raise errors.UnexpectedValueTypeError(node.value,
-                expected=hint,
-                actual=value_type)
+        value_type = self._infer(node.value, context, hint=hint, required_type=required_type)
         
         for target in node.targets:
             self._assign(node, target, value_type, context)
@@ -569,8 +567,8 @@ class StatementTypeChecker(object):
             import_path + ".py"
         )
         
-    def _infer(self, node, context, hint=None):
-        return self._expression_type_inferer.infer(node, context, hint=hint)
+    def _infer(self, node, context, hint=None, required_type=None):
+        return self._expression_type_inferer.infer(node, context, hint=hint, required_type=required_type)
     
     def _check_list(self, statements, context):
         for statement in statements:

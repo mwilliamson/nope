@@ -30,8 +30,14 @@ class ExpressionTypeInferer(object):
             ephemeral.FormalArgumentConstraint: lambda node, context, hint: node.type,
         }
     
-    def infer(self, expression, context, hint=None):
-        expression_type = self._inferers[type(expression)](expression, context, hint)
+    def infer(self, expression, context, hint=None, required_type=None):
+        expression_type = self._inferers[type(expression)](expression, context, required_type or hint)
+        
+        if required_type is not None and not types.is_sub_type(required_type, expression_type):
+            raise errors.UnexpectedValueTypeError(expression,
+                expected=required_type,
+                actual=expression_type)
+        
         self._type_lookup[expression] = expression_type
         return expression_type
     
