@@ -280,7 +280,6 @@ class StatementTypeChecker(object):
 
     def _check_assignment(self, node, context):
         if node.explicit_type is not None:
-            # TODO: raise error if value is not explicit_type
             hint = self._infer_type_value(node.explicit_type, context)
         elif len(node.targets) == 1 and isinstance(node.targets[0], nodes.VariableReference):
             hint = context.lookup(node.targets[0], allow_unbound=True)
@@ -288,6 +287,12 @@ class StatementTypeChecker(object):
             hint = None
         
         value_type = self._infer(node.value, context, hint=hint)
+        
+        if node.explicit_type is not None and not types.is_sub_type(hint, value_type):
+            raise errors.UnexpectedValueTypeError(node.value,
+                expected=hint,
+                actual=value_type)
+        
         for target in node.targets:
             self._assign(node, target, value_type, context)
     

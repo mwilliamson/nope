@@ -159,3 +159,22 @@ def when_target_has_explicit_type_that_type_is_used_as_type_hint():
         "object": types.meta_type(types.object_type),
     })
     assert_equal(types.list_type(types.object_type), context.lookup_name("x"))
+
+
+@istest
+def given_explicit_type_when_value_does_not_have_that_type_an_error_is_raised():
+    value_node = nodes.none()
+    node = nodes.assign(
+        [nodes.ref("x")],
+        value_node,
+        explicit_type=nodes.ref("int")
+    )
+    try:
+        update_context(node, type_bindings={
+            "int": types.meta_type(types.int_type),
+        })
+        assert False, "Expected error"
+    except errors.UnexpectedValueTypeError as error:
+        assert_equal(value_node, error.node)
+        assert_equal(types.none_type, error.actual)
+        assert_equal(types.int_type, error.expected)
