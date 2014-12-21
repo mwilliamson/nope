@@ -427,7 +427,7 @@ class IsFuncTypeTests(object):
 @istest
 class GenericTypeTests(object):
     @istest
-    def generic_type_has_name_without_any_type_parameters(self):
+    def instantiated_type_includes_names_of_actual_type_parameters(self):
         assert_equal("Option[int]", str(types.generic_class("Option", ["T"])(int_type)))
             
     @istest
