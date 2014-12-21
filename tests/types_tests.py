@@ -1,6 +1,7 @@
 from nose.tools import istest, assert_equal, assert_not_equal
 
 from nope import types
+from .testing import wip
 
 
 _formal_param = types.invariant("T")
@@ -466,6 +467,19 @@ class GenericTypeTests(object):
             types.attr("value", T)
         ])
         assert_equal(int_type, generic_type(int_type).attrs.type_of("value"))
+    
+    @wip
+    @istest
+    def instantiating_type_replaces_type_in_attributes_of_instantiated_attributes(self):
+        one = types.generic_class("one", ["A"])
+        two = types.generic_class("two", ["B"])
+        three = types.generic_class("three", ["C"], lambda C: [
+            types.attr("value", one(two(C))),
+        ])
+        assert_equal(
+            one(two(types.int_type)),
+            three(types.int_type).attrs.type_of("value"),
+        )
 
 
 @istest
