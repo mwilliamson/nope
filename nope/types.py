@@ -174,6 +174,9 @@ class _GenericType(object):
             type_map = dict(zip(self.params, params))
             inner_type = self._inner_type.value()
             underlying_type = inner_type.substitute_types_minimal(type_map)
+            # TODO: fix this awful hack.
+            if hasattr(underlying_type, "name"):
+                underlying_type.name = _instantiated_type_name(underlying_type.name.split("[")[0], params)
             # TODO: unify generic_cache and temp cache in subsitution with a global-ish type cache
             self._generic_cache[params] = _InstantiatedType(self, params, underlying_type)
             inner_type.substitute_types_finish(type_map, underlying_type)

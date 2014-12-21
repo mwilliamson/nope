@@ -427,6 +427,10 @@ class IsFuncTypeTests(object):
 @istest
 class GenericTypeTests(object):
     @istest
+    def generic_type_has_name_without_any_type_parameters(self):
+        assert_equal("Option[int]", str(types.generic_class("Option", ["T"])(int_type)))
+            
+    @istest
     def cannot_instantiate_generic_type_with_wrong_number_of_type_parameters(self):
         generic_type = types.generic_class("Option", ["T"])
         try:
