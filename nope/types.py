@@ -63,6 +63,26 @@ class _Attributes(object):
         )
 
 
+class _EmptyAttributes(object):
+    def get(self, name):
+        return None
+    
+    def type_of(self, name):
+        return None
+    
+    def __contains__(self, name):
+        return False
+    
+    def __iter__(self):
+        return iter([])
+    
+    def copy(self):
+        return self
+    
+    def names(self):
+        return []
+
+
 class _GenericTypeAttributes(object):
     def __init__(self, params, attrs):
         self._params = params
@@ -227,7 +247,7 @@ class _GenericFunc(object):
         self.formal_type_params = formal_type_params
         self._create_func = create_func
         self._generic_signature = create_func(*formal_type_params)
-        self.attrs = _Attributes({})
+        self.attrs = _EmptyAttributes()
     
     @property
     def args(self):
@@ -337,7 +357,7 @@ class _FunctionType(object):
     def __init__(self, args, return_type):
         self.args = tuple(args)
         self.return_type = return_type
-        self.attrs = _Attributes({})
+        self.attrs = _EmptyAttributes()
     
     def __eq__(self, other):
         if not isinstance(other, _FunctionType):
@@ -429,7 +449,7 @@ def is_generic_func_type(type_):
 class _UnionTypeBase(object):
     def __init__(self, types):
         self._types = tuple(types)
-        self.attrs = _Attributes({})
+        self.attrs = _EmptyAttributes()
     
     def __str__(self):
         return " | ".join(map(str, self._types))
