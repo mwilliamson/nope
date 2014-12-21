@@ -79,12 +79,12 @@ def _resolve_class_definition(visitor, node, context):
     for base_class in node.base_classes:
         visitor.visit(base_class, context)
     
-    for type_param in node.type_params:
-        visitor.visit(type_param, context)
-    
     context.add_reference(node, node.name)
     
     body_context = context.enter_class(node)
+    
+    for type_param in node.type_params:
+        visitor.visit(type_param, body_context)
     
     for statement in node.body:
         visitor.visit(statement, body_context)

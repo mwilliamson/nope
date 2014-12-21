@@ -371,16 +371,6 @@ def class_definition_base_classes_are_resolved():
     declarations = _create_declarations(["User", "object"])
     references = resolve(node, declarations)
     assert_is(declarations.declaration("object"), references.referenced_declaration(ref))
-    
-
-@istest
-def class_definition_type_parameters_are_resolved():
-    param = nodes.formal_type_parameter("T")
-    node = nodes.class_def("User", [], type_params=[param])
-    
-    declarations = _create_declarations(["User", "T"])
-    references = resolve(node, declarations)
-    assert_is(declarations.declaration("T"), references.referenced_declaration(param))
 
 
 @istest

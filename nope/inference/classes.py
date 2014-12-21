@@ -13,8 +13,8 @@ class ClassDefinitionTypeChecker(object):
     def check_class_definition(self, node, context):
         self._check_base_classes(node, context)
         class_attr_types = self._check_class_assignments(node, context)
-        meta_type = self._infer_class_type(node, context, class_attr_types)
-        self._check_class_methods(node, context, meta_type)
+        inner_meta_type = self._infer_class_type(node, context, class_attr_types)
+        self._check_class_methods(node, context, inner_meta_type)
     
     def _check_base_classes(self, node, context):
         base_classes = [
@@ -41,16 +41,30 @@ class ClassDefinitionTypeChecker(object):
             raise errors.InitAttributeMustBeFunctionDefinitionError(init[0])
         
         return attrs
-    
+        
     def _infer_class_type(self, node, context, class_attr_types):
-        class_type = types.scalar_type(node.name)
-        meta_type = types.meta_type(class_type)
+        if node.type_params:
+            type_params = [
+                types.invariant(type_param_node.name)
+                for type_param_node in node.type_params
+            ]
+            for type_param_node, type_param in zip(node.type_params, type_params):
+                context.update_type(type_param_node, types.meta_type(type_param))
+                
+            class_type = types.generic_class(node.name, type_params)
+            meta_type = types.meta_type(class_type)
+            
+            inner_class_type = class_type.instantiate(type_params)
+            inner_meta_type = types.meta_type(inner_class_type)
+        else:
+            inner_class_type = class_type = types.scalar_type(node.name)
+            inner_meta_type = meta_type = types.meta_type(class_type)
         
         context.update_type(node, meta_type)
         
         method_nodes = filter_by_type(nodes.FunctionDef, node.body)
         
-        body_context = self._enter_class_body_context(node, context, meta_type)
+        body_context = self._enter_class_body_context(node, context, types.meta_type(inner_class_type))
         method_func_types = dict(
             (method_node.name, (method_node, self._infer_function_def(method_node, body_context)))
             for method_node in method_nodes
@@ -58,19 +72,19 @@ class ClassDefinitionTypeChecker(object):
         attr_types = class_attr_types.copy()
         attr_types.update(method_func_types)
         for method_name, (method_node, func_type) in attr_types.items():
-            self._add_attr_to_type(method_node, meta_type, method_name, func_type)
+            self._add_attr_to_type(method_node, inner_meta_type, method_name, func_type)
             
         init = method_func_types.get("__init__")
         
         if init is not None:
             init_node, init_func_type = init
             for statement in init_node.body:
-                self._check_init_statement(init_node, statement, body_context, class_type)
+                self._check_init_statement(init_node, statement, body_context, inner_class_type)
         
         constructor_type = self._constructor_type(init, class_type)
         meta_type.attrs.add("__call__", constructor_type, read_only=True)
         
-        return meta_type
+        return inner_meta_type
     
     def _constructor_type(self, init, class_type):
         if init is None:
