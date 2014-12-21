@@ -26,9 +26,8 @@ class ClassDefinitionTypeChecker(object):
     
     def _check_class_assignments(self, node, context):
         assignments = filter_by_type(nodes.Assignment, node.body)
-        body_context = self._enter_class_body_context(node, context, types.unknown_type)
         for assignment in assignments:
-            self._update_context(assignment, body_context)       
+            self._update_context(assignment, context)
         
         attrs = dict(
             (target.name, (assignment, context.lookup(target)))
