@@ -14,6 +14,12 @@ class _Attribute(object):
     
     def __repr__(self):
         return "_Attribute({}, {}, {})".format(self.name, self.type, self.read_only)
+    
+    def substitute_types_minimal(self, type_map):
+        return _Attribute(self.name, None, self.read_only)
+    
+    def substitute_types_finish(self, type_map, new_type):
+        new_type.type = _substitute_types(type_map, self.type)
 
 
 attr = _Attribute
@@ -46,6 +52,15 @@ class _Attributes(object):
     
     def names(self):
         return self._attrs.keys()
+    
+    def substitute_types_minimal(self, type_map):
+        return _Attributes(None)
+    
+    def substitute_types_finish(self, type_map, new_type):
+        new_type._attrs = dict(
+            (attr.name, _substitute_types(type_map, attr))
+            for attr in self._attrs.values()
+        )
 
 
 class _GenericTypeAttributes(object):
@@ -58,12 +73,11 @@ class _GenericTypeAttributes(object):
 
 
 class _ScalarType(object):
-    def __init__(self, name, attrs, base_classes):
-        assert isinstance(attrs, _Attributes)
-        
+    def __init__(self, name, attrs, base_classes, is_generic):
         self.name = name
         self.attrs = attrs
         self.base_classes = base_classes
+        self._is_generic = is_generic
     
     def __str__(self):
         return self.name
@@ -71,27 +85,61 @@ class _ScalarType(object):
     def __repr__(self):
         return str(self)
     
+    def substitute_types_minimal(self, type_map):
+        if self._is_generic:
+            return _ScalarType(self.name, None, None, self._is_generic)
+        else:
+            return self
+    
+    def substitute_types_finish(self, type_map, new_type):
+        new_type.attrs = _substitute_types(type_map, self.attrs)
+        new_type.base_classes = [
+            _substitute_types(type_map, base_class)
+            for base_class in self.base_classes
+        ]
+    
 
-def scalar_type(name, attrs=None, base_classes=None):
+def scalar_type(name, attrs=None, base_classes=None, is_generic=False):
     if base_classes is None:
         base_classes = []
     
-    return _ScalarType(name, _generate_attrs(attrs), base_classes)
+    return _ScalarType(name, _generate_attrs(attrs), base_classes, is_generic=is_generic)
 
 
 def _generate_attrs(attrs):
-    return _Attributes(dict((attr.name, attr) for attr in (attrs or [])))
+    return _Attributes(_generate_attr_dict(attrs))
+
+
+def _generate_attr_dict(attrs):
+    return dict((attr.name, attr) for attr in (attrs or []))
+
+
+class _LazyValue(object):
+    def __init__(self, func):
+        self._func = func
+        self._is_cached = False
+    
+    def value(self):
+        if not self._is_cached:
+            self._cache = self._func()
+            self._is_cached = True
+        
+        return self._cache
 
 
 class _GenericType(object):
-    def __init__(self, params, create_type, complete_type):
+    def __init__(self, params, inner_type, complete_inner_type):
         self.params = params
-        self._create_type = create_type
-        self._complete_type = complete_type
+        
+        def _generate_inner_type():
+            complete_inner_type(inner_type, *params)
+            return inner_type
+        
+        self._inner_type = _LazyValue(_generate_inner_type)
         # TODO: the cache lives too long -- for instance,
         # builtin types such as int will never evict anything from the cache,
         # and will never be deleted, meaning it will grow on each compilation
-        self._generic_cache = {}
+        self._generic_cache = {tuple(params): _InstantiatedType(self, params, inner_type)}
     
     def __call__(self, *args):
         return self.instantiate(args)
@@ -103,9 +151,13 @@ class _GenericType(object):
         params = tuple(params)
         
         if params not in self._generic_cache:
-            new_type = self._create_type(*params)
-            self._generic_cache[params] = _InstantiatedType(self, params, new_type)
-            self._complete_type(new_type, *params)
+            type_map = dict(zip(self.params, params))
+            inner_type = self._inner_type.value()
+            underlying_type = inner_type.substitute_types_minimal(type_map)
+            # TODO: unify generic_cache and temp cache in subsitution with a global-ish type cache
+            self._generic_cache[params] = _InstantiatedType(self, params, underlying_type)
+            inner_type.substitute_types_finish(type_map, underlying_type)
+            
         
         return self._generic_cache[params]
     
@@ -117,6 +169,14 @@ class _GenericType(object):
     
     def is_instantiated_sub_type(self, other):
         return is_sub_type(self.instantiate(self.params), other, unify=self.params)
+
+
+def _substitute_types(type_map, type_):
+    if type_ not in type_map:
+        type_map[type_] = type_.substitute_types_minimal(type_map)
+        type_.substitute_types_finish(type_map, type_map[type_])
+    
+    return type_map[type_]
 
 
 class _InstantiatedType(object):
@@ -134,6 +194,15 @@ class _InstantiatedType(object):
         
     def __str__(self):
         return str(self._underlying_type)
+    
+    def substitute_types_minimal(self, type_map):
+        return self.generic_type.instantiate(tuple(
+            type_map.get(type_param, type_param)
+            for type_param in self.type_params
+        ))
+    
+    def substitute_types_finish(self, type_map, new_type):
+        pass
 
 
 def is_generic_type(type_):
@@ -141,12 +210,16 @@ def is_generic_type(type_):
 
 
 def generic(params, create_type, attrs=None):
-    def complete_type(new_type, *params):
-        if attrs is not None:
-            new_type.attrs = _generate_attrs(attrs(*params))
+    if attrs is None:
+        attrs = lambda *args: []
+    
+    def complete_inner_type(new_type, *params):
+        for attr in attrs(*params):
+            new_type.attrs.add(attr.name, attr.type, attr.read_only)
     
     formal_params = [_formal_param(param) for param in params]
-    return _GenericType(formal_params, create_type, complete_type)
+    
+    return _GenericType(formal_params, create_type(*formal_params), complete_inner_type)
 
 
 class _GenericFunc(object):
@@ -188,11 +261,12 @@ def generic_class(name, formal_params, attrs=None):
     if attrs is None:
         attrs = lambda *params: []
     
-    return generic(
+    result = generic(
         formal_params,
-        lambda *params: scalar_type(_instantiated_type_name(name, params)),
+        lambda *params: scalar_type(_instantiated_type_name(name, params), is_generic=True),
         attrs=attrs,
     )
+    return result
 
 def _instantiated_type_name(name, params):
     return "{}[{}]".format(name, ", ".join(map(str, params)))
@@ -215,7 +289,7 @@ def _formal_param(param):
     if isinstance(param, _FormalParameter):
         return param
     else:
-        return _FormalParameter(param, _Variance.Invariant)
+        return invariant(param)
 
 
 def invariant(name):
@@ -232,13 +306,17 @@ def contravariant(name):
 
 class _StructuralType(object):
     def __init__(self, name, attrs):
-        assert isinstance(attrs, _Attributes)
-        
         self.name = name
         self.attrs = attrs
     
     def __str__(self):
         return self.name
+    
+    def substitute_types_minimal(self, type_map):
+        return _StructuralType(self.name, None)
+    
+    def substitute_types_finish(self, type_map, new_type):
+        new_type.attrs = _substitute_types(type_map, self.attrs)
     
 
 def structural_type(name, attrs=None):
@@ -279,6 +357,13 @@ class _FunctionType(object):
     
     def __repr__(self):
         return str(self)
+    
+    def substitute_types_minimal(self, type_map):
+        return _FunctionType((), None)
+    
+    def substitute_types_finish(self, type_map, new_type):
+        new_type.args = tuple(_substitute_types(type_map, arg) for arg in self.args)
+        new_type.return_type = _substitute_types(type_map, self.return_type)
 
 
 class _FunctionTypeArgument(object):
@@ -309,6 +394,12 @@ class _FunctionTypeArgument(object):
             return "?" + with_name
         else:
             return with_name
+    
+    def substitute_types_minimal(self, type_map):
+        return _FunctionTypeArgument(self.name, None, self.optional)
+    
+    def substitute_types_finish(self, type_map, new_type):
+        new_type.type = _substitute_types(type_map, self.type)
 
 
 def func(args, return_type):
@@ -356,7 +447,13 @@ class _UnionTypeBase(object):
     
     def __neq__(self, other):
         return not (self == other)
-
+    
+    def substitute_types_minimal(self, type_map):
+        return type(self)(())
+    
+    def substitute_types_finish(self, type_map, new_type):
+        new_type._types = tuple(_substitute_types(type_map, type_) for type_ in self._types)
+        
 
 class _UnionType(_UnionTypeBase):
     _union_type_name = "union"
