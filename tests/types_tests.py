@@ -459,6 +459,13 @@ class GenericTypeTests(object):
         assert generic_type.is_instantiated_sub_type(scalar_type)
         assert generic_type.is_instantiated_sub_type(generic_type(types.int_type))
         assert not generic_type.is_instantiated_sub_type(types.scalar_type("empty"))
+    
+    @istest
+    def instantiating_type_replaces_type_in_attributes(self):
+        generic_type = types.generic_structural_type("box", ["T"], lambda T: [
+            types.attr("value", T)
+        ])
+        assert_equal(int_type, generic_type(int_type).attrs.type_of("value"))
 
 
 @istest
