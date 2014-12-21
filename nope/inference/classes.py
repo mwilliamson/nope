@@ -49,8 +49,6 @@ class ClassDefinitionTypeChecker(object):
         
         context.update_type(node, meta_type)
         
-        method_nodes = filter_by_type(nodes.FunctionDef, node.body)
-        
         body_context = self._enter_class_body_context(node, context, types.meta_type(inner_class_type))
         
         attr_types = self._unbound_attribute_types(node, body_context)
