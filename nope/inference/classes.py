@@ -12,8 +12,8 @@ class ClassDefinitionTypeChecker(object):
     
     def check_class_definition(self, node, context):
         self._check_base_classes(node, context)
-        class_attr_types = self._check_class_assignments(node, context)
-        inner_meta_type = self._infer_class_type(node, context, class_attr_types)
+        self._check_class_assignments(node, context)
+        inner_meta_type = self._infer_class_type(node, context)
         self._check_class_methods(node, context, inner_meta_type)
     
     def _check_base_classes(self, node, context):
@@ -29,20 +29,7 @@ class ClassDefinitionTypeChecker(object):
         for assignment in assignments:
             self._update_context(assignment, context)
         
-        attrs = dict(
-            (target.name, (assignment, context.lookup(target)))
-            for assignment in assignments
-            for target in assignment.targets
-            if isinstance(target, nodes.VariableReference)
-        )
-        
-        init = attrs.get("__init__")
-        if init is not None:
-            raise errors.InitAttributeMustBeFunctionDefinitionError(init[0])
-        
-        return attrs
-        
-    def _infer_class_type(self, node, context, class_attr_types):
+    def _infer_class_type(self, node, context):
         if node.type_params:
             type_params = [
                 types.invariant(type_param_node.name)
@@ -65,13 +52,13 @@ class ClassDefinitionTypeChecker(object):
         method_nodes = filter_by_type(nodes.FunctionDef, node.body)
         
         body_context = self._enter_class_body_context(node, context, types.meta_type(inner_class_type))
-        method_func_types = self._unbound_method_types(method_nodes, body_context)
-        attr_types = class_attr_types.copy()
-        attr_types.update(method_func_types)
+        
+        attr_types = self._unbound_attribute_types(node, body_context)
+        
         for method_name, (method_node, func_type) in attr_types.items():
             self._add_attr_to_type(method_node, inner_meta_type, method_name, func_type)
             
-        init = method_func_types.get("__init__")
+        init = attr_types.get("__init__")
         
         if init is not None:
             init_node, init_func_type = init
@@ -94,11 +81,30 @@ class ClassDefinitionTypeChecker(object):
         meta_type.attrs.add("__call__", constructor_type, read_only=True)
         
         return inner_meta_type
+    
+    def _unbound_attribute_types(self, node, body_context):
+        attrs = self._unbound_assigned_attribute_types(node, body_context)
+        attrs.update(self._unbound_method_types(node, body_context))
+        return attrs
+    
+    def _unbound_assigned_attribute_types(self, node, context):
+        attrs = dict(
+            (target.name, (assignment, context.lookup(target)))
+            for assignment in filter_by_type(nodes.Assignment, node.body)
+            for target in assignment.targets
+            if isinstance(target, nodes.VariableReference)
+        )
         
-    def _unbound_method_types(self, method_nodes, body_context):
+        init = attrs.get("__init__")
+        if init is not None:
+            raise errors.InitAttributeMustBeFunctionDefinitionError(init[0])
+        
+        return attrs
+    
+    def _unbound_method_types(self, node, body_context):
         return dict(
             (method_node.name, (method_node, self._infer_function_def(method_node, body_context)))
-            for method_node in method_nodes
+            for method_node in filter_by_type(nodes.FunctionDef, node.body)
         )
     
     def _constructor_type(self, init, class_type):
