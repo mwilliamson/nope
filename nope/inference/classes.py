@@ -51,21 +51,8 @@ class ClassDefinitionTypeChecker(object):
         
         body_context = self._enter_class_body_context(node, context, types.meta_type(inner_class_type))
         
-        attr_types = self._unbound_attribute_types(node, body_context)
+        inner_constructor_type = self._add_attrs_to_inner_type(node, body_context, inner_meta_type)
         
-        for method_name, (method_node, func_type) in attr_types.items():
-            self._add_attr_to_type(method_node, inner_meta_type, method_name, func_type)
-            
-        init = attr_types.get("__init__")
-        
-        if init is not None:
-            init_node, init_func_type = init
-            for statement in init_node.body:
-                self._check_init_statement(init_node, statement, body_context, inner_class_type)
-            
-            self._update_context(init_node, body_context)
-        
-        inner_constructor_type = self._constructor_type(init, inner_class_type)
         if node.type_params:
             constructor_type = types.generic_func(
                 type_params,
@@ -81,6 +68,25 @@ class ClassDefinitionTypeChecker(object):
         meta_type.attrs.add("__call__", constructor_type, read_only=True)
         
         return inner_meta_type
+    
+    def _add_attrs_to_inner_type(self, node, body_context, inner_meta_type):
+        inner_class_type = inner_meta_type.type
+        
+        attr_types = self._unbound_attribute_types(node, body_context)
+        
+        for method_name, (method_node, func_type) in attr_types.items():
+            self._add_attr_to_type(method_node, inner_meta_type, method_name, func_type)
+            
+        init = attr_types.get("__init__")
+        
+        if init is not None:
+            init_node, init_func_type = init
+            for statement in init_node.body:
+                self._check_init_statement(init_node, statement, body_context, inner_class_type)
+            
+            self._update_context(init_node, body_context)
+        
+        return self._constructor_type(init, inner_class_type)
     
     def _unbound_attribute_types(self, node, body_context):
         attrs = self._unbound_assigned_attribute_types(node, body_context)
