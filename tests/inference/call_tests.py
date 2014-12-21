@@ -92,6 +92,22 @@ def return_type_is_common_super_type_of_possible_return_types_of_overloaded_func
 
 
 @istest
+def error_in_inferring_actual_argument_to_overloaded_function_is_not_failure_to_find_matching_overload():
+    type_bindings = {"f": types.overloaded_func(
+        types.func([types.object_type], types.any_type),
+        types.func([types.str_type], types.any_type),
+    )}
+    
+    ref = nodes.ref("x")
+    
+    try:
+        infer(nodes.call(nodes.ref("f"), [ref]), type_bindings=type_bindings)
+        assert False, "Expected error"
+    except errors.TypeCheckError as error:
+        assert_equal(ref, error.node)
+
+
+@istest
 def callee_can_be_generic_func():
     type_bindings = {"f": types.generic_func(["T"], lambda T:
         types.func([T], types.int_type),

@@ -90,6 +90,11 @@ class ExpressionTypeInferer(object):
 
     def _infer_call(self, node, context, hint):
         callee_type = self.infer(node.func, context)
+        for arg in node.args:
+            self.infer(arg, context)
+        for arg in node.kwargs.values():
+            self.infer(arg, context)
+            
         return self._infer_call_with_callee_type(node, callee_type, context)
     
     def _infer_call_with_callee_type(self, node, callee_type, context):
