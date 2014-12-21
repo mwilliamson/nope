@@ -420,6 +420,15 @@ def type_definition_is_resolved_to_type_declaration():
 
 
 @istest
+def formal_type_parameter_is_resolved_to_type_declaration():
+    node = nodes.formal_type_parameter("T")
+    
+    declarations = _create_declarations(["T"])
+    references = resolve(node, declarations)
+    assert_is(declarations.declaration("T"), references.referenced_declaration(node))
+
+
+@istest
 def import_multiple_aliases_using_same_name_resolve_to_same_node():
     declarations = _create_declarations(["x"])
     first_alias_node = nodes.import_alias("x.y", None)
