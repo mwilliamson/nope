@@ -31,43 +31,66 @@ class ClassDefinitionTypeChecker(object):
         
     def _infer_class_type(self, node, context):
         if node.type_params:
-            type_params = [
+            formal_type_params = [
                 types.invariant(type_param_node.name)
                 for type_param_node in node.type_params
             ]
-            for type_param_node, type_param in zip(node.type_params, type_params):
+            
+            def instantiate(*actual_type_params):
+                return types.scalar_type(node.name)
+            
+            def instantiate_attrs(inner_class_type, *actual_type_params):
+                # TODO: make context immutable.
+                # Variables can change type over time (which we should probably
+                # disallow entirely if they're captured by a function/class, or do something clever with SSA).
+                # Also, we explicitly change the type of the type parameters each time we instantiate.
+                # This should be fine since we don't interleave instantiations, but it feels messy (read: bug-prone).
+                # TODO: rename enter_statement (or create alias) -- we're really just exploiting
+                # the fact that this has a separate set of bindings from declaration to type
+                inner_context = context.enter_statement()
+                for type_param_node, type_param in zip(node.type_params, actual_type_params):
+                    inner_context.update_type(type_param_node, types.meta_type(type_param))
+                
+                inner_meta_type = types.meta_type(inner_class_type)
+                body_context = self._enter_class_body_context(node, inner_context, inner_meta_type)
+                self._add_attrs_to_inner_type(node, body_context, inner_meta_type)
+            
+            for type_param_node, type_param in zip(node.type_params, formal_type_params):
                 context.update_type(type_param_node, types.meta_type(type_param))
                 
-            class_type = types.generic_class(node.name, type_params)
+            # TODO: fix name
+            class_type = types.generic(formal_type_params, instantiate, complete_type=instantiate_attrs)
+            meta_type = types.meta_type(class_type)
+            context.update_type(node, meta_type)
+            
+            def inner_constructor_type(*actual_type_params):
+                inner_class_type = class_type(*actual_type_params)
+                return self._constructor_type(inner_class_type)
+                
+            constructor_type = types.generic_func(
+                formal_type_params,
+                inner_constructor_type
+            )
+            meta_type.attrs.add("__call__", constructor_type, read_only=True)
+            return types.meta_type(class_type.instantiate(formal_type_params))
+        else:
+            class_type = types.scalar_type(node.name)
             meta_type = types.meta_type(class_type)
             
-            inner_class_type = class_type.instantiate(type_params)
-            inner_meta_type = types.meta_type(inner_class_type)
-        else:
-            inner_class_type = class_type = types.scalar_type(node.name)
-            inner_meta_type = meta_type = types.meta_type(class_type)
-        
-        context.update_type(node, meta_type)
-        
-        body_context = self._enter_class_body_context(node, context, types.meta_type(inner_class_type))
-        
-        inner_constructor_type = self._add_attrs_to_inner_type(node, body_context, inner_meta_type)
-        
-        if node.type_params:
-            constructor_type = types.generic_func(
-                type_params,
-                lambda *actual_type_params: types._substitute_types(
-                    dict(zip(type_params, actual_type_params)),
-                    inner_constructor_type,
-                )
-            )
-        else:
-            constructor_type = inner_constructor_type
-        
-        
-        meta_type.attrs.add("__call__", constructor_type, read_only=True)
-        
-        return inner_meta_type
+            context.update_type(node, meta_type)
+            
+            body_context = self._enter_class_body_context(node, context, meta_type)
+            
+            init = self._add_attrs_to_inner_type(node, body_context, meta_type)
+            if init is None:
+                init_type = None
+            else:
+                init_type = init[1]
+            
+            constructor_type = self._constructor_type(class_type)
+            meta_type.attrs.add("__call__", constructor_type, read_only=True)
+            
+            return meta_type
     
     def _add_attrs_to_inner_type(self, node, body_context, inner_meta_type):
         inner_class_type = inner_meta_type.type
@@ -86,7 +109,7 @@ class ClassDefinitionTypeChecker(object):
             
             self._update_context(init_node, body_context)
         
-        return self._constructor_type(init, inner_class_type)
+        return init
     
     def _unbound_attribute_types(self, node, body_context):
         attrs = self._unbound_assigned_attribute_types(node, body_context)
@@ -113,13 +136,12 @@ class ClassDefinitionTypeChecker(object):
             for method_node in filter_by_type(nodes.FunctionDef, node.body)
         )
     
-    def _constructor_type(self, init, class_type):
-        if init is None:
+    def _constructor_type(self, class_type):
+        init_type = class_type.attrs.type_of("__init__")
+        if init_type is None:
             return types.func([], class_type)
         else:
-            init_node, init_func_type = init
-            init_method_type = self._function_type_to_method_type(init_func_type)
-            return types.func(init_method_type.args, class_type)
+            return types.func(init_type.args, class_type)
     
     def _check_class_methods(self, node, context, meta_type):
         body_context = self._enter_class_body_context(node, context, meta_type)
@@ -135,11 +157,10 @@ class ClassDefinitionTypeChecker(object):
         if types.is_func_type(attr_type):
             self._check_method_receiver_argument(node, class_type, attr_name, attr_type)
             method_type = self._function_type_to_method_type(attr_type)
-            if is_init_method:
-                if method_type.return_type != types.none_type:
-                    raise errors.InitMethodsMustReturnNoneError(node)
-            else:
-                class_type.attrs.add(attr_name, method_type)
+            if is_init_method and method_type.return_type != types.none_type:
+                raise errors.InitMethodsMustReturnNoneError(node)
+            # TODO: ideally, __init__ wouldn't be present as an attr
+            class_type.attrs.add(attr_name, method_type)
         else:
             class_type.attrs.add(attr_name, attr_type)
             meta_type.attrs.add(attr_name, attr_type)

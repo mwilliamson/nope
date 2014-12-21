@@ -160,10 +160,11 @@ def is_generic_type(type_):
     return isinstance(type_, _GenericType)
 
 
-def generic(params, create_type, attrs=None):
-    def complete_type(new_type, *params):
-        if attrs is not None:
-            new_type.attrs = _generate_attrs(attrs(*params))
+def generic(params, create_type, attrs=None, complete_type=None):
+    if complete_type is None:
+        def complete_type(new_type, *params):
+            if attrs is not None:
+                new_type.attrs = _generate_attrs(attrs(*params))
     
     formal_params = [_formal_param(param) for param in params]
     return _GenericType(formal_params, create_type, complete_type)

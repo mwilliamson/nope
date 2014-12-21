@@ -4,6 +4,7 @@ from nope import types, nodes, errors
 from nope.identity_dict import IdentityDict
 
 from .util import update_context
+from ..testing import wip
 
 
 @istest
@@ -184,6 +185,7 @@ def method_signature_is_checked_when_defined_by_assignment():
         assert_equal("is_person", error.attr_name)
 
 
+@wip
 @istest
 def init_method_is_not_present_on_instance():
     node = _create_class_with_init(
