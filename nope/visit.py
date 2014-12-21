@@ -53,6 +53,8 @@ class Visitor(object):
             
             nodes.Module: self._visit_module,
             
+            nodes.Statements: self._visit_statements_node,
+            
             type(None): lambda *args: None
         }
         self._visitors = self._default_visitors.copy()
@@ -100,6 +102,9 @@ class Visitor(object):
         
         return result
 
+    
+    def _visit_statements_node(self, statements, *args):
+        return nodes.Statements(self._visit_statements(statements.body, *args))
     
     def _visit_statements(self, statements, *args):
         return self._visit_all(statements, *args)

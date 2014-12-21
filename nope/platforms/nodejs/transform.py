@@ -39,7 +39,6 @@ class NodeTransformer(zuice.Base):
             nodes.TryStatement: self._try_statement,
             nodes.RaiseStatement: self._raise_statement,
             nodes.AssertStatement: self._assert_statement,
-            nodes.WithStatement: self._with_statement,
             
             nodes.Call: self._call,
             nodes.AttributeAccess: self._attr,
@@ -72,7 +71,10 @@ class NodeTransformer(zuice.Base):
             if result is not None:
                 return result
         
-        return self._transformers[node_type](nope_node)
+        if node_type in self._transformers:
+            return self._transformers[node_type](nope_node)
+        
+        raise Exception("Could not transform node: {}".format(nope_node))
     
     def _module(self, module):
         var_statements = [
@@ -487,56 +489,6 @@ class NodeTransformer(zuice.Base):
         ])
     
     
-    def _with_statement(self, statement):
-        exception_name = self._unique_name("exception")
-        manager_name = self._unique_name("manager")
-        exit_method_var_name = self._unique_name("exit")
-        error_name = self._unique_name("error")
-        has_exited_name = self._unique_name("hasExited")
-        
-        manager_ref = js.ref(manager_name)
-        
-        enter_value = js.call(self._get_magic_method(manager_ref, "enter"), [])
-        if statement.target is None:
-            enter_statement = js.expression_statement(enter_value)
-        else:
-            enter_statement = self._create_single_assignment(statement.target, enter_value)
-        
-        return js.statements([
-            js.var(manager_name, self.transform(statement.value)),
-            js.var(exit_method_var_name, self._get_magic_method(manager_ref, "exit")),
-            js.var(has_exited_name, js.boolean(False)),
-            enter_statement,
-            js.try_catch(
-                self._transform_all(statement.body),
-                error_name=error_name,
-                catch_body=[
-                    js.var(exception_name, self._get_nope_exception_from_error(js.ref(error_name))),
-                    js.assign_statement(js.ref(has_exited_name), js.boolean(True)),
-                    js.if_else(
-                        js.unary_operation("!", self._builtins_bool(js.call(js.ref(exit_method_var_name), [
-                            _call_builtin("type", [js.ref(exception_name)]),
-                            js.ref(exception_name),
-                            js.null,
-                        ]))),
-                        [js.throw(js.ref(error_name))],
-                        [],
-                    ),
-                    
-                ],
-                finally_body=[
-                    js.if_else(
-                        js.unary_operation("!", js.ref(has_exited_name)),
-                        [
-                            js.expression_statement(js.call(js.ref(exit_method_var_name), [js.null, js.null, js.null])),
-                        ],
-                        [],
-                    ),
-                ],
-            ),
-        ])
-
-
     def _call(self, call):
         # TODO: proper support for __call__
         # at the moment, we only support meta-types that are directly callable e.g. str()

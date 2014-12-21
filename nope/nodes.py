@@ -117,7 +117,7 @@ class ImportAlias(_create_node("ImportAlias", ["name", "asname"])):
         return self.name.split(".")
 
 Module = _create_node("Module", ["body", "is_executable"])
-
+Statements = _create_node("Statements", ["body"])
 
 def none():
     return NoneLiteral()

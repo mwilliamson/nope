@@ -10,6 +10,7 @@ from ...modules import Module
 from .transform import NodeTransformer
 from . import js, operations
 from ...walk import walk_tree
+from ...desugar import desugar
 
 
 class CodeGenerator(zuice.Base):
@@ -21,7 +22,7 @@ class CodeGenerator(zuice.Base):
             files.mkdir_p(os.path.join(destination_root, relative_path))
         
         def handle_file(path, relative_path):
-            module = self._source_tree.module(path)
+            module = desugar(self._source_tree.module(path))
             
             destination_dir = os.path.dirname(os.path.join(destination_root, relative_path))
             
