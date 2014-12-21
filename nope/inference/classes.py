@@ -81,7 +81,21 @@ class ClassDefinitionTypeChecker(object):
             for statement in init_node.body:
                 self._check_init_statement(init_node, statement, body_context, inner_class_type)
         
-        constructor_type = self._constructor_type(init, class_type)
+        inner_constructor_type = self._constructor_type(init, inner_class_type)
+        if node.type_params:
+            # TODO: remove usage of _substitute_types. Either make it public,
+            # or reimplement generic functions using type substitution (probably the latter)
+            constructor_type = types.generic_func(
+                type_params,
+                lambda *actual_type_params: types._substitute_types(
+                    dict(zip(type_params, actual_type_params)),
+                    inner_constructor_type,
+                )
+            )
+        else:
+            constructor_type = inner_constructor_type
+        
+        
         meta_type.attrs.add("__call__", constructor_type, read_only=True)
         
         return inner_meta_type

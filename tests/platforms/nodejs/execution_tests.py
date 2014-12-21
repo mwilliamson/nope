@@ -10,6 +10,7 @@ from nope.platforms import nodejs
 from nope import injection
 from .. import execution
 from .runner import SingleProcessRunner
+from ...testing import wip
 
 
 @istest
@@ -53,9 +54,10 @@ class NodeJsExecutionTests(execution.ExecutionTests):
     def create_fast_runner():
         return SingleProcessRunner.start()
     
-    test_getitem_dict = None
-    test_unnested_list_comprehension = None
-    test_unnested_generator_expression = None
+    test_getitem_dict = wip(execution.ExecutionTests.test_getitem_dict)
+    test_unnested_list_comprehension = wip(execution.ExecutionTests.test_unnested_list_comprehension)
+    test_unnested_generator_expression = wip(execution.ExecutionTests.test_unnested_generator_expression)
+    test_generic_class_type_parameters_are_inferred_from_init_method = wip(execution.ExecutionTests.test_generic_class_type_parameters_are_inferred_from_init_method)
 
 
 @istest
