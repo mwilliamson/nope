@@ -32,7 +32,7 @@ _builtin_types = {
         types.iterable(types.tuple_type(T1, T2))
     )),
     
-    "isinstance": types.func([types.object_type, types.any_meta_type], types.boolean_type),
+    "isinstance": types.func([types.object_type, types.any_meta_type], types.bool_type),
 }
 
 
@@ -63,7 +63,7 @@ builtin_modules = {
         types.attr(
             "escape",
             types.func(
-                [types.str_type, types.func_arg("quote", types.boolean_type, optional=True)],
+                [types.str_type, types.func_arg("quote", types.bool_type, optional=True)],
                 types.str_type
             ),
             read_only=True

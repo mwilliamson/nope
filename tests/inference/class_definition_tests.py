@@ -45,7 +45,7 @@ def attributes_defined_in_class_definition_body_are_present_on_class_type():
         nodes.assign([nodes.ref("is_person")], nodes.boolean(True)),
     ])
     class_type = _infer_class_type(node, ["is_person"])
-    assert_equal(types.boolean_type, class_type.attrs.type_of("is_person"))
+    assert_equal(types.bool_type, class_type.attrs.type_of("is_person"))
 
 
 @istest
@@ -54,7 +54,7 @@ def attributes_defined_in_class_definition_body_are_present_on_meta_type():
         nodes.assign([nodes.ref("is_person")], nodes.boolean(True)),
     ])
     meta_type = _infer_meta_type(node, ["is_person"])
-    assert_equal(types.boolean_type, meta_type.attrs.type_of("is_person"))
+    assert_equal(types.bool_type, meta_type.attrs.type_of("is_person"))
 
 
 @istest
@@ -84,7 +84,7 @@ def first_argument_in_method_signature_can_be_strict_supertype_of_class():
         ),
     ])
     class_type = _infer_class_type(node, ["is_person"])
-    assert_equal(types.func([], types.boolean_type), class_type.attrs.type_of("is_person"))
+    assert_equal(types.func([], types.bool_type), class_type.attrs.type_of("is_person"))
 
 
 @istest
@@ -103,7 +103,7 @@ def attributes_with_function_type_defined_in_class_definition_body_are_bound_to_
         )
     ])
     class_type = _infer_class_type(node, ["is_person"])
-    assert_equal(types.func([], types.boolean_type), class_type.attrs.type_of("is_person"))
+    assert_equal(types.func([], types.bool_type), class_type.attrs.type_of("is_person"))
 
 
 @istest
@@ -122,7 +122,7 @@ def self_argument_in_method_signature_can_be_explicit_name_of_class():
         )
     ])
     class_type = _infer_class_type(node, ["is_person"])
-    assert_equal(types.func([], types.boolean_type), class_type.attrs.type_of("is_person"))
+    assert_equal(types.func([], types.bool_type), class_type.attrs.type_of("is_person"))
 
 
 @istest
@@ -144,7 +144,7 @@ def self_argument_in_method_signature_cannot_be_unrelated_type():
         assert False, "Expected error"
     except errors.UnexpectedReceiverTypeError as error:
         assert_equal(func_node, error.node)
-        assert_equal(types.boolean_type, error.receiver_type)
+        assert_equal(types.bool_type, error.receiver_type)
         assert_equal("first argument of methods should have Self type but was 'bool'", str(error))
 
 
@@ -176,7 +176,7 @@ def method_signature_is_checked_when_defined_by_assignment():
     node = nodes.class_def("User", [func_node])
     try:
         _infer_class_type(node, ["is_person"], type_bindings={
-            "f": types.func([], types.boolean_type)
+            "f": types.func([], types.bool_type)
         })
         assert False, "Expected error"
     except errors.MethodHasNoArgumentsError as error:
@@ -402,7 +402,7 @@ def _infer_meta_type(class_node, names, names_in_nodes=None, type_bindings=None)
     if names_in_nodes is None:
         names_in_nodes = []
     
-    type_bindings["bool"] = types.meta_type(types.boolean_type)
+    type_bindings["bool"] = types.meta_type(types.bool_type)
     type_bindings["object"] = types.meta_type(types.object_type)
     type_bindings["none"] = types.meta_type(types.none_type)
     type_bindings["str"] = types.meta_type(types.str_type)

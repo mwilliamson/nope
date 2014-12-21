@@ -13,7 +13,7 @@ def can_infer_type_of_none():
 
 @istest
 def can_infer_type_of_boolean_literal():
-    assert_equal(types.boolean_type, infer(nodes.boolean(True)))
+    assert_equal(types.bool_type, infer(nodes.boolean(True)))
 
 
 @istest

@@ -45,7 +45,7 @@ class ExpressionTypeInferer(object):
         return types.none_type
     
     def _infer_bool(self, node, context, hint):
-        return types.boolean_type
+        return types.bool_type
     
     def _infer_int(self, node, context, hint):
         return types.int_type
@@ -266,14 +266,14 @@ class ExpressionTypeInferer(object):
         elif node.operator == "is":
             self.infer(node.left, context)
             self.infer(node.right, context)
-            return types.boolean_type
+            return types.bool_type
         else:
             return self.infer_magic_method_call(node, node.operator, node.left, [node.right], context)
     
     def _infer_unary_operation(self, node, context, hint):
         if node.operator == "bool_not":
             self.infer(node.operand, context)
-            return types.boolean_type
+            return types.bool_type
         else:
             return self.infer_magic_method_call(node, node.operator, node.operand, [], context)
     

@@ -173,7 +173,7 @@ def type_of_boolean_or_operation_is_unification_of_operand_types():
 def type_of_boolean_not_operation_is_boolean():
     type_bindings = {"x": types.int_type}
     operation = nodes.bool_not(nodes.ref("x"))
-    assert_equal(types.boolean_type, infer(operation, type_bindings=type_bindings))
+    assert_equal(types.bool_type, infer(operation, type_bindings=type_bindings))
 
 
 @istest
@@ -185,7 +185,7 @@ def value_of_boolean_not_operation_is_type_checked():
 def type_of_is_operation_is_boolean():
     type_bindings = {"x": types.object_type, "y": types.str_type}
     operation = nodes.is_(nodes.ref("x"), nodes.ref("y"))
-    assert_equal(types.boolean_type, infer(operation, type_bindings=type_bindings))
+    assert_equal(types.bool_type, infer(operation, type_bindings=type_bindings))
 
 
 @istest

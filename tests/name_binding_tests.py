@@ -466,7 +466,7 @@ def assigned_variables_in_with_statement_body_are_still_bound_after_exit_if_exit
 
 @istest
 def assigned_variables_in_with_statement_body_are_unbound_after_exit_if_exit_method_does_not_return_none():
-    context_manager_type = context_manager_class(exit_type=types.boolean_type)
+    context_manager_type = context_manager_class(exit_type=types.bool_type)
     _assert_name_is_not_definitely_bound(lambda generate:
         nodes.with_statement(
             generate.bound_ref("manager", context_manager_type),

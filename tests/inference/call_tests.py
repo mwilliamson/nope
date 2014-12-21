@@ -16,11 +16,11 @@ def can_infer_type_of_call_with_keyword_arguments():
     type_bindings = {
         "f": types.func(
             args=[types.func_arg("name", types.str_type), types.func_arg("hats", types.int_type)],
-            return_type=types.boolean_type,
+            return_type=types.bool_type,
         )
     }
     node = nodes.call(nodes.ref("f"), [], {"name": nodes.string("Bob"), "hats": nodes.int(42)})
-    assert_equal(types.boolean_type, infer(node, type_bindings=type_bindings))
+    assert_equal(types.bool_type, infer(node, type_bindings=type_bindings))
 
 
 @istest
@@ -28,11 +28,11 @@ def can_infer_type_of_call_with_optional_argument_not_specified():
     type_bindings = {
         "f": types.func(
             args=[types.func_arg(None, types.str_type, optional=True)],
-            return_type=types.boolean_type,
+            return_type=types.bool_type,
         )
     }
     node = nodes.call(nodes.ref("f"), [])
-    assert_equal(types.boolean_type, infer(node, type_bindings=type_bindings))
+    assert_equal(types.bool_type, infer(node, type_bindings=type_bindings))
 
 
 @istest
@@ -40,11 +40,11 @@ def can_infer_type_of_call_with_optional_argument_specified():
     type_bindings = {
         "f": types.func(
             args=[types.func_arg(None, types.str_type, optional=True)],
-            return_type=types.boolean_type,
+            return_type=types.bool_type,
         )
     }
     node = nodes.call(nodes.ref("f"), [nodes.string("blah")])
-    assert_equal(types.boolean_type, infer(node, type_bindings=type_bindings))
+    assert_equal(types.bool_type, infer(node, type_bindings=type_bindings))
 
 
 @istest
@@ -160,7 +160,7 @@ def type_of_keyword_arguments_must_match():
     type_bindings = {
         "f": types.func(
             args=[types.func_arg("name", types.str_type)],
-            return_type=types.boolean_type,
+            return_type=types.bool_type,
         )
     }
     arg_node = nodes.int(4)
@@ -223,7 +223,7 @@ def error_if_argument_is_passed_both_by_position_and_keyword():
     
     func_type = types.func(
         args=[types.func_arg("name", types.str_type)],
-        return_type=types.boolean_type,
+        return_type=types.bool_type,
     )
     try:
         _infer_function_call(func_type, node)
