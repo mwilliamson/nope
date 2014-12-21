@@ -1,7 +1,7 @@
 import zuice
 
 from .name_declaration import DeclarationFinder
-from .check import ModuleChecker, SourceChecker
+from .check import ModuleChecker
 from .source import SourceTree, CachedSourceTree, TransformingSourceTree, FileSystemSourceTree
 from . import environment, builtins, inference, types, transformers
 from .modules import Module

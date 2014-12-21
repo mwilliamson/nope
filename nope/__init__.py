@@ -1,9 +1,8 @@
 import zuice
 
-from . import platforms, errors, injection
+from . import platforms, injection
 from .check import SourceChecker
 from .platforms import nodejs
-from .source import SourceTree
 
 
 def check(path):

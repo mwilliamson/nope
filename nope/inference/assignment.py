@@ -22,7 +22,6 @@ class Assignment(object):
     
     
     def _assign_ref(self, node, target, value_type, context):
-        var_type = context.lookup(target, allow_unbound=True)
         context.update_type(target, value_type)
         
         if self._on_ref is not None:

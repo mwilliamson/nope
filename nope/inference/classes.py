@@ -81,11 +81,7 @@ class ClassDefinitionTypeChecker(object):
             
             body_context = self._enter_class_body_context(node, context, meta_type)
             
-            init = self._add_attrs_to_inner_type(node, body_context, meta_type)
-            if init is None:
-                init_type = None
-            else:
-                init_type = init[1]
+            self._add_attrs_to_inner_type(node, body_context, meta_type)
             
             constructor_type = self._constructor_type(class_type)
             meta_type.attrs.add("__call__", constructor_type, read_only=True)
@@ -108,8 +104,6 @@ class ClassDefinitionTypeChecker(object):
                 self._check_init_statement(init_node, statement, body_context, inner_class_type)
             
             self._update_context(init_node, body_context)
-        
-        return init
     
     def _unbound_attribute_types(self, node, body_context):
         attrs = self._unbound_assigned_attribute_types(node, body_context)

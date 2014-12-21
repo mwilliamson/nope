@@ -1,6 +1,6 @@
 import os
 
-from .. import nodes, types, returns, errors, branches, builtins, visit
+from .. import nodes, types, returns, errors, branches, builtins
 from . import ephemeral
 from .assignment import Assignment
 from .classes import ClassDefinitionTypeChecker
