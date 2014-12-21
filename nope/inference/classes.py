@@ -62,6 +62,8 @@ class ClassDefinitionTypeChecker(object):
             init_node, init_func_type = init
             for statement in init_node.body:
                 self._check_init_statement(init_node, statement, body_context, inner_class_type)
+            
+            self._update_context(init_node, body_context)
         
         inner_constructor_type = self._constructor_type(init, inner_class_type)
         if node.type_params:
@@ -116,12 +118,7 @@ class ClassDefinitionTypeChecker(object):
     def _check_class_methods(self, node, context, meta_type):
         body_context = self._enter_class_body_context(node, context, meta_type)
         
-        functions = filter_by_type(nodes.FunctionDef, node.body)
-        for index, function in enumerate(functions):
-            if function.name == "__init__":
-                functions.insert(0, functions.pop(index))
-        
-        for function_definition in functions:
+        for function_definition in filter_by_type(nodes.FunctionDef, node.body):
             self._update_context(function_definition, body_context)
         
     
