@@ -640,6 +640,7 @@ A(42)
         self._test_program_string(program, b"42\n")
     
     
+    @wip
     @istest
     def test_generic_class_type_parameters_are_inferred_from_init_method(self):
         program = """
