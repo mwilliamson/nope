@@ -459,6 +459,8 @@ def is_sub_type(super_type, sub_type, unify=None):
         assert sub_type is not None
         
         if super_type == sub_type:
+            if isinstance(super_type, _FormalParameter) and super_type in unify:
+                constraints.constrain_type_param_to_super_type(super_type, sub_type)
             return True
         
         if super_type == object_type:

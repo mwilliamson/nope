@@ -253,6 +253,11 @@ class SubTypeTests(object):
     def type_map_is_returned_by_super_type_unification(self):
         type_map = types.is_sub_type(_scalar_type, _formal_param, unify=[_formal_param])
         assert_equal(_scalar_type, type_map[_formal_param])
+        
+    @istest
+    def formal_type_parameter_is_mapped_to_itself_if_unified_with_itself(self):
+        type_map = types.is_sub_type(_formal_param, _formal_param, unify=[_formal_param])
+        assert_equal(_formal_param, type_map[_formal_param])
     
     @istest
     def unification_occurs_before_reification(self):
