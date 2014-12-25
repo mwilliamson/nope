@@ -92,6 +92,7 @@ list_type = generic_class("list", ["T"], lambda T: [
         func([int_type], T),
         func([slice_type(_int_or_none, _int_or_none, _int_or_none)], list_type(T)),
     )),
+    attr("__add__", func([list_type(T)], list_type(T))),
     attr("pop", func([], T))
 ])
 
