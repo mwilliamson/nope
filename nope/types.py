@@ -146,6 +146,10 @@ class _InstantiatedType(object):
         self._underlying_type = underlying_type
     
     @property
+    def name(self):
+        return self._underlying_type.name
+    
+    @property
     def attrs(self):
         return self._underlying_type.attrs
     

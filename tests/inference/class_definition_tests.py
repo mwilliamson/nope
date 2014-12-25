@@ -381,6 +381,12 @@ def attributes_assigned_in_init_can_be_used_in_methods_when_init_method_is_defin
     ])
     _infer_class_type(node, ["__init__", "g"], [(init_func, ["self_init"])])
 
+@istest
+def name_of_instantiation_of_generic_class_includes_type_parameters():
+    node = nodes.class_def("Option", [], type_params=[nodes.formal_type_parameter("T")])
+    class_type = _infer_class_type(node, [])
+    assert_equal("Option[int]", class_type(types.int_type).name)
+
 
 def _create_class_with_init(signature, args, body):
     return nodes.class_def("User", [
@@ -415,7 +421,7 @@ def _infer_meta_type(class_node, names, names_in_nodes=None, type_bindings=None)
     )
     meta_type = context.lookup(class_node)
     assert isinstance(meta_type, types.MetaType)
-    assert isinstance(meta_type.type, types._ScalarType)
+    assert isinstance(meta_type.type, types._ScalarType) or isinstance(meta_type.type, types._GenericType)
     return meta_type
 
 
