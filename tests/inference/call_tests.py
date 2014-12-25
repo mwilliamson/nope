@@ -1,4 +1,4 @@
-from nose.tools import istest, assert_equal, assert_is
+from nose.tools import istest, assert_equal, assert_is, assert_raises_regexp
 
 from nope import types, nodes, errors
 from nope.inference import ephemeral
@@ -126,6 +126,20 @@ def generic_type_arguments_are_covariant():
         types.common_super_type([types.str_type, types.none_type]),
         infer(node, type_bindings=type_bindings)
     )
+
+
+@istest
+def error_if_generic_func_is_passed_wrong_arguments():
+    type_bindings = {"f": types.generic_func(["T"], lambda T:
+        types.func([T, types.int_type], T),
+    )}
+    node = nodes.call(nodes.ref("f"), [nodes.string(""), nodes.none()])
+    try:
+        infer(node, type_bindings=type_bindings)
+        assert False, "Expected error"
+    except errors.ArgumentsError as error:
+        assert_is(node, error.node)
+        assert_equal("cannot call function of type: T => T, int -> T\nwith arguments: str, NoneType", str(error))
 
 
 @istest

@@ -197,7 +197,7 @@ class _GenericFunc(object):
         return self._create_func(*params)
     
     def __str__(self):
-        return "[{}] => {}".format(", ".join(map(str, self.formal_type_params)), self._generic_signature)
+        return "{} => {}".format(", ".join(map(str, self.formal_type_params)), self._generic_signature)
     
 
 def generic_func(formal_type_params, create_func):
@@ -231,6 +231,9 @@ class _FormalParameter(object):
     def __init__(self, name, variance):
         self._name = name
         self.variance = variance
+    
+    def __str__(self):
+        return self._name
     
     def __repr__(self):
         return "_FormalParameter({}, {})".format(self._name, self.variance)

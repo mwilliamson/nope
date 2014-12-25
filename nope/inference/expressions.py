@@ -111,11 +111,14 @@ class ExpressionTypeInferer(object):
                 for actual_arg in actual_args
             ]
             actual_func_type = types.func(actual_arg_types, types.object_type)
-            # TODO: handle type_map is None
             # TODO: unify these two ways of checking args -- the logic is effectively
             # duplicated in this class and in types.is_sub_type, and the user gets
             # less informative errors in the generic case
             type_map = types.is_sub_type(actual_func_type, call_function_type, unify=type_params)
+            if type_map is None:
+                message = "cannot call function of type: {}\nwith arguments: {}".format(
+                    call_function_type, ", ".join(map(str, actual_func_type.args)))
+                raise errors.ArgumentsError(node, message)
             return call_function_type.instantiate_with_type_map(type_map).return_type
         else:
             formal_arg_types = [
