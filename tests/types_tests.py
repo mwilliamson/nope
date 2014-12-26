@@ -378,6 +378,18 @@ class SubTypeTests(object):
 
 
 @istest
+class ConstraintsTests(object):
+    @istest
+    def can_resolve_simultaneous_super_type_and_sub_type_constraints_if_theyre_consistent(self):
+        constraints = types.Constraints()
+        constraints.constrain_type_param_to_super_type(_formal_param, types.bottom_type)
+        constraints.constrain_type_param_to_sub_type(_formal_param, types.any_type)
+        constraints.constrain_type_param_to_super_type(_formal_param, _scalar_type)
+        
+        assert_equal(_scalar_type, constraints.resolve()[_formal_param])
+
+
+@istest
 class CommonSuperTypeTests(object):
     @istest
     def common_super_type_of_one_type_is_same_type(self):

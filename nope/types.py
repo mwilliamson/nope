@@ -461,9 +461,16 @@ def is_sub_type(super_type, sub_type, unify=None):
         assert super_type is not None
         assert sub_type is not None
         
+            
+        if isinstance(super_type, _FormalParameter) and super_type in unify:
+            constraints.constrain_type_param_to_super_type(super_type, sub_type)
+            return True
+        
+        if isinstance(sub_type, _FormalParameter) and sub_type in unify:
+            constraints.constrain_type_param_to_sub_type(sub_type, super_type)
+            return True
+            
         if super_type == sub_type:
-            if isinstance(super_type, _FormalParameter) and super_type in unify:
-                constraints.constrain_type_param_to_super_type(super_type, sub_type)
             return True
         
         if super_type == object_type:
@@ -473,14 +480,6 @@ def is_sub_type(super_type, sub_type, unify=None):
             return True
             
         if super_type == any_meta_type and is_meta_type(sub_type):
-            return True
-            
-        if isinstance(super_type, _FormalParameter) and super_type in unify:
-            constraints.constrain_type_param_to_super_type(super_type, sub_type)
-            return True
-        
-        if isinstance(sub_type, _FormalParameter) and sub_type in unify:
-            constraints.constrain_type_param_to_sub_type(sub_type, super_type)
             return True
         
         if _instance_of_same_generic_type(super_type, sub_type):
@@ -567,11 +566,24 @@ class Constraints(object):
         if len(types) == 1:
             return next(iter(types))
         
-        relations = set(relation for relation, type_ in constraints)
-        if relations == set(["super"]):
-            return common_super_type(types)
-        elif relations == set(["sub"]):
-            return common_sub_type(types)
+        required_sub_types = set(
+            type_
+            for relation, type_ in constraints
+            if relation == "super"
+        )
+        super_type = common_super_type(required_sub_types)
+        
+        required_super_types = set(
+            type_
+            for relation, type_ in constraints
+            if relation == "sub"
+        )
+        sub_type = common_sub_type(required_super_types)
+        
+        if len(required_sub_types) == 0:
+            return sub_type
+        elif is_sub_type(sub_type, super_type):
+            return super_type
         else:
             return None
         
