@@ -191,6 +191,12 @@ class DeclarationFinder(object):
 def _declarations_in_function(node):
     declarations = Declarations({})
     
+    signature = nodes.explicit_type_of(node)
+    if signature is not None:
+        # TODO: handle non-signature explicit_type
+        for param in signature.type_params:
+            _declare(param, declarations)
+    
     for arg in node.args.args:
         _declare(arg, declarations)
     

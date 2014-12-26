@@ -189,12 +189,15 @@ class _GenericFunc(object):
     def return_type(self):
         return self._generic_signature.return_type
     
+    def instantiate(self, params):
+        return self._create_func(*params)
+    
     def instantiate_with_type_map(self, type_map):
         params = [
             type_map[formal_type_param]
             for formal_type_param in self.formal_type_params
         ]
-        return self._create_func(*params)
+        return self.instantiate(params)
     
     def __str__(self):
         return "{} => {}".format(", ".join(map(str, self.formal_type_params)), self._generic_signature)

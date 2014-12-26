@@ -192,6 +192,17 @@ def declarations_in_function_include_declarations_in_body():
 
 
 @istest
+def declarations_in_function_include_type_parameter_declarations():
+    node = nodes.typed(
+        nodes.signature(type_params=[nodes.formal_type_parameter("T")], args=[], returns=nodes.ref("none")),
+        nodes.func("f", nodes.arguments([]), [])
+    )
+    
+    declarations = declarations_in_function(node)
+    assert isinstance(declarations.declaration("T"), name_declaration.TypeDeclarationNode)
+
+
+@istest
 def declarations_in_function_include_argument_declarations():
     node = nodes.func("f", nodes.arguments([nodes.arg("x")]), [])
     
