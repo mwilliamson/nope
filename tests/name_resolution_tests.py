@@ -288,6 +288,26 @@ def function_definition_signature_has_names_resolved():
     references = resolve(node, declarations)
     assert_is(declarations.declaration("int"), references.referenced_declaration(int_ref))
     assert_is(declarations.declaration("str"), references.referenced_declaration(str_ref))
+
+
+@istest
+def generic_function_definition_signature_has_names_resolved():
+    param = nodes.formal_type_parameter("T")
+    arg_ref = nodes.ref("T")
+    return_ref = nodes.ref("T")
+    
+    signature = nodes.signature(
+        type_params=[param],
+        args=[nodes.signature_arg(arg_ref)],
+        returns=return_ref,
+    )
+    node = nodes.typed(signature, nodes.func("f", nodes.arguments([]), []))
+    
+    declarations = _create_declarations(["f"])
+    references = resolve(node, declarations)
+    assert not declarations.is_declared("T")
+    assert_is(references.referenced_declaration(param), references.referenced_declaration(arg_ref))
+    assert_is(references.referenced_declaration(param), references.referenced_declaration(return_ref))
     
 
 @istest

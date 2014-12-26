@@ -59,9 +59,9 @@ class Visitor(object):
         self._before = {}
         self._after = {}
         if visit_explicit_types:
-            self.visit_explicit_type = self.visit
+            self.visit_explicit_type = lambda node, explicit_type, *args: self.visit(explicit_type, *args)
         else:
-            self.visit_explicit_type = lambda node, *args: node
+            self.visit_explicit_type = lambda node, explicit_type, *args: explicit_type
     
     def replace(self, node_type, func):
         self._visitors[node_type] = functools.partial(func, self)
@@ -71,6 +71,9 @@ class Visitor(object):
     
     def after(self, node_type, func):
         self._after[node_type] = func
+    
+    def replace_visit_explicit_type(self, func):
+        self.visit_explicit_type = functools.partial(func, self)
     
     def visit(self, node, *args):
         node_type = type(node)
@@ -82,7 +85,7 @@ class Visitor(object):
         if explicit_type is None:
             explicit_type_result = None
         else:
-            explicit_type_result = self.visit_explicit_type(explicit_type, *args)
+            explicit_type_result = self.visit_explicit_type(node, explicit_type, *args)
             
         result = self._visitors[node_type](node, *args)
         

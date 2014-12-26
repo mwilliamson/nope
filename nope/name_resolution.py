@@ -29,6 +29,7 @@ class References(object):
 def _resolve(node, context):
     visitor = visit.Visitor()
     
+    visitor.replace_visit_explicit_type(_resolve_explicit_type)
     visitor.replace(nodes.VariableReference, _resolve_variable_reference)
     visitor.replace(nodes.ListComprehension, _resolve_comprehension)
     visitor.replace(nodes.GeneratorExpression, _resolve_comprehension)
@@ -41,6 +42,11 @@ def _resolve(node, context):
     visitor.replace(nodes.Module, _resolve_module)
     
     return visitor.visit(node, context)
+
+
+def _resolve_explicit_type(visitor, node, explicit_type, context):
+    if not isinstance(node, nodes.FunctionDef):
+        return visitor.visit(explicit_type, context)
 
 
 def _resolve_variable_reference(visitor, node, context):
@@ -66,6 +72,8 @@ def _resolve_function_def(visitor, node, context):
     context.add_reference(node, node.name)
     
     body_context = context.enter_function(node)
+    
+    visitor.visit(nodes.explicit_type_of(node), body_context)
     
     for arg in node.args.args:
         visitor.visit(arg, body_context)
@@ -127,6 +135,10 @@ class _Context(object):
     def enter_function(self, node):
         function_declarations = self._declaration_finder.declarations_in_function(node)
         declarations = self._declarations_for_functions.enter(function_declarations)
+        # TODO: tidy up this hack.
+        for declaration in self._declarations:
+            if isinstance(declaration, (name_declaration.TypeDeclarationNode, name_declaration.SelfTypeDeclarationNode)):
+                declarations._declarations[declaration.name] = declaration
         return _Context(self._declaration_finder, declarations, self._references)
     
     def enter_class(self, node):
