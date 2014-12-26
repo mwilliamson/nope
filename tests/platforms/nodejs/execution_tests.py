@@ -57,7 +57,6 @@ class NodeJsExecutionTests(execution.ExecutionTests):
     test_getitem_dict = wip(execution.ExecutionTests.test_getitem_dict)
     test_unnested_list_comprehension = wip(execution.ExecutionTests.test_unnested_list_comprehension)
     test_unnested_generator_expression = wip(execution.ExecutionTests.test_unnested_generator_expression)
-    test_generic_class_type_parameters_are_inferred_from_init_method = wip(execution.ExecutionTests.test_generic_class_type_parameters_are_inferred_from_init_method)
 
 
 @istest

@@ -546,7 +546,7 @@ class NodeTransformer(zuice.Base):
         
         call_func_type = self._type_of(call.func)
         call_ref = call.func
-        while not types.is_func_type(call_func_type):
+        while not types.is_func_type(call_func_type) and not types.is_generic_func(call_func_type):
             call_func_type = call_func_type.attrs.type_of("__call__")
             call_ref = nodes.attr(call_ref, "__call__")
         

@@ -526,6 +526,28 @@ def arguments_of_function_are_definitely_bound():
 
 
 @istest
+def type_parameters_of_function_are_definitely_bound():
+    param = nodes.formal_type_parameter("T")
+    arg_ref = nodes.ref("T")
+    returns_ref = nodes.ref("T")
+    func_node = nodes.typed(
+        nodes.signature(type_params=[param], args=[nodes.signature_arg(arg_ref)], returns=returns_ref),
+        nodes.func("f", nodes.arguments([]), []),
+    )
+    
+    param_declaration = name_declaration.VariableDeclarationNode("T")
+    
+    references = References([
+        (func_node, name_declaration.VariableDeclarationNode("f")),
+        (param, param_declaration),
+        (arg_ref, param_declaration),
+        (returns_ref, param_declaration),
+    ])
+    
+    _updated_bindings(func_node, references)
+
+
+@istest
 def exception_handler_targets_cannot_be_accessed_from_nested_function():
     target_node = nodes.ref("error")
     ref_node = nodes.ref("error")

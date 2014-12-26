@@ -79,6 +79,17 @@ print(f(42))
         self._test_program_string(program, b"42\n")
         
     @istest
+    def can_call_generic_identity_function(self):
+        program = """
+#:: T => T -> T
+def f(x):
+    return x
+
+print(f(42))
+"""
+        self._test_program_string(program, b"42\n")
+        
+    @istest
     def fib_program_prints_result_to_stdout(self):
         result = self._run_program(path=program_path("valid/fib.py"), program="fib")
         assert_equal(b"55\n", result.output)

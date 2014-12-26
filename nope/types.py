@@ -124,8 +124,12 @@ class _GenericType(object):
         
         if params not in self._generic_cache:
             new_type = self._create_type(*params)
-            self._generic_cache[params] = _InstantiatedType(self, params, new_type)
-            self._complete_type(new_type, *params)
+            self._generic_cache[params] = _InstantiatedType(
+                self,
+                params,
+                new_type,
+                lambda: self._complete_type(new_type, *params),
+            )
         
         return self._generic_cache[params]
     
@@ -140,10 +144,11 @@ class _GenericType(object):
 
 
 class _InstantiatedType(object):
-    def __init__(self, generic_type, type_params, underlying_type):
+    def __init__(self, generic_type, type_params, underlying_type, complete_type):
         self.generic_type = generic_type
         self.type_params = type_params
         self._underlying_type = underlying_type
+        self._complete_type = complete_type
     
     @property
     def name(self):
@@ -151,9 +156,11 @@ class _InstantiatedType(object):
     
     @property
     def attrs(self):
+        self._complete_type()
         return self._underlying_type.attrs
     
     def reify(self):
+        self._complete_type()
         return self._underlying_type
         
     def __str__(self):
