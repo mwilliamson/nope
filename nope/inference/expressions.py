@@ -244,9 +244,31 @@ class ExpressionTypeInferer(object):
         return types.meta_type(types.union(*constituent_types))
     
     def _infer_function_signature(self, node, context, hint):
+        formal_type_params = [
+            types.invariant(type_param_node.name)
+            for type_param_node in node.type_params
+        ]
+        
+        if formal_type_params:
+            def inner_func_type(*actual_type_params):
+                # TODO: remove duplication with generic classes
+                inner_context = context.enter_statement()
+                for type_param_node, type_param in zip(node.type_params, actual_type_params):
+                    inner_context.update_type(type_param_node, types.meta_type(type_param))
+                
+                return self._infer_inner_function_signature(node, inner_context)
+                
+            
+            func_type = types.generic_func(formal_type_params, inner_func_type)
+        else:
+            func_type = self._infer_inner_function_signature(node, context)
+        return types.meta_type(func_type)
+    
+    def _infer_inner_function_signature(self, node, context):
         args = [self._read_signature_arg(arg, context) for arg in node.args]
         return_type = self.infer_type_value(node.returns, context)
-        return types.meta_type(types.func(args, return_type))
+        
+        return types.func(args, return_type)
     
     def _read_signature_arg(self, arg, context):
         return types.func_arg(
