@@ -192,8 +192,7 @@ def _declarations_in_function(node):
     declarations = Declarations({})
     
     signature = nodes.explicit_type_of(node)
-    if signature is not None:
-        # TODO: handle non-signature explicit_type
+    if isinstance(signature, nodes.FunctionSignature):
         for param in signature.type_params:
             _declare(param, declarations)
     

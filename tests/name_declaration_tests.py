@@ -203,6 +203,16 @@ def declarations_in_function_include_type_parameter_declarations():
 
 
 @istest
+def no_error_if_explicit_type_for_function_is_not_signature():
+    node = nodes.typed(
+        nodes.ref("T"),
+        nodes.func("f", nodes.arguments([]), [])
+    )
+    
+    declarations_in_function(node)
+
+
+@istest
 def declarations_in_function_include_argument_declarations():
     node = nodes.func("f", nodes.arguments([nodes.arg("x")]), [])
     
