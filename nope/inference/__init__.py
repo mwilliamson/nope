@@ -7,32 +7,35 @@ from ..identity_dict import IdentityDict
 
 
 class TypeChecker(zuice.Base):
-    _declaration_finder = zuice.dependency(name_declaration.DeclarationFinder)
-    _name_resolver = zuice.dependency(name_resolution.NameResolver)
-    _module_resolver_factory = zuice.dependency(module_resolution.ModuleResolverFactory)
-    _module_exports = zuice.dependency(modules.ModuleExports)
+    _injector = zuice.dependency(zuice.Injector)
     
     def check_module(self, module, module_types):
-        # TODO: don't construct the type checker with a module
-        module_checker = _TypeCheckerForModule(
-            self._declaration_finder,
-            self._name_resolver,
-            self._module_exports,
-            module_types,
-            self._module_resolver_factory.for_module(module),
-            module,
-        )
-        module_type = module_checker.check(module)
-        return module_type, module_checker.type_lookup()
+        module_checker = self._injector.get(_TypeCheckerForModule, {
+            modules.Module: module,
+            modules.ModuleTypes: module_types,
+        })
+        return module_checker.check()
 
 
-class _TypeCheckerForModule(object):
-    def __init__(self, declaration_finder, name_resolver, module_exports, module_types, module_resolver, module):
-        self._name_resolver = name_resolver
-        self._module_exports = module_exports
+class _TypeCheckerForModule(zuice.Base):
+    _declaration_finder = zuice.dependency(name_declaration.DeclarationFinder)
+    _name_resolver = zuice.dependency(name_resolution.NameResolver)
+    _module_resolver = zuice.dependency(module_resolution.ModuleResolver)
+    _module_exports = zuice.dependency(modules.ModuleExports)
+    _module = zuice.dependency(modules.Module)
+    _module_types = zuice.dependency(modules.ModuleTypes)
+    
+    @zuice.init
+    def init(self):
         self._type_lookup = IdentityDict()
         self._expression_type_inferer = ExpressionTypeInferer(self._type_lookup)
-        self._statement_type_checker = StatementTypeChecker(declaration_finder, self._expression_type_inferer, module_resolver, module_types, module)
+        self._statement_type_checker = StatementTypeChecker(
+            self._declaration_finder,
+            self._expression_type_inferer,
+            self._module_resolver,
+            self._module_types,
+            self._module
+        )
     
     def type_lookup(self):
         return types.TypeLookup(self._type_lookup)
@@ -43,7 +46,8 @@ class _TypeCheckerForModule(object):
     def update_context(self, statement, context):
         self._statement_type_checker.update_context(statement, context)
 
-    def check(self, module):
+    def check(self):
+        module = self._module
         references = self._name_resolver.resolve(module.node)
     
         context = builtins.module_context(references)
@@ -68,7 +72,7 @@ class _TypeCheckerForModule(object):
             types.attr(declaration.name, context.lookup_declaration(declaration))
             for declaration in exported_declarations
             if bindings.is_declaration_definitely_bound(declaration)
-        ])
+        ]), self.type_lookup()
         
 
 

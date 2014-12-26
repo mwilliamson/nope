@@ -7,6 +7,10 @@ class Module(object):
     pass
 
 
+class ModuleTypes(object):
+    pass
+
+
 class LocalModule(Module):
     def __init__(self, path, node):
         self.path = path
