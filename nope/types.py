@@ -148,7 +148,12 @@ class _InstantiatedType(object):
         self.generic_type = generic_type
         self.type_params = type_params
         self._underlying_type = underlying_type
+        self._is_complete = False
         self._complete_type = complete_type
+    
+    def _ensure_complete(self):
+        if not self._is_complete:
+            self._complete_type()
     
     @property
     def name(self):
@@ -156,11 +161,11 @@ class _InstantiatedType(object):
     
     @property
     def attrs(self):
-        self._complete_type()
+        self._ensure_complete()
         return self._underlying_type.attrs
     
     def reify(self):
-        self._complete_type()
+        self._ensure_complete()
         return self._underlying_type
         
     def __str__(self):
