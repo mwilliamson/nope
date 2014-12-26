@@ -51,10 +51,7 @@ class _TypeCheckerForModule(object):
             self.update_context(statement, context)
         
         for reference in references:
-            # TODO: deal with this more elegantly
-            reference_type = context.lookup(reference, allow_unbound=True)
-            if reference_type is not None:
-                self._type_lookup[reference] = reference_type
+            self._type_lookup[reference] = context.lookup(reference)
         
         exported_declarations = self._module_exports.declarations(module.node)
         
