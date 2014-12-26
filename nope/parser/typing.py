@@ -98,13 +98,6 @@ def _make_arg(result):
     return nodes.signature_arg(result[1], result[2], optional=result[0] is not None)
     
 
-def _make_args(result):
-    if result is None:
-        return []
-    else:
-        return [result[0]] + [extra_arg[1] for extra_arg in result[1]]
-
-
 def _make_signature(result):
     return nodes.signature(
         type_params=result[0],
@@ -152,7 +145,7 @@ def _create_type_rules():
     arg = (maybe(question_mark) + maybe(arg_name + skip(colon)) + type_) >> _make_arg
     
     generic_params = maybe(type_name + _token_type("fat-arrow")) >> _make_params
-    args = maybe(arg + many(comma + arg)) >> _make_args
+    args = _zero_or_more_with_separator(arg, comma)
     signature = (generic_params + args + _token_type("arrow") + type_) >> _make_signature
     sub_signature = (_token_type("paren-open") + signature + _token_type("paren-close")) >> (lambda result: result[1])
     
@@ -168,6 +161,9 @@ def _create_type_rules():
 
 def _one_or_more_with_separator(repeated, separator):
     return (repeated + many(skip(separator) + repeated)) >> _make_separated
+
+def _zero_or_more_with_separator(repeated, separator):
+    return maybe(_one_or_more_with_separator(repeated, separator))
 
 def _make_separated(result):
     if result[1]:
