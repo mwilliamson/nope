@@ -69,6 +69,13 @@ def object_can_be_called_if_it_has_call_magic_method_that_returns_callable():
 
 
 @istest
+def formal_type_of_argument_is_used_as_type_hint_for_actual_argument():
+    type_bindings = {"f": types.func([types.list_type(types.str_type)], types.int_type)}
+    node = nodes.call(nodes.ref("f"), [nodes.list_literal([])])
+    assert_equal(types.int_type, infer(node, type_bindings=type_bindings))
+
+
+@istest
 def callee_can_be_overloaded_func_type_where_choice_is_unambiguous_given_args():
     type_bindings = {"f": types.overloaded_func(
         types.func([types.str_type], types.int_type),

@@ -102,11 +102,16 @@ class ExpressionTypeInferer(object):
             return self._infer_overloaded_func_call(node, callee_type, context)
                 
         type_params, call_function_type = self._get_call_type(node.func, callee_type)
-        
+
+        formal_arg_types = [
+            arg.type
+            for arg in call_function_type.args
+        ]
+                    
         actual_args = self._generate_actual_args(node, call_function_type.args)
         actual_arg_types = [
-            self.infer(actual_arg, context)
-            for actual_arg in actual_args
+            self.infer(actual_arg, context, hint=formal_arg_type)
+            for actual_arg, formal_arg_type in zip(actual_args, formal_arg_types)
         ]
         
         if type_params:
@@ -121,11 +126,6 @@ class ExpressionTypeInferer(object):
                 raise errors.ArgumentsError(node, message)
             return call_function_type.instantiate_with_type_map(type_map).return_type
         else:
-            formal_arg_types = [
-                arg.type
-                for arg in call_function_type.args
-            ]
-            
             self._type_check_args(
                 node,
                 list(zip(actual_args, actual_arg_types)),
