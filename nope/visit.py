@@ -251,6 +251,7 @@ class Visitor(object):
     
     def _visit_function_signature(self, node, *args):
         return nodes.signature(
+            type_params=self._visit_all(node.type_params, *args),
             args=self._visit_all(node.args, *args),
             returns=self.visit(node.returns, *args)
         )
