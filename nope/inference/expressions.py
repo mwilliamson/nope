@@ -104,12 +104,12 @@ class ExpressionTypeInferer(object):
         type_params, call_function_type = self._get_call_type(node.func, callee_type)
         
         actual_args = self._generate_actual_args(node, call_function_type.args)
+        actual_arg_types = [
+            self.infer(actual_arg, context)
+            for actual_arg in actual_args
+        ]
         
         if type_params:
-            actual_arg_types = [
-                self.infer(actual_arg, context)
-                for actual_arg in actual_args
-            ]
             actual_func_type = types.func(actual_arg_types, types.object_type)
             # TODO: unify these two ways of checking args -- the logic is effectively
             # duplicated in this class and in types.is_sub_type, and the user gets
@@ -128,7 +128,7 @@ class ExpressionTypeInferer(object):
             
             self._type_check_args(
                 node,
-                actual_args,
+                list(zip(actual_args, actual_arg_types)),
                 type_params,
                 formal_arg_types,
                 context
@@ -322,8 +322,7 @@ class ExpressionTypeInferer(object):
         return self._infer_call(call_node, context, hint=None)
     
     def _type_check_args(self, node, actual_args, type_params, formal_arg_types, context):
-        for actual_arg, formal_arg_type in zip(actual_args, formal_arg_types):
-            actual_arg_type = self.infer(actual_arg, context)
+        for (actual_arg, actual_arg_type), formal_arg_type in zip(actual_args, formal_arg_types):
             # TODO: need to ensure unified type params are consistent
             if not types.is_sub_type(formal_arg_type, actual_arg_type, unify=type_params):
                 if isinstance(actual_arg, ephemeral.FormalArgumentConstraint):
