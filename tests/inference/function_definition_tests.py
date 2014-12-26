@@ -140,6 +140,22 @@ def argument_type_in_signature_is_unioned_with_none_if_argument_is_optional():
         assert_equal(types.union(types.int_type, types.none_type), error.actual)
 
 
+@istest
+def can_type_check_generic_function_with_type_parameters():
+    signature = nodes.signature(
+        type_params=[nodes.formal_type_parameter("T")],
+        args=[
+            nodes.signature_arg(nodes.ref("T")),
+        ],
+        returns=nodes.ref("T"),
+    )
+    args = nodes.arguments([
+        nodes.argument("value"),
+    ])
+    node = nodes.typed(signature, nodes.func("f", args=args, body=[nodes.ret(nodes.ref("value"))]))
+    assert_equal(types.func([types.int_type], types.int_type), _infer_func_type(node).instantiate([types.int_type]))
+
+
 #~ @istest
 #~ def argument_type_does_not_have_none_if_if_none_expression_is_set():
     #~ arg_type = nodes.type_union([nodes.ref("int"), nodes.ref("none")])
