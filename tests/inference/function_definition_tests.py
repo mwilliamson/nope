@@ -157,6 +157,25 @@ def can_type_check_generic_function_with_type_parameters():
 
 
 @istest
+def can_type_check_generic_function_with_type_parameters_referenced_in_body():
+    signature = nodes.signature(
+        type_params=[nodes.formal_type_parameter("T")],
+        args=[
+            nodes.signature_arg(nodes.ref("T")),
+        ],
+        returns=nodes.ref("T"),
+    )
+    args = nodes.arguments([
+        nodes.argument("value_1"),
+    ])
+    node = nodes.typed(signature, nodes.func("f", args=args, body=[
+        nodes.typed(nodes.ref("T"), nodes.assign([nodes.ref("value_2")], nodes.ref("value_1"))),
+        nodes.ret(nodes.ref("value_2")),
+    ]))
+    assert_equal(types.func([types.int_type], types.int_type), _infer_func_type(node).instantiate([types.int_type]))
+
+
+@istest
 def error_if_name_of_argument_does_not_match_name_in_signature():
     signature = nodes.signature(
         args=[nodes.signature_arg("y", nodes.ref("int"))],

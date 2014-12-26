@@ -90,6 +90,11 @@ class StatementTypeChecker(object):
         
         body_context = context.enter_func(return_type)
         
+        if types.is_generic_func(func_type):
+            signature = nodes.explicit_type_of(node)
+            for formal_type_param_node, formal_type_param in zip(signature.type_params, func_type.formal_type_params):
+                body_context.update_type(formal_type_param_node, types.meta_type(formal_type_param))
+        
         body_arg_types = [
             self._infer_function_def_arg_type(arg, formal_arg, body_context)
             for arg, formal_arg in zip(node.args.args, func_type.args)
