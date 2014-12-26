@@ -91,7 +91,7 @@ def _make_params(result):
     if result is None:
         return result
     else:
-        return [result[0]]
+        return [nodes.formal_type_parameter(result[0])]
 
 
 def _make_arg(result):

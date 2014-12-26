@@ -83,7 +83,7 @@ def can_parse_signature_comment_with_type_application_with_many_generic_paramete
 @istest
 def can_parse_signature_comment_with_one_formal_type_parameter():
     expected_signature = nodes.signature(
-        type_params=["T"],
+        type_params=[nodes.formal_type_parameter("T")],
         args=[nodes.signature_arg(nodes.ref("T"))],
         returns=nodes.ref("T")
     )
