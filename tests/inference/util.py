@@ -1,7 +1,7 @@
 from nose.tools import assert_equal
 
 from nope import types, errors, nodes, inference, name_declaration, modules
-from nope.context import Context
+from nope.inference.context import Context
 from nope.modules import LocalModule
 from nope.module_resolution import ResolvedImport
 

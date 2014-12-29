@@ -1,4 +1,4 @@
-from . import types, name_declaration, context
+from . import types, name_declaration
 from .modules import BuiltinModule
 
 
@@ -37,21 +37,18 @@ _builtin_types = {
 
 
 _builtin_declarations = {}
-_builtin_definition_types = {}
+builtin_declaration_types = {}
 
 def _setup():
     for name, type_ in _builtin_types.items():
         definition = _builtin_declarations[name] = name_declaration.VariableDeclarationNode(name)
-        _builtin_definition_types[definition] = type_
+        builtin_declaration_types[definition] = type_
     
 _setup()
 
 
 def declarations():
     return name_declaration.Declarations(_builtin_declarations)
-
-def module_context(references):
-    return context.Context(references, _builtin_definition_types).enter_module()
 
 
 def module_bindings(references):

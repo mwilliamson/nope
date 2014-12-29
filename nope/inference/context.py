@@ -1,4 +1,4 @@
-from . import errors, types
+from .. import errors, types
 
 
 class Context(object):

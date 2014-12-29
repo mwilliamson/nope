@@ -4,6 +4,7 @@ from .. import types, name_declaration, name_resolution, name_binding, builtins,
 from .expressions import ExpressionTypeInferer
 from .statements import StatementTypeChecker
 from ..identity_dict import IdentityDict
+from .context import Context
 
 
 class TypeChecker(zuice.Base):
@@ -50,7 +51,7 @@ class _TypeCheckerForModule(zuice.Base):
         module = self._module
         references = self._name_resolver.resolve(module.node)
     
-        context = builtins.module_context(references)
+        context = module_context(references)
         for statement in module.node.body:
             self.update_context(statement, context)
         
@@ -75,5 +76,5 @@ class _TypeCheckerForModule(zuice.Base):
         ]), self.type_lookup()
         
 
-
-    
+def module_context(references):
+    return Context(references, builtins.builtin_declaration_types).enter_module()

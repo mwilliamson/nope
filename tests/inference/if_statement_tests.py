@@ -1,7 +1,7 @@
 from nose.tools import istest, assert_equal
 
 from nope import types, nodes, errors, inference, builtins, name_declaration
-from nope.context import Context
+from nope.inference.context import Context
 from nope.name_resolution import References
 
 from .util import (
@@ -120,7 +120,7 @@ def type_of_variable_is_narrowed_if_reassigned_in_if_body_with_isinstance_condit
         (variable_in_condition_ref, variable_declaration),
         (variable_in_assignment_ref, variable_declaration),
     ])
-    context = builtins.module_context(references).enter_func(types.none_type)
+    context = inference.module_context(references).enter_func(types.none_type)
     context.update_type(variable_in_condition_ref, types.union(types.str_type, types.none_type))
     type_checker.update_context(node, context)
     assert_equal(types.union(types.int_type, types.none_type), context.lookup_declaration(variable_declaration))
