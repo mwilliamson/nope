@@ -25,46 +25,26 @@ def _declare_children(node, declarations):
 
 
 def _targets(node):
-    left_values, target_type = _left_values(node)
-    if target_type is not None:
-        targets = []
-        for left_value in left_values:
-            _left_value_to_targets(left_value, targets)
-        
-        return targets, target_type
-    else:
-        return _targets_of.get(type(node), lambda node: ([], None))(node)
+    find_targets, target_type = _targets_of.get(type(node), (lambda node: [], None))
+    return find_targets(node), target_type
 
 
-_targets_of = {
-    nodes.FunctionDef: lambda node: ([(node, node.name)], FunctionDeclarationNode),
-    nodes.ClassDefinition: lambda node: ([(node, node.name)], ClassDeclarationNode),
-    nodes.TypeDefinition: lambda node: ([(node, node.name)], TypeDeclarationNode),
-    nodes.FormalTypeParameter: lambda node: ([(node, node.name)], TypeDeclarationNode),
-    nodes.Argument: lambda node: ([(node, node.name)], VariableDeclarationNode),
-    nodes.ImportAlias: lambda node: ([(node, node.value_name)], ImportDeclarationNode),
-}
-
-
-def _left_value_to_targets(left_value, targets):
-    if isinstance(left_value, nodes.VariableReference):
-        targets.append((left_value, left_value.name))
-    elif isinstance(left_value, nodes.TupleLiteral):
-        for child in left_value.elements:
-            _left_value_to_targets(child, targets)
+def _left_value_to_targets(root):
+    targets = []
     
-
-
-def _left_values(node):
-    left_values_of = _left_values_of.get(type(node), lambda node: ([], None))
-    return left_values_of(node)
-
-_left_values_of = {
-    nodes.Assignment: lambda node: (node.targets, VariableDeclarationNode),
-    nodes.ForLoop: lambda node: ([node.target], VariableDeclarationNode),
-    nodes.ExceptHandler: lambda node: (filter(None, [node.target]), ExceptionHandlerTargetNode),
-    nodes.WithStatement: lambda node: (filter(None, [node.target]), VariableDeclarationNode),
-}
+    def acc(left_value):
+        if isinstance(left_value, nodes.VariableReference):
+            targets.append((left_value, left_value.name))
+        elif isinstance(left_value, nodes.TupleLiteral):
+            for child in left_value.elements:
+                acc(child)
+    
+    if isinstance(root, list):
+        for element in root:
+            acc(element)
+    else:
+        acc(root)
+    return targets
 
 
 class Declarations(object):
@@ -194,7 +174,21 @@ def _declarations_in_module(node):
 
 def _declarations_in_comprehension(node):
     declarations = Declarations({})
-    targets = []
-    _left_value_to_targets(node.target, targets)
+    targets = _left_value_to_targets(node.target)
     _declare_targets(targets, VariableDeclarationNode, declarations)
     return declarations
+
+
+_targets_of = {
+    nodes.Assignment: (lambda node: _left_value_to_targets(node.targets), VariableDeclarationNode),
+    nodes.ForLoop: (lambda node: _left_value_to_targets(node.target), VariableDeclarationNode),
+    nodes.ExceptHandler: (lambda node: _left_value_to_targets(node.target), ExceptionHandlerTargetNode),
+    nodes.WithStatement: (lambda node: _left_value_to_targets(node.target), VariableDeclarationNode),
+        
+    nodes.FunctionDef: (lambda node: [(node, node.name)], FunctionDeclarationNode),
+    nodes.ClassDefinition: (lambda node: [(node, node.name)], ClassDeclarationNode),
+    nodes.TypeDefinition: (lambda node: [(node, node.name)], TypeDeclarationNode),
+    nodes.FormalTypeParameter: (lambda node: [(node, node.name)], TypeDeclarationNode),
+    nodes.Argument: (lambda node: [(node, node.name)], VariableDeclarationNode),
+    nodes.ImportAlias: (lambda node: [(node, node.value_name)], ImportDeclarationNode),
+}
