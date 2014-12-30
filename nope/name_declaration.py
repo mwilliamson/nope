@@ -1,75 +1,70 @@
-from nope import nodes, errors, visit
-from nope.identity_dict import NodeDict
+from . import nodes, errors, structure
+from .identity_dict import NodeDict
 
 
 def _declare(node, declarations):
-    visitor = visit.Visitor(visit_explicit_types=False)
-    visitor.before(nodes.Assignment, _declare_assignment)
-    visitor.before(nodes.ForLoop, _declare_for_loop)
-    visitor.before(nodes.TryStatement, _declare_try)
-    visitor.before(nodes.WithStatement, _declare_with)
-    visitor.replace(nodes.FunctionDef, _declare_function_def)
-    visitor.replace(nodes.ClassDefinition, _declare_class_definition)
-    visitor.before(nodes.TypeDefinition, _declare_type_definition)
-    visitor.before(nodes.FormalTypeParameter, _declare_formal_type_parameter)
-    visitor.before(nodes.Argument, _declare_argument)
-    visitor.before(nodes.Import, _declare_import)
-    visitor.before(nodes.ImportFrom, _declare_import)
+    targets, target_type = _targets(node)
+    _declare_targets(targets, target_type, declarations)
     
-    return visitor.visit(node, declarations)
+    if not _creates_new_scope(node):
+        _declare_children(node, declarations)
 
 
-def _declare_target(target, declarations, target_type):
-    if isinstance(target, nodes.VariableReference):
-        declarations.declare(target.name, target, target_type=target_type)
-    elif isinstance(target, nodes.TupleLiteral):
-        for element in target.elements:
-            _declare_target(element, declarations, target_type)
+def _declare_targets(targets, target_type, declarations):
+    for target_node, target_name in targets:
+        declarations.declare(target_name, target_node, target_type=target_type)
 
 
-def _declare_assignment(visitor, node, declarations):
-    for target in node.targets:
-        _declare_target(target, declarations, target_type=VariableDeclarationNode)
+def _creates_new_scope(node):
+    return isinstance(node, (nodes.FunctionDef, nodes.ClassDefinition))
 
 
-def _declare_for_loop(visitor, node, declarations):
-    _declare_target(node.target, declarations, target_type=VariableDeclarationNode)
+def _declare_children(node, declarations):
+    for child in structure.children(node):
+        _declare(child, declarations)
 
 
-def _declare_try(visitor, node, declarations):
-    for handler in node.handlers:
-        if handler.target is not None:
-            _declare_target(handler.target, declarations, target_type=ExceptionHandlerTargetNode)
+def _targets(node):
+    left_values, target_type = _left_values(node)
+    if target_type is not None:
+        targets = []
+        for left_value in left_values:
+            _left_value_to_targets(left_value, targets)
+        
+        return targets, target_type
+    else:
+        return _targets_of.get(type(node), lambda node: ([], None))(node)
 
 
-def _declare_with(visitor, node, declarations):
-    if node.target is not None:
-        _declare_target(node.target, declarations, target_type=VariableDeclarationNode)
+_targets_of = {
+    nodes.FunctionDef: lambda node: ([(node, node.name)], FunctionDeclarationNode),
+    nodes.ClassDefinition: lambda node: ([(node, node.name)], ClassDeclarationNode),
+    nodes.TypeDefinition: lambda node: ([(node, node.name)], TypeDeclarationNode),
+    nodes.FormalTypeParameter: lambda node: ([(node, node.name)], TypeDeclarationNode),
+    nodes.Argument: lambda node: ([(node, node.name)], VariableDeclarationNode),
+    nodes.ImportAlias: lambda node: ([(node, node.value_name)], ImportDeclarationNode),
+}
 
 
-def _declare_function_def(visitor, node, declarations):
-    declarations.declare(node.name, node, target_type=FunctionDeclarationNode)
+def _left_value_to_targets(left_value, targets):
+    if isinstance(left_value, nodes.VariableReference):
+        targets.append((left_value, left_value.name))
+    elif isinstance(left_value, nodes.TupleLiteral):
+        for child in left_value.elements:
+            _left_value_to_targets(child, targets)
+    
 
 
-def _declare_class_definition(visitor, node, declarations):
-    declarations.declare(node.name, node, target_type=ClassDeclarationNode)
+def _left_values(node):
+    left_values_of = _left_values_of.get(type(node), lambda node: ([], None))
+    return left_values_of(node)
 
-
-def _declare_type_definition(visitor, node, declarations):
-    declarations.declare(node.name, node, target_type=TypeDeclarationNode)
-
-
-def _declare_formal_type_parameter(visitor, node, declarations):
-    declarations.declare(node.name, node, target_type=TypeDeclarationNode)
-
-
-def _declare_argument(visitor, node, declarations):
-    declarations.declare(node.name, node, target_type=VariableDeclarationNode)
-
-
-def _declare_import(visitor, node, declarations):
-    for alias in node.names:
-        declarations.declare(alias.value_name, alias, target_type=ImportDeclarationNode)
+_left_values_of = {
+    nodes.Assignment: lambda node: (node.targets, VariableDeclarationNode),
+    nodes.ForLoop: lambda node: ([node.target], VariableDeclarationNode),
+    nodes.ExceptHandler: lambda node: (filter(None, [node.target]), ExceptionHandlerTargetNode),
+    nodes.WithStatement: lambda node: (filter(None, [node.target]), VariableDeclarationNode),
+}
 
 
 class Declarations(object):
@@ -199,5 +194,7 @@ def _declarations_in_module(node):
 
 def _declarations_in_comprehension(node):
     declarations = Declarations({})
-    _declare_target(node.target, declarations, target_type=VariableDeclarationNode)
+    targets = []
+    _left_value_to_targets(node.target, targets)
+    _declare_targets(targets, VariableDeclarationNode, declarations)
     return declarations
