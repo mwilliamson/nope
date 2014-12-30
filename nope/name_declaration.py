@@ -112,57 +112,27 @@ class Declarations(object):
 
 
 
-class VariableDeclarationNode(object):
-    description = "variable assignment"
+def _create_declaration_node(node_type_name, node_type_description):
+    class Node(object):
+        description = node_type_description
+        
+        def __init__(self, name):
+            self.name = name
+        
+        def __repr__(self):
+            return "{}({})".format(node_type_name, self.name)
     
-    def __init__(self, name):
-        self.name = name
+    Node.__name__ = node_type_name
+    return Node
     
-    def __repr__(self):
-        return "VariableDeclarationNode({})".format(self.name)
 
-
-class ExceptionHandlerTargetNode(object):
-    description = "exception handler target"
-    
-    def __init__(self, name):
-        self.name = name
-
-
-class FunctionDeclarationNode(object):
-    description = "function declaration"
-    
-    def __init__(self, name):
-        self.name = name
-
-
-class ClassDeclarationNode(object):
-    description = "class declaration"
-    
-    def __init__(self, name):
-        self.name = name
-
-
-class TypeDeclarationNode(object):
-    description = "type declaration"
-    
-    def __init__(self, name):
-        self.name = name
-
-
-class SelfTypeDeclarationNode(object):
-    description = "self type declaration"
-    
-    def __init__(self, name):
-        self.name = name
-
-
-class ImportDeclarationNode(object):
-    description = "import statement"
-    
-    def __init__(self, name):
-        self.name = name
-
+VariableDeclarationNode = _create_declaration_node("VariableDeclaratioNode", "variable assignment")
+ExceptionHandlerTargetNode = _create_declaration_node("ExceptionHandlerTargetNode", "exception handler target")
+FunctionDeclarationNode = _create_declaration_node("FunctionDeclarationNode", "function declaration")
+ClassDeclarationNode = _create_declaration_node("ClassDeclarationNode", "class declaration")
+TypeDeclarationNode = _create_declaration_node("TypeDeclarationNode", "type declaration")
+SelfTypeDeclarationNode = _create_declaration_node("SelfTypeDeclarationNode", "self type declaration")
+ImportDeclarationNode = _create_declaration_node("ImportDeclarationNode", "import statement")
 
 
 class DeclarationFinder(object):
