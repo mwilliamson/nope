@@ -215,6 +215,10 @@ class StatementTypeChecker(object):
         if self._is_boolean_negation(condition):
             ref, false_type, true_type = self._extract_variable_type_in_branches(condition.operand, context)
             return ref, true_type, false_type
+        
+        if self._is_is_not_operation(condition):
+            ref, false_type, true_type = self._extract_variable_type_in_branches(nodes.is_(condition.left, condition.right), context)
+            return ref, true_type, false_type
             
         ref, true_branch_type = self._extract_type_condition(condition, context)
         if ref is None:
@@ -227,6 +231,8 @@ class StatementTypeChecker(object):
     def _is_boolean_negation(self, expression):
         return isinstance(expression, nodes.UnaryOperation) and expression.operator == "bool_not"
     
+    def _is_is_not_operation(self, expression):
+        return isinstance(expression, nodes.BinaryOperation) and expression.operator == "is_not"
     
     def _extract_type_condition(self, condition, context):
         ref = self._extract_variable_name_from_is_none_condition(condition)

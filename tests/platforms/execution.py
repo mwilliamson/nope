@@ -79,6 +79,22 @@ print(f(42))
         self._test_program_string(program, b"42\n")
         
     @istest
+    def function_definition_with_if_not_none_branch(self):
+        program = """
+#:: int -> none
+def g(x):
+    print(x)
+
+#:: int | none -> none
+def f(x):
+    if x is not None:
+        g(x)
+
+f(42)
+"""
+        self._test_program_string(program, b"42\n")
+        
+    @istest
     def can_call_generic_identity_function(self):
         program = """
 #:: T => T -> T
