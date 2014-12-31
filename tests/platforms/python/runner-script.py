@@ -18,7 +18,7 @@ def main():
             sys.path.append(os.path.dirname(path))
             with open(path) as source:
                 try:
-                    exec(source.read())
+                    exec(source.read(), globals().copy())
                     return_code = 0
                 except Exception:
                     traceback.print_exc()
