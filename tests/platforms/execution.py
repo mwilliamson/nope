@@ -303,6 +303,13 @@ True
         self._test_expression("AssertionError('') is AssertionError('')", b"False")
     
     @istest
+    def test_is_not(self):
+        self._test_expression("None is not None", b"False")
+        self._test_expression("None is not 1", b"True")
+        self._test_expression("1 is not '1'", b"True")
+        self._test_expression("AssertionError('') is not AssertionError('')", b"True")
+    
+    @istest
     def test_getitem_list(self):
         self._test_expression("[42, 53, 75][1]", b"53")
     

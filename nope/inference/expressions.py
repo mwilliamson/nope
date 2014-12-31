@@ -293,7 +293,7 @@ class ExpressionTypeInferer(object):
                 self.infer(node.left, context),
                 self.infer(node.right, context),
             ])
-        elif node.operator == "is":
+        elif node.operator in ["is", "is_not"]:
             self.infer(node.left, context)
             self.infer(node.right, context)
             return types.bool_type

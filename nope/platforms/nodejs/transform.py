@@ -580,6 +580,10 @@ class NodeTransformer(zuice.Base):
             return js.binary_operation("===",
                 self.transform(operation.left),
                 self.transform(operation.right))
+        elif operation.operator == "is_not":
+            return js.binary_operation("!==",
+                self.transform(operation.left),
+                self.transform(operation.right))
         else:
             return self._operation(operation.operator, [operation.left, operation.right])
     

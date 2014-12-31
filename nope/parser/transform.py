@@ -452,6 +452,7 @@ class Converter(object):
             ast.Not: self._nodes.bool_not,
             
             ast.Is: self._nodes.is_,
+            ast.IsNot: self._nodes.is_not,
             
             ast.In: self._nodes.contains,
         }
