@@ -33,6 +33,7 @@ _builtin_types = {
     )),
     
     "isinstance": types.func([types.object_type, types.any_meta_type], types.bool_type),
+    "type": types.func([types.object_type], types.object_type),
 }
 
 
@@ -66,8 +67,16 @@ builtin_modules = {
             read_only=True
         )
     ])),
+    "base64": BuiltinModule("base64", types.module("base64", [
+    ])),
+    "random": BuiltinModule("random", types.module("random", [
+        types.attr("randint", types.func([types.int_type, types.int_type], types.int_type)),
+    ])),
+    "sys": BuiltinModule("sys", types.module("sys", [
+    ])),
+    
     "collections": BuiltinModule("collections", types.module("collections", [
     ])),
     "dodge": BuiltinModule("dodge", types.module("dodge", [
-    ]))
+    ])),
 }
