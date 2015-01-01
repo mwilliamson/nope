@@ -3,6 +3,17 @@ from nose.tools import istest, assert_equal
 from nope import parser, nodes
 
 @istest
+def module_is_treated_as_empty_if_empty_directive_is_at_top():
+    source = """#:nope treat-as-empty
+
+x = 1
+"""
+    
+    module_node = parser.parse(source)
+    assert not module_node.is_executable
+    assert_equal([], module_node.body)
+
+@istest
 def module_is_executable_if_it_has_shebang():
     source = """#!/usr/bin/env python
 print(1)
