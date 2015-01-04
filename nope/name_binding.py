@@ -1,4 +1,5 @@
-from nope import nodes, errors, visit, name_declaration, types, branches
+from . import nodes, errors, visit, name_declaration, types, branches
+from .lists import filter_by_type
 
 
 def check_bindings(node, references, type_lookup, is_definitely_bound):
@@ -148,9 +149,15 @@ class _BindingChecker(object):
 
     
     def _update_class_definition(self, visitor, node, context):
-        context.bind(node)
         body_context = context.enter_new_namespace()
         self._update_statements(visitor, node.body, body_context)
+        context.add_deferred(node, lambda: self._update_class_on_reference(node, context))
+    
+    def _update_class_on_reference(self, node, context):
+        context.bind(node)
+        methods = filter_by_type(nodes.FunctionDef, node.body)
+        for method in methods:
+            context.is_definitely_bound(method)
     
     
     def _update_type_definition(self, visitor, node, context):
@@ -226,7 +233,7 @@ class _Context(object):
         return _Context(self._references, DiffingDict(self._is_definitely_bound), self._exception_handler_target_names, self._deferred)
     
     def enter_new_namespace(self):
-        is_definitely_bound = _copy_dict(self._is_definitely_bound)
+        is_definitely_bound = DiffingDict(self._is_definitely_bound)
         for declaration in is_definitely_bound:
             if isinstance(declaration, name_declaration.ExceptionHandlerTargetNode):
                 is_definitely_bound[declaration] = False
@@ -278,10 +285,8 @@ class DiffingDict(object):
         self._original = original
         self._new = new
     
-    def flattened_copy(self):
-        copy = self._original.copy()
-        copy.update(self._new)
-        return copy
+    def __iter__(self):
+        return iter(list(self._original) + list(self._new))
     
     def __getitem__(self, key):
         if key in self._new:

@@ -556,6 +556,39 @@ def class_name_is_definitely_bound_after_class_definition():
 
 
 @istest
+def method_can_reference_later_function_if_class_is_not_used_in_the_interim():
+    g_ref = nodes.ref("g")
+    f = nodes.func("f", args=nodes.Arguments([]), body=[
+        nodes.ret(nodes.call(g_ref, []))
+    ])
+    g = nodes.func("g", args=nodes.Arguments([]), body=[])
+    
+    _updated_bindings(nodes.module([
+        nodes.class_def("a", [f]),
+        g,
+    ]))
+
+
+@istest
+def class_cannot_be_referenced_if_method_dependencies_are_not_bound():
+    g_ref = nodes.ref("g")
+    f = nodes.func("f", args=nodes.Arguments([]), body=[
+        nodes.ret(nodes.call(g_ref, []))
+    ])
+    g = nodes.func("g", args=nodes.Arguments([]), body=[])
+    
+    try:
+        _updated_bindings(nodes.module([
+            nodes.class_def("a", [f]),
+            nodes.expression_statement(nodes.ref("a")),
+            g,
+        ]))
+        assert False, "Expected error"
+    except errors.UnboundLocalError as error:
+        assert_equal(g_ref, error.node)
+
+
+@istest
 def body_of_class_is_checked():
     _assert_child_statement_is_checked(lambda generate:
         generate.class_def("User", [generate.unbound_ref_statement()])
