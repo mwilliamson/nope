@@ -186,20 +186,20 @@ class _BindingChecker(object):
 
 
 class _Context(object):
-    def __init__(self, declarations, is_definitely_bound, exception_handler_target_names):
-        self._declarations = declarations
+    def __init__(self, references, is_definitely_bound, exception_handler_target_names):
+        self._references = references
         self._is_definitely_bound = is_definitely_bound
         self._exception_handler_target_names = exception_handler_target_names
     
     def is_definitely_bound(self, node):
-        declaration = self._declarations.referenced_declaration(node)
+        declaration = self._references.referenced_declaration(node)
         return self.is_declaration_definitely_bound(declaration)
     
     def is_declaration_definitely_bound(self, declaration):
         return self._is_definitely_bound.get(declaration, False)
     
     def bind(self, node):
-        declaration = self._declarations.referenced_declaration(node)
+        declaration = self._references.referenced_declaration(node)
         self._is_definitely_bound[declaration] = True
     
     def add_exception_handler_target(self, node):
@@ -212,14 +212,14 @@ class _Context(object):
         self._exception_handler_target_names.remove(node.name)
     
     def enter_branch(self):
-        return _Context(self._declarations, DiffingDict(self._is_definitely_bound), self._exception_handler_target_names)
+        return _Context(self._references, DiffingDict(self._is_definitely_bound), self._exception_handler_target_names)
     
     def enter_new_namespace(self):
         is_definitely_bound = _copy_dict(self._is_definitely_bound)
         for declaration in is_definitely_bound:
             if isinstance(declaration, name_declaration.ExceptionHandlerTargetNode):
                 is_definitely_bound[declaration] = False
-        return _Context(self._declarations, is_definitely_bound, set())
+        return _Context(self._references, is_definitely_bound, set())
     
     def unify(self, contexts):
         is_definitely_bound_mappings = [
