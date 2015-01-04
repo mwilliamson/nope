@@ -101,8 +101,7 @@ class StatementTypeChecker(object):
         for arg, body_arg_type in zip(node.args.args, body_arg_types):
             body_context.update_type(arg, body_arg_type)
         
-        for statement in node.body:
-            self.update_context(statement, body_context)
+        self.update_context(node.body, body_context)
         
         if return_type != types.none_type and not returns.has_unconditional_return(node.body):
             raise errors.MissingReturnError(node, return_type)
