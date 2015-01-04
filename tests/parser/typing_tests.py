@@ -132,6 +132,26 @@ x = 1
 
 
 @istest
+def type_definitions_can_span_multiple_lines():
+    source = """
+#:type Identifier =
+#:   int
+#: | str
+x = 1
+"""
+    expected_node = nodes.TypeDefinition(
+        "Identifier",
+        nodes.type_union([nodes.ref("int"), nodes.ref("str")])
+    )
+    
+    type_comments = parse_type_comments(io.StringIO(source))
+    assert_equal(
+        {(5, 0): ((2, 0), expected_node)},
+        type_comments.type_definitions
+    )
+
+
+@istest
 def generic_specifiers_use_generic_keyword():
     source = """
 #:generic T

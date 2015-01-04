@@ -20,11 +20,11 @@ def parse_type_comments(source):
     generics = {}
     
     for attached_node_position, (position, prefix, type_comment) in _type_comments(source):
-        if prefix == "#:type":
+        if prefix == "type":
             store = type_definitions
-        elif prefix == "#:generic":
+        elif prefix == "generic":
             store = generics
-        elif prefix == "#::":
+        elif prefix == ":":
             store = explicit_types
         else:
             raise Exception("Unhandled case")
@@ -37,23 +37,28 @@ def parse_type_comments(source):
 
 def _type_comments(source):
     tokens = tokenize.generate_tokens(source.readline)
-    last_type_comment = None
+    lines = []
+    comment_position = None
     
     for token_type, token_str, position, _, _ in tokens:
-        semantic_comment = _extract_semantic_comment(token_type, token_str)
-        if semantic_comment is not None:
-            prefix, parser = semantic_comment
-            last_type_comment = position, prefix, parser(token_str[len(prefix):].strip())
-        elif last_type_comment is not None and _is_part_of_node(token_type):
-            yield position, last_type_comment
-            last_type_comment = None
+        line = _extract_semantic_comment_line(token_type, token_str)
+        if line is not None:
+            lines.append(line)
+            if comment_position is None:
+                comment_position = position
+        elif lines and _is_part_of_node(token_type):
+            type_comment = " ".join(lines).strip()
+            for prefix, rule in _type_comment_parsers.items():
+                if type_comment.startswith(prefix):
+                    yield position, (comment_position, prefix, _parse(type_comment[len(prefix):], rule))
+                    
+            lines = []
+            comment_position = None
 
 
-def _extract_semantic_comment(token_type, token_str):
-    if token_type == tokenize.COMMENT:
-        for prefix, rule in _type_comment_parsers.items():
-            if token_str.startswith(prefix):
-                return prefix, lambda string: _parse(string, rule)
+def _extract_semantic_comment_line(token_type, token_str):
+    if token_type == tokenize.COMMENT and token_str.startswith("#:"):
+        return token_str[2:]
 
 
 def _is_part_of_node(token_type):
@@ -197,7 +202,7 @@ def _tokenize_type_string(sig_str):
 
 
 _type_comment_parsers = {
-    "#:type": _type_definition,
-    "#:generic": _generic,
-    "#::": _explicit_type,
+    "type": _type_definition,
+    "generic": _generic,
+    ":": _explicit_type,
 }
