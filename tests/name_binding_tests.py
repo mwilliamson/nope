@@ -434,12 +434,31 @@ def function_cannot_be_referenced_before_definition():
     
     try:
         _updated_bindings(nodes.module([
-            nodes.expression_statement(nodes.ref("f")),
+            nodes.expression_statement(ref_node),
             f,
         ]))
         assert False, "Expected error"
     except errors.UnboundLocalError as error:
         assert_equal(ref_node, error.node)
+
+
+@istest
+def function_cannot_be_referenced_before_definition_of_dependencies():
+    g_ref = nodes.ref("g")
+    f = nodes.func("f", args=nodes.Arguments([]), body=[
+        nodes.ret(nodes.call(g_ref, []))
+    ])
+    g = nodes.func("g", args=nodes.Arguments([]), body=[])
+    
+    try:
+        _updated_bindings(nodes.module([
+            f,
+            nodes.expression_statement(nodes.ref("f")),
+            g,
+        ]))
+        assert False, "Expected error"
+    except errors.UnboundLocalError as error:
+        assert_equal(g_ref, error.node)
 
 
 @istest
