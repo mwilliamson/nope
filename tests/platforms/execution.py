@@ -104,6 +104,22 @@ def f(x):
 print(f(42))
 """
         self._test_program_string(program, b"42\n")
+    
+    @wip
+    @istest
+    def functions_can_be_defined_out_of_order(self):
+        program = """
+#:: -> none
+def f():
+    g()
+
+#:: -> none
+def g():
+    print(42)
+
+f()
+"""
+        self._test_program_string(program, b"42\n")
         
     @istest
     def fib_program_prints_result_to_stdout(self):
