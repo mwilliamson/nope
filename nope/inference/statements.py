@@ -85,6 +85,7 @@ class StatementTypeChecker(object):
 
     def _check_function_def(self, node, context):
         func_type = self.infer_function_def(node, context)
+        context.update_type(node, func_type)
         
         return_type = func_type.return_type
         
@@ -108,7 +109,6 @@ class StatementTypeChecker(object):
         if return_type != types.none_type and not returns.has_unconditional_return(node.body):
             raise errors.MissingReturnError(node, return_type)
         
-        context.update_type(node, func_type)
     
     def _infer_function_def_arg_type(self, arg, formal_arg, context):
         if arg.optional:

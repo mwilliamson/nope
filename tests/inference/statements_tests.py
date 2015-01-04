@@ -15,6 +15,17 @@ def function_definitions_in_statement_lists_can_be_defined_out_of_order():
 
 
 @istest
+def function_definitions_in_statement_lists_can_be_mutually_recursive():
+    f = nodes.func("f", args=nodes.Arguments([]), body=[
+        nodes.ret(nodes.call(nodes.ref("g"), []))
+    ])
+    g = nodes.func("g", args=nodes.Arguments([]), body=[
+        nodes.ret(nodes.call(nodes.ref("f"), []))
+    ])
+    _update_context([f, g])
+
+
+@istest
 def function_definitions_in_statement_lists_are_type_checked_even_if_not_invoked():
     node = nodes.func("f", args=nodes.Arguments([]), body=[nodes.ret(nodes.int_literal(42))])
     try:
