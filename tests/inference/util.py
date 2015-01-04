@@ -115,7 +115,7 @@ def _create_context(types=None, declared_names_in_node=None):
 
 class SingleScopeContext(object):
     def __init__(self, references):
-        self._context = Context(references, {})
+        self._context = Context(references, {}, {})
     
     def __getattr__(self, key):
         return getattr(self._context, key)

@@ -1,6 +1,8 @@
 import os
+import functools
 
 from .. import nodes, types, returns, errors, branches, builtins
+from ..lists import filter_by_type
 from . import ephemeral
 from .assignment import Assignment
 from .classes import ClassDefinitionTypeChecker
@@ -431,8 +433,17 @@ class StatementTypeChecker(object):
         return self._expression_type_inferer.infer(node, context, hint=hint, required_type=required_type)
     
     def _check_list(self, statements, context):
+        deferred = []
+        
         for statement in statements:
-            self.update_context(statement, context)
+            if isinstance(statement, nodes.FunctionDef):
+                context.add_deferred(statement, functools.partial(self.update_context, statement, context))
+                deferred.append(statement)
+            else:
+                self.update_context(statement, context)
+        
+        for statement in deferred:
+            context.lookup(statement)
     
     def _infer_magic_method_call(self, *args, **kwargs):
         return self._expression_type_inferer.infer_magic_method_call(*args, **kwargs)

@@ -2,7 +2,7 @@ from .. import errors, types
 
 
 class Context(object):
-    def __init__(self, references, declaration_types, return_type=None, is_module_scope=False):
+    def __init__(self, references, declaration_types, deferred, return_type=None, is_module_scope=False):
         if isinstance(declaration_types, dict):
             declaration_types = DiffDict(declaration_types)
         
@@ -10,6 +10,7 @@ class Context(object):
         self._declaration_types = declaration_types
         self.return_type = return_type
         self.is_module_scope = is_module_scope
+        self._deferred = deferred
     
     def update_type(self, node, type_):
         declaration = self._references.referenced_declaration(node)
@@ -21,6 +22,10 @@ class Context(object):
     
     def lookup(self, node, allow_unbound=False):
         declaration = self._references.referenced_declaration(node)
+        
+        if declaration in self._deferred:
+            self._deferred.pop(declaration)()
+        
         if declaration in self._declaration_types or allow_unbound:
             return self._declaration_types.get(declaration)
         else:
@@ -36,6 +41,7 @@ class Context(object):
         return Context(
             self._references,
             self._declaration_types,
+            self._deferred,
             return_type=return_type,
             is_module_scope=False,
         )
@@ -44,6 +50,7 @@ class Context(object):
         return Context(
             self._references,
             self._declaration_types,
+            self._deferred,
             return_type=None,
             is_module_scope=False,
         )
@@ -52,6 +59,7 @@ class Context(object):
         return Context(
             self._references,
             self._declaration_types,
+            self._deferred,
             return_type=None,
             is_module_scope=True,
         )
@@ -60,6 +68,7 @@ class Context(object):
         return Context(
             self._references,
             DiffDict(self._declaration_types),
+            self._deferred,
             return_type=self.return_type,
             is_module_scope=self.is_module_scope,
         )
@@ -78,6 +87,10 @@ class Context(object):
                 for context in other_contexts
                 if declaration in context._declaration_types
             ])
+    
+    def add_deferred(self, node, type_check):
+        declaration = self.referenced_declaration(node)
+        self._deferred[declaration] = type_check
 
 
 class DiffDict(object):
