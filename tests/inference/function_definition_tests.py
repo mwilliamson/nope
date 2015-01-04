@@ -12,6 +12,24 @@ def can_infer_type_of_function_with_no_args_and_no_return():
 
 
 @istest
+def can_infer_type_of_function_with_explicit_signature():
+    signature = nodes.signature(args=[], returns=nodes.ref("none"))
+    args = nodes.arguments([])
+    node = nodes.typed(signature, nodes.func("f", args=args, body=[]))
+    assert_equal(types.func([], types.none_type), _infer_func_type(node))
+
+
+@istest
+def can_infer_type_of_function_with_explicit_signature_of_aliased_function_type():
+    args = nodes.arguments([])
+    node = nodes.typed(nodes.ref("Action"), nodes.func("f", args=args, body=[]))
+    type_bindings = {
+        "Action": types.meta_type(types.func([], types.none_type))
+    }
+    assert_equal(types.func([], types.none_type), _infer_func_type(node, type_bindings))
+
+
+@istest
 def can_infer_type_of_function_with_args_and_no_return():
     signature = nodes.signature(
         args=[
@@ -236,11 +254,18 @@ def error_if_type_signature_argument_is_optional_but_def_argument_is_not_optiona
         assert_equal("optional argument 'x' must have default value", str(error))
 
 
-def _infer_func_type(func_node):
-    context = update_context(func_node, type_bindings={
+def _infer_func_type(func_node, type_bindings=None):
+    if type_bindings is None:
+        type_bindings = {}
+    else:
+        type_bindings = type_bindings.copy()
+    
+    type_bindings.update({
         "int": types.meta_type(types.int_type),
         "str": types.meta_type(types.str_type),
         "none": types.meta_type(types.none_type),
         "list": types.meta_type(types.list_type),
     })
+    
+    context = update_context(func_node, type_bindings=type_bindings)
     return context.lookup(func_node)
