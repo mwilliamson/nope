@@ -2,10 +2,10 @@ from nose.tools import istest, assert_equal, assert_is
 
 from nope import nodes, errors, name_declaration, types
 from nope.name_binding import check_bindings
-from nope.name_resolution import References
 from nope.identity_dict import IdentityDict
 from nope.types import TypeLookup
-from .inference.util import context_manager_class
+from .inference.util import context_manager_class, SingleScopeReferences
+from nope.name_resolution import References
 
 
 @istest
@@ -41,24 +41,15 @@ def children_of_list_comprehension_are_checked():
 
 @istest
 def list_comprehension_target_is_definitely_bound():
-    target_node = nodes.ref("x")
-    ref_node = nodes.ref("x")
     node = nodes.list_comprehension(
-        ref_node,
+        nodes.ref("x"),
         nodes.comprehension(
-            target_node,
+            nodes.ref("x"),
             nodes.list_literal([]),
         ),
     )
     
-    declaration = name_declaration.VariableDeclarationNode("x")
-    
-    references = References([
-        (ref_node, declaration),
-        (target_node, declaration),
-    ])
-    
-    _updated_bindings(node, references)
+    _updated_bindings(node)
 
 
 @istest
@@ -66,11 +57,7 @@ def variable_is_definitely_bound_after_assignment():
     target_node = nodes.ref("x")
     node = nodes.assign([target_node], nodes.none())
     
-    references = References([
-        (target_node, name_declaration.VariableDeclarationNode("x")),
-    ])
-    
-    bindings = _updated_bindings(node, references)
+    bindings = _updated_bindings(node)
     assert_equal(True, bindings.is_definitely_bound(target_node))
 
 
@@ -80,13 +67,7 @@ def value_is_evaluated_before_target_is_bound():
     ref_node = nodes.ref("x")
     node = nodes.assign([target_node], ref_node)
     
-    declaration = name_declaration.VariableDeclarationNode("x")
-    references = References([
-        (target_node, declaration),
-        (ref_node, declaration),
-    ])
-    
-    _assert_is_unbound_error(ref_node, lambda: _updated_bindings(node, references))
+    _assert_is_unbound_error(ref_node, lambda: _updated_bindings(node))
 
 
 @istest
@@ -95,13 +76,7 @@ def targets_are_evaluated_left_to_right():
     ref_node = nodes.ref("x")
     node = nodes.assign([nodes.attr(ref_node, "blah"), target_node], nodes.none())
     
-    declaration = name_declaration.VariableDeclarationNode("x")
-    references = References([
-        (target_node, declaration),
-        (ref_node, declaration),
-    ])
-    
-    _assert_is_unbound_error(ref_node, lambda: _updated_bindings(node, references))
+    _assert_is_unbound_error(ref_node, lambda: _updated_bindings(node))
 
 
 @istest
@@ -109,34 +84,20 @@ def variable_in_tuple_is_definitely_bound_after_assignment():
     target_node = nodes.ref("x")
     node = nodes.assign([nodes.tuple_literal([target_node])], nodes.tuple_literal([nodes.none()]))
     
-    references = References([
-        (target_node, name_declaration.VariableDeclarationNode("x")),
-    ])
-    
-    bindings = _updated_bindings(node, references)
+    bindings = _updated_bindings(node)
     assert_equal(True, bindings.is_definitely_bound(target_node))
 
 
 @istest
 def error_if_name_is_unbound():
     ref = nodes.ref("x")
-    references = References([
-        (ref, name_declaration.VariableDeclarationNode("x")),
-    ])
-    
-    _assert_is_unbound_error(ref, lambda: _updated_bindings(ref, references))
+    _assert_is_unbound_error(ref, lambda: _updated_bindings(ref))
 
 
 @istest
 def no_error_if_name_is_definitely_bound():
     ref = nodes.ref("x")
-    
-    declaration = name_declaration.VariableDeclarationNode("x")
-    references = References([
-        (ref, declaration),
-    ])
-    
-    _updated_bindings(ref, references, is_definitely_bound={declaration: True})
+    _updated_bindings(ref, is_definitely_bound={"x": True})
 
 
 @istest
@@ -158,12 +119,7 @@ def variable_remains_definitely_bound_after_being_reassigned_in_one_branch_of_if
         []
     )
     
-    declaration = name_declaration.VariableDeclarationNode("x")
-    references = References([
-        (target_node, declaration)
-    ])
-    
-    bindings = _updated_bindings(node, references, is_definitely_bound={declaration: True})
+    bindings = _updated_bindings(node, is_definitely_bound={"x": True})
     assert bindings.is_definitely_bound(target_node)
 
 
@@ -183,11 +139,7 @@ def potentially_bound_variable_becomes_definitely_bound_after_being_assigned_in_
         []
     )
     
-    declaration = name_declaration.VariableDeclarationNode("x")
-    references = References([
-        (target_node, declaration)
-    ])
-    bindings = _updated_bindings(node, references)
+    bindings = _updated_bindings(node)
     assert not bindings.is_definitely_bound(target_node)
     
     node = nodes.if_else(
@@ -195,7 +147,7 @@ def potentially_bound_variable_becomes_definitely_bound_after_being_assigned_in_
         [nodes.assign([target_node], nodes.none())],
         [nodes.assign([target_node], nodes.none())]
     )
-    bindings = _updated_bindings(node, references)
+    bindings = _updated_bindings(node)
     assert bindings.is_definitely_bound(target_node)
 
 
@@ -388,14 +340,8 @@ def except_handler_targets_cannot_share_their_name_when_nested():
         ],
     )
     
-    declaration = name_declaration.ExceptionHandlerTargetNode("error")
-    references = References([
-        (first_target_node, declaration),
-        (second_target_node, declaration),
-    ])
-    
     try:
-        _updated_bindings(node, references)
+        _updated_bindings(node)
         assert False, "Expected error"
     except errors.InvalidReassignmentError as error:
         assert_equal(second_target_node, error.node)
@@ -436,18 +382,9 @@ def with_statement_target_is_definitely_bound_in_body():
     var_ref = nodes.ref("target")
     statement = nodes.with_statement(manager_ref, target_ref, [nodes.expression_statement(var_ref)])
     
-    manager_declaration = name_declaration.VariableDeclarationNode("manager")
-    target_declaration = name_declaration.VariableDeclarationNode("target")
-    references = References([
-        (manager_ref, manager_declaration),
-        (target_ref, target_declaration),
-        (var_ref, target_declaration),
-    ])
-    
     _updated_bindings(
         statement,
-        references,
-        is_definitely_bound={manager_declaration: True},
+        is_definitely_bound={"manager": True},
         type_lookup=TypeLookup(IdentityDict([(manager_ref, context_manager_class(exit_type=types.none_type))]))
     )
 
@@ -479,11 +416,8 @@ def assigned_variables_in_with_statement_body_are_unbound_after_exit_if_exit_met
 @istest
 def function_name_is_definitely_bound_after_function_definition():
     node = nodes.func("f", nodes.arguments([]), [])
-    declaration = name_declaration.VariableDeclarationNode("f")
     
-    references = References([(node, declaration)])
-    
-    bindings = _updated_bindings(node, references)
+    bindings = _updated_bindings(node)
     assert_equal(True, bindings.is_definitely_bound(node))
 
 
@@ -499,13 +433,7 @@ def variables_from_outer_scope_remain_bound():
     ref = nodes.ref("x")
     func_node = nodes.func("f", nodes.arguments([]), [nodes.expression_statement(ref)])
     
-    declaration = name_declaration.VariableDeclarationNode("x")
-    references = References([
-        (func_node, name_declaration.VariableDeclarationNode("f")),
-        (ref, declaration),
-    ])
-    
-    _updated_bindings(func_node, references, is_definitely_bound={declaration: True})
+    _updated_bindings(func_node, is_definitely_bound={"x": True})
 
 
 @istest
@@ -514,15 +442,7 @@ def arguments_of_function_are_definitely_bound():
     arg_ref = nodes.ref("x")
     func_node = nodes.func("f", nodes.arguments([arg]), [nodes.expression_statement(arg_ref)])
     
-    arg_declaration = name_declaration.VariableDeclarationNode("x")
-    
-    references = References([
-        (func_node, name_declaration.VariableDeclarationNode("f")),
-        (arg, arg_declaration),
-        (arg_ref, arg_declaration),
-    ])
-    
-    _updated_bindings(func_node, references)
+    _updated_bindings(func_node)
 
 
 @istest
@@ -535,16 +455,7 @@ def type_parameters_of_function_are_definitely_bound():
         nodes.func("f", nodes.arguments([]), []),
     )
     
-    param_declaration = name_declaration.VariableDeclarationNode("T")
-    
-    references = References([
-        (func_node, name_declaration.VariableDeclarationNode("f")),
-        (param, param_declaration),
-        (arg_ref, param_declaration),
-        (returns_ref, param_declaration),
-    ])
-    
-    _updated_bindings(func_node, references)
+    _updated_bindings(func_node)
 
 
 @istest
@@ -568,7 +479,7 @@ def exception_handler_targets_cannot_be_accessed_from_nested_function():
     ])
     
     try:
-        _updated_bindings(try_node, references)
+        _updated_bindings(try_node, references=references)
         assert False, "Expected error"
     except errors.UnboundLocalError as error:
         assert_equal(ref_node, error.node)
@@ -578,11 +489,7 @@ def exception_handler_targets_cannot_be_accessed_from_nested_function():
 @istest
 def class_name_is_definitely_bound_after_class_definition():
     node = nodes.class_def("User", [])
-    declaration = name_declaration.VariableDeclarationNode("User")
-    
-    references = References([(node, declaration)])
-    
-    bindings = _updated_bindings(node, references)
+    bindings = _updated_bindings(node)
     assert_equal(True, bindings.is_definitely_bound(node))
 
 
@@ -598,22 +505,9 @@ def type_name_is_definitely_bound_after_type_definition():
     int_ref = nodes.ref("int")
     str_ref = nodes.ref("str")
     
-    int_declaration = name_declaration.VariableDeclarationNode("int")
-    str_declaration = name_declaration.VariableDeclarationNode("str")
-    
     node = nodes.type_definition("Identifier", nodes.type_union([int_ref, str_ref]))
-    declaration = name_declaration.TypeDeclarationNode("Identifier")
     
-    references = References([
-        (node, declaration),
-        (int_ref, int_declaration),
-        (str_ref, str_declaration),
-    ])
-    
-    bindings = _updated_bindings(node, references, is_definitely_bound={
-        int_declaration: True,
-        str_declaration: True,
-    })
+    bindings = _updated_bindings(node, is_definitely_bound=["int", "str"])
     assert_equal(True, bindings.is_definitely_bound(node))
 
 
@@ -622,10 +516,7 @@ def import_name_is_definitely_bound_after_import_statement():
     alias_node = nodes.import_alias("x.y", None)
     node = nodes.Import([alias_node])
     
-    declaration = name_declaration.VariableDeclarationNode("x")
-    references = References([(alias_node, declaration)])
-    
-    bindings = _updated_bindings(node, references)
+    bindings = _updated_bindings(node)
     assert_equal(True, bindings.is_definitely_bound(alias_node))
 
 
@@ -634,10 +525,7 @@ def import_name_is_definitely_bound_after_import_from_statement():
     alias_node = nodes.import_alias("x.y", None)
     node = nodes.import_from(["."], [alias_node])
     
-    declaration = name_declaration.VariableDeclarationNode("x")
-    references = References([(alias_node, declaration)])
-    
-    bindings = _updated_bindings(node, references)
+    bindings = _updated_bindings(node)
     assert_equal(True, bindings.is_definitely_bound(alias_node))
 
 
@@ -647,19 +535,12 @@ _standard_unbound_ref = nodes.ref("unbound_ref")
 def _test_context(create_node):
     declaration = name_declaration.VariableDeclarationNode("x")
     
-    references = IdentityDict([
-        (_standard_target_node, declaration),
-        (_standard_unbound_ref, name_declaration.VariableDeclarationNode("unbound_ref")),
-    ])
-    
     is_definitely_bound = {}
     type_lookup = IdentityDict()
     
     class NodeGenerator(object):
         def target(self):
-            target_node = nodes.ref("x")
-            references[target_node] = declaration
-            return target_node
+            return nodes.ref("x")
         
         def assignment(self):
             return nodes.assign([self.target()], nodes.none())
@@ -672,40 +553,35 @@ def _test_context(create_node):
         
         def bound_ref(self, name, type_):
             bound_node = nodes.ref(name)
-            bound_declaration = name_declaration.VariableDeclarationNode(name)
-            references[bound_node] = bound_declaration
-            is_definitely_bound[bound_declaration] = True
+            is_definitely_bound[name] = True
             type_lookup[bound_node] = type_
             return bound_node
         
         def func(self, *args, **kwargs):
-            node = nodes.func(*args, **kwargs)
-            declaration = name_declaration.FunctionDeclarationNode(node.name)
-            references[node] = declaration
-            return node
+            return nodes.func(*args, **kwargs)
         
         def class_def(self, *args, **kwargs):
-            node = nodes.class_def(*args, **kwargs)
-            declaration = name_declaration.ClassDeclarationNode(node.name)
-            references[node] = declaration
-            return node
-            
+            return nodes.class_def(*args, **kwargs)
             
         
     node = create_node(NodeGenerator())
     
-    return node, References(references), is_definitely_bound, TypeLookup(type_lookup)
+    return {
+        "node": node,
+        "is_definitely_bound": is_definitely_bound,
+        "type_lookup": TypeLookup(type_lookup),
+    }
 
 
 def _assert_name_is_not_definitely_bound(create_node):
     args = _test_context(create_node)
-    bindings = _updated_bindings(*args)
+    bindings = _updated_bindings(**args)
     assert not bindings.is_definitely_bound(_standard_target_node)
     
 
 def _assert_name_is_definitely_bound(create_node):
     args = _test_context(create_node)
-    bindings = _updated_bindings(*args)
+    bindings = _updated_bindings(**args)
     assert bindings.is_definitely_bound(_standard_target_node)
 
 
@@ -715,12 +591,21 @@ def _assert_child_statement_is_checked(create_node):
 
 def _assert_child_expression_is_checked(create_node):
     args = _test_context(create_node)
-    _assert_is_unbound_error(_standard_unbound_ref, lambda: _updated_bindings(*args))
+    _assert_is_unbound_error(_standard_unbound_ref, lambda: _updated_bindings(**args))
     
 
-def _updated_bindings(node, references, is_definitely_bound=None, type_lookup=None):
+def _updated_bindings(node, *, references=None, is_definitely_bound=None, type_lookup=None):
     if is_definitely_bound is None:
         is_definitely_bound = {}
+    
+    if references is None:
+        references = SingleScopeReferences()
+    
+    is_definitely_bound = dict(
+        (references.declaration(name), True)
+        for name in is_definitely_bound
+    )
+    
     return check_bindings(
         node,
         references,
