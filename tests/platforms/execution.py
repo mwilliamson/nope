@@ -788,6 +788,24 @@ except:
     print("Exception handler")
 """
         self._test_program_string(program, b"Exception handler\n")
+    
+    
+    @istest
+    def test_method_can_call_function_defined_later(self):
+        program = """
+class A:
+    #:: Self -> none
+    def f(self):
+        g()
+
+def g():
+    print(42)
+
+A().f()
+
+"""
+        self._test_program_string(program, b"42\n")
+    
         
     @istest
     def type_definition_using_type_union(self):

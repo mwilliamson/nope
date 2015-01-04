@@ -53,6 +53,7 @@ class _TypeCheckerForModule(zuice.Base):
     
         context = module_context(references)
         self.update_context(module.node.body, context)
+        context.update_deferred()
         
         for reference in references:
             self._type_lookup[reference] = context.lookup(reference)
@@ -76,4 +77,4 @@ class _TypeCheckerForModule(zuice.Base):
         
 
 def module_context(references):
-    return Context(references, builtins.builtin_declaration_types, {}).enter_module()
+    return Context(references, builtins.builtin_declaration_types, IdentityDict()).enter_module()

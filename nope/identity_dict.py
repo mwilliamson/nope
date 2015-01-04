@@ -33,3 +33,12 @@ class IdentityDict(object):
     
     def keys(self):
         return [key for key, value in self._values.values()]
+    
+    def pop(self, key):
+        return self._values.pop(id(key))[1]
+    
+    def popitem(self):
+        return self._values.popitem()[1]
+    
+    def __bool__(self):
+        return bool(self._values)

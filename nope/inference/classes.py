@@ -104,7 +104,7 @@ class ClassDefinitionTypeChecker(object):
             for statement in init_node.body:
                 self._check_init_statement(init_node, statement, body_context, inner_class_type)
             
-            self._update_context(init_node, body_context)
+            self._update_context(init_node, body_context, immediate=True)
     
     def _unbound_attribute_types(self, node, body_context):
         attrs = self._unbound_assigned_attribute_types(node, body_context)

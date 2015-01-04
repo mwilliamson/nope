@@ -23,9 +23,6 @@ class Context(object):
     def lookup(self, node, allow_unbound=False):
         declaration = self._references.referenced_declaration(node)
         
-        if declaration in self._deferred:
-            self._deferred.pop(declaration)()
-        
         if declaration in self._declaration_types or allow_unbound:
             return self._declaration_types.get(declaration)
         else:
@@ -89,8 +86,20 @@ class Context(object):
             ])
     
     def add_deferred(self, node, type_check):
-        declaration = self.referenced_declaration(node)
-        self._deferred[declaration] = type_check
+        if node not in self._deferred:
+            self._deferred[node] = []
+            
+        self._deferred[node].append(type_check)
+    
+    def update_deferred(self, node=None):
+        if node is None:
+            while self._deferred:
+                for update in self._deferred.popitem()[1]:
+                    update()
+                
+        elif node in self._deferred:
+            for update in self._deferred.pop(node):
+                update()
 
 
 class DiffDict(object):

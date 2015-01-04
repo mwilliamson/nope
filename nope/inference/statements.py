@@ -41,9 +41,11 @@ class StatementTypeChecker(object):
             nodes.ImportFrom: self._check_import_from,
             list: self._check_list,
         }
-
-    def update_context(self, statement, context):
+    
+    def update_context(self, statement, context, immediate=False):
         self._checkers[type(statement)](statement, context)
+        if immediate:
+            context.update_deferred(statement)
 
     def _find_submodule(self, name):
         try:
@@ -86,7 +88,12 @@ class StatementTypeChecker(object):
     def _check_function_def(self, node, context):
         func_type = self.infer_function_def(node, context)
         context.update_type(node, func_type)
-        
+        context.add_deferred(
+            node,
+            functools.partial(self._check_function_def_body, node, func_type, context)
+        )
+    
+    def _check_function_def_body(self, node, func_type, context):
         return_type = func_type.return_type
         
         body_context = context.enter_func(return_type)
@@ -433,17 +440,8 @@ class StatementTypeChecker(object):
         return self._expression_type_inferer.infer(node, context, hint=hint, required_type=required_type)
     
     def _check_list(self, statements, context):
-        deferred = []
-        
         for statement in statements:
-            if isinstance(statement, nodes.FunctionDef):
-                context.add_deferred(statement, functools.partial(self.update_context, statement, context))
-                deferred.append(statement)
-            else:
-                self.update_context(statement, context)
-        
-        for statement in deferred:
-            context.lookup(statement)
+            self.update_context(statement, context)
     
     def _infer_magic_method_call(self, *args, **kwargs):
         return self._expression_type_inferer.infer_magic_method_call(*args, **kwargs)
