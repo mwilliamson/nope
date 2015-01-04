@@ -428,6 +428,21 @@ def function_can_be_referenced_immediately_after_definition():
 
 
 @istest
+def function_cannot_be_referenced_before_definition():
+    f = nodes.func("f", args=nodes.Arguments([]), body=[])
+    ref_node = nodes.ref("f")
+    
+    try:
+        _updated_bindings(nodes.module([
+            nodes.expression_statement(nodes.ref("f")),
+            f,
+        ]))
+        assert False, "Expected error"
+    except errors.UnboundLocalError as error:
+        assert_equal(ref_node, error.node)
+
+
+@istest
 def function_definitions_in_statement_lists_can_be_defined_out_of_order():
     f = nodes.func("f", args=nodes.Arguments([]), body=[
         nodes.ret(nodes.call(nodes.ref("g"), []))
