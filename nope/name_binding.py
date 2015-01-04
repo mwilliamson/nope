@@ -46,8 +46,8 @@ class _BindingChecker(object):
             if isinstance(target, nodes.VariableReference):
                 context.bind(target)
             visitor.visit(target, context)
-
-
+    
+    
     def _update_comprehension(self, visitor, node, context):
         self._update_comprehension_generator(visitor, node.generator, context)
     
@@ -133,8 +133,7 @@ class _BindingChecker(object):
         for arg in node.args.args:
             visitor.visit(arg, body_context)
         
-        for statement in node.body:
-            visitor.visit(statement, body_context)
+        self._update_statements(visitor, node.body, body_context)
 
 
     def _update_argument(self, visitor, node, context):
@@ -144,8 +143,7 @@ class _BindingChecker(object):
     def _update_class_definition(self, visitor, node, context):
         context.bind(node)
         body_context = context.enter_new_namespace()
-        for statement in node.body:
-            visitor.visit(statement, body_context)
+        self._update_statements(visitor, node.body, body_context)
     
     
     def _update_type_definition(self, visitor, node, context):
