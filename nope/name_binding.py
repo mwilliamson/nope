@@ -2,7 +2,7 @@ from nope import nodes, errors, visit, name_declaration, types, branches
 
 
 def check_bindings(node, references, type_lookup, is_definitely_bound):
-    context = _Context(references, is_definitely_bound, set())
+    context = _Context(references, is_definitely_bound, set(), {})
     checker = _BindingChecker(type_lookup)
     checker.update_bindings(node, context)
     return Bindings(references, context._is_definitely_bound)
@@ -30,7 +30,9 @@ class _BindingChecker(object):
         visitor.before(nodes.Import, self._update_import)
         visitor.before(nodes.ImportFrom, self._update_import)
         
-        return visitor.visit(node, context)
+        visitor.visit(node, context)
+        
+        context.update_deferred()
 
 
     def _check_variable_reference(self, visitor, node, context):
@@ -129,6 +131,11 @@ class _BindingChecker(object):
 
     def _update_function_definition(self, visitor, node, context):
         context.bind(node)
+        
+        context.add_deferred(node, lambda: self._update_function_definition_body(visitor, node, context))
+        
+    
+    def _update_function_definition_body(self, visitor, node, context):
         body_context = context.enter_new_namespace()
         for arg in node.args.args:
             visitor.visit(arg, body_context)
@@ -186,16 +193,20 @@ class _BindingChecker(object):
 
 
 class _Context(object):
-    def __init__(self, references, is_definitely_bound, exception_handler_target_names):
+    def __init__(self, references, is_definitely_bound, exception_handler_target_names, deferred):
         self._references = references
         self._is_definitely_bound = is_definitely_bound
         self._exception_handler_target_names = exception_handler_target_names
+        self._deferred = deferred
     
     def is_definitely_bound(self, node):
         declaration = self._references.referenced_declaration(node)
         return self.is_declaration_definitely_bound(declaration)
     
     def is_declaration_definitely_bound(self, declaration):
+        if declaration in self._deferred:
+            self._deferred.pop(declaration)()
+            
         return self._is_definitely_bound.get(declaration, False)
     
     def bind(self, node):
@@ -212,14 +223,14 @@ class _Context(object):
         self._exception_handler_target_names.remove(node.name)
     
     def enter_branch(self):
-        return _Context(self._references, DiffingDict(self._is_definitely_bound), self._exception_handler_target_names)
+        return _Context(self._references, DiffingDict(self._is_definitely_bound), self._exception_handler_target_names, self._deferred)
     
     def enter_new_namespace(self):
         is_definitely_bound = _copy_dict(self._is_definitely_bound)
         for declaration in is_definitely_bound:
             if isinstance(declaration, name_declaration.ExceptionHandlerTargetNode):
                 is_definitely_bound[declaration] = False
-        return _Context(self._references, is_definitely_bound, set())
+        return _Context(self._references, is_definitely_bound, set(), self._deferred)
     
     def unify(self, contexts):
         is_definitely_bound_mappings = [
@@ -236,6 +247,14 @@ class _Context(object):
                     mapping.get(declaration, False)
                     for mapping in is_definitely_bound_mappings
                 )
+    
+    def add_deferred(self, node, update):
+        declaration = self._references.referenced_declaration(node)
+        self._deferred[declaration] = update
+    
+    def update_deferred(self):
+        for declaration in list(self._deferred.keys()):
+            self.is_declaration_definitely_bound(declaration)
 
 
 class Bindings(object):
