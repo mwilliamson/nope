@@ -76,6 +76,8 @@ TODO
   We need to make sure that the type is consistent if that variable is captured
   in a function definition.
 
+* Prevent re-definition of types and functions.
+
 Status
 ------
 
