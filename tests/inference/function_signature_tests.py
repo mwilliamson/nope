@@ -20,7 +20,7 @@ def type_of_function_signature_is_metatype_of_function():
 
 
 @istest
-def type_of_function_signature_is_metatype_of_function():
+def type_of_generic_function_signature_is_metatype_of_function():
     node = nodes.signature(
         type_params=[nodes.formal_type_parameter("T")],
         args=[nodes.signature_arg(nodes.ref("T"))],
