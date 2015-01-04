@@ -716,26 +716,6 @@ def _assert_child_statement_is_checked(create_node):
 def _assert_child_expression_is_checked(create_node):
     args = _test_context(create_node)
     _assert_is_unbound_error(_standard_unbound_ref, lambda: _updated_bindings(*args))
-
-
-def _create_test_context(references, other_refs=None, variable_types=None):
-    if other_refs is None:
-        other_refs = []
-    if variable_types is None:
-        variable_types = {}
-        
-    is_definitely_bound = {}
-    for other_ref in other_refs:
-        references[other_ref] = name_declaration.VariableDeclarationNode(other_ref.name)
-        is_definitely_bound[references[other_ref]] = True
-    
-    type_lookup = types.TypeLookup(IdentityDict([
-        (other_ref, variable_types[other_ref.name])
-        for other_ref in other_refs
-        if other_ref.name in variable_types
-    ]))
-    
-    return References(references), is_definitely_bound, type_lookup
     
 
 def _updated_bindings(node, references, is_definitely_bound=None, type_lookup=None):
