@@ -438,6 +438,18 @@ def function_definitions_in_statement_lists_can_be_defined_out_of_order():
 
 
 @istest
+def function_definitions_can_be_mutually_recursive():
+    f = nodes.func("f", args=nodes.Arguments([]), body=[
+        nodes.ret(nodes.call(nodes.ref("g"), []))
+    ])
+    g = nodes.func("g", args=nodes.Arguments([]), body=[
+        nodes.ret(nodes.call(nodes.ref("f"), []))
+    ])
+    
+    _updated_bindings(nodes.module([f, g]))
+
+
+@istest
 def body_of_function_is_checked():
     _assert_child_statement_is_checked(lambda generate:
         generate.func("f", nodes.arguments([]), [generate.unbound_ref_statement()])
