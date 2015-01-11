@@ -39,6 +39,7 @@ class StatementTypeChecker(object):
             nodes.TypeDefinition: self._check_type_definition,
             nodes.Import: self._check_import,
             nodes.ImportFrom: self._check_import_from,
+            nodes.Statements: self._check_statements,
             list: self._check_list,
         }
     
@@ -407,7 +408,11 @@ class StatementTypeChecker(object):
         for alias in node.names:
             module_type = self._find_module(node, node.module, alias.name)
             context.update_type(alias, module_type)
-
+    
+    
+    def _check_statements(self, node, context):
+        self.update_context(node.body, context)
+    
     
     def _find_module(self, node, names, value_name=None):
         try:

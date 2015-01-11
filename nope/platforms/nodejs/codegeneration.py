@@ -86,7 +86,7 @@ def _replace_extension(filename, new_extension):
 
 # TODO: should probably yank this from somewhere more general since it's not specific to node.js
 _builtin_names = [
-    "bool", "print", "abs", "divmod", "range", "Exception", "AssertionError", "str",
+    "bool", "print", "abs", "divmod", "range", "Exception", "AssertionError", "str", "type",
 ]
 
 def _generate_prelude(fileobj, is_executable, relative_path):

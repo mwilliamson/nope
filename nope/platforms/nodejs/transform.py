@@ -39,6 +39,7 @@ class NodeTransformer(zuice.Base):
             nodes.TryStatement: self._try_statement,
             nodes.RaiseStatement: self._raise_statement,
             nodes.AssertStatement: self._assert_statement,
+            nodes.Statements: self._statements,
             
             nodes.Call: self._call,
             nodes.AttributeAccess: self._attr,
@@ -453,7 +454,6 @@ class NodeTransformer(zuice.Base):
             [self._generate_raise(exception_value)],
         )
     
-    
     def _generate_raise(self, exception_value):
         exception_name = self._unique_name("exception")
         error_name = self._unique_name("error")
@@ -487,6 +487,10 @@ class NodeTransformer(zuice.Base):
             )),
             js.throw(js.ref(error_name)),
         ])
+    
+    
+    def _statements(self, statements):
+        return js.statements([self.transform(statement) for statement in statements.body])
     
     
     def _call(self, call):

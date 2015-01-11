@@ -659,60 +659,6 @@ def test_transform_raise_with_exception_value():
 
 
 @istest
-def test_transform_with_statement_with_no_target():
-    _assert_transform(
-        nodes.with_statement(nodes.ref("manager"), None, [nodes.ret(nodes.ref("x"))]),
-        """
-            var $manager1 = manager;
-            var $exit2 = $nope.builtins.getattr($manager1, "__exit__");
-            var $hasExited4 = false;
-            $nope.builtins.getattr($manager1, "__enter__")();
-            try {
-                return x;
-            } catch ($error3) {
-                var $exception0 = $error3.$nopeException;
-                $hasExited4 = true;
-                if (!($nope.builtins.bool($exit2($nope.builtins.type($exception0), $exception0, null)))) {
-                    throw $error3;
-                }
-                
-            } finally {
-                if (!($hasExited4)) {
-                    $exit2(null, null, null);
-                }
-            }
-        """,
-    )
-
-
-@istest
-def test_transform_with_statement_with_target():
-    _assert_transform(
-        nodes.with_statement(nodes.ref("manager"), nodes.ref("value"), [nodes.ret(nodes.ref("x"))]),
-        """
-            var $manager1 = manager;
-            var $exit2 = $nope.builtins.getattr($manager1, "__exit__");
-            var $hasExited4 = false;
-            value = $nope.builtins.getattr($manager1, "__enter__")();
-            try {
-                return x;
-            } catch ($error3) {
-                var $exception0 = $error3.$nopeException;
-                $hasExited4 = true;
-                if (!($nope.builtins.bool($exit2($nope.builtins.type($exception0), $exception0, null)))) {
-                    throw $error3;
-                }
-                
-            } finally {
-                if (!($hasExited4)) {
-                    $exit2(null, null, null);
-                }
-            }
-        """,
-    )
-
-
-@istest
 def test_transform_call_with_positional_arguments():
     func_node = nodes.ref("f")
     type_lookup = types.TypeLookup(IdentityDict([
