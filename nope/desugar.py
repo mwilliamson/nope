@@ -1,79 +1,96 @@
 import itertools
 
-from . import nodes, visit
+from . import nodes, visit, couscous as cc
 from .modules import LocalModule
 
 
-def desugar(module):
-    if not isinstance(module, LocalModule):
-        raise Exception("Unhandled desugar type: {}".format(module))
+def desugar(node):
+    desugarrer = Desugarrer()
+    return desugarrer.desugar(node)
+
+
+class Desugarrer(object):
+    def __init__(self):
+        self._unique_count = itertools.count()
     
-    visitor = visit.Visitor()
-    visitor.replace(nodes.WithStatement, _with_statement)
+        self._transforms = {
+            nodes.WithStatement: self._with_statement,
+            
+            nodes.ReturnStatement: self._return,
+            
+            nodes.VariableReference: self._ref,
+            list: lambda nope_nodes: list(map(self.desugar, nope_nodes)),
+        }
     
-    return LocalModule(module.path, visitor.visit(module.node))
+    def desugar(self, node):
+        return self._transforms[type(node)](node)
+        
+
+    def _with_statement(self, statement):
+        exception_name = self._generate_unique_name("exception")
+        manager_name = self._generate_unique_name("manager")
+        exit_method_var_name = self._generate_unique_name("exit")
+        has_exited_name = self._generate_unique_name("has_exited")
+        
+        manager_ref = cc.ref(manager_name)
+        
+        enter_value = cc.call(self._get_magic_method(manager_ref, "enter"), [])
+        if statement.target is None:
+            enter_statement = cc.expression_statement(enter_value)
+        else:
+            enter_statement = cc.assign(self.desugar(statement.target), enter_value)
+        
+        return cc.statements([
+            cc.assign(manager_ref, self.desugar(statement.value)),
+            cc.assign(cc.ref(exit_method_var_name), self._get_magic_method(manager_ref, "exit")),
+            cc.assign(cc.ref(has_exited_name), cc.false),
+            enter_statement,
+            cc.try_(
+                desugar(statement.body),
+                handlers=[cc.except_(self._builtin_ref("Exception"), cc.ref(exception_name), [
+                    cc.assign(cc.ref(has_exited_name), cc.true),
+                    cc.if_(
+                        cc.not_(_bool(cc.call(cc.ref(exit_method_var_name), [
+                            cc.call(self._builtin_ref("type"), [cc.ref(exception_name)]),
+                            cc.ref(exception_name),
+                            cc.none,
+                        ]))),
+                        [cc.raise_()],
+                        [],
+                    ),
+                    
+                ])],
+                finally_body=[
+                    cc.if_(
+                        cc.not_(cc.ref(has_exited_name)),
+                        [
+                            cc.expression_statement(cc.call(
+                                cc.ref(exit_method_var_name),
+                                [cc.none, cc.none, cc.none]
+                            )),
+                        ],
+                        [],
+                    ),
+                ],
+            ),
+        ])
     
-
-def _with_statement(visitor, statement):
-    exception_name = _generate_unique_name("exception")
-    manager_name = _generate_unique_name("manager")
-    exit_method_var_name = _generate_unique_name("exit")
-    has_exited_name = _generate_unique_name("has_exited")
+    def _return(self, node):
+        return cc.ret(self.desugar(node.value))
     
-    manager_ref = lambda: nodes.ref(manager_name)
-    
-    enter_value = nodes.call(_get_magic_method(manager_ref(), "enter"), [])
-    if statement.target is None:
-        enter_statement = nodes.expression_statement(enter_value)
-    else:
-        enter_statement = nodes.assign([statement.target], enter_value)
-    
-    return nodes.Statements([
-        nodes.assign([manager_ref()], statement.value),
-        nodes.assign([nodes.ref(exit_method_var_name)], _get_magic_method(manager_ref(), "exit")),
-        nodes.assign([nodes.ref(has_exited_name)], nodes.boolean(False)),
-        enter_statement,
-        nodes.try_statement(
-            statement.body,
-            handlers=[nodes.except_handler(_builtin_ref("Exception"), nodes.ref(exception_name), [
-                nodes.assign([nodes.ref(has_exited_name)], nodes.boolean(True)),
-                nodes.if_else(
-                    nodes.bool_not(nodes.call(nodes.ref(exit_method_var_name), [
-                        nodes.call(_builtin_ref("type"), [nodes.ref(exception_name)]),
-                        nodes.ref(exception_name),
-                        nodes.none(),
-                    ])),
-                    [nodes.raise_statement(nodes.ref(exception_name))],
-                    [],
-                ),
-                
-            ])],
-            finally_body=[
-                nodes.if_else(
-                    nodes.bool_not(nodes.ref(has_exited_name)),
-                    [
-                        nodes.expression_statement(nodes.call(
-                            nodes.ref(exit_method_var_name),
-                            [nodes.none(), nodes.none(), nodes.none()]
-                        )),
-                    ],
-                    [],
-                ),
-            ],
-        ),
-    ])
+    def _ref(self, node):
+        return cc.ref(node.name)
 
 
-def _get_magic_method(receiver, name):
-    # TODO: get magic method through the same mechanism as self._call
-    return nodes.attr(receiver, "__{}__".format(name))
+    def _get_magic_method(self, receiver, name):
+        # TODO: get magic method through the same mechanism as self._call
+        return cc.attr(receiver, "__{}__".format(name))
 
-def _builtin_ref(name):
-    # TODO: create a distinct node type for referring to builtins
-    return nodes.ref(name)
+    def _builtin_ref(self, name):
+        return cc.builtin(name)
 
+    def _generate_unique_name(self, name):
+        return "${}{}".format(name, next(self._unique_count))
 
-_unique_count = itertools.count()
-
-def _generate_unique_name(name):
-    return "____nope_{}__".format(name, next(_unique_count))
+def _bool(value):
+    return cc.call(cc.builtin("bool"), [value])
