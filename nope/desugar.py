@@ -1,6 +1,6 @@
 import itertools
 
-from . import nodes, visit, couscous as cc
+from . import nodes, visit, couscous as cc, modules
 from .modules import LocalModule
 
 
@@ -14,6 +14,8 @@ class Desugarrer(object):
         self._unique_count = itertools.count()
     
         self._transforms = {
+            LocalModule: self._local_module,
+        
             nodes.WithStatement: self._with_statement,
             
             nodes.ReturnStatement: self._return,
@@ -25,6 +27,8 @@ class Desugarrer(object):
     def desugar(self, node):
         return self._transforms[type(node)](node)
         
+    def _local_module(self, module):
+        return LocalModule(module.path, self.desugar(module.node))
 
     def _with_statement(self, statement):
         exception_name = self._generate_unique_name("exception")
