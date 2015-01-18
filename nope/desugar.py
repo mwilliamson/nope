@@ -27,6 +27,7 @@ class Desugarrer(object):
             nodes.ExpressionStatement: self._expression_statement,
             
             nodes.Call: self._call,
+            nodes.IntLiteral: self._int,
             nodes.VariableReference: self._ref,
             list: lambda nope_nodes: list(map(self.desugar, nope_nodes)),
         }
@@ -106,6 +107,9 @@ class Desugarrer(object):
     
     def _call(self, node):
         return cc.call(self.desugar(node.func), self.desugar(node.args))
+    
+    def _int(self, node):
+        return cc.int_literal(node.value)
     
     def _ref(self, node):
         return cc.ref(node.name)

@@ -126,6 +126,16 @@ class VariableReferenceTests(object):
         )
 
 
+@istest
+class IntLiteralTests(object):
+    @istest
+    def test_transform(self):
+        _assert_transform(
+            nodes.int_literal(42),
+            cc.int_literal(42)
+        )
+
+
 def _assert_transform(nope, expected_result):
     result = desugar(nope)
     if isinstance(expected_result, str):

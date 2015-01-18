@@ -189,6 +189,7 @@ def not_(operand):
 
 builtin = BuiltinReference = dodge.data_class("BuiltinReference", ["name"])
 ref = VariableReference = dodge.data_class("VariableReference", ["name"])
+int_literal = IntLiteral = dodge.data_class("IntLiteral", ["value"])
 BooleanLiteral = dodge.data_class("BooleanLiteral", ["value"])
 false = BooleanLiteral(False)
 true = BooleanLiteral(True)
