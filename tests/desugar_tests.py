@@ -63,6 +63,23 @@ class WithStatementTests(object):
 
 
 @istest
+class FunctionDefinitionTests(object):
+    @istest
+    def test_transform_body(self):
+        _assert_transform(
+            nodes.func("f", nodes.args([]), [nodes.ret(nodes.ref("value"))]),
+            cc.func("f", [], [cc.ret(cc.ref("value"))]),
+        )
+        
+    @istest
+    def test_transform_args(self):
+        _assert_transform(
+            nodes.func("f", nodes.args([nodes.arg("value")]), []),
+            cc.func("f", [cc.arg("value")], []),
+        )
+
+
+@istest
 class ReturnStatementTests(object):
     @istest
     def test_transform_return_statement_transforms_value(self):
@@ -79,6 +96,23 @@ class ExpressionStatementTests(object):
         _assert_transform(
             nodes.expression_statement(nodes.ref("value")),
             cc.expression_statement(cc.ref("value"))
+        )
+
+
+@istest
+class CallTests(object):
+    @istest
+    def callee_is_transformed(self):
+        _assert_transform(
+            nodes.call(nodes.ref("f"), []),
+            cc.call(cc.ref("f"), []),
+        )
+        
+    @istest
+    def arguments_are_transformed(self):
+        _assert_transform(
+            nodes.call(nodes.ref("f"), [nodes.ref("x")]),
+            cc.call(cc.ref("f"), [cc.ref("x")]),
         )
 
 

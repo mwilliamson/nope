@@ -169,6 +169,9 @@ except_ = ExceptHandler = dodge.data_class("ExceptHandler", ["type", "target", "
 
 if_ = IfStatement = dodge.data_class("IfStatement", ["condition", "true_body", "false_body"])
 
+func = FunctionDefinition = dodge.data_class("FunctionDefinition", ["name", "args", "body"])
+arg = FormalArgument = dodge.data_class("FormalArgument", ["name"])
+
 expression_statement = ExpressionStatement = dodge.data_class("ExpressionStatement", ["value"])
 assign = Assignment = dodge.data_class("Assignment", ["target", "value"])
 ret = ReturnStatement = dodge.data_class("ReturnStatement", ["value"])

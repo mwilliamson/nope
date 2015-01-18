@@ -19,10 +19,14 @@ class Desugarrer(object):
             nodes.Module: self._module,
         
             nodes.WithStatement: self._with_statement,
+            nodes.FunctionDef: self._function_definition,
+            nodes.Arguments: self._arguments,
+            nodes.Argument: self._argument,
             
             nodes.ReturnStatement: self._return,
             nodes.ExpressionStatement: self._expression_statement,
             
+            nodes.Call: self._call,
             nodes.VariableReference: self._ref,
             list: lambda nope_nodes: list(map(self.desugar, nope_nodes)),
         }
@@ -85,11 +89,23 @@ class Desugarrer(object):
             ),
         ])
     
+    def _function_definition(self, node):
+        return cc.func(node.name, self.desugar(node.args), self.desugar(node.body))
+    
+    def _arguments(self, node):
+        return self.desugar(node.args)
+        
+    def _argument(self, node):
+        return cc.arg(node.name)
+    
     def _return(self, node):
         return cc.ret(self.desugar(node.value))
     
     def _expression_statement(self, node):
         return cc.expression_statement(self.desugar(node.value))
+    
+    def _call(self, node):
+        return cc.call(self.desugar(node.func), self.desugar(node.args))
     
     def _ref(self, node):
         return cc.ref(node.name)
