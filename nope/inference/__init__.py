@@ -68,12 +68,16 @@ class _TypeCheckerForModule(zuice.Base):
             is_definitely_bound=builtin_is_definitely_bound,
         )
         
-        return types.module(module.path, [
+        module_type = types.module(module.path, [
             # TODO: set read_only as appropriate
             types.attr(declaration.name, context.lookup_declaration(declaration))
             for declaration in exported_declarations
             if bindings.is_declaration_definitely_bound(declaration)
-        ]), self.type_lookup()
+        ])
+        
+        self._type_lookup[module.node] = module_type
+        
+        return module_type, self.type_lookup()
         
 
 def module_context(references):

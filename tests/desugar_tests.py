@@ -5,6 +5,7 @@ from nose.tools import istest, assert_equal
 from nope import nodes, couscous as cc, types
 from nope.identity_dict import IdentityDict
 from nope.desugar import desugar
+from nope.name_declaration import DeclarationFinder
 
 
 @istest
@@ -29,7 +30,10 @@ class ModuleTests(object):
         _assert_transform(
             module_node,
             cc.module(
-                [cc.assign(cc.ref("value"), cc.none)],
+                [
+                    cc.declare("value"),
+                    cc.assign(cc.ref("value"), cc.none)
+                ],
                 is_executable=False,
                 exported_names=["value"],
             ),
@@ -44,9 +48,9 @@ class WithStatementTests(object):
         _assert_transform(
             nodes.with_statement(nodes.ref("manager"), None, [nodes.ret(nodes.ref("x"))]),
             """
-                $manager1 = manager
-                $exit2 = $manager1.__exit__
-                $has_exited3 = False
+                var $manager1 = manager
+                var $exit2 = $manager1.__exit__
+                var $has_exited3 = False
                 $manager1.__enter__()
                 try:
                     return x
@@ -66,9 +70,9 @@ class WithStatementTests(object):
         _assert_transform(
             nodes.with_statement(nodes.ref("manager"), nodes.ref("value"), [nodes.ret(nodes.ref("x"))]),
             """
-                $manager1 = manager
-                $exit2 = $manager1.__exit__
-                $has_exited3 = False
+                var $manager1 = manager
+                var $exit2 = $manager1.__exit__
+                var $has_exited3 = False
                 value = $manager1.__enter__()
                 try:
                     return x
@@ -86,14 +90,21 @@ class WithStatementTests(object):
 @istest
 class FunctionDefinitionTests(object):
     @istest
-    def test_transform_body(self):
+    def test_statements_in_body_are_transformed(self):
         _assert_transform(
             nodes.func("f", nodes.args([]), [nodes.ret(nodes.ref("value"))]),
             cc.func("f", [], [cc.ret(cc.ref("value"))]),
         )
         
     @istest
-    def test_transform_args(self):
+    def test_variables_are_declared(self):
+        _assert_transform(
+            nodes.func("f", nodes.args([]), [nodes.assign([nodes.ref("x")], nodes.ref("y"))]),
+            cc.func("f", [], [cc.declare("x"), cc.assign(cc.ref("x"), cc.ref("y"))]),
+        )
+        
+    @istest
+    def test_arguments_are_transformed(self):
         _assert_transform(
             nodes.func("f", nodes.args([nodes.arg("value")]), []),
             cc.func("f", [cc.arg("value")], []),
@@ -180,7 +191,7 @@ class NoneLiteralTests(object):
 def _assert_transform(nope, expected_result, type_lookup=None):
     if type_lookup is not None:
         type_lookup = types.TypeLookup(IdentityDict(type_lookup))
-    result = desugar(nope, type_lookup=type_lookup)
+    result = desugar(nope, type_lookup=type_lookup, declarations=DeclarationFinder())
     if isinstance(expected_result, str):
         lines = list(filter(lambda line: line.strip(), expected_result.splitlines()))
         indentation = re.match("^ *", lines[0]).end()

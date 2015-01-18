@@ -10,19 +10,22 @@ from ...modules import Module
 from .transform import NodeTransformer
 from . import js, operations
 from ...walk import walk_tree
-from ...desugar import desugar
+from ...desugar import Desugarrer
 
 
 class CodeGenerator(zuice.Base):
     _source_tree = zuice.dependency(SourceTree)
-    _node_transformer_factory = zuice.dependency(zuice.factory(NodeTransformer))
+    _node_transformer = zuice.dependency(NodeTransformer)
+    _desugarrer = zuice.dependency(zuice.factory(Desugarrer))
     
     def generate_files(self, source_path, destination_root):
         def handle_dir(path, relative_path):
             files.mkdir_p(os.path.join(destination_root, relative_path))
         
         def handle_file(path, relative_path):
-            module = desugar(self._source_tree.module(path))
+            nope_module = self._source_tree.module(path)
+            desugarrer = self._desugarrer({Module: nope_module})
+            module = desugarrer.desugar(nope_module)
             
             destination_dir = os.path.dirname(os.path.join(destination_root, relative_path))
             
@@ -31,8 +34,7 @@ class CodeGenerator(zuice.Base):
             dest_path = os.path.join(destination_dir, dest_filename)
             with open(dest_path, "w") as dest_file:
                 _generate_prelude(dest_file, module.node.is_executable, relative_path)
-                node_transformer = self._node_transformer_factory({Module: module})
-                js.dump(node_transformer.transform(module.node), dest_file)
+                js.dump(self._node_transformer.transform(module.node), dest_file)
         
         _write_nope_js(destination_root)
         _write_builtins(destination_root)

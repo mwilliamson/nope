@@ -3,16 +3,18 @@ import itertools
 import zuice
 
 from . import nodes, visit, couscous as cc, types
+from .name_declaration import DeclarationFinder
 from .modules import LocalModule
 
 
-def desugar(node, type_lookup):
-    desugarrer = Desugarrer(type_lookup)
+def desugar(node, type_lookup, declarations):
+    desugarrer = Desugarrer(type_lookup, declarations)
     return desugarrer.desugar(node)
 
 
 class Desugarrer(zuice.Base):
     _type_lookup = zuice.dependency(types.TypeLookup)
+    _declarations = zuice.dependency(DeclarationFinder)
     
     @zuice.init
     def init(self):
@@ -51,8 +53,11 @@ class Desugarrer(zuice.Base):
             for attr in self._type_lookup.type_of(module).attrs
         ]
         
+        declared_names = set(self._declarations.declarations_in_module(module).names())
+        declarations = list(map(cc.declare, sorted(declared_names)))
+        
         return cc.module(
-            self.desugar(module.body),
+            declarations + self.desugar(module.body),
             is_executable=module.is_executable,
             exported_names=exported_names
         )
@@ -72,9 +77,9 @@ class Desugarrer(zuice.Base):
             enter_statement = cc.assign(self.desugar(statement.target), enter_value)
         
         return cc.statements([
-            cc.assign(manager_ref, self.desugar(statement.value)),
-            cc.assign(cc.ref(exit_method_var_name), self._get_magic_method(manager_ref, "exit")),
-            cc.assign(cc.ref(has_exited_name), cc.false),
+            cc.declare(manager_name, self.desugar(statement.value)),
+            cc.declare(exit_method_var_name, self._get_magic_method(manager_ref, "exit")),
+            cc.declare(has_exited_name, cc.false),
             enter_statement,
             cc.try_(
                 self.desugar(statement.body),
@@ -107,7 +112,12 @@ class Desugarrer(zuice.Base):
         ])
     
     def _function_definition(self, node):
-        return cc.func(node.name, self.desugar(node.args), self.desugar(node.body))
+        declared_names = set(self._declarations.declarations_in_function(node).names())
+        arg_names = [arg.name for arg in node.args.args]
+        declared_names.difference_update(arg_names)
+        declarations = list(map(cc.declare, sorted(declared_names)))
+        
+        return cc.func(node.name, self.desugar(node.args), declarations + self.desugar(node.body))
     
     def _arguments(self, node):
         return self.desugar(node.args)

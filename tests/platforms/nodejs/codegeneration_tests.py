@@ -14,7 +14,7 @@ from nope.name_declaration import DeclarationFinder
 @istest
 def test_transform_module():
     _assert_transform(
-        nodes.module([nodes.expression_statement(nodes.ref("x"))]),
+        cc.module([cc.expression_statement(cc.ref("x"))]),
         js.statements([js.expression_statement(js.ref("x"))])
     )
 

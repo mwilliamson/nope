@@ -23,10 +23,11 @@ class NodeTransformer(zuice.Base):
             nodes.ImportFrom: self._import_from,
             
             nodes.ExpressionStatement:self. _expression_statement,
+            cc.VariableDeclaration: self._declare,
             nodes.Assignment: self._assign,
             nodes.ClassDefinition: self._class_definition,
             nodes.TypeDefinition: lambda *args, **kwargs: None,
-            nodes.FunctionDef: self._function_def,
+            cc.FunctionDefinition: self._function_def,
             nodes.ReturnStatement: self._return_statement,
             nodes.IfElse: self._if_else,
             nodes.WhileLoop: self._while_loop,
@@ -77,7 +78,7 @@ class NodeTransformer(zuice.Base):
     def _module(self, module):
         var_statements = [
             js.var(name)
-            for name in sorted(self._declarations.declarations_in_module(module).names())
+            for name in sorted(module.exported_names)
         ]
         body_statements = var_statements + self._transform_all(module.body)
         export_names = self._module_exports.names(module)
@@ -155,6 +156,13 @@ class NodeTransformer(zuice.Base):
 
     def _expression_statement(self, statement):
         return js.expression_statement(self.transform(statement.value))
+
+
+    def _declare(self, declaration):
+        if declaration.value is None:
+            return js.var(declaration.name)
+        else:
+            return js.var(declaration.name, self.transform(declaration.value))
 
 
     def _assign(self, assignment):

@@ -38,6 +38,7 @@ class Writer(object):
             ExceptHandler: self._except,
             
             ExpressionStatement: self._expression_statement,
+            VariableDeclaration: self._declaration,
             Assignment: self._assignment,
             ReturnStatement: self._return,
             RaiseStatement: self._raise,
@@ -111,6 +112,14 @@ class Writer(object):
         self.write(node.value)
     
     @_simple_statement
+    def _declaration(self, node):
+        self._output.write("var ")
+        self._output.write(node.name)
+        if node.value is not None:
+            self._output.write(" = ")
+            self.write(node.value)
+    
+    @_simple_statement
     def _assignment(self, node):
         self.write(node.target)
         self._output.write(" = ")
@@ -174,6 +183,12 @@ arg = FormalArgument = dodge.data_class("FormalArgument", ["name"])
 
 expression_statement = ExpressionStatement = dodge.data_class("ExpressionStatement", ["value"])
 assign = Assignment = dodge.data_class("Assignment", ["target", "value"])
+
+def declare(name, value=None):
+    return VariableDeclaration(name, value)
+
+VariableDeclaration = dodge.data_class("VariableDeclaration", ["name", "value"])
+
 ret = ReturnStatement = dodge.data_class("ReturnStatement", ["value"])
 RaiseStatement = dodge.data_class("RaiseStatement", [])
 
