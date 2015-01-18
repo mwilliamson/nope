@@ -22,13 +22,13 @@ class NodeTransformer(zuice.Base):
             nodes.Import: self._import,
             nodes.ImportFrom: self._import_from,
             
-            nodes.ExpressionStatement:self. _expression_statement,
+            cc.ExpressionStatement:self. _expression_statement,
             cc.VariableDeclaration: self._declare,
             nodes.Assignment: self._assign,
             nodes.ClassDefinition: self._class_definition,
             nodes.TypeDefinition: lambda *args, **kwargs: None,
             cc.FunctionDefinition: self._function_def,
-            nodes.ReturnStatement: self._return_statement,
+            cc.ReturnStatement: self._return_statement,
             nodes.IfElse: self._if_else,
             nodes.WhileLoop: self._while_loop,
             nodes.ForLoop: self._for_loop,
@@ -39,13 +39,13 @@ class NodeTransformer(zuice.Base):
             nodes.AssertStatement: self._assert_statement,
             nodes.Statements: self._statements,
             
-            nodes.Call: self._call,
+            cc.Call: self._call,
             nodes.AttributeAccess: self._attr,
             nodes.BinaryOperation: self._binary_operation,
             nodes.UnaryOperation: self._unary_operation,
             nodes.Subscript: self._subscript,
             nodes.Slice: self._slice,
-            nodes.VariableReference: _ref,
+            cc.VariableReference: _ref,
             nodes.NoneLiteral: _none,
             nodes.BooleanLiteral: _bool,
             nodes.IntLiteral: _int,
@@ -292,18 +292,14 @@ class NodeTransformer(zuice.Base):
     
     
     def _function_def(self, func):
-        declared_names = set(self._declarations.declarations_in_function(func).names())
-        arg_names = [arg.name for arg in func.args.args]
-        declared_names.difference_update(arg_names)
-        
-        body = [js.var(name) for name in declared_names] + self._transform_all(func.body)
+        body = self._transform_all(func.body)
         
         if not returns.has_unconditional_return(func.body):
             body += [js.ret(js.null)]
         
         return js.function_declaration(
             name=func.name,
-            args=arg_names,
+            args=[arg.name for arg in func.args],
             body=body,
         )
         
@@ -607,9 +603,6 @@ class NodeTransformer(zuice.Base):
     def _transform_all(self, nodes):
         return list(filter(None, map(self.transform, nodes)))
     
-    
-    def _type_of(self, node):
-        return self._type_lookup.type_of(node)
     
     def _unique_name(self, base):
         name = "${}{}".format(base, self._unique_name_index)

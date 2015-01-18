@@ -676,57 +676,6 @@ def test_transform_call_with_positional_arguments():
 
 
 @istest
-def test_transform_call_with_keyword_arguments():
-    func_node = nodes.ref("f")
-    type_lookup = types.TypeLookup(IdentityDict([
-        (func_node, types.func(
-            [
-                types.func_arg("first", types.str_type),
-                types.func_arg("second", types.str_type),
-            ],
-            types.none_type
-        ))
-    ]))
-    
-    _assert_transform(
-        nodes.call(func_node, [], {"first": nodes.ref("x"), "second": nodes.ref("y")}),
-        js.call(js.ref("f"), [js.ref("x"), js.ref("y")]),
-        type_lookup=type_lookup,
-    )
-
-
-@istest
-def test_transform_call_with_optional_positional_argument():
-    func_node = nodes.ref("f")
-    type_lookup = types.TypeLookup(IdentityDict([
-        (func_node, types.func(
-            [types.str_type, types.func_arg(None, types.str_type, optional=True)],
-            types.none_type
-        ))
-    ]))
-    
-    _assert_transform(
-        nodes.call(func_node, [nodes.ref("x")]),
-        js.call(js.ref("f"), [js.ref("x"), js.null]),
-        type_lookup=type_lookup,
-    )
-
-
-@istest
-def test_transform_call_magic_method():
-    func_node = nodes.ref("str")
-    type_lookup = types.TypeLookup(IdentityDict([
-        (func_node, types.str_meta_type)
-    ]))
-    
-    _assert_transform(
-        nodes.call(func_node, [nodes.ref("x")]),
-        """$nope.builtins.getattr(str, "__call__")(x);""",
-        type_lookup=type_lookup,
-    )
-
-
-@istest
 def test_transform_property_access():
     _assert_transform(
         nodes.attr(nodes.ref("x"), "y"),

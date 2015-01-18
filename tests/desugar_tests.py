@@ -144,17 +144,65 @@ class ExpressionStatementTests(object):
 @istest
 class CallTests(object):
     @istest
-    def callee_is_transformed(self):
+    def test_transform_call_with_positional_arguments(self):
+        func_node = nodes.ref("f")
+        type_lookup = [
+            (func_node, types.func([types.str_type], types.none_type))
+        ]
         _assert_transform(
-            nodes.call(nodes.ref("f"), []),
-            cc.call(cc.ref("f"), []),
+            nodes.call(func_node, [nodes.ref("x")]),
+            cc.call(cc.ref("f"), [cc.ref("x")]),
+            type_lookup=type_lookup,
         )
         
     @istest
-    def arguments_are_transformed(self):
+    def test_transform_call_with_keyword_arguments(self):
+        func_node = nodes.ref("f")
+        type_lookup = [
+            (func_node, types.func(
+                [
+                    types.func_arg("first", types.str_type),
+                    types.func_arg("second", types.str_type),
+                ],
+                types.none_type
+            ))
+        ]
+        
         _assert_transform(
-            nodes.call(nodes.ref("f"), [nodes.ref("x")]),
-            cc.call(cc.ref("f"), [cc.ref("x")]),
+            nodes.call(func_node, [], {"first": nodes.ref("x"), "second": nodes.ref("y")}),
+            cc.call(cc.ref("f"), [cc.ref("x"), cc.ref("y")]),
+            type_lookup=type_lookup,
+        )
+
+
+    @istest
+    def test_transform_call_with_optional_positional_argument(self):
+        func_node = nodes.ref("f")
+        type_lookup = [
+            (func_node, types.func(
+                [types.str_type, types.func_arg(None, types.str_type, optional=True)],
+                types.none_type
+            ))
+        ]
+        
+        _assert_transform(
+            nodes.call(func_node, [nodes.ref("x")]),
+            cc.call(cc.ref("f"), [cc.ref("x"), cc.none]),
+            type_lookup=type_lookup,
+        )
+
+
+    @istest
+    def test_transform_call_magic_method(self):
+        func_node = nodes.ref("str")
+        type_lookup = [
+            (func_node, types.str_meta_type)
+        ]
+        
+        _assert_transform(
+            nodes.call(func_node, [nodes.ref("x")]),
+            """str.__call__(x)""",
+            type_lookup=type_lookup,
         )
 
 

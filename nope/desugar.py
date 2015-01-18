@@ -35,6 +35,7 @@ class Desugarrer(zuice.Base):
             nodes.ExpressionStatement: self._expression_statement,
             
             nodes.Call: self._call,
+            nodes.AttributeAccess: self._attr,
             nodes.VariableReference: self._ref,
             nodes.IntLiteral: self._int,
             nodes.NoneLiteral: self._none,
@@ -50,7 +51,7 @@ class Desugarrer(zuice.Base):
     def _module(self, module):
         exported_names = [
             attr.name
-            for attr in self._type_lookup.type_of(module).attrs
+            for attr in self._type_of(module).attrs
         ]
         
         declared_names = set(self._declarations.declarations_in_module(module).names())
@@ -136,7 +137,32 @@ class Desugarrer(zuice.Base):
         return cc.expression_statement(self.desugar(node.value))
     
     def _call(self, node):
-        return cc.call(self.desugar(node.func), self.desugar(node.args))
+        # TODO: proper support for __call__
+        # at the moment, we only support meta-types that are directly callable e.g. str()
+        # a better solution might be have such values have a $call attribute (or similar)
+        # to avoid clashing with actual __call__ attributes
+        args = []
+        
+        call_func_type = self._type_of(node.func)
+        call_ref = node.func
+        while not types.is_func_type(call_func_type) and not types.is_generic_func(call_func_type):
+            call_func_type = call_func_type.attrs.type_of("__call__")
+            call_ref = nodes.attr(call_ref, "__call__")
+        
+        for index, formal_arg in enumerate(call_func_type.args):
+            if index < len(node.args):
+                actual_arg_node = node.args[index]
+            elif formal_arg.name in node.kwargs:
+                actual_arg_node = node.kwargs[formal_arg.name]
+            else:
+                actual_arg_node = nodes.none()
+                
+            args.append(self.desugar(actual_arg_node))
+            
+        return cc.call(self.desugar(call_ref), args)
+    
+    def _attr(self, node):
+        return cc.attr(self.desugar(node.value), node.attr)
     
     def _ref(self, node):
         return cc.ref(node.name)
@@ -147,7 +173,10 @@ class Desugarrer(zuice.Base):
     def _none(self, node):
         return cc.none
 
-
+    
+    def _type_of(self, node):
+        return self._type_lookup.type_of(node)
+    
     def _get_magic_method(self, receiver, name):
         # TODO: get magic method through the same mechanism as self._call
         return cc.attr(receiver, "__{}__".format(name))
