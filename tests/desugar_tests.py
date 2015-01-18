@@ -2,7 +2,8 @@ import re
 
 from nose.tools import istest, assert_equal
 
-from nope import nodes, couscous as cc
+from nope import nodes, couscous as cc, types
+from nope.identity_dict import IdentityDict
 from nope.desugar import desugar
 
 
@@ -10,9 +11,29 @@ from nope.desugar import desugar
 class ModuleTests(object):
     @istest
     def test_statements_in_module_body_are_transformed(self):
+        module_node = nodes.module([nodes.expression_statement(nodes.ref("value"))], is_executable=True)
+        module_type = types.module("blah", [])
         _assert_transform(
-            nodes.module([nodes.expression_statement(nodes.ref("value"))], is_executable=True),
-            cc.module([cc.expression_statement(cc.ref("value"))], is_executable=True),
+            module_node,
+            cc.module([cc.expression_statement(cc.ref("value"))], is_executable=True, exported_names=[]),
+            type_lookup=[(module_node, module_type)]
+        )
+        
+    @istest
+    def test_module_exports_are_set_directly_on_module(self):
+        module_node = nodes.module(
+            [nodes.assign([nodes.ref("value")], nodes.none())],
+            is_executable=False
+        )
+        module_type = types.module("blah", [types.attr("value", types.none_type)])
+        _assert_transform(
+            module_node,
+            cc.module(
+                [cc.assign(cc.ref("value"), cc.none)],
+                is_executable=False,
+                exported_names=["value"],
+            ),
+            type_lookup=[(module_node, module_type)]
         )
 
 
@@ -90,6 +111,16 @@ class ReturnStatementTests(object):
 
 
 @istest
+class AssignmentTests(object):
+    @istest
+    def test_transform_assigment_to_single_target(self):
+        _assert_transform(
+            nodes.assign([nodes.ref("x")], nodes.ref("y")),
+            cc.assign(cc.ref("x"), cc.ref("y")),
+        )
+        
+
+@istest
 class ExpressionStatementTests(object):
     @istest
     def test_transform_value(self):
@@ -136,8 +167,20 @@ class IntLiteralTests(object):
         )
 
 
-def _assert_transform(nope, expected_result):
-    result = desugar(nope)
+@istest
+class NoneLiteralTests(object):
+    @istest
+    def test_transform(self):
+        _assert_transform(
+            nodes.none(),
+            cc.none
+        )
+
+
+def _assert_transform(nope, expected_result, type_lookup=None):
+    if type_lookup is not None:
+        type_lookup = types.TypeLookup(IdentityDict(type_lookup))
+    result = desugar(nope, type_lookup=type_lookup)
     if isinstance(expected_result, str):
         lines = list(filter(lambda line: line.strip(), expected_result.splitlines()))
         indentation = re.match("^ *", lines[0]).end()

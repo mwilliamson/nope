@@ -1,16 +1,21 @@
 import itertools
 
-from . import nodes, visit, couscous as cc, modules
+import zuice
+
+from . import nodes, visit, couscous as cc, types
 from .modules import LocalModule
 
 
-def desugar(node):
-    desugarrer = Desugarrer()
+def desugar(node, type_lookup):
+    desugarrer = Desugarrer(type_lookup)
     return desugarrer.desugar(node)
 
 
-class Desugarrer(object):
-    def __init__(self):
+class Desugarrer(zuice.Base):
+    _type_lookup = zuice.dependency(types.TypeLookup)
+    
+    @zuice.init
+    def init(self):
         self._unique_count = itertools.count()
     
         self._transforms = {
@@ -24,11 +29,13 @@ class Desugarrer(object):
             nodes.Argument: self._argument,
             
             nodes.ReturnStatement: self._return,
+            nodes.Assignment: self._assignment,
             nodes.ExpressionStatement: self._expression_statement,
             
             nodes.Call: self._call,
-            nodes.IntLiteral: self._int,
             nodes.VariableReference: self._ref,
+            nodes.IntLiteral: self._int,
+            nodes.NoneLiteral: self._none,
             list: lambda nope_nodes: list(map(self.desugar, nope_nodes)),
         }
     
@@ -39,7 +46,16 @@ class Desugarrer(object):
         return LocalModule(module.path, self.desugar(module.node))
     
     def _module(self, module):
-        return cc.module(self.desugar(module.body), is_executable=module.is_executable)
+        exported_names = [
+            attr.name
+            for attr in self._type_lookup.type_of(module).attrs
+        ]
+        
+        return cc.module(
+            self.desugar(module.body),
+            is_executable=module.is_executable,
+            exported_names=exported_names
+        )
     
     def _with_statement(self, statement):
         exception_name = self._generate_unique_name("exception")
@@ -61,7 +77,7 @@ class Desugarrer(object):
             cc.assign(cc.ref(has_exited_name), cc.false),
             enter_statement,
             cc.try_(
-                desugar(statement.body),
+                self.desugar(statement.body),
                 handlers=[cc.except_(self._builtin_ref("Exception"), cc.ref(exception_name), [
                     cc.assign(cc.ref(has_exited_name), cc.true),
                     cc.if_(
@@ -102,17 +118,24 @@ class Desugarrer(object):
     def _return(self, node):
         return cc.ret(self.desugar(node.value))
     
+    def _assignment(self, node):
+        target, = node.targets
+        return cc.assign(self.desugar(target), self.desugar(node.value))
+    
     def _expression_statement(self, node):
         return cc.expression_statement(self.desugar(node.value))
     
     def _call(self, node):
         return cc.call(self.desugar(node.func), self.desugar(node.args))
     
+    def _ref(self, node):
+        return cc.ref(node.name)
+    
     def _int(self, node):
         return cc.int_literal(node.value)
     
-    def _ref(self, node):
-        return cc.ref(node.name)
+    def _none(self, node):
+        return cc.none
 
 
     def _get_magic_method(self, receiver, name):

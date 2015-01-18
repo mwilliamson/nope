@@ -1,6 +1,6 @@
 import zuice
 
-from ... import nodes, returns, types
+from ... import nodes, returns, types, couscous as cc
 from ...modules import ModuleExports, BuiltinModule
 from ...name_declaration import DeclarationFinder
 from ...module_resolution import ModuleResolver
@@ -12,16 +12,13 @@ optimise = zuice.key("optimise")
 
 
 class NodeTransformer(zuice.Base):
-    _type_lookup = zuice.dependency(types.TypeLookup)
     _module_resolver = zuice.dependency(ModuleResolver)
-    _module_exports = zuice.dependency(ModuleExports)
-    _declarations = zuice.dependency(DeclarationFinder)
     _optimise = zuice.dependency(optimise)
     
     @zuice.init
     def init(self):
         self._transformers = {
-            nodes.Module: self._module,
+            cc.Module: self._module,
             nodes.Import: self._import,
             nodes.ImportFrom: self._import_from,
             

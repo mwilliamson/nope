@@ -923,9 +923,8 @@ def test_transform_slice():
     )
 
 
-def _assert_transform(nope, expected_js, type_lookup=None, module_resolver=None, optimise=True):
+def _assert_transform(nope, expected_js, module_resolver=None, optimise=True):
     transformed_js = _transform_node(nope,
-        type_lookup=type_lookup,
         module_resolver=module_resolver,
         optimise=optimise,
     )
@@ -941,15 +940,11 @@ def _assert_node(actual, expected_js):
         assert_equal(expected_js, actual)
 
 
-def _transform_node(nope, type_lookup=None, module_resolver=None, optimise=True):
-    if type_lookup is None:
-        type_lookup = types.TypeLookup(IdentityDict())
-
+def _transform_node(nope, module_resolver=None, optimise=True):
     if module_resolver is None:
         module_resolver = FakeModuleResolver()
     
     return _transform(nope,
-        type_lookup=type_lookup,
         module_resolver=module_resolver, 
         optimise=optimise,
     )
@@ -984,13 +979,9 @@ def _normalise_js(js):
         raise SyntaxError("{}\nin:\n{}".format(error, js))
 
 
-def _transform(nope_node, type_lookup, module_resolver, optimise):
-    declaration_finder = DeclarationFinder()
+def _transform(nope_node, module_resolver, optimise):
     transformer = NodeTransformer(
-        type_lookup=type_lookup,
         module_resolver=module_resolver,
-        module_exports=ModuleExports(declaration_finder),
-        declarations=declaration_finder,
         optimise=optimise,
     )
     return transformer.transform(nope_node)
