@@ -48,7 +48,7 @@ class NodeTransformer(zuice.Base):
             cc.VariableReference: _ref,
             nodes.NoneLiteral: _none,
             nodes.BooleanLiteral: _bool,
-            nodes.IntLiteral: _int,
+            cc.IntLiteral: _int,
             nodes.StringLiteral: _str,
             nodes.ListLiteral: self._list_literal,
             nodes.TupleLiteral: self._tuple_literal,
@@ -76,13 +76,8 @@ class NodeTransformer(zuice.Base):
         raise Exception("Could not transform node: {}".format(nope_node))
     
     def _module(self, module):
-        var_statements = [
-            js.var(name)
-            for name in sorted(module.exported_names)
-        ]
-        body_statements = var_statements + self._transform_all(module.body)
-        export_names = self._module_exports.names(module)
-                
+        body_statements = self._transform_all(module.body)
+        
         export_statements = [
             js.expression_statement(
                 js.assign(
@@ -93,7 +88,7 @@ class NodeTransformer(zuice.Base):
                     js.ref(export_name)
                 )
             )
-            for export_name in export_names
+            for export_name in module.exported_names
         ]
         return js.statements(body_statements + export_statements)
 
@@ -495,29 +490,8 @@ class NodeTransformer(zuice.Base):
     
     
     def _call(self, call):
-        # TODO: proper support for __call__
-        # at the moment, we only support meta-types that are directly callable e.g. str()
-        # a better solution might be have such values have a $call attribute (or similar)
-        # to avoid clashing with actual __call__ attributes
-        args = []
-        
-        call_func_type = self._type_of(call.func)
-        call_ref = call.func
-        while not types.is_func_type(call_func_type) and not types.is_generic_func(call_func_type):
-            call_func_type = call_func_type.attrs.type_of("__call__")
-            call_ref = nodes.attr(call_ref, "__call__")
-        
-        for index, formal_arg in enumerate(call_func_type.args):
-            if index < len(call.args):
-                actual_arg_node = call.args[index]
-            elif formal_arg.name in call.kwargs:
-                actual_arg_node = call.kwargs[formal_arg.name]
-            else:
-                actual_arg_node = nodes.none()
-                
-            args.append(self.transform(actual_arg_node))
-            
-        return js.call(self.transform(call_ref), args)
+        args = [self.transform(arg) for arg in call.args]
+        return js.call(self.transform(call.func), args)
 
     def _attr(self, attr):
         return self._getattr(self.transform(attr.value), attr.attr)
