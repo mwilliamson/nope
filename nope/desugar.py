@@ -15,10 +15,13 @@ class Desugarrer(object):
     
         self._transforms = {
             LocalModule: self._local_module,
+            
+            nodes.Module: self._module,
         
             nodes.WithStatement: self._with_statement,
             
             nodes.ReturnStatement: self._return,
+            nodes.ExpressionStatement: self._expression_statement,
             
             nodes.VariableReference: self._ref,
             list: lambda nope_nodes: list(map(self.desugar, nope_nodes)),
@@ -29,7 +32,10 @@ class Desugarrer(object):
         
     def _local_module(self, module):
         return LocalModule(module.path, self.desugar(module.node))
-
+    
+    def _module(self, module):
+        return cc.module(self.desugar(module.body), is_executable=module.is_executable)
+    
     def _with_statement(self, statement):
         exception_name = self._generate_unique_name("exception")
         manager_name = self._generate_unique_name("manager")
@@ -81,6 +87,9 @@ class Desugarrer(object):
     
     def _return(self, node):
         return cc.ret(self.desugar(node.value))
+    
+    def _expression_statement(self, node):
+        return cc.expression_statement(self.desugar(node.value))
     
     def _ref(self, node):
         return cc.ref(node.name)

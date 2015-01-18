@@ -7,6 +7,16 @@ from nope.desugar import desugar
 
 
 @istest
+class ModuleTests(object):
+    @istest
+    def test_statements_in_module_body_are_transformed(self):
+        _assert_transform(
+            nodes.module([nodes.expression_statement(nodes.ref("value"))], is_executable=True),
+            cc.module([cc.expression_statement(cc.ref("value"))], is_executable=True),
+        )
+
+
+@istest
 class WithStatementTests(object):
     @istest
     def test_transform_with_statement_with_no_target(self):
@@ -59,6 +69,16 @@ class ReturnStatementTests(object):
         _assert_transform(
             nodes.ret(nodes.ref("value")),
             cc.ret(cc.ref("value"))
+        )
+
+
+@istest
+class ExpressionStatementTests(object):
+    @istest
+    def test_transform_value(self):
+        _assert_transform(
+            nodes.expression_statement(nodes.ref("value")),
+            cc.expression_statement(cc.ref("value"))
         )
 
 

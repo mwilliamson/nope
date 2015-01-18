@@ -160,6 +160,8 @@ class Writer(object):
         self._output.write("None")
 
 
+module = Module = dodge.data_class("Module", ["body", "is_executable"])
+
 statements = Statements = dodge.data_class("Statements", ["body"])
 
 try_ = TryStatement = dodge.data_class("TryStatement", ["body", "handlers", "finally_body"])
