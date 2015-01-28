@@ -639,8 +639,8 @@ def test_transform_setitem_subscript():
 @istest
 def test_transform_boolean_not():
     _assert_transform(
-        nodes.bool_not(nodes.ref("x")),
-        js.unary_operation("!", js.call(js.ref("$nope.builtins.bool"), [js.ref("x")]))
+        cc.not_(cc.ref("x")),
+        js.unary_operation("!", js.ref("x")),
     )
 
 

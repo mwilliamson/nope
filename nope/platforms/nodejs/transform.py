@@ -40,8 +40,8 @@ class NodeTransformer(zuice.Base):
             
             cc.Call: self._call,
             nodes.AttributeAccess: self._attr,
-            nodes.BinaryOperation: self._binary_operation,
-            nodes.UnaryOperation: self._unary_operation,
+            cc.BinaryOperation: self._binary_operation,
+            cc.UnaryOperation: self._unary_operation,
             nodes.Subscript: self._subscript,
             nodes.Slice: self._slice,
             cc.VariableReference: _ref,
@@ -439,8 +439,8 @@ class NodeTransformer(zuice.Base):
     
     
     def _unary_operation(self, operation):
-        if operation.operator == "bool_not":
-            return js.unary_operation("!", self._condition(operation.operand))
+        if operation.operator == "not":
+            return js.unary_operation("!", self.transform(operation.operand))
         else:
             return self._operation(operation.operator, [operation.operand])
     
