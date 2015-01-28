@@ -217,6 +217,16 @@ class VariableReferenceTests(object):
 
 
 @istest
+class StringLiteralTests(object):
+    @istest
+    def test_transform(self):
+        _assert_transform(
+            nodes.string("Many places I have been"),
+            cc.str_literal("Many places I have been")
+        )
+
+
+@istest
 class IntLiteralTests(object):
     @istest
     def test_transform(self):
