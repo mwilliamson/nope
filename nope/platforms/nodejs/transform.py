@@ -24,7 +24,7 @@ class NodeTransformer(zuice.Base):
             
             cc.ExpressionStatement:self. _expression_statement,
             cc.VariableDeclaration: self._declare,
-            nodes.Assignment: self._assign,
+            cc.Assignment: self._assign,
             nodes.ClassDefinition: self._class_definition,
             nodes.TypeDefinition: lambda *args, **kwargs: None,
             cc.FunctionDefinition: self._function_def,
@@ -50,7 +50,7 @@ class NodeTransformer(zuice.Base):
             cc.BooleanLiteral: _bool,
             cc.IntLiteral: _int,
             cc.StrLiteral: _str,
-            nodes.ListLiteral: self._list_literal,
+            cc.ListLiteral: self._list_literal,
             nodes.TupleLiteral: self._tuple_literal,
             
             ConvertedNode: lambda node: node.js_node,
@@ -162,36 +162,8 @@ class NodeTransformer(zuice.Base):
 
     def _assign(self, assignment):
         value = self.transform(assignment.value)
-        
-        tmp_name = self._unique_name("tmp")
-        assignments = [
-            self._create_single_assignment(target, js.ref(tmp_name))
-            for target in assignment.targets
-        ]
-        return js.statements([js.var(tmp_name, value)] + assignments)
-    
-    def _create_single_assignment(self, target, value):
-        if isinstance(target, nodes.Subscript):
-            call = self._operation(
-                "setitem",
-                [target.value, target.slice, ConvertedNode(value)]
-            )
-            return js.expression_statement(call)
-        elif isinstance(target, nodes.TupleLiteral):
-            return js.statements([
-                self._create_single_assignment(target_element, js.property_access(value, js.number(index)))
-                for index, target_element in enumerate(target.elements)
-            ])
-        # TODO: test this! Is using setattr necessary?
-        elif isinstance(target, nodes.AttributeAccess):
-            return js.assign_statement(
-                js.property_access(self.transform(target.value), target.attr),
-                value
-            )
-        elif isinstance(target, nodes.VariableReference):
-            return js.assign_statement(self.transform(target), value)
-        else:
-            raise Exception("Unhandled case")
+        target = self.transform(assignment.target)
+        return js.assign_statement(target, value)
         
     
     def _class_definition(self, class_definition):

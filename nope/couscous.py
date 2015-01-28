@@ -45,10 +45,12 @@ class Writer(object):
             
             Call: self._call,
             AttributeAccess: self._attr,
+            Subscript: self._subscript,
             UnaryOperation: self._unary_operation,
             
             BuiltinReference: self._builtin,
             VariableReference: self._ref,
+            IntLiteral: self._int,
             BooleanLiteral: self._bool,
             NoneLiteral: self._none,
         }
@@ -151,6 +153,12 @@ class Writer(object):
         self._output.write(".")
         self._output.write(node.attr)
     
+    def _subscript(self, node):
+        self.write(node.obj)
+        self._output.write("[")
+        self.write(node.index)
+        self._output.write("]")
+    
     def _unary_operation(self, node):
         self._output.write(node.operator)
         self._output.write(" ")
@@ -162,6 +170,9 @@ class Writer(object):
     def _ref(self, node):
         self._output.write(node.name)
     
+    def _int(self, node):
+        self._output.write(str(node.value))
+    
     def _bool(self, node):
         self._output.write(str(node.value))
     
@@ -169,7 +180,13 @@ class Writer(object):
         self._output.write("None")
 
 
-module = Module = dodge.data_class("Module", ["body", "is_executable", "exported_names"])
+def module(body, is_executable=False, exported_names=None):
+    if exported_names is None:
+        exported_names = []
+    
+    return Module(body, is_executable, exported_names)
+
+Module = dodge.data_class("Module", ["body", "is_executable", "exported_names"])
 
 statements = Statements = dodge.data_class("Statements", ["body"])
 
@@ -197,10 +214,13 @@ def raise_():
 
 call = Call = dodge.data_class("Call", ["func", "args"])
 attr = AttributeAccess = dodge.data_class("AttributeAccess", ["obj", "attr"])
+subscript = Subscript = dodge.data_class("Subscript", ["obj", "index"])
 UnaryOperation = dodge.data_class("UnaryOperation", ["operator", "operand"])
 
 def not_(operand):
     return UnaryOperation("not", operand)
+
+list_literal = ListLiteral = dodge.data_class("ListLiteral", ["elements"])
 
 builtin = BuiltinReference = dodge.data_class("BuiltinReference", ["name"])
 ref = VariableReference = dodge.data_class("VariableReference", ["name"])

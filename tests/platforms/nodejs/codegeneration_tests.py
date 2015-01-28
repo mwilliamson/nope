@@ -14,7 +14,7 @@ from nope.name_declaration import DeclarationFinder
 @istest
 def test_transform_module():
     _assert_transform(
-        cc.module([cc.expression_statement(cc.ref("x"))]),
+        cc.module([cc.expression_statement(cc.ref("x"))], is_executable=False, exported_names=[]),
         js.statements([js.expression_statement(js.ref("x"))])
     )
 
@@ -22,17 +22,17 @@ def test_transform_module():
 @istest
 def test_transform_module_with_exports():
     _assert_transform(
-        nodes.module([
-            nodes.assign(["__all__"], nodes.list_literal([nodes.string("x")])),
-            nodes.assign(["x"], nodes.none())
-        ]),
+        cc.module([
+            cc.declare("__all__"),
+            cc.declare("x"),
+            cc.assign(cc.ref("__all__"), cc.list_literal([cc.str_literal("x")])),
+            cc.assign(cc.ref("x"), cc.none)
+        ], exported_names=["x"]),
         """
             var __all__;
             var x;
-            var $tmp0 = ["x"];
-            __all__ = $tmp0;
-            var $tmp1 = null;
-            x = $tmp1;
+            __all__ = ["x"];
+            x = null;
             $exports.x = x;
         """
     )
@@ -155,7 +155,7 @@ def test_transform_import_builtin_module():
 @istest
 def test_transform_expression_statement():
     _assert_transform(
-        nodes.expression_statement(nodes.ref("x")),
+        cc.expression_statement(cc.ref("x")),
         js.expression_statement(js.ref("x"))
     )
 

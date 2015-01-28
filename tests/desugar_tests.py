@@ -129,6 +129,33 @@ class AssignmentTests(object):
             nodes.assign([nodes.ref("x")], nodes.ref("y")),
             cc.assign(cc.ref("x"), cc.ref("y")),
         )
+
+
+    @istest
+    def test_transform_compound_assignments(self):
+        _assert_transform(
+            nodes.assign(["x", "y"], nodes.ref("z")),
+            cc.statements([
+                cc.declare("$tmp0", cc.ref("z")),
+                cc.assign(cc.ref("x"), cc.ref("$tmp0")),
+                cc.assign(cc.ref("y"), cc.ref("$tmp0")),
+            ]),
+        )
+
+
+    @istest
+    def test_tuple_assignment(self):
+        _assert_transform(
+            nodes.assign(
+                [nodes.tuple_literal([nodes.ref("x"), nodes.ref("y")])],
+                nodes.ref("z")
+            ),
+            """
+                var $tmp0 = z
+                x = $tmp0[0]
+                y = $tmp0[1]
+            """
+        )
         
 
 @istest

@@ -131,8 +131,40 @@ class Desugarrer(zuice.Base):
         return cc.ret(self.desugar(node.value))
     
     def _assignment(self, node):
-        target, = node.targets
-        return cc.assign(self.desugar(target), self.desugar(node.value))
+        value = self.desugar(node.value)
+        if len(node.targets) == 1 and isinstance(node.targets[0], nodes.VariableReference):
+            target, = node.targets
+            return self._create_single_assignment(target, value)
+        else:
+            tmp_name = self._generate_unique_name("tmp")
+            assignments = [
+                self._create_single_assignment(target, cc.ref(tmp_name))
+                for target in node.targets
+            ]
+            return cc.statements([cc.declare(tmp_name, value)] + assignments)
+    
+    def _create_single_assignment(self, target, value):
+        if isinstance(target, nodes.VariableReference):
+            return cc.assign(self.desugar(target), value)
+        #~ if isinstance(target, nodes.Subscript):
+            #~ call = self._operation(
+                #~ "setitem",
+                #~ [target.value, target.slice, ConvertedNode(value)]
+            #~ )
+            #~ return js.expression_statement(call)
+        elif isinstance(target, nodes.TupleLiteral):
+            return cc.statements([
+                self._create_single_assignment(target_element, cc.subscript(value, cc.int_literal(index)))
+                for index, target_element in enumerate(target.elements)
+            ])
+        #~ # TODO: test this! Is using setattr necessary?
+        #~ elif isinstance(target, nodes.AttributeAccess):
+            #~ return js.assign_statement(
+                #~ js.property_access(self.transform(target.value), target.attr),
+                #~ value
+            #~ )
+        else:
+            raise Exception("Unhandled case: {}".format(type(target)))
     
     def _expression_statement(self, node):
         return cc.expression_statement(self.desugar(node.value))
