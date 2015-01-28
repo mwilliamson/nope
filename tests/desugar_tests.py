@@ -71,9 +71,26 @@ class FunctionDefinitionTests(object):
             cc.func("f", [cc.arg("value")], [cc.ret(cc.ref("value"))]),
         )
 
+    @istest
+    def test_does_not_redeclare_variables_with_same_name_as_argument(self):
+        _assert_transform(
+            nodes.func(
+                name="f",
+                args=nodes.args([nodes.arg("x")]),
+                body=[
+                    nodes.assign(["x"], nodes.ref("y")),
+                    nodes.ret(nodes.ref("value")),
+                ],
+            ),
+            cc.func("f", [cc.arg("x")], [
+                cc.assign(cc.ref("x"), cc.ref("y")),
+                cc.ret(cc.ref("value")),
+            ])
+        )
+
 
     @istest
-    def test_function_without_explicit_return_on_all_paths_returns_null_at_end(self):
+    def test_function_without_explicit_return_on_all_paths_returns_none_at_end(self):
         _assert_transform(
             nodes.func(
                 name="f",
@@ -94,49 +111,6 @@ class FunctionDefinitionTests(object):
                 cc.ret(cc.none),
             ]),
         )
-
-
-    #~ @istest
-    #~ def test_transform_function_declaration_declares_variables_at_top_of_function():
-        #~ _assert_transform(
-            #~ nodes.typed(
-                #~ parse_explicit_type("-> none"),
-                #~ nodes.func(
-                    #~ name="f",
-                    #~ args=nodes.args([]),
-                    #~ body=[nodes.assign(["x"], nodes.ref("y"))],
-                #~ ),
-            #~ ),
-            #~ """
-                #~ function f() {
-                    #~ var x;
-                    #~ var $tmp0 = y;
-                    #~ x = $tmp0;
-                    #~ return null;
-                #~ }
-            #~ """
-        #~ )
-#~ 
-#~ 
-    #~ @istest
-    #~ def test_transform_function_declaration_does_not_redeclare_variables_with_same_name_as_argument():
-        #~ _assert_transform(
-            #~ nodes.typed(
-                #~ parse_explicit_type("-> none"),
-                #~ nodes.func(
-                    #~ name="f",
-                    #~ args=nodes.args([nodes.arg("x")]),
-                    #~ body=[nodes.assign(["x"], nodes.ref("y"))],
-                #~ ),
-            #~ ),
-            #~ """
-                #~ function f(x) {
-                    #~ var $tmp0 = y;
-                    #~ x = $tmp0;
-                    #~ return null;
-                #~ }
-            #~ """
-        #~ )
 
 
 @istest
