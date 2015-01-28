@@ -33,7 +33,7 @@ class Writer(object):
             Statements: self._statements,
             
             IfStatement: self._if,
-            WhileStatement: self._while,
+            WhileLoop: self._while,
             BreakStatement: self._break,
             
             TryStatement: self._try,
@@ -215,7 +215,7 @@ def if_(condition, true_body, false_body=None):
     return IfStatement(condition, true_body, false_body)
 
 IfStatement = dodge.data_class("IfStatement", ["condition", "true_body", "false_body"])
-while_ = WhileStatement = dodge.data_class("WhileLoop", ["condition", "body"])
+while_ = WhileLoop = dodge.data_class("WhileLoop", ["condition", "body"])
 BreakStatement = dodge.data_class("BreakStatement", [])
 break_ = BreakStatement()
 

@@ -390,12 +390,12 @@ def test_transform_if_else():
 @istest
 def test_transform_while_loop():
     _assert_transform(
-        nodes.while_loop(
-            nodes.ref("x"),
-            [nodes.ret(nodes.ref("y"))],
+        cc.while_(
+            cc.ref("x"),
+            [cc.ret(cc.ref("y"))],
         ),
         js.while_loop(
-            js.call(js.ref("$nope.builtins.bool"), [js.ref("x")]),
+            js.ref("x"),
             [js.ret(js.ref("y"))],
         )
     )
@@ -430,7 +430,7 @@ def test_transform_for_loop():
 @istest
 def test_transform_break():
     _assert_transform(
-        nodes.break_statement(),
+        cc.break_,
         js.break_statement(),
     )
 

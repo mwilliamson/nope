@@ -30,9 +30,9 @@ class NodeTransformer(zuice.Base):
             cc.FunctionDefinition: self._function_def,
             cc.ReturnStatement: self._return_statement,
             nodes.IfElse: self._if_else,
-            nodes.WhileLoop: self._while_loop,
+            cc.WhileLoop: self._while_loop,
             nodes.ForLoop: self._for_loop,
-            nodes.BreakStatement: self._break_statement,
+            cc.BreakStatement: self._break_statement,
             nodes.ContinueStatement: self._continue_statement,
             nodes.TryStatement: self._try_statement,
             nodes.RaiseStatement: self._raise_statement,
@@ -285,8 +285,10 @@ class NodeTransformer(zuice.Base):
     
     
     def _while_loop(self, loop):
-        condition = self._condition(loop.condition)
-        return self._loop(loop, condition, at_loop_start=[])
+        return js.while_loop(
+            self.transform(loop.condition),
+            self._transform_all(loop.body),
+        )
         
     
     def _condition(self, condition):
@@ -314,39 +316,6 @@ class NodeTransformer(zuice.Base):
             js.var(element_name),
             self._loop(loop, condition, at_loop_start=[assign_loop_target]),
         ])
-    
-    def _loop(self, loop, condition, at_loop_start):
-        body = at_loop_start + self._transform_all(loop.body)
-        
-        if loop.else_body:
-            else_body = self._transform_all(loop.else_body)
-            
-            normal_exit_name = self._unique_name("normalExit")
-            normal_exit = js.ref(normal_exit_name)
-            
-            def assign_normal_exit(value):
-                return js.assign_statement(normal_exit, js.boolean(value))
-            
-            return js.statements([
-                js.var(normal_exit_name, js.boolean(True)),
-                js.while_loop(
-                    js.boolean(True),
-                    [assign_normal_exit(True)] +
-                        [js.if_else(condition, [], [js.break_statement()])] +
-                        [assign_normal_exit(False)] +
-                        body,
-                ),
-                js.if_else(
-                    normal_exit,
-                    else_body,
-                    []
-                )
-            ])
-        else:
-            return js.while_loop(
-                condition,
-                body,
-            )
     
     
     def _break_statement(self, statement):
