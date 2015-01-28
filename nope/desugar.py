@@ -119,7 +119,7 @@ class Desugarrer(zuice.Base):
     
     def _while(self, loop):
         condition = self._condition(loop.condition)
-        return self._loop(loop, condition, at_loop_start=[])
+        return self._loop(loop, condition)
     
     
     def _for_loop(self, loop):
@@ -130,14 +130,16 @@ class Desugarrer(zuice.Base):
         return cc.statements([
             cc.declare(iterator_name, self._call_builtin("iter", [self.desugar(loop.iterable)])),
             cc.declare(element_name),
-            cc.while_(cc.true, [
-                cc.assign(cc.ref(element_name), self._call_builtin("next", [cc.ref(iterator_name), sentinel])),
-                cc.if_(cc.is_(cc.ref(element_name), sentinel), [
-                    cc.break_,
-                ]),
-                self._create_single_assignment(loop.target, cc.ref(element_name)),
-                cc.statements(self.desugar(loop.body))
-            ]),
+            self._loop(
+                loop,
+                before_condition=[
+                    cc.assign(cc.ref(element_name), self._call_builtin("next", [cc.ref(iterator_name), sentinel])),
+                ],
+                condition=cc.not_(cc.is_(cc.ref(element_name), sentinel)),
+                after_condition=[
+                    self._create_single_assignment(loop.target, cc.ref(element_name)),
+                ],
+            ),
         ])
         
         
@@ -150,8 +152,8 @@ class Desugarrer(zuice.Base):
         return self._call_builtin("bool", [cc_condition])
     
     
-    def _loop(self, loop, condition, at_loop_start):
-        body = at_loop_start + self.desugar(loop.body)
+    def _loop(self, loop, condition, before_condition=[], after_condition=[]):
+        body = self.desugar(loop.body)
         
         if loop.else_body:
             normal_exit_name = self._generate_unique_name("normal_exit")
@@ -162,16 +164,28 @@ class Desugarrer(zuice.Base):
                 cc.while_(
                     cc.true,
                     [
-                        cc.if_(cc.not_(condition), [
+                        cc.statements(before_condition),
+                        cc.if_(self._negate(condition), [
                             cc.assign(normal_exit, cc.true),
                             cc.break_
                         ]),
-                    ] + body,
+                        cc.statements(after_condition),
+                        cc.statements(body),
+                    ]
                 ),
                 cc.if_(normal_exit, self.desugar(loop.else_body))
             ])
+        elif before_condition:
+            return cc.while_(cc.true, [
+                cc.statements(before_condition),
+                cc.if_(self._negate(condition), [
+                    cc.break_,
+                ]),
+                cc.statements(after_condition),
+                cc.statements(body),
+            ])
         else:
-            return cc.while_(condition, body)
+            return cc.while_(condition, after_condition + body)
     
     def _function_definition(self, node):
         declared_names = set(self._declarations.declarations_in_function(node).names())
@@ -268,6 +282,12 @@ class Desugarrer(zuice.Base):
     
     def _none(self, node):
         return cc.none
+
+    def _negate(self, node):
+        if isinstance(node, cc.UnaryOperation) and node.operator == "not":
+            return node.operand
+        else:
+            return cc.not_(node)
 
     
     def _type_of(self, node):

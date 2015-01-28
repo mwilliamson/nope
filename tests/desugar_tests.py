@@ -169,6 +169,31 @@ class ForLoopTests(object):
                     return x
             """
         )
+        
+    @istest
+    def test_transform_for_loop_with_else_branch(self):
+        _assert_transform(
+            nodes.for_loop(
+                nodes.ref("x"),
+                nodes.ref("xs"),
+                [nodes.ret(nodes.ref("x"))],
+                [nodes.ret(nodes.ref("y"))],
+            ),
+            """
+                var $iterator0 = $builtins.iter(xs)
+                var $element1
+                var $normal_exit2 = False
+                while True:
+                    $element1 = $builtins.next($iterator0, $internals.loop_sentinel)
+                    if $element1 is $internals.loop_sentinel:
+                        $normal_exit2 = True
+                        break
+                    x = $element1
+                    return x
+                if $normal_exit2:
+                    return y
+            """
+        )
 
 
 @istest
