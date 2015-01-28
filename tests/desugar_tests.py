@@ -175,7 +175,6 @@ class IfTests(object):
                 [cc.ret(cc.ref("z"))],
             )
         )
-        
 
 
 @istest
@@ -260,6 +259,26 @@ class ForLoopTests(object):
                 if $normal_exit2:
                     return y
             """
+        )
+
+
+@istest
+class BreakTests(object):
+    @istest
+    def test_break(self):
+        _assert_transform(
+            nodes.break_statement(),
+            cc.break_
+        )
+
+
+@istest
+class ContinueTests(object):
+    @istest
+    def test_continue(self):
+        _assert_transform(
+            nodes.continue_statement(),
+            cc.continue_
         )
 
 

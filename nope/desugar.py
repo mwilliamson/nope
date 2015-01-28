@@ -34,6 +34,8 @@ class Desugarrer(zuice.Base):
             nodes.IfElse: self._if,
             nodes.WhileLoop: self._while,
             nodes.ForLoop: self._for_loop,
+            nodes.BreakStatement: lambda node: cc.break_,
+            nodes.ContinueStatement: lambda node: cc.continue_,
             
             nodes.ReturnStatement: self._return,
             nodes.Assignment: self._assignment,
