@@ -13,7 +13,8 @@ from .runner import SingleProcessRunner
 from ...testing import wip
 
 
-@istest
+# TODO: remove if unnecessary
+#~ @istest
 def sanity_check_optimised_and_unoptimised_compilers_produce_different_output():
     with tempman.create_temp_dir() as temp_dir:
         source_dir = os.path.join(temp_dir.path, "src")

@@ -358,35 +358,7 @@ def test_transform_single_assignment():
     _assert_transform(
         nodes.assign(["x"], nodes.ref("z")),
         """
-            var $tmp0 = z;
-            x = $tmp0;
-        """
-    )
-
-
-@istest
-def test_transform_compound_assignments():
-    _assert_transform(
-        nodes.assign(["x", "y"], nodes.ref("z")),
-        js.statements([
-            js.var("$tmp0", js.ref("z")),
-            js.assign_statement("x", js.ref("$tmp0")),
-            js.assign_statement("y", js.ref("$tmp0")),
-        ]),
-    )
-
-
-@istest
-def test_tuple_assignment():
-    _assert_transform(
-        nodes.assign(
-            [nodes.tuple_literal([nodes.ref("x"), nodes.ref("y")])],
-            nodes.ref("z")
-        ),
-        """
-            var $tmp0 = z;
-            x = $tmp0[0];
-            y = $tmp0[1];
+            x = z;
         """
     )
 

@@ -42,6 +42,30 @@ class ModuleTests(object):
 
 
 @istest
+class FunctionDefinitionTests(object):
+    @istest
+    def test_statements_in_body_are_transformed(self):
+        _assert_transform(
+            nodes.func("f", nodes.args([]), [nodes.ret(nodes.ref("value"))]),
+            cc.func("f", [], [cc.ret(cc.ref("value"))]),
+        )
+        
+    @istest
+    def test_variables_are_declared(self):
+        _assert_transform(
+            nodes.func("f", nodes.args([]), [nodes.assign([nodes.ref("x")], nodes.ref("y"))]),
+            cc.func("f", [], [cc.declare("x"), cc.assign(cc.ref("x"), cc.ref("y"))]),
+        )
+        
+    @istest
+    def test_arguments_are_transformed(self):
+        _assert_transform(
+            nodes.func("f", nodes.args([nodes.arg("value")]), []),
+            cc.func("f", [cc.arg("value")], []),
+        )
+
+
+@istest
 class WithStatementTests(object):
     @istest
     def test_transform_with_statement_with_no_target(self):
@@ -88,26 +112,39 @@ class WithStatementTests(object):
 
 
 @istest
-class FunctionDefinitionTests(object):
+class WhileLoopTests(object):
     @istest
-    def test_statements_in_body_are_transformed(self):
+    def test_transform_while_loop(self):
         _assert_transform(
-            nodes.func("f", nodes.args([]), [nodes.ret(nodes.ref("value"))]),
-            cc.func("f", [], [cc.ret(cc.ref("value"))]),
+            nodes.while_loop(
+                nodes.ref("x"),
+                [nodes.ret(nodes.ref("y"))],
+            ),
+            cc.while_(
+                cc.call(cc.builtin("bool"), [cc.ref("x")]),
+                [cc.ret(cc.ref("y"))],
+            )
         )
         
     @istest
-    def test_variables_are_declared(self):
+    def test_transform_while_loop_with_else_branch(self):
         _assert_transform(
-            nodes.func("f", nodes.args([]), [nodes.assign([nodes.ref("x")], nodes.ref("y"))]),
-            cc.func("f", [], [cc.declare("x"), cc.assign(cc.ref("x"), cc.ref("y"))]),
-        )
-        
-    @istest
-    def test_arguments_are_transformed(self):
-        _assert_transform(
-            nodes.func("f", nodes.args([nodes.arg("value")]), []),
-            cc.func("f", [cc.arg("value")], []),
+            nodes.while_loop(
+                nodes.ref("x"),
+                [nodes.ret(nodes.ref("y"))],
+                [nodes.ret(nodes.ref("z"))]
+                
+            ),
+            """
+                var $normal_exit0 = False
+                while True:
+                    if not $builtins.bool(x):
+                        $normal_exit0 = True
+                        break
+                    return y
+                if $normal_exit0:
+                    return z
+            """
         )
 
 

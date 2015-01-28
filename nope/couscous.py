@@ -33,6 +33,8 @@ class Writer(object):
             Statements: self._statements,
             
             IfStatement: self._if,
+            WhileStatement: self._while,
+            BreakStatement: self._break,
             
             TryStatement: self._try,
             ExceptHandler: self._except,
@@ -93,6 +95,16 @@ class Writer(object):
         self._output.write("if ")
         self.write(node.condition)
         self._write_block(node.true_body)
+    
+    def _while(self, node):
+        self._indent()
+        self._output.write("while ")
+        self.write(node.condition)
+        self._write_block(node.body)
+    
+    @_simple_statement
+    def _break(self, node):
+        self._output.write("break")
     
     def _indent(self):
         self._output.write("    " * self._indentation)
@@ -190,13 +202,22 @@ Module = dodge.data_class("Module", ["body", "is_executable", "exported_names"])
 
 statements = Statements = dodge.data_class("Statements", ["body"])
 
+func = FunctionDefinition = dodge.data_class("FunctionDefinition", ["name", "args", "body"])
+arg = FormalArgument = dodge.data_class("FormalArgument", ["name"])
+
 try_ = TryStatement = dodge.data_class("TryStatement", ["body", "handlers", "finally_body"])
 except_ = ExceptHandler = dodge.data_class("ExceptHandler", ["type", "target", "body"])
 
-if_ = IfStatement = dodge.data_class("IfStatement", ["condition", "true_body", "false_body"])
+def if_(condition, true_body, false_body=None):
+    if false_body is None:
+        false_body = []
+    
+    return IfStatement(condition, true_body, false_body)
 
-func = FunctionDefinition = dodge.data_class("FunctionDefinition", ["name", "args", "body"])
-arg = FormalArgument = dodge.data_class("FormalArgument", ["name"])
+IfStatement = dodge.data_class("IfStatement", ["condition", "true_body", "false_body"])
+while_ = WhileStatement = dodge.data_class("WhileLoop", ["condition", "body"])
+BreakStatement = dodge.data_class("BreakStatement", [])
+break_ = BreakStatement()
 
 expression_statement = ExpressionStatement = dodge.data_class("ExpressionStatement", ["value"])
 assign = Assignment = dodge.data_class("Assignment", ["target", "value"])

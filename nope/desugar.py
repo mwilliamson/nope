@@ -24,11 +24,14 @@ class Desugarrer(zuice.Base):
             LocalModule: self._local_module,
             
             nodes.Module: self._module,
-        
-            nodes.WithStatement: self._with_statement,
+            
+            nodes.TypeDefinition: lambda node: cc.statements([]),
             nodes.FunctionDef: self._function_definition,
             nodes.Arguments: self._arguments,
             nodes.Argument: self._argument,
+            
+            nodes.WithStatement: self._with_statement,
+            nodes.WhileLoop: self._while,
             
             nodes.ReturnStatement: self._return,
             nodes.Assignment: self._assignment,
@@ -112,6 +115,42 @@ class Desugarrer(zuice.Base):
                 ],
             ),
         ])
+    
+    def _while(self, loop):
+        condition = self._condition(loop.condition)
+        return self._loop(loop, condition, at_loop_start=[])
+        
+    
+    def _condition(self, condition):
+        return self._builtins_bool(self.desugar(condition))
+    
+    
+    def _builtins_bool(self, cc_condition):
+        return self._call_builtin("bool", [cc_condition])
+    
+    
+    def _loop(self, loop, condition, at_loop_start):
+        body = at_loop_start + self.desugar(loop.body)
+        
+        if loop.else_body:
+            normal_exit_name = self._generate_unique_name("normal_exit")
+            normal_exit = cc.ref(normal_exit_name)
+            
+            return cc.statements([
+                cc.declare(normal_exit_name, cc.false),
+                cc.while_(
+                    cc.true,
+                    [
+                        cc.if_(cc.not_(condition), [
+                            cc.assign(normal_exit, cc.true),
+                            cc.break_
+                        ]),
+                    ] + body,
+                ),
+                cc.if_(normal_exit, self.desugar(loop.else_body))
+            ])
+        else:
+            return cc.while_(condition, body)
     
     def _function_definition(self, node):
         declared_names = set(self._declarations.declarations_in_function(node).names())
@@ -216,7 +255,10 @@ class Desugarrer(zuice.Base):
     def _get_magic_method(self, receiver, name):
         # TODO: get magic method through the same mechanism as self._call
         return cc.attr(receiver, "__{}__".format(name))
-
+    
+    def _call_builtin(self, name, args):
+        return cc.call(self._builtin_ref(name), args)
+    
     def _builtin_ref(self, name):
         return cc.builtin(name)
 
