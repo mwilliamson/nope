@@ -67,8 +67,9 @@ class OptimisedNodeJsExecutionTests(NodeJsExecutionTests):
         bindings.bind(nodejs.optimise).to_instance(True)
 
 
-@istest
-class UnoptimisedNodeJsExecutionTests(NodeJsExecutionTests):
-    @staticmethod
-    def create_bindings(bindings):
-        bindings.bind(nodejs.optimise).to_instance(False)
+# TODO: remove if unnecessary
+#~ @istest
+#~ class UnoptimisedNodeJsExecutionTests(NodeJsExecutionTests):
+    #~ @staticmethod
+    #~ def create_bindings(bindings):
+        #~ bindings.bind(nodejs.optimise).to_instance(False)
