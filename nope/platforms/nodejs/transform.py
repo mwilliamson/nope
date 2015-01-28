@@ -46,10 +46,10 @@ class NodeTransformer(zuice.Base):
             nodes.Subscript: self._subscript,
             nodes.Slice: self._slice,
             cc.VariableReference: _ref,
-            nodes.NoneLiteral: _none,
-            nodes.BooleanLiteral: _bool,
+            cc.NoneLiteral: _none,
+            cc.BooleanLiteral: _bool,
             cc.IntLiteral: _int,
-            nodes.StringLiteral: _str,
+            cc.StrLiteral: _str,
             nodes.ListLiteral: self._list_literal,
             nodes.TupleLiteral: self._tuple_literal,
             

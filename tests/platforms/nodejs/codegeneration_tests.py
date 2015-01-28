@@ -3,7 +3,7 @@ from nose.tools import istest, assert_equal
 
 from nope.platforms.nodejs import js
 from nope.platforms.nodejs.transform import NodeTransformer
-from nope import nodes, types
+from nope import nodes, types, couscous as cc
 from nope.parser.typing import parse_explicit_type
 from nope.identity_dict import IdentityDict
 from nope.module_resolution import ResolvedImport
@@ -823,7 +823,7 @@ def test_transform_variable_reference():
 @istest
 def test_transform_none_expression():
     _assert_transform(
-        nodes.none(),
+        cc.none,
         js.null
     )
 
@@ -831,11 +831,11 @@ def test_transform_none_expression():
 @istest
 def test_transform_boolean_expression():
     _assert_transform(
-        nodes.boolean(True),
+        cc.true,
         js.boolean(True)
     )
     _assert_transform(
-        nodes.boolean(False),
+        cc.false,
         js.boolean(False)
     )
 
@@ -843,7 +843,7 @@ def test_transform_boolean_expression():
 @istest
 def test_transform_string_expression():
     _assert_transform(
-        nodes.string("hello"),
+        cc.str_literal("hello"),
         js.string("hello")
     )
 
@@ -851,7 +851,7 @@ def test_transform_string_expression():
 @istest
 def test_transform_int_expression():
     _assert_transform(
-        nodes.int(42),
+        cc.int_literal(42),
         js.number(42),
     )
 
