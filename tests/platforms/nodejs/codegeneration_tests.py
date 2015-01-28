@@ -438,7 +438,7 @@ def test_transform_break():
 @istest
 def test_transform_continue():
     _assert_transform(
-        nodes.continue_statement(),
+        cc.continue_,
         js.continue_statement(),
     )
 

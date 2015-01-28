@@ -218,6 +218,8 @@ IfStatement = dodge.data_class("IfStatement", ["condition", "true_body", "false_
 while_ = WhileLoop = dodge.data_class("WhileLoop", ["condition", "body"])
 BreakStatement = dodge.data_class("BreakStatement", [])
 break_ = BreakStatement()
+ContinueStatement = dodge.data_class("ContinueStatement", [])
+continue_ = ContinueStatement()
 
 expression_statement = ExpressionStatement = dodge.data_class("ExpressionStatement", ["value"])
 assign = Assignment = dodge.data_class("Assignment", ["target", "value"])
