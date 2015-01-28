@@ -354,6 +354,13 @@ class OperationTests(object):
             nodes.neg(nodes.ref("x")),
             cc.call(cc.attr(cc.ref("x"), "__neg__"), [])
         )
+        
+    @istest
+    def test_transform_boolean_not(self):
+        _assert_transform(
+            nodes.bool_not(nodes.ref("x")),
+            cc.not_(cc.call(cc.builtin("bool"), [cc.ref("x")])),
+        )
 
 
 @istest

@@ -266,8 +266,11 @@ class Desugarrer(zuice.Base):
         return cc.call(cc.attr(left, "__{}__".format(node.operator)), [right])
     
     def _unary_operation(self, node):
-        operand = self.desugar(node.operand)
-        return cc.call(cc.attr(operand, "__{}__".format(node.operator)), [])
+        if node.operator == "bool_not":
+            return cc.not_(self._condition(node.operand))
+        else:
+            operand = self.desugar(node.operand)
+            return cc.call(cc.attr(operand, "__{}__".format(node.operator)), [])
     
     def _call(self, node):
         # TODO: proper support for __call__
