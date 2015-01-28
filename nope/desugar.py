@@ -41,6 +41,8 @@ class Desugarrer(zuice.Base):
             nodes.Assignment: self._assignment,
             nodes.ExpressionStatement: self._expression_statement,
             
+            nodes.BinaryOperation: self._binary_operation,
+            nodes.UnaryOperation: self._unary_operation,
             nodes.Call: self._call,
             nodes.AttributeAccess: self._attr,
             nodes.VariableReference: self._ref,
@@ -257,6 +259,15 @@ class Desugarrer(zuice.Base):
     
     def _expression_statement(self, node):
         return cc.expression_statement(self.desugar(node.value))
+    
+    def _binary_operation(self, node):
+        left = self.desugar(node.left)
+        right = self.desugar(node.right)
+        return cc.call(cc.attr(left, "__{}__".format(node.operator)), [right])
+    
+    def _unary_operation(self, node):
+        operand = self.desugar(node.operand)
+        return cc.call(cc.attr(operand, "__{}__".format(node.operator)), [])
     
     def _call(self, node):
         # TODO: proper support for __call__

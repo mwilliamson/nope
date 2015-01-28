@@ -573,83 +573,67 @@ def test_transform_setitem_subscript():
         """
     )
 
-
-@istest
-def test_transform_binary_operation():
-    _assert_transform(
-        nodes.add(nodes.ref("x"), nodes.ref("y")),
-        js.call(js.ref("$nope.operators.add"), [js.ref("x"), js.ref("y")])
-    )
-
-
-@istest
-def test_normal_js_addition_is_used_if_both_operands_are_ints_and_optimise_is_true():
-    left = nodes.ref("x")
-    right = nodes.ref("y")
-    
-    type_lookup = types.TypeLookup(IdentityDict([
-        (left, types.int_type),
-        (right, types.int_type),
-    ]))
-    
-    def assert_transform(expected_js, optimise):
-        _assert_transform(
-            nodes.add(left, right),
-            expected_js,
-            type_lookup=type_lookup,
-            optimise=optimise,
-        )
-    
-    assert_transform(js.binary_operation("+", js.ref("x"), js.ref("y")), optimise=True)
-    assert_transform(js.call(js.ref("$nope.operators.add"), [js.ref("x"), js.ref("y")]), optimise=False)
-    
-    # Doing this in the same test to make sure all arguments except optimise are the same
+# TODO:
+#~ @istest
+#~ def test_normal_js_addition_is_used_if_both_operands_are_ints_and_optimise_is_true():
+    #~ left = nodes.ref("x")
+    #~ right = nodes.ref("y")
+    #~ 
+    #~ type_lookup = types.TypeLookup(IdentityDict([
+        #~ (left, types.int_type),
+        #~ (right, types.int_type),
+    #~ ]))
+    #~ 
+    #~ def assert_transform(expected_js, optimise):
+        #~ _assert_transform(
+            #~ nodes.add(left, right),
+            #~ expected_js,
+            #~ type_lookup=type_lookup,
+            #~ optimise=optimise,
+        #~ )
+    #~ 
+    #~ assert_transform(js.binary_operation("+", js.ref("x"), js.ref("y")), optimise=True)
+    #~ assert_transform(js.call(js.ref("$nope.operators.add"), [js.ref("x"), js.ref("y")]), optimise=False)
+    #~ 
+    #~ # Doing this in the same test to make sure all arguments except optimise are the same
     
 
-@istest
-def test_normal_binary_operation_if_only_one_side_is_int():
-    x = nodes.ref("x")
-    y = nodes.ref("y")
-    
-    type_lookup = types.TypeLookup(IdentityDict([
-        (x, types.int_type),
-        (y, types.object_type),
-    ]))
-    
-    _assert_transform(
-        nodes.add(x, y),
-        js.call(js.ref("$nope.operators.add"), [js.ref("x"), js.ref("y")]),
-        type_lookup=type_lookup,
-    )
-    
-    _assert_transform(
-        nodes.add(y, x),
-        js.call(js.ref("$nope.operators.add"), [js.ref("y"), js.ref("x")]),
-        type_lookup=type_lookup,
-    )
+#~ @istest
+#~ def test_normal_binary_operation_if_only_one_side_is_int():
+    #~ x = nodes.ref("x")
+    #~ y = nodes.ref("y")
+    #~ 
+    #~ type_lookup = types.TypeLookup(IdentityDict([
+        #~ (x, types.int_type),
+        #~ (y, types.object_type),
+    #~ ]))
+    #~ 
+    #~ _assert_transform(
+        #~ nodes.add(x, y),
+        #~ js.call(js.ref("$nope.operators.add"), [js.ref("x"), js.ref("y")]),
+        #~ type_lookup=type_lookup,
+    #~ )
+    #~ 
+    #~ _assert_transform(
+        #~ nodes.add(y, x),
+        #~ js.call(js.ref("$nope.operators.add"), [js.ref("y"), js.ref("x")]),
+        #~ type_lookup=type_lookup,
+    #~ )
 
 
-@istest
-def test_transform_unary_operation():
-    _assert_transform(
-        nodes.neg(nodes.ref("x")),
-        js.call(js.ref("$nope.operators.neg"), [js.ref("x")])
-    )
-
-
-@istest
-def test_normal_javascript_negation_is_used_if_operand_is_int():
-    x = nodes.ref("x")
-    
-    type_lookup = types.TypeLookup(IdentityDict([
-        (x, types.int_type),
-    ]))
-    
-    _assert_transform(
-        nodes.neg(x),
-        js.unary_operation("-", js.ref("x")),
-        type_lookup=type_lookup,
-    )
+#~ @istest
+#~ def test_normal_javascript_negation_is_used_if_operand_is_int():
+    #~ x = nodes.ref("x")
+    #~ 
+    #~ type_lookup = types.TypeLookup(IdentityDict([
+        #~ (x, types.int_type),
+    #~ ]))
+    #~ 
+    #~ _assert_transform(
+        #~ nodes.neg(x),
+        #~ js.unary_operation("-", js.ref("x")),
+        #~ type_lookup=type_lookup,
+    #~ )
 
 
 @istest

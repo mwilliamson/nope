@@ -340,6 +340,23 @@ class ExpressionStatementTests(object):
 
 
 @istest
+class OperationTests(object):
+    @istest
+    def test_transform_binary_operation_is_converted_to_call_on_class(self):
+        _assert_transform(
+            nodes.add(nodes.ref("x"), nodes.ref("y")),
+            cc.call(cc.attr(cc.ref("x"), "__add__"), [cc.ref("y")])
+        )
+
+    @istest
+    def test_transform_unary_operation_is_converted_to_call_on_class(self):
+        _assert_transform(
+            nodes.neg(nodes.ref("x")),
+            cc.call(cc.attr(cc.ref("x"), "__neg__"), [])
+        )
+
+
+@istest
 class CallTests(object):
     @istest
     def test_transform_call_with_positional_arguments(self):
