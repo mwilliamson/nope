@@ -31,7 +31,6 @@ class NodeTransformer(zuice.Base):
             cc.ReturnStatement: self._return_statement,
             nodes.IfElse: self._if_else,
             cc.WhileLoop: self._while_loop,
-            nodes.ForLoop: self._for_loop,
             cc.BreakStatement: self._break_statement,
             cc.ContinueStatement: self._continue_statement,
             nodes.TryStatement: self._try_statement,
