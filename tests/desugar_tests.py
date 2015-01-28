@@ -149,6 +149,29 @@ class WhileLoopTests(object):
 
 
 @istest
+class ForLoopTests(object):
+    @istest
+    def test_transform_for_loop(self):
+        _assert_transform(
+            nodes.for_loop(
+                nodes.ref("x"),
+                nodes.ref("xs"),
+                [nodes.ret(nodes.ref("x"))],
+            ),
+            """
+                var $iterator0 = $builtins.iter(xs)
+                var $element1
+                while True:
+                    $element1 = $builtins.next($iterator0, $internals.loop_sentinel)
+                    if $element1 is $internals.loop_sentinel:
+                        break
+                    x = $element1
+                    return x
+            """
+        )
+
+
+@istest
 class ReturnStatementTests(object):
     @istest
     def test_transform_return_statement_transforms_value(self):

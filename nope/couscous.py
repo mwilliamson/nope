@@ -49,8 +49,10 @@ class Writer(object):
             AttributeAccess: self._attr,
             Subscript: self._subscript,
             UnaryOperation: self._unary_operation,
+            BinaryOperation: self._binary_operation,
             
             BuiltinReference: self._builtin,
+            InternalReference: self._internal,
             VariableReference: self._ref,
             IntLiteral: self._int,
             BooleanLiteral: self._bool,
@@ -176,8 +178,18 @@ class Writer(object):
         self._output.write(" ")
         self.write(node.operand)
     
+    def _binary_operation(self, node):
+        self.write(node.left)
+        self._output.write(" ")
+        self._output.write(node.operator)
+        self._output.write(" ")
+        self.write(node.right)
+    
     def _builtin(self, node):
         self._output.write("$builtins." + node.name)
+    
+    def _internal(self, node):
+        self._output.write("$internals." + node.name)
     
     def _ref(self, node):
         self._output.write(node.name)
@@ -238,14 +250,17 @@ def raise_():
 call = Call = dodge.data_class("Call", ["func", "args"])
 attr = AttributeAccess = dodge.data_class("AttributeAccess", ["obj", "attr"])
 subscript = Subscript = dodge.data_class("Subscript", ["obj", "index"])
-UnaryOperation = dodge.data_class("UnaryOperation", ["operator", "operand"])
 
-def not_(operand):
-    return UnaryOperation("not", operand)
+UnaryOperation = dodge.data_class("UnaryOperation", ["operator", "operand"])
+not_ = functools.partial(UnaryOperation, "not")
+
+BinaryOperation = dodge.data_class("BinaryOperation", ["operator", "left", "right"])
+is_ = functools.partial(BinaryOperation, "is")
 
 list_literal = ListLiteral = dodge.data_class("ListLiteral", ["elements"])
 
 builtin = BuiltinReference = dodge.data_class("BuiltinReference", ["name"])
+internal = InternalReference = dodge.data_class("InternalReference", ["name"])
 ref = VariableReference = dodge.data_class("VariableReference", ["name"])
 str_literal = StrLiteral = dodge.data_class("StrLiteral", ["value"])
 int_literal = IntLiteral = dodge.data_class("IntLiteral", ["value"])

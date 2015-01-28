@@ -32,6 +32,7 @@ class Desugarrer(zuice.Base):
             
             nodes.WithStatement: self._with_statement,
             nodes.WhileLoop: self._while,
+            nodes.ForLoop: self._for_loop,
             
             nodes.ReturnStatement: self._return,
             nodes.Assignment: self._assignment,
@@ -119,6 +120,26 @@ class Desugarrer(zuice.Base):
     def _while(self, loop):
         condition = self._condition(loop.condition)
         return self._loop(loop, condition, at_loop_start=[])
+    
+    
+    def _for_loop(self, loop):
+        iterator_name = self._generate_unique_name("iterator")
+        element_name = self._generate_unique_name("element")
+        sentinel = cc.internal("loop_sentinel")
+        
+        return cc.statements([
+            cc.declare(iterator_name, self._call_builtin("iter", [self.desugar(loop.iterable)])),
+            cc.declare(element_name),
+            cc.while_(cc.true, [
+                cc.assign(cc.ref(element_name), self._call_builtin("next", [cc.ref(iterator_name), sentinel])),
+                cc.if_(cc.is_(cc.ref(element_name), sentinel), [
+                    cc.break_,
+                ]),
+                self._create_single_assignment(loop.target, cc.ref(element_name)),
+                cc.statements(self.desugar(loop.body))
+            ]),
+        ])
+        
         
     
     def _condition(self, condition):

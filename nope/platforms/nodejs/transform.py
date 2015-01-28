@@ -289,33 +289,6 @@ class NodeTransformer(zuice.Base):
             self.transform(loop.condition),
             self._transform_all(loop.body),
         )
-        
-    
-    def _condition(self, condition):
-        return self._builtins_bool(self.transform(condition))
-    
-    
-    def _builtins_bool(self, js_condition):
-        return _call_builtin("bool", [js_condition])
-    
-    
-    def _for_loop(self, loop):
-        iterator_name = self._unique_name("iterator")
-        element_name = self._unique_name("element")
-        sentinel = js.ref("$nope.loopSentinel")
-        
-        condition = js.binary_operation(
-            "!==",
-            js.assign(element_name, _call_builtin("next", [js.ref(iterator_name), sentinel])),
-            sentinel,
-        )
-        assign_loop_target = self._create_single_assignment(loop.target, js.ref(element_name))
-        
-        return js.statements([
-            js.var(iterator_name, _call_builtin("iter", [self.transform(loop.iterable)])),
-            js.var(element_name),
-            self._loop(loop, condition, at_loop_start=[assign_loop_target]),
-        ])
     
     
     def _break_statement(self, statement):

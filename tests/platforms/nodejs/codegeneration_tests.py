@@ -402,32 +402,6 @@ def test_transform_while_loop():
 
 
 @istest
-def test_transform_for_loop():
-    _assert_transform(
-        nodes.for_loop(
-            nodes.ref("x"),
-            nodes.ref("xs"),
-            [nodes.ret(nodes.ref("x"))],
-        ),
-        js.statements([
-            js.var("$iterator0", js.call(js.ref("$nope.builtins.iter"), [js.ref("xs")])),
-            js.var("$element1"),
-            js.while_loop(
-                js.binary_operation(
-                    "!==",
-                    js.assign("$element1", js.call(js.ref("$nope.builtins.next"), [js.ref("$iterator0"), js.ref("$nope.loopSentinel")])),
-                    js.ref("$nope.loopSentinel"),
-                ),
-                [
-                    js.assign_statement(js.ref("x"), js.ref("$element1")),
-                    js.ret(js.ref("x")),
-                ],
-            ),
-        ])
-    )
-
-
-@istest
 def test_transform_break():
     _assert_transform(
         cc.break_,
