@@ -163,90 +163,16 @@ def test_transform_expression_statement():
 @istest
 def test_transform_function_declaration():
     _assert_transform(
-        nodes.typed(
-            parse_explicit_type("object, object -> object"),
-            nodes.func(
-                name="f",
-                args=nodes.args([nodes.arg("x"), nodes.arg("y")]),
-                body=[nodes.ret(nodes.ref("x"))],
-            )
+        cc.func(
+            name="f",
+            args=[cc.arg("x"), cc.arg("y")],
+            body=[cc.ret(cc.ref("x"))],
         ),
         js.function_declaration(
             name="f",
             args=["x", "y"],
             body=[js.ret(js.ref("x"))],
         )
-    )
-
-
-@istest
-def test_function_without_explicit_return_on_all_paths_returns_null_at_end():
-    _assert_transform(
-        nodes.typed(
-            parse_explicit_type("-> none"),
-            nodes.func(
-                name="f",
-                args=nodes.args([]),
-                body=[
-                    nodes.if_else(
-                        nodes.ref("x"),
-                        [nodes.ret(nodes.none())],
-                        []
-                    ),
-                ],
-            )
-        ),
-        """
-        function f() {
-            if ($nope.builtins.bool(x)) {
-                return null;
-            }
-            return null;
-        }
-        """
-    )
-
-
-@istest
-def test_transform_function_declaration_declares_variables_at_top_of_function():
-    _assert_transform(
-        nodes.typed(
-            parse_explicit_type("-> none"),
-            nodes.func(
-                name="f",
-                args=nodes.args([]),
-                body=[nodes.assign(["x"], nodes.ref("y"))],
-            ),
-        ),
-        """
-            function f() {
-                var x;
-                var $tmp0 = y;
-                x = $tmp0;
-                return null;
-            }
-        """
-    )
-
-
-@istest
-def test_transform_function_declaration_does_not_redeclare_variables_with_same_name_as_argument():
-    _assert_transform(
-        nodes.typed(
-            parse_explicit_type("-> none"),
-            nodes.func(
-                name="f",
-                args=nodes.args([nodes.arg("x")]),
-                body=[nodes.assign(["x"], nodes.ref("y"))],
-            ),
-        ),
-        """
-            function f(x) {
-                var $tmp0 = y;
-                x = $tmp0;
-                return null;
-            }
-        """
     )
 
 

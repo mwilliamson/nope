@@ -53,16 +53,90 @@ class FunctionDefinitionTests(object):
     @istest
     def test_variables_are_declared(self):
         _assert_transform(
-            nodes.func("f", nodes.args([]), [nodes.assign([nodes.ref("x")], nodes.ref("y"))]),
-            cc.func("f", [], [cc.declare("x"), cc.assign(cc.ref("x"), cc.ref("y"))]),
+            nodes.func("f", nodes.args([]), [
+                nodes.assign([nodes.ref("x")], nodes.ref("y")),
+                nodes.ret(nodes.ref("value")),
+            ]),
+            cc.func("f", [], [
+                cc.declare("x"),
+                cc.assign(cc.ref("x"), cc.ref("y")),
+                cc.ret(cc.ref("value")),
+            ]),
         )
         
     @istest
     def test_arguments_are_transformed(self):
         _assert_transform(
-            nodes.func("f", nodes.args([nodes.arg("value")]), []),
-            cc.func("f", [cc.arg("value")], []),
+            nodes.func("f", nodes.args([nodes.arg("value")]), [nodes.ret(nodes.ref("value"))]),
+            cc.func("f", [cc.arg("value")], [cc.ret(cc.ref("value"))]),
         )
+
+
+    @istest
+    def test_function_without_explicit_return_on_all_paths_returns_null_at_end(self):
+        _assert_transform(
+            nodes.func(
+                name="f",
+                args=nodes.args([]),
+                body=[
+                    nodes.if_else(
+                        nodes.ref("x"),
+                        [nodes.ret(nodes.boolean(True))],
+                        []
+                    ),
+                ],
+            ),
+            cc.func("f", [], [
+                cc.if_(
+                    cc.call(cc.builtin("bool"), [cc.ref("x")]),
+                    [cc.ret(cc.true)],
+                ),
+                cc.ret(cc.none),
+            ]),
+        )
+
+
+    #~ @istest
+    #~ def test_transform_function_declaration_declares_variables_at_top_of_function():
+        #~ _assert_transform(
+            #~ nodes.typed(
+                #~ parse_explicit_type("-> none"),
+                #~ nodes.func(
+                    #~ name="f",
+                    #~ args=nodes.args([]),
+                    #~ body=[nodes.assign(["x"], nodes.ref("y"))],
+                #~ ),
+            #~ ),
+            #~ """
+                #~ function f() {
+                    #~ var x;
+                    #~ var $tmp0 = y;
+                    #~ x = $tmp0;
+                    #~ return null;
+                #~ }
+            #~ """
+        #~ )
+#~ 
+#~ 
+    #~ @istest
+    #~ def test_transform_function_declaration_does_not_redeclare_variables_with_same_name_as_argument():
+        #~ _assert_transform(
+            #~ nodes.typed(
+                #~ parse_explicit_type("-> none"),
+                #~ nodes.func(
+                    #~ name="f",
+                    #~ args=nodes.args([nodes.arg("x")]),
+                    #~ body=[nodes.assign(["x"], nodes.ref("y"))],
+                #~ ),
+            #~ ),
+            #~ """
+                #~ function f(x) {
+                    #~ var $tmp0 = y;
+                    #~ x = $tmp0;
+                    #~ return null;
+                #~ }
+            #~ """
+        #~ )
 
 
 @istest
@@ -109,6 +183,25 @@ class WithStatementTests(object):
                         $exit2(None, None, None)
             """
         )
+
+
+@istest
+class IfTests(object):
+    @istest
+    def test_transform_if(self):
+        _assert_transform(
+            nodes.if_else(
+                nodes.ref("x"),
+                [nodes.ret(nodes.ref("y"))],
+                [nodes.ret(nodes.ref("z"))],
+            ),
+            cc.if_(
+                cc.call(cc.builtin("bool"), [cc.ref("x")]),
+                [cc.ret(cc.ref("y"))],
+                [cc.ret(cc.ref("z"))],
+            )
+        )
+        
 
 
 @istest
@@ -346,6 +439,14 @@ class IntLiteralTests(object):
             nodes.int_literal(42),
             cc.int_literal(42)
         )
+
+
+@istest
+class BooleanLiteralTests(object):
+    @istest
+    def test_transform(self):
+        _assert_transform(nodes.boolean(True), cc.true)
+        _assert_transform(nodes.boolean(False), cc.false)
 
 
 @istest

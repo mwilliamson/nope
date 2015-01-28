@@ -1,6 +1,6 @@
 import zuice
 
-from ... import nodes, returns, types, couscous as cc
+from ... import nodes, types, couscous as cc
 from ...modules import ModuleExports, BuiltinModule
 from ...name_declaration import DeclarationFinder
 from ...module_resolution import ModuleResolver
@@ -259,9 +259,6 @@ class NodeTransformer(zuice.Base):
     
     def _function_def(self, func):
         body = self._transform_all(func.body)
-        
-        if not returns.has_unconditional_return(func.body):
-            body += [js.ret(js.null)]
         
         return js.function_declaration(
             name=func.name,

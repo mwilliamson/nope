@@ -2,7 +2,7 @@ import itertools
 
 import zuice
 
-from . import nodes, visit, couscous as cc, types
+from . import nodes, visit, couscous as cc, types, returns
 from .name_declaration import DeclarationFinder
 from .modules import LocalModule
 
@@ -31,6 +31,7 @@ class Desugarrer(zuice.Base):
             nodes.Argument: self._argument,
             
             nodes.WithStatement: self._with_statement,
+            nodes.IfElse: self._if,
             nodes.WhileLoop: self._while,
             nodes.ForLoop: self._for_loop,
             
@@ -43,6 +44,7 @@ class Desugarrer(zuice.Base):
             nodes.VariableReference: self._ref,
             nodes.StringLiteral: self._str,
             nodes.IntLiteral: self._int,
+            nodes.BooleanLiteral: self._bool,
             nodes.NoneLiteral: self._none,
             list: lambda nope_nodes: list(map(self.desugar, nope_nodes)),
         }
@@ -116,6 +118,13 @@ class Desugarrer(zuice.Base):
                 ],
             ),
         ])
+    
+    def _if(self, node):
+        return cc.if_(
+            self._condition(node.condition),
+            self.desugar(node.true_body),
+            self.desugar(node.false_body),
+        )
     
     def _while(self, loop):
         condition = self._condition(loop.condition)
@@ -193,7 +202,11 @@ class Desugarrer(zuice.Base):
         declared_names.difference_update(arg_names)
         declarations = list(map(cc.declare, sorted(declared_names)))
         
-        return cc.func(node.name, self.desugar(node.args), declarations + self.desugar(node.body))
+        body = self.desugar(node.body)
+        if not returns.has_unconditional_return(node.body):
+            body += [cc.ret(cc.none)]
+            
+        return cc.func(node.name, self.desugar(node.args), declarations + body)
     
     def _arguments(self, node):
         return self.desugar(node.args)
@@ -279,6 +292,9 @@ class Desugarrer(zuice.Base):
     
     def _int(self, node):
         return cc.int_literal(node.value)
+    
+    def _bool(self, node):
+        return cc.bool_literal(node.value)
     
     def _none(self, node):
         return cc.none
