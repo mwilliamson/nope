@@ -261,19 +261,21 @@ class Desugarrer(zuice.Base):
         return cc.expression_statement(self.desugar(node.value))
     
     def _binary_operation(self, node):
-        left = self.desugar(node.left)
-        right = self.desugar(node.right)
         if node.operator == "is":
+            left = self.desugar(node.left)
+            right = self.desugar(node.right)
             return cc.is_(left, right)
         else:
-            return cc.call(cc.attr(left, "__{}__".format(node.operator)), [right])
+            return self._call_magic_method(node.left, node.operator, node.right)
     
     def _unary_operation(self, node):
         if node.operator == "bool_not":
             return cc.not_(self._condition(node.operand))
         else:
-            operand = self.desugar(node.operand)
-            return cc.call(cc.attr(operand, "__{}__".format(node.operator)), [])
+            return self._call_magic_method(node.operand, node.operator)
+    
+    def _call_magic_method(self, obj, name, *args):
+        return cc.call(cc.attr(self.desugar(obj), "__{}__".format(name)), list(map(self.desugar, args)))
     
     def _call(self, node):
         # TODO: proper support for __call__
