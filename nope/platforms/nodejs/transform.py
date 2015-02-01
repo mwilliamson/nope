@@ -42,7 +42,6 @@ class NodeTransformer(zuice.Base):
             nodes.AttributeAccess: self._attr,
             cc.BinaryOperation: self._binary_operation,
             cc.UnaryOperation: self._unary_operation,
-            nodes.Subscript: self._subscript,
             nodes.Slice: self._slice,
             cc.VariableReference: _ref,
             cc.NoneLiteral: _none,
@@ -458,9 +457,6 @@ class NodeTransformer(zuice.Base):
     def _get_magic_method(self, receiver, name):
         # TODO: get magic method through the same mechanism as self._call
         return self._getattr(receiver, "__{}__".format(name))
-    
-    def _subscript(self, subscript):
-        return self._operation("getitem", [subscript.value, subscript.slice])
     
     
     def _slice(self, node):

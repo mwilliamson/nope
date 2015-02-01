@@ -368,6 +368,13 @@ class OperationTests(object):
             nodes.is_(nodes.ref("x"), nodes.ref("y")),
             cc.is_(cc.ref("x"), cc.ref("y")),
         )
+        
+    @istest
+    def test_transform_getitem(self):
+        _assert_transform(
+            nodes.subscript(nodes.ref("x"), nodes.ref("y")),
+            cc.call(cc.attr(cc.ref("x"), "__getitem__"), [cc.ref("y")])
+        )
 
 
 @istest

@@ -43,6 +43,7 @@ class Desugarrer(zuice.Base):
             
             nodes.BinaryOperation: self._binary_operation,
             nodes.UnaryOperation: self._unary_operation,
+            nodes.Subscript: self._subscript,
             nodes.Call: self._call,
             nodes.AttributeAccess: self._attr,
             nodes.VariableReference: self._ref,
@@ -273,6 +274,9 @@ class Desugarrer(zuice.Base):
             return cc.not_(self._condition(node.operand))
         else:
             return self._call_magic_method(node.operand, node.operator)
+    
+    def _subscript(self, node):
+        return self._call_magic_method(node.value, "getitem", node.slice)
     
     def _call_magic_method(self, obj, name, *args):
         return cc.call(cc.attr(self.desugar(obj), "__{}__".format(name)), list(map(self.desugar, args)))
