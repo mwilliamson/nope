@@ -548,9 +548,9 @@ def test_transform_call_with_positional_arguments():
 
 
 @istest
-def test_transform_property_access():
+def test_transform_attribute_access():
     _assert_transform(
-        nodes.attr(nodes.ref("x"), "y"),
+        cc.attr(cc.ref("x"), "y"),
         js.call(js.ref("$nope.builtins.getattr"), [js.ref("x"), js.string("y")])
     )
 

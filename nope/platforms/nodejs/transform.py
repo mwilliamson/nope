@@ -39,7 +39,7 @@ class NodeTransformer(zuice.Base):
             cc.Statements: self._statements,
             
             cc.Call: self._call,
-            nodes.AttributeAccess: self._attr,
+            cc.AttributeAccess: self._attr,
             cc.BinaryOperation: self._binary_operation,
             cc.UnaryOperation: self._unary_operation,
             nodes.Slice: self._slice,
@@ -403,7 +403,7 @@ class NodeTransformer(zuice.Base):
         return js.call(self.transform(call.func), args)
 
     def _attr(self, attr):
-        return self._getattr(self.transform(attr.value), attr.attr)
+        return self._getattr(self.transform(attr.obj), attr.attr)
     
     def _binary_operation(self, operation):
         if operation.operator == "bool_and":
