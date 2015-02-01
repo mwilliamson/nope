@@ -303,6 +303,19 @@ class RaiseStatementTests(object):
 
 
 @istest
+class AssertStatementTests(object):
+    @istest
+    def test_assert_without_message_is_transformed_to_conditional_raise(self):
+        _assert_transform(
+            nodes.assert_statement(nodes.ref("value")),
+            """
+                if not value:
+                    raise $builtins.AssertionError("")
+            """
+        )
+
+
+@istest
 class AssignmentTests(object):
     @istest
     def test_transform_assigment_to_single_target(self):

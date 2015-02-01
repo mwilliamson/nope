@@ -343,21 +343,6 @@ class NodeTransformer(zuice.Base):
         exception_value = self.transform(statement.value)
         return self._generate_raise(exception_value)
     
-    
-    def _assert_statement(self, statement):
-        if statement.message is None:
-            message = js.string("")
-        else:
-            message = self.transform(statement.message)
-        
-        exception_value = _call_builtin("AssertionError", [message])
-        
-        return js.if_else(
-            self._condition(statement.condition),
-            [],
-            [self._generate_raise(exception_value)],
-        )
-    
     def _generate_raise(self, exception_value):
         exception_name = self._unique_name("exception")
         error_name = self._unique_name("error")

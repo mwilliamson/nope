@@ -39,6 +39,7 @@ class Desugarrer(zuice.Base):
             
             nodes.ReturnStatement: self._return,
             nodes.RaiseStatement: self._raise,
+            nodes.AssertStatement: self._assert,
             nodes.Assignment: self._assignment,
             nodes.ExpressionStatement: self._expression_statement,
             
@@ -227,6 +228,19 @@ class Desugarrer(zuice.Base):
     
     def _raise(self, node):
         return cc.raise_(self.desugar(node.value))
+        
+    def _assert(self, node):
+        if node.message is None:
+            message = cc.str_literal("")
+        else:
+            message = self.transform(statement.message)
+        
+        exception_value = self._call_builtin("AssertionError", [message])
+        
+        return cc.if_(
+            cc.not_(self.desugar(node.condition)),
+            [cc.raise_(exception_value)],
+        )
     
     def _assignment(self, node):
         value = self.desugar(node.value)

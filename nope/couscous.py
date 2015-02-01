@@ -54,6 +54,7 @@ class Writer(object):
             BuiltinReference: self._builtin,
             InternalReference: self._internal,
             VariableReference: self._ref,
+            StrLiteral: self._str,
             IntLiteral: self._int,
             BooleanLiteral: self._bool,
             NoneLiteral: self._none,
@@ -149,6 +150,9 @@ class Writer(object):
     @_simple_statement
     def _raise(self, node):
         self._output.write("raise")
+        if node.value is not None:
+            self._output.write(" ")
+            self.write(node.value)
     
     def _call(self, node):
         self.write(node.func)
@@ -193,6 +197,11 @@ class Writer(object):
     
     def _ref(self, node):
         self._output.write(node.name)
+    
+    def _str(self, node):
+        self._output.write('"')
+        self._output.write(node.value)
+        self._output.write('"')
     
     def _int(self, node):
         self._output.write(str(node.value))
