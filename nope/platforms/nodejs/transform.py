@@ -408,7 +408,7 @@ class NodeTransformer(zuice.Base):
                 self.transform(operation.left),
                 self.transform(operation.right))
         else:
-            return self._operation(operation.operator, [operation.left, operation.right])
+            raise Exception("Unrecognised binary operator: {}".format(operation.operator))
     
     def _optimised_binary_operation(self, operation):
         if (operation.operator in operations.number and
