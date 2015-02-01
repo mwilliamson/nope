@@ -263,7 +263,10 @@ class Desugarrer(zuice.Base):
     def _binary_operation(self, node):
         left = self.desugar(node.left)
         right = self.desugar(node.right)
-        return cc.call(cc.attr(left, "__{}__".format(node.operator)), [right])
+        if node.operator == "is":
+            return cc.is_(left, right)
+        else:
+            return cc.call(cc.attr(left, "__{}__".format(node.operator)), [right])
     
     def _unary_operation(self, node):
         if node.operator == "bool_not":

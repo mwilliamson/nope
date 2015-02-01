@@ -663,7 +663,7 @@ def test_transform_boolean_or():
 @istest
 def test_transform_is_operation():
     _assert_transform(
-        nodes.is_(nodes.ref("x"), nodes.ref("y")),
+        cc.is_(cc.ref("x"), cc.ref("y")),
         js.binary_operation("===", js.ref("x"), js.ref("y"))
     )
 

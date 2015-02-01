@@ -361,6 +361,13 @@ class OperationTests(object):
             nodes.bool_not(nodes.ref("x")),
             cc.not_(cc.call(cc.builtin("bool"), [cc.ref("x")])),
         )
+        
+    @istest
+    def test_transform_is_operator(self):
+        _assert_transform(
+            nodes.is_(nodes.ref("x"), nodes.ref("y")),
+            cc.is_(cc.ref("x"), cc.ref("y")),
+        )
 
 
 @istest
