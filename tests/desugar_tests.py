@@ -397,6 +397,20 @@ class OperationTests(object):
         )
         
     @istest
+    def test_transform_boolean_and(self):
+        _assert_transform(
+            nodes.bool_and(nodes.ref("x"), nodes.ref("y")),
+            cc.and_(cc.ref("x"), cc.ref("y")),
+        )
+        
+    @istest
+    def test_transform_boolean_or(self):
+        _assert_transform(
+            nodes.bool_or(nodes.ref("x"), nodes.ref("y")),
+            cc.or_(cc.ref("x"), cc.ref("y")),
+        )
+        
+    @istest
     def test_transform_is_operator(self):
         _assert_transform(
             nodes.is_(nodes.ref("x"), nodes.ref("y")),

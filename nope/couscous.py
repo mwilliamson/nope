@@ -266,6 +266,8 @@ not_ = functools.partial(UnaryOperation, "not")
 BinaryOperation = dodge.data_class("BinaryOperation", ["operator", "left", "right"])
 is_ = functools.partial(BinaryOperation, "is")
 is_not = functools.partial(BinaryOperation, "is_not")
+and_ = functools.partial(BinaryOperation, "and")
+or_ = functools.partial(BinaryOperation, "or")
 
 list_literal = ListLiteral = dodge.data_class("ListLiteral", ["elements"])
 

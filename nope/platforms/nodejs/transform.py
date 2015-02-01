@@ -43,6 +43,7 @@ class NodeTransformer(zuice.Base):
             cc.UnaryOperation: self._unary_operation,
             nodes.Slice: self._slice,
             cc.VariableReference: _ref,
+            cc.BuiltinReference: _builtin_ref,
             cc.NoneLiteral: _none,
             cc.BooleanLiteral: _bool,
             cc.IntLiteral: _int,
@@ -389,12 +390,12 @@ class NodeTransformer(zuice.Base):
         return self._getattr(self.transform(attr.obj), attr.attr)
     
     def _binary_operation(self, operation):
-        if operation.operator == "bool_and":
+        if operation.operator == "and":
             return call_internal(
                 ["booleanAnd"],
                 [self.transform(operation.left), self.transform(operation.right)]
             )
-        elif operation.operator == "bool_or":
+        elif operation.operator == "or":
             return call_internal(
                 ["booleanOr"],
                 [self.transform(operation.left), self.transform(operation.right)]
@@ -482,6 +483,10 @@ def _call_builtin(name, args):
 
 def _ref(ref):
     return js.ref(ref.name)
+
+
+def _builtin_ref(ref):
+    return js.ref("$nope.builtins.{}".format(ref.name))
 
 
 def _none(none):

@@ -668,6 +668,14 @@ def test_transform_variable_reference():
 
 
 @istest
+def test_transform_builtin_reference():
+    _assert_transform(
+        cc.builtin("x"),
+        js.ref("$nope.builtins.x")
+    )
+
+
+@istest
 def test_transform_none_expression():
     _assert_transform(
         cc.none,
