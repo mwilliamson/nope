@@ -38,6 +38,7 @@ class Desugarrer(zuice.Base):
             nodes.ContinueStatement: lambda node: cc.continue_,
             
             nodes.ReturnStatement: self._return,
+            nodes.RaiseStatement: self._raise,
             nodes.Assignment: self._assignment,
             nodes.ExpressionStatement: self._expression_statement,
             
@@ -223,6 +224,9 @@ class Desugarrer(zuice.Base):
     
     def _return(self, node):
         return cc.ret(self.desugar(node.value))
+    
+    def _raise(self, node):
+        return cc.raise_(self.desugar(node.value))
     
     def _assignment(self, node):
         value = self.desugar(node.value)

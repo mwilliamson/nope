@@ -293,6 +293,16 @@ class ReturnStatementTests(object):
 
 
 @istest
+class RaiseStatementTests(object):
+    @istest
+    def test_transform_raise_statement_transforms_value(self):
+        _assert_transform(
+            nodes.raise_statement(nodes.ref("value")),
+            cc.raise_(cc.ref("value"))
+        )
+
+
+@istest
 class AssignmentTests(object):
     @istest
     def test_transform_assigment_to_single_target(self):
