@@ -552,17 +552,6 @@ def test_transform_attribute_access():
         js.call(js.ref("$nope.builtins.getattr"), [js.ref("x"), js.string("y")])
     )
 
-
-@istest
-def test_transform_setitem_subscript():
-    _assert_transform(
-        nodes.assign([nodes.subscript(nodes.ref("x"), nodes.ref("y"))], nodes.ref("z")),
-        """
-            var $tmp0 = z;
-            $nope.operators.setitem(x, y, $tmp0);
-        """
-    )
-
 # TODO:
 #~ @istest
 #~ def test_normal_js_addition_is_used_if_both_operands_are_ints_and_optimise_is_true():

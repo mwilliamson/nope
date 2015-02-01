@@ -327,6 +327,17 @@ class AssignmentTests(object):
                 y = $tmp0[1]
             """
         )
+
+
+    @istest
+    def test_transform_setitem_subscript(self):
+        _assert_transform(
+            nodes.assign([nodes.subscript(nodes.ref("x"), nodes.ref("y"))], nodes.ref("z")),
+            """
+                var $tmp0 = z
+                x.__setitem__(y, $tmp0)
+            """
+        )
         
 
 @istest

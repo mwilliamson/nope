@@ -51,7 +51,9 @@ class Desugarrer(zuice.Base):
             nodes.IntLiteral: self._int,
             nodes.BooleanLiteral: self._bool,
             nodes.NoneLiteral: self._none,
+            
             list: lambda nope_nodes: list(map(self.desugar, nope_nodes)),
+            ConvertedNode: lambda node: node.cc_node,
         }
     
     def desugar(self, node):
@@ -238,12 +240,14 @@ class Desugarrer(zuice.Base):
     def _create_single_assignment(self, target, value):
         if isinstance(target, nodes.VariableReference):
             return cc.assign(self.desugar(target), value)
-        #~ if isinstance(target, nodes.Subscript):
-            #~ call = self._operation(
-                #~ "setitem",
-                #~ [target.value, target.slice, ConvertedNode(value)]
-            #~ )
-            #~ return js.expression_statement(call)
+        if isinstance(target, nodes.Subscript):
+            call = self._call_magic_method(
+                target.value,
+                "setitem",
+                target.slice,
+                ConvertedNode(value),
+            )
+            return cc.expression_statement(call)
         elif isinstance(target, nodes.TupleLiteral):
             return cc.statements([
                 self._create_single_assignment(target_element, cc.subscript(value, cc.int_literal(index)))
@@ -349,3 +353,8 @@ class Desugarrer(zuice.Base):
 
 def _bool(value):
     return cc.call(cc.builtin("bool"), [value])
+
+
+class ConvertedNode(object):
+    def __init__(self, cc_node):
+        self.cc_node = cc_node
