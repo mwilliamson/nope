@@ -242,10 +242,10 @@ def declare(name, value=None):
 VariableDeclaration = dodge.data_class("VariableDeclaration", ["name", "value"])
 
 ret = ReturnStatement = dodge.data_class("ReturnStatement", ["value"])
-RaiseStatement = dodge.data_class("RaiseStatement", [])
+RaiseStatement = dodge.data_class("RaiseStatement", ["value"])
 
-def raise_():
-    return RaiseStatement()
+def raise_(value=None):
+    return RaiseStatement(value)
 
 call = Call = dodge.data_class("Call", ["func", "args"])
 attr = AttributeAccess = dodge.data_class("AttributeAccess", ["obj", "attr"])

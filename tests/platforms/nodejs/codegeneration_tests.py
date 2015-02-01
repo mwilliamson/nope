@@ -512,10 +512,22 @@ def test_transform_try_except_with_multiple_exception_handlers():
     )
 
 
+# TODO:
+#@istest
+def test_transform_raise_without_exception_value():
+    # Need a surrounding try/except
+    _assert_transform(
+        cc.raise_(),
+        """
+            throw $error1;
+        """,
+    )
+
+
 @istest
 def test_transform_raise_with_exception_value():
     _assert_transform(
-        nodes.raise_statement(nodes.ref("error")),
+        cc.raise_(cc.ref("error")),
         """
             var $exception0 = error;
             var $error1 = new $nope.Error();

@@ -34,7 +34,7 @@ class NodeTransformer(zuice.Base):
             cc.BreakStatement: self._break_statement,
             cc.ContinueStatement: self._continue_statement,
             nodes.TryStatement: self._try_statement,
-            nodes.RaiseStatement: self._raise_statement,
+            cc.RaiseStatement: self._raise_statement,
             nodes.AssertStatement: self._assert_statement,
             cc.Statements: self._statements,
             
