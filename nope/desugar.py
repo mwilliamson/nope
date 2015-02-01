@@ -55,7 +55,6 @@ class Desugarrer(zuice.Base):
             nodes.NoneLiteral: self._none,
             
             list: lambda nope_nodes: list(map(self.desugar, nope_nodes)),
-            ConvertedNode: lambda node: node.cc_node,
         }
     
     def desugar(self, node):
@@ -260,10 +259,10 @@ class Desugarrer(zuice.Base):
             return cc.assign(self.desugar(target), value)
         if isinstance(target, nodes.Subscript):
             call = self._call_magic_method(
-                target.value,
+                self.desugar(target.value),
                 "setitem",
-                target.slice,
-                ConvertedNode(value),
+                self.desugar(target.slice),
+                value,
             )
             return cc.expression_statement(call)
         elif isinstance(target, nodes.TupleLiteral):
@@ -284,24 +283,26 @@ class Desugarrer(zuice.Base):
         return cc.expression_statement(self.desugar(node.value))
     
     def _binary_operation(self, node):
+        left = self.desugar(node.left)
+        right = self.desugar(node.right)
         if node.operator == "is":
-            left = self.desugar(node.left)
-            right = self.desugar(node.right)
             return cc.is_(left, right)
+        elif node.operator == "is_not":
+            return cc.is_not(left, right)
         else:
-            return self._call_magic_method(node.left, node.operator, node.right)
+            return self._call_magic_method(left, node.operator, right)
     
     def _unary_operation(self, node):
         if node.operator == "bool_not":
             return cc.not_(self._condition(node.operand))
         else:
-            return self._call_magic_method(node.operand, node.operator)
+            return self._call_magic_method(self.desugar(node.operand), node.operator)
     
     def _subscript(self, node):
-        return self._call_magic_method(node.value, "getitem", node.slice)
+        return self._call_magic_method(self.desugar(node.value), "getitem", self.desugar(node.slice))
     
     def _call_magic_method(self, obj, name, *args):
-        return cc.call(cc.attr(self.desugar(obj), "__{}__".format(name)), list(map(self.desugar, args)))
+        return cc.call(cc.attr(obj, "__{}__".format(name)), list(args))
     
     def _call(self, node):
         # TODO: proper support for __call__
@@ -371,8 +372,3 @@ class Desugarrer(zuice.Base):
 
 def _bool(value):
     return cc.call(cc.builtin("bool"), [value])
-
-
-class ConvertedNode(object):
-    def __init__(self, cc_node):
-        self.cc_node = cc_node

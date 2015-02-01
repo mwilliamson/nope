@@ -404,6 +404,13 @@ class OperationTests(object):
         )
         
     @istest
+    def test_transform_is_not_operator(self):
+        _assert_transform(
+            nodes.is_not(nodes.ref("x"), nodes.ref("y")),
+            cc.is_not(cc.ref("x"), cc.ref("y")),
+        )
+        
+    @istest
     def test_transform_getitem(self):
         _assert_transform(
             nodes.subscript(nodes.ref("x"), nodes.ref("y")),
