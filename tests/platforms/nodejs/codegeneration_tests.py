@@ -280,12 +280,10 @@ def test_transform_class_with_init_method():
 
 
 @istest
-def test_transform_single_assignment():
+def test_transform_assignment():
     _assert_transform(
-        nodes.assign(["x"], nodes.ref("z")),
-        """
-            x = z;
-        """
+        cc.assign(cc.ref("x"), cc.ref("z")),
+        js.expression_statement(js.assign(js.ref("x"), js.ref("z"))),
     )
 
 
