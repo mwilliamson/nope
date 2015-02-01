@@ -425,7 +425,7 @@ class NodeTransformer(zuice.Base):
         if operation.operator == "not":
             return js.unary_operation("!", self.transform(operation.operand))
         else:
-            return self._operation(operation.operator, [operation.operand])
+            raise Exception("Unrecognised unary operator: {}".format(operation.operator))
     
     def _optimised_unnary_operation(self, operation):
         if (operation.operator in operations.number and
