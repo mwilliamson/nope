@@ -29,7 +29,7 @@ class NodeTransformer(zuice.Base):
             nodes.TypeDefinition: lambda *args, **kwargs: None,
             cc.FunctionDefinition: self._function_def,
             cc.ReturnStatement: self._return_statement,
-            nodes.IfElse: self._if_else,
+            cc.IfStatement: self._if_else,
             cc.WhileLoop: self._while_loop,
             cc.BreakStatement: self._break_statement,
             cc.ContinueStatement: self._continue_statement,

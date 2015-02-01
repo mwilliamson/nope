@@ -300,10 +300,10 @@ def test_transform_return():
 @istest
 def test_transform_if_else():
     _assert_transform(
-        nodes.if_else(
-            nodes.ref("x"),
-            [nodes.ret(nodes.ref("y"))],
-            [nodes.ret(nodes.ref("z"))],
+        cc.if_else(
+            cc.ref("x"),
+            [cc.ret(cc.ref("y"))],
+            [cc.ret(cc.ref("z"))],
         ),
         js.if_else(
             js.call(js.ref("$nope.builtins.bool"), [js.ref("x")]),
