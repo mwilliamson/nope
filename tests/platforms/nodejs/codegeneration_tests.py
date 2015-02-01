@@ -292,7 +292,7 @@ def test_transform_single_assignment():
 @istest
 def test_transform_return():
     _assert_transform(
-        nodes.ret(nodes.ref("x")),
+        cc.ret(cc.ref("x")),
         js.ret(js.ref("x"))
     )
 

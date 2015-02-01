@@ -266,7 +266,6 @@ class NodeTransformer(zuice.Base):
         )
         
 
-
     def _return_statement(self, statement):
         return js.ret(self.transform(statement.value))
 
