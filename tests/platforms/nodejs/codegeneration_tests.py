@@ -661,7 +661,7 @@ def test_transform_is_operation():
 @istest
 def test_transform_variable_reference():
     _assert_transform(
-        nodes.ref("x"),
+        cc.ref("x"),
         js.ref("x")
     )
 
