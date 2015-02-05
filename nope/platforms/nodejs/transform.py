@@ -42,6 +42,7 @@ class NodeTransformer(zuice.Base):
             cc.UnaryOperation: self._unary_operation,
             cc.VariableReference: _ref,
             cc.BuiltinReference: _builtin_ref,
+            cc.InternalReference: _internal_ref,
             cc.NoneLiteral: _none,
             cc.BooleanLiteral: _bool,
             cc.IntLiteral: _int,
@@ -475,6 +476,10 @@ def _call_builtin(name, args):
 
 def _ref(ref):
     return js.ref(ref.name)
+
+
+def _internal_ref(ref):
+    return js.ref("$nope.{}".format(ref.name))
 
 
 def _builtin_ref(ref):
