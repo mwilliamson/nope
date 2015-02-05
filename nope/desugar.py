@@ -48,6 +48,9 @@ class Desugarrer(zuice.Base):
             nodes.Subscript: self._subscript,
             nodes.Call: self._call,
             nodes.AttributeAccess: self._attr,
+            
+            nodes.ListLiteral: self._list_literal,
+            
             nodes.VariableReference: self._ref,
             nodes.StringLiteral: self._str,
             nodes.IntLiteral: self._int,
@@ -335,6 +338,9 @@ class Desugarrer(zuice.Base):
     
     def _attr(self, node):
         return cc.attr(self.desugar(node.value), node.attr)
+    
+    def _list_literal(self, node):
+        return cc.list_literal(list(map(self.desugar, node.elements)))
     
     def _ref(self, node):
         return cc.ref(node.name)

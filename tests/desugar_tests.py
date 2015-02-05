@@ -497,6 +497,16 @@ class CallTests(object):
         )
 
 
+
+@istest
+class ListLiteralTests(object):
+    @istest
+    def test_transform(self):
+        _assert_transform(
+            nodes.list_literal([nodes.none()]),
+            cc.list_literal([cc.none])
+        )
+
 @istest
 class VariableReferenceTests(object):
     @istest
