@@ -272,7 +272,7 @@ class NodeTransformer(zuice.Base):
 
     def _if_else(self, statement):
         return js.if_else(
-            self._condition(statement.condition),
+            self.transform(statement.condition),
             self._transform_all(statement.true_body),
             self._transform_all(statement.false_body),
         )
