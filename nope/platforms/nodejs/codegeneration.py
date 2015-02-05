@@ -15,7 +15,7 @@ from ...desugar import Desugarrer
 
 class CodeGenerator(zuice.Base):
     _source_tree = zuice.dependency(SourceTree)
-    _node_transformer = zuice.dependency(NodeTransformer)
+    _node_transformer = zuice.dependency(zuice.factory(NodeTransformer))
     _desugarrer = zuice.dependency(zuice.factory(Desugarrer))
     
     def generate_files(self, source_path, destination_root):
@@ -34,7 +34,8 @@ class CodeGenerator(zuice.Base):
             dest_path = os.path.join(destination_dir, dest_filename)
             with open(dest_path, "w") as dest_file:
                 _generate_prelude(dest_file, module.node.is_executable, relative_path)
-                js.dump(self._node_transformer.transform(module.node), dest_file)
+                node_transformer = self._node_transformer({Module: module})
+                js.dump(node_transformer.transform(module.node), dest_file)
         
         _write_nope_js(destination_root)
         _write_builtins(destination_root)
