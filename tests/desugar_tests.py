@@ -507,6 +507,16 @@ class ListLiteralTests(object):
             cc.list_literal([cc.none])
         )
 
+
+@istest
+class SliceTests(object):
+    @istest
+    def test_transform(self):
+        _assert_transform(
+            nodes.slice(nodes.ref("x"), nodes.ref("y"), nodes.none()),
+            cc.call(cc.builtin("slice"), [cc.ref("x"), cc.ref("y"), cc.none]),
+        )
+
 @istest
 class VariableReferenceTests(object):
     @istest
