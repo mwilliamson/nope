@@ -298,13 +298,13 @@ def test_transform_return():
 @istest
 def test_transform_if_else():
     _assert_transform(
-        cc.if_else(
+        cc.if_(
             cc.ref("x"),
             [cc.ret(cc.ref("y"))],
             [cc.ret(cc.ref("z"))],
         ),
         js.if_else(
-            js.call(js.ref("$nope.builtins.bool"), [js.ref("x")]),
+            js.ref("x"),
             [js.ret(js.ref("y"))],
             [js.ret(js.ref("z"))],
         )
