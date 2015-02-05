@@ -24,6 +24,9 @@ class Desugarrer(zuice.Base):
             LocalModule: self._local_module,
             
             nodes.Module: self._module,
+            nodes.Import: lambda node: node,
+            nodes.ImportFrom: lambda node: node,
+            nodes.ImportAlias: lambda node: node,
             
             nodes.TypeDefinition: lambda node: cc.statements([]),
             nodes.FunctionDef: self._function_definition,
@@ -237,7 +240,7 @@ class Desugarrer(zuice.Base):
         if node.message is None:
             message = cc.str_literal("")
         else:
-            message = self.transform(statement.message)
+            message = self.desugar(node.message)
         
         exception_value = self._call_builtin("AssertionError", [message])
         

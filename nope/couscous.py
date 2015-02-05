@@ -3,6 +3,8 @@ import functools
 
 import dodge
 
+from . import nodes
+
 
 def dumps(node):
     output = io.StringIO()
@@ -220,6 +222,11 @@ def module(body, is_executable=False, exported_names=None):
     return Module(body, is_executable, exported_names)
 
 Module = dodge.data_class("Module", ["body", "is_executable", "exported_names"])
+
+# TODO: create import nodes for couscous
+import_ = Import = nodes.Import
+import_from = ImportFrom = nodes.import_from
+import_alias = ImportAlias = nodes.import_alias
 
 statements = Statements = dodge.data_class("Statements", ["body"])
 

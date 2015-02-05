@@ -19,8 +19,8 @@ class NodeTransformer(zuice.Base):
     def init(self):
         self._transformers = {
             cc.Module: self._module,
-            nodes.Import: self._import,
-            nodes.ImportFrom: self._import_from,
+            cc.Import: self._import,
+            cc.ImportFrom: self._import_from,
             
             cc.ExpressionStatement:self. _expression_statement,
             cc.VariableDeclaration: self._declare,

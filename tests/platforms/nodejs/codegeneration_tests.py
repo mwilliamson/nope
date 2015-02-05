@@ -41,7 +41,7 @@ def test_transform_module_with_exports():
 @istest
 def test_transform_basic_import_of_top_level_module():
     _assert_transform(
-        nodes.Import([nodes.import_alias("x", None)]),
+        cc.import_([cc.import_alias("x", None)]),
         js.statements([
             js.assign_statement("x", js.call(js.ref("$require"), [js.string("x")])),
         ])
@@ -51,7 +51,7 @@ def test_transform_basic_import_of_top_level_module():
 @istest
 def test_transform_basic_import_of_module_in_package():
     _assert_transform(
-        nodes.Import([nodes.import_alias("x.y", None)]),
+        cc.import_([cc.import_alias("x.y", None)]),
         js.statements([
             js.assign_statement("x", js.call(js.ref("$require"), [js.string("x")])),
             js.assign_statement(js.property_access(js.ref("x"), "y"), js.call(js.ref("$require"), [js.string("x/y")])),
@@ -62,7 +62,7 @@ def test_transform_basic_import_of_module_in_package():
 @istest
 def test_transform_import_from_current_package():
     _assert_transform(
-        nodes.import_from(["."], [nodes.import_alias("x", None)]),
+        cc.import_from(["."], [cc.import_alias("x", None)]),
         """
             x = ($require("./")).x;
         """
@@ -72,7 +72,7 @@ def test_transform_import_from_current_package():
 @istest
 def test_transform_import_from_parent_package():
     _assert_transform(
-        nodes.import_from([".."], [nodes.import_alias("x", None)]),
+        cc.import_from([".."], [cc.import_alias("x", None)]),
         """
             x = ($require("../")).x
         """
@@ -82,9 +82,9 @@ def test_transform_import_from_parent_package():
 @istest
 def test_transform_import_from_with_multiple_names():
     _assert_transform(
-        nodes.import_from(["."], [
-            nodes.import_alias("x", None),
-            nodes.import_alias("y", None),
+        cc.import_from(["."], [
+            cc.import_alias("x", None),
+            cc.import_alias("y", None),
         ]),
         """
             x = ($require("./")).x;
@@ -96,8 +96,8 @@ def test_transform_import_from_with_multiple_names():
 @istest
 def test_transform_import_from_with_alias():
     _assert_transform(
-        nodes.import_from(["."], [
-            nodes.import_alias("x", "y"),
+        cc.import_from(["."], [
+            cc.import_alias("x", "y"),
         ]),
         """
             y = ($require("./")).x
@@ -108,7 +108,7 @@ def test_transform_import_from_with_alias():
 @istest
 def test_transform_import_from_child_package():
     _assert_transform(
-        nodes.import_from([".", "x"], [nodes.import_alias("y", None)]),
+        cc.import_from([".", "x"], [cc.import_alias("y", None)]),
         """
             y = ($require("./x")).y
         """
@@ -118,7 +118,7 @@ def test_transform_import_from_child_package():
 @istest
 def test_transform_import_module_from_absolute_package():
     _assert_transform(
-        nodes.import_from(["x"], [nodes.import_alias("y", None)]),
+        cc.import_from(["x"], [cc.import_alias("y", None)]),
         """
             y = ($require("x")).y;
         """
@@ -128,7 +128,7 @@ def test_transform_import_module_from_absolute_package():
 @istest
 def test_transform_import_value_from_absolute_package():
     _assert_transform(
-        nodes.import_from(["x"], [nodes.import_alias("y", None)]),
+        cc.import_from(["x"], [cc.import_alias("y", None)]),
         """
             y = $require("x/y");
         """,
@@ -142,7 +142,7 @@ def test_transform_import_value_from_absolute_package():
 def test_transform_import_builtin_module():
     module = BuiltinModule("cgi", None)
     _assert_transform(
-        nodes.Import([nodes.import_alias("cgi", None)]),
+        cc.import_([cc.import_alias("cgi", None)]),
         """
             cgi = $require("__builtins/cgi");
         """,
