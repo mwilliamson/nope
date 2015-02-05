@@ -50,6 +50,7 @@ class Desugarrer(zuice.Base):
             nodes.AttributeAccess: self._attr,
             
             nodes.ListLiteral: self._list_literal,
+            nodes.TupleLiteral: self._tuple_literal,
             nodes.Slice: self._slice,
             
             nodes.VariableReference: self._ref,
@@ -342,6 +343,9 @@ class Desugarrer(zuice.Base):
     
     def _list_literal(self, node):
         return cc.list_literal(self.desugar(node.elements))
+    
+    def _tuple_literal(self, node):
+        return cc.tuple_literal(self.desugar(node.elements))
     
     def _slice(self, node):
         return self._call_builtin("slice", self.desugar([node.start, node.stop, node.step]))

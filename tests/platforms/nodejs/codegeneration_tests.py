@@ -714,7 +714,7 @@ def test_transform_int_expression():
 @istest
 def test_transform_tuple_literal():
     _assert_transform(
-        nodes.tuple_literal([nodes.int(42), nodes.int(1)]),
+        cc.tuple_literal([cc.int_literal(42), cc.int_literal(1)]),
         """$nope.jsArrayToTuple([42, 1])"""
     )
 

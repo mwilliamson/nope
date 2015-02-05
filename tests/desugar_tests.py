@@ -497,7 +497,6 @@ class CallTests(object):
         )
 
 
-
 @istest
 class ListLiteralTests(object):
     @istest
@@ -509,6 +508,16 @@ class ListLiteralTests(object):
 
 
 @istest
+class TupleLiteralTests(object):
+    @istest
+    def test_transform(self):
+        _assert_transform(
+            nodes.tuple_literal([nodes.none()]),
+            cc.tuple_literal([cc.none])
+        )
+
+
+@istest
 class SliceTests(object):
     @istest
     def test_transform(self):
@@ -516,6 +525,7 @@ class SliceTests(object):
             nodes.slice(nodes.ref("x"), nodes.ref("y"), nodes.none()),
             cc.call(cc.builtin("slice"), [cc.ref("x"), cc.ref("y"), cc.none]),
         )
+
 
 @istest
 class VariableReferenceTests(object):

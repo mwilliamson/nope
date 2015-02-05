@@ -270,6 +270,7 @@ and_ = functools.partial(BinaryOperation, "and")
 or_ = functools.partial(BinaryOperation, "or")
 
 list_literal = ListLiteral = dodge.data_class("ListLiteral", ["elements"])
+tuple_literal = TupleLiteral = dodge.data_class("TupleLiteral", ["elements"])
 
 builtin = BuiltinReference = dodge.data_class("BuiltinReference", ["name"])
 internal = InternalReference = dodge.data_class("InternalReference", ["name"])

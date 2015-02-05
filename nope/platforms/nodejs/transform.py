@@ -48,7 +48,7 @@ class NodeTransformer(zuice.Base):
             cc.IntLiteral: _int,
             cc.StrLiteral: _str,
             cc.ListLiteral: self._list_literal,
-            nodes.TupleLiteral: self._tuple_literal,
+            cc.TupleLiteral: self._tuple_literal,
         }
         
         self._optimised_transformers = {
