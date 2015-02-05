@@ -638,7 +638,7 @@ def test_transform_boolean_not():
 @istest
 def test_transform_boolean_and():
     _assert_transform(
-        nodes.bool_and(nodes.ref("x"), nodes.ref("y")),
+        cc.and_(cc.ref("x"), cc.ref("y")),
         js.call(js.ref("$nope.booleanAnd"), [js.ref("x"), js.ref("y")]),
     )
 
@@ -646,7 +646,7 @@ def test_transform_boolean_and():
 @istest
 def test_transform_boolean_or():
     _assert_transform(
-        nodes.bool_or(nodes.ref("x"), nodes.ref("y")),
+        cc.or_(cc.ref("x"), cc.ref("y")),
         js.call(js.ref("$nope.booleanOr"), [js.ref("x"), js.ref("y")]),
     )
 
