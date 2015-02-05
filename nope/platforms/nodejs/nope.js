@@ -271,6 +271,10 @@ function tuple(values) {
     var self = {
         __str__: function() {
             return "(" + values.map(str).join(", ") + ")";
+        },
+        __getitem__: function(key) {
+            // TODO: slices, exceptions
+            return self[key];
         }
     };
     
