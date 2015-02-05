@@ -26,7 +26,6 @@ class NodeTransformer(zuice.Base):
             cc.VariableDeclaration: self._declare,
             cc.Assignment: self._assign,
             nodes.ClassDefinition: self._class_definition,
-            nodes.TypeDefinition: lambda *args, **kwargs: None,
             cc.FunctionDefinition: self._function_def,
             cc.ReturnStatement: self._return_statement,
             cc.IfStatement: self._if_else,
