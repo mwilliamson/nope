@@ -48,8 +48,6 @@ class NodeTransformer(zuice.Base):
             cc.StrLiteral: _str,
             cc.ListLiteral: self._list_literal,
             nodes.TupleLiteral: self._tuple_literal,
-            
-            ConvertedNode: lambda node: node.js_node,
         }
         
         self._optimised_transformers = {
@@ -497,8 +495,3 @@ def _int(node):
 
 def _str(node):
     return js.string(node.value)
-
-
-class ConvertedNode(object):
-    def __init__(self, js_node):
-        self.js_node = js_node
