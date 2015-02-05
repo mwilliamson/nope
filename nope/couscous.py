@@ -49,7 +49,6 @@ class Writer(object):
             
             Call: self._call,
             AttributeAccess: self._attr,
-            Subscript: self._subscript,
             UnaryOperation: self._unary_operation,
             BinaryOperation: self._binary_operation,
             
@@ -173,12 +172,6 @@ class Writer(object):
         self._output.write(".")
         self._output.write(node.attr)
     
-    def _subscript(self, node):
-        self.write(node.obj)
-        self._output.write("[")
-        self.write(node.index)
-        self._output.write("]")
-    
     def _unary_operation(self, node):
         self._output.write(node.operator)
         self._output.write(" ")
@@ -265,7 +258,6 @@ def raise_(value=None):
 
 call = Call = dodge.data_class("Call", ["func", "args"])
 attr = AttributeAccess = dodge.data_class("AttributeAccess", ["obj", "attr"])
-subscript = Subscript = dodge.data_class("Subscript", ["obj", "index"])
 
 UnaryOperation = dodge.data_class("UnaryOperation", ["operator", "operand"])
 not_ = functools.partial(UnaryOperation, "not")

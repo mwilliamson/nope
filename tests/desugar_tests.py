@@ -346,8 +346,8 @@ class AssignmentTests(object):
             ),
             """
                 var $tmp0 = z
-                x = $tmp0[0]
-                y = $tmp0[1]
+                x = $tmp0.__getitem__(0)
+                y = $tmp0.__getitem__(1)
             """
         )
 
