@@ -33,6 +33,8 @@ class Desugarrer(zuice.Base):
             nodes.FunctionDef: self._function_definition,
             nodes.Arguments: self._arguments,
             nodes.Argument: self._argument,
+            nodes.TryStatement: self._try_statement,
+            nodes.ExceptHandler: self._except_handler,
             
             nodes.WithStatement: self._with_statement,
             nodes.IfElse: self._if,
@@ -85,6 +87,20 @@ class Desugarrer(zuice.Base):
             declarations + self.desugar(module.body),
             is_executable=module.is_executable,
             exported_names=exported_names
+        )
+    
+    def _try_statement(self, statement):
+        return cc.try_(
+            self.desugar(statement.body),
+            self.desugar(statement.handlers),
+            self.desugar(statement.finally_body),
+        )
+    
+    def _except_handler(self, handler):
+        return cc.except_(
+            self.desugar(handler.type),
+            self.desugar(handler.target),
+            self.desugar(handler.body),
         )
     
     def _with_statement(self, statement):

@@ -142,6 +142,24 @@ class FunctionDefinitionTests(object):
 
 
 @istest
+class TryStatementTests(object):
+    @istest
+    def test_statements_in_bodies_are_transformed(self):
+        _assert_transform(
+            nodes.try_statement(
+                [nodes.ret(nodes.ref("x"))],
+                handlers=[nodes.except_handler(nodes.ref("Exception"), nodes.ref("error"), [nodes.ref("y")])],
+                finally_body=[nodes.ret(nodes.ref("z"))],
+            ),
+            cc.try_(
+                [cc.ret(cc.ref("x"))],
+                handlers=[cc.except_(cc.ref("Exception"), cc.ref("error"), [cc.ref("y")])],
+                finally_body=[cc.ret(cc.ref("z"))],
+            ),
+        )
+
+
+@istest
 class WithStatementTests(object):
     @istest
     def test_transform_with_statement_with_no_target(self):
