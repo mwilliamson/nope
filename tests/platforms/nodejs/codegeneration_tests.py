@@ -245,38 +245,28 @@ def test_transform_class_with_methods():
 
 @istest
 def test_transform_class_with_init_method():
-    class_node = nodes.class_def(
+    class_node = cc.class_(
         name="User",
-        body=[
-            nodes.func(
+        methods=[
+            cc.func(
                 "__init__",
-                nodes.args([nodes.arg("self"), nodes.arg("x")]),
+                [nodes.arg("self"), nodes.arg("x")],
                 [],
             )
         ],
+        body=[],
     )
-    class_type = types.scalar_type("User")
-    meta_type = types.meta_type(class_type, [
-        types.attr("__call__", types.func([types.str_type], types.none_type)),
-    ])
-    type_lookup = types.TypeLookup(IdentityDict([
-        (class_node, meta_type)
-    ]))
     _assert_transform(
         class_node,
         """
             function $__init__0(self, x) {
-                return null;
             }
             User = function($arg1) {
                 var $self2 = {};
-                var __init__;
-                __init__ = $__init__0;
-                __init__($self2, $arg1);
+                $__init__0($self2, $arg1);
                 return $self2;
             };
         """,
-        type_lookup=type_lookup
     )
 
 

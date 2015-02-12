@@ -168,13 +168,13 @@ class NodeTransformer(zuice.Base):
             for node in class_definition.body
             if isinstance(node, cc.VariableDeclaration)
         )
-        if "__init__" in declared_names:
-            init_type = self._type_of(class_definition).attrs.type_of("__call__")
+        if "__init__" in renamed_methods:
+            init_method = next(method for method in class_definition.methods if method.name == "__init__")
             # The type checker should guarantee that init_type exists and
             # is a function type (a stronger constraint than simply callable)
             constructor_arg_names = [
                 self._unique_name("arg")
-                for arg in init_type.args
+                for arg_index in range(len(init_method.args) - 1)
             ]
         else:
             constructor_arg_names = []
@@ -194,17 +194,17 @@ class NodeTransformer(zuice.Base):
         assign_attrs = [
             create_attr_assignment(name, js.ref(name))
             for name in declared_names
-            if name != "__init__"
         ]
         
         assign_methods = [
             create_attr_assignment(method.name, js.ref(renamed_methods[method.name]))
             for method in class_definition.methods
+            if method.name != "__init__"
         ]
         
-        if "__init__" in declared_names:
+        if "__init__" in renamed_methods:
             init_args = [self_ref] + [js.ref(name) for name in constructor_arg_names]
-            call_init = [js.expression_statement(js.call(js.ref("__init__"), init_args))]
+            call_init = [js.expression_statement(js.call(js.ref(renamed_methods["__init__"]), init_args))]
         else:
             call_init = []
         
