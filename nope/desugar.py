@@ -311,12 +311,12 @@ class Desugarrer(zuice.Base):
                 self._create_single_assignment(target_element, self._call_magic_method(value, "getitem", cc.int_literal(index)))
                 for index, target_element in enumerate(target.elements)
             ])
-        #~ # TODO: test this! Is using setattr necessary?
-        #~ elif isinstance(target, nodes.AttributeAccess):
-            #~ return js.assign_statement(
-                #~ js.property_access(self.transform(target.value), target.attr),
-                #~ value
-            #~ )
+        # TODO: test this! Is using setattr necessary?
+        elif isinstance(target, nodes.AttributeAccess):
+            return cc.assign(
+                cc.attr(self.desugar(target.value), target.attr),
+                value
+            )
         else:
             raise Exception("Unhandled case: {}".format(type(target)))
     
