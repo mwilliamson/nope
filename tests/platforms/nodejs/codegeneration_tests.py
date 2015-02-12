@@ -3,7 +3,7 @@ from nose.tools import istest, assert_equal
 
 from nope.platforms.nodejs import js
 from nope.platforms.nodejs.transform import NodeTransformer
-from nope import nodes, types, couscous as cc
+from nope import types, couscous as cc
 from nope.parser.typing import parse_explicit_type
 from nope.identity_dict import IdentityDict
 from nope.module_resolution import ResolvedImport
@@ -250,7 +250,7 @@ def test_transform_class_with_init_method():
         methods=[
             cc.func(
                 "__init__",
-                [nodes.arg("self"), nodes.arg("x")],
+                [cc.arg("self"), cc.arg("x")],
                 [],
             )
         ],
@@ -335,8 +335,8 @@ def test_transform_continue():
 @istest
 def test_transform_try_with_empty_finally_body():
     _assert_transform(
-        nodes.try_statement(
-            [nodes.ret(nodes.ref("x"))],
+        cc.try_(
+            [cc.ret(cc.ref("x"))],
             finally_body=[],
         ),
         """
@@ -348,9 +348,9 @@ def test_transform_try_with_empty_finally_body():
 @istest
 def test_transform_try_finally():
     _assert_transform(
-        nodes.try_statement(
-            [nodes.ret(nodes.ref("x"))],
-            finally_body=[nodes.ret(nodes.ref("y"))],
+        cc.try_(
+            [cc.ret(cc.ref("x"))],
+            finally_body=[cc.ret(cc.ref("y"))],
         ),
         """
             try {
@@ -365,10 +365,10 @@ def test_transform_try_finally():
 @istest
 def test_transform_try_except_with_no_name():
     _assert_transform(
-        nodes.try_statement(
-            [nodes.ret(nodes.ref("x"))],
+        cc.try_(
+            [cc.ret(cc.ref("x"))],
             handlers=[
-                nodes.except_handler(None, None, [nodes.ret(nodes.ref("y"))]),
+                cc.except_(None, None, [cc.ret(cc.ref("y"))]),
             ],
         ),
         """
@@ -392,10 +392,10 @@ def test_transform_try_except_with_no_name():
 @istest
 def test_transform_try_except_with_exception_type():
     _assert_transform(
-        nodes.try_statement(
-            [nodes.ret(nodes.ref("x"))],
+        cc.try_(
+            [cc.ret(cc.ref("x"))],
             handlers=[
-                nodes.except_handler(nodes.ref("AssertionError"), None, [nodes.ret(nodes.ref("y"))]),
+                cc.except_(cc.ref("AssertionError"), None, [cc.ret(cc.ref("y"))]),
             ],
         ),
         """
@@ -419,10 +419,10 @@ def test_transform_try_except_with_exception_type():
 @istest
 def test_transform_try_except_with_exception_type_and_name():
     _assert_transform(
-        nodes.try_statement(
-            [nodes.ret(nodes.ref("x"))],
+        cc.try_(
+            [cc.ret(cc.ref("x"))],
             handlers=[
-                nodes.except_handler(nodes.ref("AssertionError"), "error", [nodes.ret(nodes.ref("y"))]),
+                cc.except_(cc.ref("AssertionError"), cc.ref("error"), [cc.ret(cc.ref("y"))]),
             ],
         ),
         """
@@ -447,10 +447,10 @@ def test_transform_try_except_with_exception_type_and_name():
 @istest
 def test_transform_try_with_empty_except_body():
     _assert_transform(
-        nodes.try_statement(
-            [nodes.ret(nodes.ref("x"))],
+        cc.try_(
+            [cc.ret(cc.ref("x"))],
             handlers=[
-                nodes.except_handler(nodes.ref("AssertionError"), "error", []),
+                cc.except_(cc.ref("AssertionError"), cc.ref("error"), []),
             ],
         ),
         """
@@ -474,11 +474,11 @@ def test_transform_try_with_empty_except_body():
 @istest
 def test_transform_try_except_with_multiple_exception_handlers():
     _assert_transform(
-        nodes.try_statement(
-            [nodes.ret(nodes.ref("x"))],
+        cc.try_(
+            [cc.ret(cc.ref("x"))],
             handlers=[
-                nodes.except_handler(nodes.ref("AssertionError"), None, [nodes.ret(nodes.ref("y"))]),
-                nodes.except_handler(nodes.ref("Exception"), None, [nodes.ret(nodes.ref("z"))]),
+                cc.except_(cc.ref("AssertionError"), None, [cc.ret(cc.ref("y"))]),
+                cc.except_(cc.ref("Exception"), None, [cc.ret(cc.ref("z"))]),
             ],
         ),
         """

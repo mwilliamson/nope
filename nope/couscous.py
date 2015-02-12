@@ -234,7 +234,16 @@ formal_type_parameter = FormalTypeParameter = dodge.data_class("FormalTypeParame
 func = FunctionDefinition = dodge.data_class("FunctionDefinition", ["name", "args", "body"])
 arg = FormalArgument = dodge.data_class("FormalArgument", ["name"])
 
-try_ = TryStatement = dodge.data_class("TryStatement", ["body", "handlers", "finally_body"])
+
+def try_(body, handlers=None, finally_body=None):
+    if handlers is None:
+        handlers = []
+    if finally_body is None:
+        finally_body = []
+    
+    return TryStatement(body, handlers, finally_body)
+
+TryStatement = dodge.data_class("TryStatement", ["body", "handlers", "finally_body"])
 except_ = ExceptHandler = dodge.data_class("ExceptHandler", ["type", "target", "body"])
 
 def if_(condition, true_body, false_body=None):
