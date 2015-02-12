@@ -533,18 +533,9 @@ def test_transform_raise_with_exception_value():
 
 @istest
 def test_transform_call_with_positional_arguments():
-    func_node = nodes.ref("f")
-    type_lookup = types.TypeLookup(IdentityDict([
-        (func_node, types.func(
-            [types.str_type, types.str_type],
-            types.none_type
-        ))
-    ]))
-    
     _assert_transform(
-        nodes.call(func_node, [nodes.ref("x"), nodes.ref("y")]),
+        cc.call(cc.ref("f"), [cc.ref("x"), cc.ref("y")]),
         js.call(js.ref("f"), [js.ref("x"), js.ref("y")]),
-        type_lookup=type_lookup,
     )
 
 
