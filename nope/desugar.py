@@ -29,6 +29,7 @@ class Desugarrer(zuice.Base):
             nodes.ImportAlias: lambda node: node,
             
             nodes.TypeDefinition: lambda node: cc.statements([]),
+            nodes.ClassDefinition: self._class_definition,
             nodes.FunctionDef: self._function_definition,
             nodes.Arguments: self._arguments,
             nodes.Argument: self._argument,
@@ -211,6 +212,16 @@ class Desugarrer(zuice.Base):
             ])
         else:
             return cc.while_(condition, after_condition + body)
+    
+    def _class_definition(self, node):
+        declared_names = list(self._declarations.declarations_in_class(node).names())
+        # TODO: come up with a more general way of detecting/declaring names that only
+        # occur at compile-time and removing them from actual output
+        declared_names.remove("Self")
+        declared_names.sort()
+        declarations = list(map(cc.declare, sorted(declared_names)))
+        body = declarations + self.desugar(node.body)
+        return cc.class_(node.name, body)
     
     def _function_definition(self, node):
         declared_names = set(self._declarations.declarations_in_function(node).names())

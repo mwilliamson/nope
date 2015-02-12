@@ -42,6 +42,22 @@ class ModuleTests(object):
 
 
 @istest
+class ClassDefinitionTests(object):
+    @istest
+    def test_statements_in_body_are_transformed(self):
+        _assert_transform(
+            nodes.class_def("Blah", [nodes.assign([nodes.ref("value")], nodes.none())]),
+            cc.class_(
+                "Blah",
+                [
+                    cc.declare("value"),
+                    cc.assign(cc.ref("value"), cc.none),
+                ],
+            ),
+        )
+
+
+@istest
 class FunctionDefinitionTests(object):
     @istest
     def test_statements_in_body_are_transformed(self):

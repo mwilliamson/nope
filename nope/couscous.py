@@ -223,6 +223,14 @@ import_alias = ImportAlias = nodes.import_alias
 
 statements = Statements = dodge.data_class("Statements", ["body"])
 
+def class_(name, body, type_params=None):
+    if type_params is None:
+        type_params = []
+    
+    return ClassDefinition(name, body, type_params)
+
+ClassDefinition = dodge.data_class("ClassDefinition", ["name", "body", "type_params"])
+formal_type_parameter = FormalTypeParameter = dodge.data_class("FormalTypeParameter", ["name"])
 func = FunctionDefinition = dodge.data_class("FunctionDefinition", ["name", "args", "body"])
 arg = FormalArgument = dodge.data_class("FormalArgument", ["name"])
 

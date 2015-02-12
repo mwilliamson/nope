@@ -25,7 +25,7 @@ class NodeTransformer(zuice.Base):
             cc.ExpressionStatement:self. _expression_statement,
             cc.VariableDeclaration: self._declare,
             cc.Assignment: self._assign,
-            nodes.ClassDefinition: self._class_definition,
+            cc.ClassDefinition: self._class_definition,
             cc.FunctionDefinition: self._function_def,
             cc.ReturnStatement: self._return_statement,
             cc.IfStatement: self._if_else,
@@ -162,14 +162,12 @@ class NodeTransformer(zuice.Base):
         
     
     def _class_definition(self, class_definition):
-        # TODO: come up with a more general way of detecting names that only
-        # occur at compile-time and removing them from actual output
-        declared_names = list(self._declarations.declarations_in_class(class_definition).names())
-        declared_names.remove("Self")
-        declared_names.sort()
-        
         renamed_methods, method_definitions = self._transform_class_methods(class_definition.body)
-        
+        declared_names = set(
+            node.name
+            for node in class_definition.body
+            if isinstance(node, cc.VariableDeclaration)
+        )
         if "__init__" in declared_names:
             init_type = self._type_of(class_definition).attrs.type_of("__call__")
             # The type checker should guarantee that init_type exists and
@@ -185,7 +183,6 @@ class NodeTransformer(zuice.Base):
         self_ref = js.ref(self_name)
         
         declare_self = js.var(self_name, js.obj({}))
-        declarations = [js.var(name) for name in declared_names]
         execute_body = self._transform_class_body(class_definition.body, renamed_methods)
         assign_attrs = [
             js.assign_statement(
@@ -206,7 +203,6 @@ class NodeTransformer(zuice.Base):
         
         body = (
             [declare_self] +
-            declarations +
             execute_body +
             assign_attrs +
             call_init + 
@@ -226,7 +222,7 @@ class NodeTransformer(zuice.Base):
         method_definitions = []
         
         for statement in body:
-            if isinstance(statement, nodes.FunctionDef):
+            if isinstance(statement, cc.FunctionDefinition):
                 unique_name = self._unique_name(statement.name)
                 renamed_methods[statement.name] = unique_name
                 function = self.transform(statement)
@@ -244,7 +240,7 @@ class NodeTransformer(zuice.Base):
     
     
     def _transform_class_body_statement(self, statement, renamed_methods):
-        if isinstance(statement, nodes.FunctionDef):
+        if isinstance(statement, cc.FunctionDefinition):
             # Compound statements are not allowed in class bodies, so we don't
             # need to recurse
             name = statement.name

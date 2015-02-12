@@ -179,7 +179,7 @@ def test_transform_function_declaration():
 @istest
 def test_transform_empty_class():
     _assert_transform(
-        nodes.class_def(
+        cc.class_(
             name="User",
             body=[],
         ),
@@ -195,18 +195,18 @@ def test_transform_empty_class():
 @istest
 def test_transform_class_with_attributes():
     _assert_transform(
-        nodes.class_def(
+        cc.class_(
             name="User",
             body=[
-                nodes.assign([nodes.ref("x")], nodes.none())
+                cc.declare("x"),
+                cc.assign(cc.ref("x"), cc.none)
             ],
         ),
         """
             User = function() {
                 var $self0 = {};
                 var x;
-                var $tmp1 = null;
-                x = $tmp1;
+                x = null;
                 $self0.x = $nope.instanceAttribute($self0, x);
                 return $self0;
             };
@@ -217,13 +217,14 @@ def test_transform_class_with_attributes():
 @istest
 def test_transform_class_with_methods():
     _assert_transform(
-        nodes.class_def(
+        cc.class_(
             name="User",
             body=[
-                nodes.func(
+                cc.declare("f"),
+                cc.func(
                     "f",
-                    nodes.args([nodes.arg("self"), nodes.arg("x")]),
-                    [],
+                    [cc.arg("self"), cc.arg("x")],
+                    [cc.ret(cc.none)],
                 )
             ],
         ),
