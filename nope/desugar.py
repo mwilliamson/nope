@@ -98,8 +98,8 @@ class Desugarrer(zuice.Base):
     
     def _except_handler(self, handler):
         return cc.except_(
-            self.desugar(handler.type),
-            self.desugar(handler.target),
+            self._desugar_or_none(handler.type),
+            self._desugar_or_none(handler.target),
             self.desugar(handler.body),
         )
     
@@ -423,6 +423,12 @@ class Desugarrer(zuice.Base):
 
     def _generate_unique_name(self, name):
         return "${}{}".format(name, next(self._unique_count))
+    
+    def _desugar_or_none(self, value):
+        if value is None:
+            return None
+        else:
+            return self.desugar(value)
 
 def _bool(value):
     return cc.call(cc.builtin("bool"), [value])

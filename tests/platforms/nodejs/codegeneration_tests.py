@@ -503,14 +503,30 @@ def test_transform_try_except_with_multiple_exception_handlers():
     )
 
 
-# TODO:
-#@istest
+@istest
 def test_transform_raise_without_exception_value():
-    # Need a surrounding try/except
     _assert_transform(
-        cc.raise_(),
+        cc.try_(
+            [cc.ret(cc.ref("x"))],
+            handlers=[
+                cc.except_(cc.ref("AssertionError"), cc.ref("error"), [cc.raise_()]),
+            ],
+        ),
         """
-            throw $error1;
+            try {
+                return x;
+            } catch ($exception0) {
+                if (($exception0.$nopeException) === ($nope.undefined)) {
+                    throw $exception0;
+                } else {
+                    if ($nope.builtins.isinstance($exception0.$nopeException, AssertionError)) {
+                        var error = $exception0.$nopeException;
+                        throw $exception0;
+                    } else {
+                        throw $exception0;
+                    }
+                }
+            }
         """,
     )
 

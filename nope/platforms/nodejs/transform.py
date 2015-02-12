@@ -57,6 +57,10 @@ class NodeTransformer(zuice.Base):
         }
         
         self._unique_name_index = 0
+        # TODO: find a nicer way of dealing with the handler stack
+        # TODO: do we need to prevent re-raise if not in the scope of a handler?
+        # or can we assume that that IR code is never generated?
+        self._handler_stack = []
     
     def transform(self, nope_node):
         node_type = type(nope_node)
@@ -299,7 +303,11 @@ class NodeTransformer(zuice.Base):
                 if handler.target is not None:
                     handler_body.append(js.var(handler.target.name, nope_exception))
                 
-                handler_body += self._transform_all(handler.body)
+                self._handler_stack.append(exception_name)
+                try:
+                    handler_body += self._transform_all(handler.body)
+                finally:
+                    self._handler_stack.pop()
                 
                 js_handler = js.if_else(
                     _call_builtin("isinstance", [nope_exception, handler_type]),
@@ -329,8 +337,11 @@ class NodeTransformer(zuice.Base):
             return js.statements(body)
     
     def _raise_statement(self, statement):
-        exception_value = self.transform(statement.value)
-        return self._generate_raise(exception_value)
+        if statement.value is None:
+            return js.throw(js.ref(self._handler_stack[-1]))
+        else:
+            exception_value = self.transform(statement.value)
+            return self._generate_raise(exception_value)
     
     def _generate_raise(self, exception_value):
         exception_name = self._unique_name("exception")
