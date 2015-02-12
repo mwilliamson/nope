@@ -44,15 +44,27 @@ class ModuleTests(object):
 @istest
 class ClassDefinitionTests(object):
     @istest
-    def test_statements_in_body_are_transformed(self):
+    def test_assignments_in_body_are_transformed(self):
         _assert_transform(
             nodes.class_def("Blah", [nodes.assign([nodes.ref("value")], nodes.none())]),
             cc.class_(
                 "Blah",
-                [
+                methods=[],
+                body=[
                     cc.declare("value"),
                     cc.assign(cc.ref("value"), cc.none),
                 ],
+            ),
+        )
+    
+    @istest
+    def test_function_definitions_in_body_are_stored_as_methods(self):
+        _assert_transform(
+            nodes.class_def("Blah", [nodes.func("f", nodes.args([]), [])]),
+            cc.class_(
+                "Blah",
+                methods=[cc.func("f", [], [cc.ret(cc.none)])],
+                body=[cc.declare("f")],
             ),
         )
 

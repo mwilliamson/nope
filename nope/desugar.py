@@ -220,8 +220,14 @@ class Desugarrer(zuice.Base):
         declared_names.remove("Self")
         declared_names.sort()
         declarations = list(map(cc.declare, sorted(declared_names)))
-        body = declarations + self.desugar(node.body)
-        return cc.class_(node.name, body)
+        
+        methods = self.desugar([child for child in node.body if isinstance(child, nodes.FunctionDef)])
+        
+        body = declarations + self.desugar([
+            child for child in node.body
+            if not isinstance(child, nodes.FunctionDef)
+        ])
+        return cc.class_(node.name, methods=methods, body=body)
     
     def _function_definition(self, node):
         declared_names = set(self._declarations.declarations_in_function(node).names())

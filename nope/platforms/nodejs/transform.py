@@ -162,7 +162,7 @@ class NodeTransformer(zuice.Base):
         
     
     def _class_definition(self, class_definition):
-        renamed_methods, method_definitions = self._transform_class_methods(class_definition.body)
+        renamed_methods, method_definitions = self._transform_class_methods(class_definition.methods)
         declared_names = set(
             node.name
             for node in class_definition.body
@@ -183,14 +183,23 @@ class NodeTransformer(zuice.Base):
         self_ref = js.ref(self_name)
         
         declare_self = js.var(self_name, js.obj({}))
-        execute_body = self._transform_class_body(class_definition.body, renamed_methods)
-        assign_attrs = [
-            js.assign_statement(
+        execute_body = self._transform_class_body(class_definition.body)
+        
+        def create_attr_assignment(name, value):
+            return js.assign_statement(
                 js.property_access(self_ref, name),
-                call_internal(["instanceAttribute"], [self_ref, js.ref(name)])
+                call_internal(["instanceAttribute"], [self_ref, value])
             )
+        
+        assign_attrs = [
+            create_attr_assignment(name, js.ref(name))
             for name in declared_names
             if name != "__init__"
+        ]
+        
+        assign_methods = [
+            create_attr_assignment(method.name, js.ref(renamed_methods[method.name]))
+            for method in class_definition.methods
         ]
         
         if "__init__" in declared_names:
@@ -205,6 +214,7 @@ class NodeTransformer(zuice.Base):
             [declare_self] +
             execute_body +
             assign_attrs +
+            assign_methods +
             call_init + 
             [return_self]
         )
@@ -217,36 +227,22 @@ class NodeTransformer(zuice.Base):
         return js.statements(method_definitions + [assign_class])
     
     
-    def _transform_class_methods(self, body):
+    def _transform_class_methods(self, methods):
         renamed_methods = {}
         method_definitions = []
         
-        for statement in body:
-            if isinstance(statement, cc.FunctionDefinition):
-                unique_name = self._unique_name(statement.name)
-                renamed_methods[statement.name] = unique_name
-                function = self.transform(statement)
-                function.name = unique_name
-                method_definitions.append(function)
+        for method in methods:
+            unique_name = self._unique_name(method.name)
+            renamed_methods[method.name] = unique_name
+            function = self.transform(method)
+            function.name = unique_name
+            method_definitions.append(function)
         
         return renamed_methods, method_definitions
     
     
-    def _transform_class_body(self, body, renamed_methods):
-        return [
-            self._transform_class_body_statement(statement, renamed_methods)
-            for statement in body
-        ]
-    
-    
-    def _transform_class_body_statement(self, statement, renamed_methods):
-        if isinstance(statement, cc.FunctionDefinition):
-            # Compound statements are not allowed in class bodies, so we don't
-            # need to recurse
-            name = statement.name
-            return js.assign_statement(js.ref(name), js.ref(renamed_methods[name]));
-        else:
-            return self.transform(statement)
+    def _transform_class_body(self, body):
+        return list(map(self.transform, body))
     
     
     def _function_def(self, func):
