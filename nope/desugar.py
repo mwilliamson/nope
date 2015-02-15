@@ -2,7 +2,7 @@ import itertools
 
 import zuice
 
-from . import nodes, visit, couscous as cc, types, returns
+from . import nodes, couscous as cc, types, returns
 from .name_declaration import DeclarationFinder
 from .modules import LocalModule
 

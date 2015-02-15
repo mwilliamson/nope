@@ -1,7 +1,6 @@
 from nose.tools import istest, assert_equal
 
 from nope import types, nodes, errors, inference, builtins, name_declaration
-from nope.inference.context import Context
 from nope.name_resolution import References
 
 from .util import (

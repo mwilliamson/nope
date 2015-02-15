@@ -2,7 +2,6 @@ import zuice
 
 from . import platforms, injection
 from .check import SourceChecker
-from .platforms import nodejs
 
 
 def check(path):

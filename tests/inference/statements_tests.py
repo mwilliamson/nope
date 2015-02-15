@@ -1,9 +1,9 @@
-from nose.tools import istest, assert_equal, assert_is
+from nose.tools import istest, assert_equal
 
 from nope import types, nodes, errors
 from nope.identity_dict import IdentityDict
 
-from .util import assert_type_mismatch, update_context
+from .util import update_context
 
 
 @istest
@@ -30,7 +30,7 @@ def function_definitions_in_statement_lists_can_be_mutually_recursive():
 def function_definitions_in_statement_lists_are_type_checked_even_if_not_invoked():
     node = nodes.func("f", args=nodes.Arguments([]), body=[nodes.ret(nodes.int_literal(42))])
     try:
-        context = _update_context([node])
+        _update_context([node])
         assert False, "Expected error"
     except errors.UnexpectedValueTypeError as error:
         assert_equal(types.int_type, error.actual)

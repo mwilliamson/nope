@@ -3,12 +3,9 @@ from nose.tools import istest, assert_equal
 
 from nope.platforms.nodejs import js
 from nope.platforms.nodejs.transform import NodeTransformer
-from nope import types, couscous as cc
-from nope.parser.typing import parse_explicit_type
-from nope.identity_dict import IdentityDict
+from nope import couscous as cc
 from nope.module_resolution import ResolvedImport
-from nope.modules import BuiltinModule, ModuleExports
-from nope.name_declaration import DeclarationFinder
+from nope.modules import BuiltinModule
 
 
 @istest

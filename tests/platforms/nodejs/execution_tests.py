@@ -1,10 +1,6 @@
-import os
-
-import tempman
-from nose.tools import istest, assert_not_equal
+from nose.tools import istest
 import zuice
 
-import nope
 from nope.platforms.nodejs import NodeJs
 from nope.platforms import nodejs
 from nope import injection

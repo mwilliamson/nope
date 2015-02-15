@@ -628,8 +628,6 @@ _standard_target_node = nodes.ref("x")
 _standard_unbound_ref = nodes.ref("unbound_ref")
 
 def _test_context(create_node):
-    declaration = name_declaration.VariableDeclarationNode("x")
-    
     is_definitely_bound = {}
     type_lookup = IdentityDict()
     

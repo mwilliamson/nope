@@ -1,4 +1,4 @@
-from nose.tools import istest, assert_equal, assert_is, assert_raises_regexp
+from nose.tools import istest, assert_equal, assert_is
 
 from nope import types, nodes, errors
 from nope.inference import ephemeral

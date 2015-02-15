@@ -1,8 +1,7 @@
 import zuice
 
 from ... import nodes, types, couscous as cc
-from ...modules import ModuleExports, BuiltinModule
-from ...name_declaration import DeclarationFinder
+from ...modules import BuiltinModule
 from ...module_resolution import ModuleResolver
 from . import js, operations
 from .internals import call_internal

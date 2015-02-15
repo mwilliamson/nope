@@ -2,7 +2,6 @@ import os
 import functools
 
 from .. import nodes, types, returns, errors, branches, builtins
-from ..lists import filter_by_type
 from . import ephemeral
 from .assignment import Assignment
 from .classes import ClassDefinitionTypeChecker

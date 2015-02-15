@@ -6,7 +6,7 @@ import zuice
 import spur
 
 from .. import testing
-from ..testing import program_path, wip
+from ..testing import program_path
 from nope import injection
 
 

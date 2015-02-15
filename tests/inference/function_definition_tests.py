@@ -1,4 +1,4 @@
-from nose.tools import istest, assert_equal, assert_is
+from nose.tools import istest, assert_equal
 
 from nope import types, nodes, errors
 
