@@ -23,6 +23,6 @@ endif
 	cd tests/platforms/nodejs/runner; npm install
 
 _virtualenv: 
-	virtualenv _virtualenv --python=python3
+	virtualenv _virtualenv --python=python3.4
 	_virtualenv/bin/pip install --upgrade pip
 	_virtualenv/bin/pip install --upgrade setuptools
