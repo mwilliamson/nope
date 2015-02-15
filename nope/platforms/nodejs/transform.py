@@ -158,7 +158,6 @@ class NodeTransformer(zuice.Base):
         value = self.transform(assignment.value)
         
         if isinstance(assignment.target, cc.AttributeAccess):
-            # TODO: test this case properly
             target = js.property_access(self.transform(assignment.target.obj), assignment.target.attr)
         else:
             target = self.transform(assignment.target)

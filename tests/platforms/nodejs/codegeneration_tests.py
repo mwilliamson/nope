@@ -276,6 +276,14 @@ def test_transform_assignment():
 
 
 @istest
+def test_transform_assignment_to_attribute_sets_property_directly():
+    _assert_transform(
+        cc.assign(cc.attr(cc.ref("x"), "y"), cc.ref("z")),
+        js.expression_statement(js.assign(js.property_access(js.ref("x"), "y"), js.ref("z"))),
+    )
+
+
+@istest
 def test_transform_return():
     _assert_transform(
         cc.ret(cc.ref("x")),
