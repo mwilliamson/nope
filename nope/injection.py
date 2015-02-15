@@ -5,6 +5,7 @@ from .check import ModuleChecker
 from .source import SourceTree, CachedSourceTree, TransformingSourceTree, FileSystemSourceTree
 from . import environment, builtins, inference, types, transformers
 from .modules import Module
+from .desugar import Desugarrer
 
 
 def create_bindings():
@@ -54,3 +55,16 @@ def _source_tree_provider(injector):
             })
         )
     )
+
+
+class CouscousTree(zuice.Base):
+    _source_tree = zuice.dependency(SourceTree)
+    _desugarrer_factory = zuice.dependency(zuice.factory(Desugarrer))
+    
+    def module(self, path):
+        module = self._source_tree.module(path)
+        if module is None:
+            return None
+        else:
+            desugarrer = self._desugarrer_factory({Module: module})
+            return desugarrer.desugar(module)

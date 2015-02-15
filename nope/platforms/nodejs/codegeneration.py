@@ -4,28 +4,24 @@ import shutil
 
 import zuice
 
-from ...source import SourceTree
 from ... import files
 from ...modules import Module
 from .transform import NodeTransformer
 from . import js, operations
 from ...walk import walk_tree
-from ...desugar import Desugarrer
+from ...injection import CouscousTree
 
 
 class CodeGenerator(zuice.Base):
-    _source_tree = zuice.dependency(SourceTree)
+    _source_tree = zuice.dependency(CouscousTree)
     _node_transformer = zuice.dependency(zuice.factory(NodeTransformer))
-    _desugarrer = zuice.dependency(zuice.factory(Desugarrer))
     
     def generate_files(self, source_path, destination_root):
         def handle_dir(path, relative_path):
             files.mkdir_p(os.path.join(destination_root, relative_path))
         
         def handle_file(path, relative_path):
-            nope_module = self._source_tree.module(path)
-            desugarrer = self._desugarrer({Module: nope_module})
-            module = desugarrer.desugar(nope_module)
+            module = self._source_tree.module(path)
             
             destination_dir = os.path.dirname(os.path.join(destination_root, relative_path))
             
