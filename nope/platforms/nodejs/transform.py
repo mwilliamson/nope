@@ -438,10 +438,6 @@ class NodeTransformer(zuice.Base):
             [self.transform(operand) for operand in operands],
         )
     
-    def _get_magic_method(self, receiver, name):
-        # TODO: get magic method through the same mechanism as self._call
-        return self._getattr(receiver, "__{}__".format(name))
-
 
     def _list_literal(self, node):
         return js.array(self._transform_all(node.elements))
