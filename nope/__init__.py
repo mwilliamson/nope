@@ -27,7 +27,6 @@ class Compiler(zuice.Base):
         
         if isinstance(platform, str):
             platform_class = platforms.find_platform_by_name(platform)
-            # TODO: remove explicit mention of nodejs. Introduce default bindings to platforms?
-            platform = self._injector.get(platform_class, {nodejs.optimise: True})
+            platform = self._injector.get(platform_class)
             
         platform.generate_code(source_path, destination_dir)

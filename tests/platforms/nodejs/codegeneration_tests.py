@@ -717,10 +717,9 @@ def test_transform_tuple_literal():
     )
 
 
-def _assert_transform(nope, expected_js, module_resolver=None, optimise=True):
+def _assert_transform(nope, expected_js, module_resolver=None):
     transformed_js = _transform_node(nope,
         module_resolver=module_resolver,
-        optimise=optimise,
     )
     _assert_node(transformed_js, expected_js)
 
@@ -734,13 +733,12 @@ def _assert_node(actual, expected_js):
         assert_equal(expected_js, actual)
 
 
-def _transform_node(nope, module_resolver=None, optimise=True):
+def _transform_node(nope, module_resolver=None):
     if module_resolver is None:
         module_resolver = FakeModuleResolver()
     
     return _transform(nope,
         module_resolver=module_resolver, 
-        optimise=optimise,
     )
     
 
@@ -773,9 +771,8 @@ def _normalise_js(js):
         raise SyntaxError("{}\nin:\n{}".format(error, js))
 
 
-def _transform(nope_node, module_resolver, optimise):
+def _transform(nope_node, module_resolver):
     transformer = NodeTransformer(
         module_resolver=module_resolver,
-        optimise=optimise,
     )
     return transformer.transform(nope_node)

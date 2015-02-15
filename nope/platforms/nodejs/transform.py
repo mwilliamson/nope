@@ -8,12 +8,8 @@ from . import js, operations
 from .internals import call_internal
 
 
-optimise = zuice.key("optimise")
-
-
 class NodeTransformer(zuice.Base):
     _module_resolver = zuice.dependency(ModuleResolver)
-    _optimise = zuice.dependency(optimise)
     
     @zuice.init
     def init(self):
@@ -64,7 +60,7 @@ class NodeTransformer(zuice.Base):
     
     def transform(self, nope_node):
         node_type = type(nope_node)
-        if self._optimise and node_type in self._optimised_transformers:
+        if node_type in self._optimised_transformers:
             result = self._optimised_transformers[node_type](nope_node)
             if result is not None:
                 return result

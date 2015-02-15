@@ -1,7 +1,6 @@
 import zuice
 
 from .codegeneration import CodeGenerator
-from .transform import optimise
 
 
 class NodeJs(zuice.Base):
