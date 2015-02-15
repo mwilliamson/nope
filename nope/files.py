@@ -19,3 +19,7 @@ def mkdir_p(path):
         os.makedirs(path)
     except FileExistsError:
         pass
+
+
+def replace_extension(filename, new_extension):
+    return filename[:filename.rindex(".")] + "." + new_extension

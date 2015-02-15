@@ -80,11 +80,7 @@ def _js_filename(python_filename):
     if python_filename == "__init__.py":
         return "index.js"
     else:
-        return _replace_extension(python_filename, "js")
-
-
-def _replace_extension(filename, new_extension):
-    return filename[:filename.rindex(".")] + "." + new_extension
+        return files.replace_extension(python_filename, "js")
 
 
 # TODO: should probably yank this from somewhere more general since it's not specific to node.js
