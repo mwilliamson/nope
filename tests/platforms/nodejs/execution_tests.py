@@ -13,7 +13,8 @@ from .runner import SingleProcessRunner
 from ...testing import wip
 
 
-@istest
+# TODO: remove if unnecessary
+#~ @istest
 def sanity_check_optimised_and_unoptimised_compilers_produce_different_output():
     with tempman.create_temp_dir() as temp_dir:
         source_dir = os.path.join(temp_dir.path, "src")
@@ -66,8 +67,9 @@ class OptimisedNodeJsExecutionTests(NodeJsExecutionTests):
         bindings.bind(nodejs.optimise).to_instance(True)
 
 
-@istest
-class UnoptimisedNodeJsExecutionTests(NodeJsExecutionTests):
-    @staticmethod
-    def create_bindings(bindings):
-        bindings.bind(nodejs.optimise).to_instance(False)
+# TODO: remove if unnecessary
+#~ @istest
+#~ class UnoptimisedNodeJsExecutionTests(NodeJsExecutionTests):
+    #~ @staticmethod
+    #~ def create_bindings(bindings):
+        #~ bindings.bind(nodejs.optimise).to_instance(False)

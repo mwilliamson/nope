@@ -3,7 +3,7 @@ from nose.tools import istest, assert_equal
 
 from nope.platforms.nodejs import js
 from nope.platforms.nodejs.transform import NodeTransformer
-from nope import nodes, types
+from nope import types, couscous as cc
 from nope.parser.typing import parse_explicit_type
 from nope.identity_dict import IdentityDict
 from nope.module_resolution import ResolvedImport
@@ -14,7 +14,7 @@ from nope.name_declaration import DeclarationFinder
 @istest
 def test_transform_module():
     _assert_transform(
-        nodes.module([nodes.expression_statement(nodes.ref("x"))]),
+        cc.module([cc.expression_statement(cc.ref("x"))], is_executable=False, exported_names=[]),
         js.statements([js.expression_statement(js.ref("x"))])
     )
 
@@ -22,17 +22,17 @@ def test_transform_module():
 @istest
 def test_transform_module_with_exports():
     _assert_transform(
-        nodes.module([
-            nodes.assign(["__all__"], nodes.list_literal([nodes.string("x")])),
-            nodes.assign(["x"], nodes.none())
-        ]),
+        cc.module([
+            cc.declare("__all__"),
+            cc.declare("x"),
+            cc.assign(cc.ref("__all__"), cc.list_literal([cc.str_literal("x")])),
+            cc.assign(cc.ref("x"), cc.none)
+        ], exported_names=["x"]),
         """
             var __all__;
             var x;
-            var $tmp0 = ["x"];
-            __all__ = $tmp0;
-            var $tmp1 = null;
-            x = $tmp1;
+            __all__ = ["x"];
+            x = null;
             $exports.x = x;
         """
     )
@@ -41,7 +41,7 @@ def test_transform_module_with_exports():
 @istest
 def test_transform_basic_import_of_top_level_module():
     _assert_transform(
-        nodes.Import([nodes.import_alias("x", None)]),
+        cc.import_([cc.import_alias("x", None)]),
         js.statements([
             js.assign_statement("x", js.call(js.ref("$require"), [js.string("x")])),
         ])
@@ -51,7 +51,7 @@ def test_transform_basic_import_of_top_level_module():
 @istest
 def test_transform_basic_import_of_module_in_package():
     _assert_transform(
-        nodes.Import([nodes.import_alias("x.y", None)]),
+        cc.import_([cc.import_alias("x.y", None)]),
         js.statements([
             js.assign_statement("x", js.call(js.ref("$require"), [js.string("x")])),
             js.assign_statement(js.property_access(js.ref("x"), "y"), js.call(js.ref("$require"), [js.string("x/y")])),
@@ -62,7 +62,7 @@ def test_transform_basic_import_of_module_in_package():
 @istest
 def test_transform_import_from_current_package():
     _assert_transform(
-        nodes.import_from(["."], [nodes.import_alias("x", None)]),
+        cc.import_from(["."], [cc.import_alias("x", None)]),
         """
             x = ($require("./")).x;
         """
@@ -72,7 +72,7 @@ def test_transform_import_from_current_package():
 @istest
 def test_transform_import_from_parent_package():
     _assert_transform(
-        nodes.import_from([".."], [nodes.import_alias("x", None)]),
+        cc.import_from([".."], [cc.import_alias("x", None)]),
         """
             x = ($require("../")).x
         """
@@ -82,9 +82,9 @@ def test_transform_import_from_parent_package():
 @istest
 def test_transform_import_from_with_multiple_names():
     _assert_transform(
-        nodes.import_from(["."], [
-            nodes.import_alias("x", None),
-            nodes.import_alias("y", None),
+        cc.import_from(["."], [
+            cc.import_alias("x", None),
+            cc.import_alias("y", None),
         ]),
         """
             x = ($require("./")).x;
@@ -96,8 +96,8 @@ def test_transform_import_from_with_multiple_names():
 @istest
 def test_transform_import_from_with_alias():
     _assert_transform(
-        nodes.import_from(["."], [
-            nodes.import_alias("x", "y"),
+        cc.import_from(["."], [
+            cc.import_alias("x", "y"),
         ]),
         """
             y = ($require("./")).x
@@ -108,7 +108,7 @@ def test_transform_import_from_with_alias():
 @istest
 def test_transform_import_from_child_package():
     _assert_transform(
-        nodes.import_from([".", "x"], [nodes.import_alias("y", None)]),
+        cc.import_from([".", "x"], [cc.import_alias("y", None)]),
         """
             y = ($require("./x")).y
         """
@@ -118,7 +118,7 @@ def test_transform_import_from_child_package():
 @istest
 def test_transform_import_module_from_absolute_package():
     _assert_transform(
-        nodes.import_from(["x"], [nodes.import_alias("y", None)]),
+        cc.import_from(["x"], [cc.import_alias("y", None)]),
         """
             y = ($require("x")).y;
         """
@@ -128,7 +128,7 @@ def test_transform_import_module_from_absolute_package():
 @istest
 def test_transform_import_value_from_absolute_package():
     _assert_transform(
-        nodes.import_from(["x"], [nodes.import_alias("y", None)]),
+        cc.import_from(["x"], [cc.import_alias("y", None)]),
         """
             y = $require("x/y");
         """,
@@ -142,7 +142,7 @@ def test_transform_import_value_from_absolute_package():
 def test_transform_import_builtin_module():
     module = BuiltinModule("cgi", None)
     _assert_transform(
-        nodes.Import([nodes.import_alias("cgi", None)]),
+        cc.import_([cc.import_alias("cgi", None)]),
         """
             cgi = $require("__builtins/cgi");
         """,
@@ -155,7 +155,7 @@ def test_transform_import_builtin_module():
 @istest
 def test_transform_expression_statement():
     _assert_transform(
-        nodes.expression_statement(nodes.ref("x")),
+        cc.expression_statement(cc.ref("x")),
         js.expression_statement(js.ref("x"))
     )
 
@@ -163,13 +163,10 @@ def test_transform_expression_statement():
 @istest
 def test_transform_function_declaration():
     _assert_transform(
-        nodes.typed(
-            parse_explicit_type("object, object -> object"),
-            nodes.func(
-                name="f",
-                args=nodes.args([nodes.arg("x"), nodes.arg("y")]),
-                body=[nodes.ret(nodes.ref("x"))],
-            )
+        cc.func(
+            name="f",
+            args=[cc.arg("x"), cc.arg("y")],
+            body=[cc.ret(cc.ref("x"))],
         ),
         js.function_declaration(
             name="f",
@@ -180,81 +177,11 @@ def test_transform_function_declaration():
 
 
 @istest
-def test_function_without_explicit_return_on_all_paths_returns_null_at_end():
-    _assert_transform(
-        nodes.typed(
-            parse_explicit_type("-> none"),
-            nodes.func(
-                name="f",
-                args=nodes.args([]),
-                body=[
-                    nodes.if_else(
-                        nodes.ref("x"),
-                        [nodes.ret(nodes.none())],
-                        []
-                    ),
-                ],
-            )
-        ),
-        """
-        function f() {
-            if ($nope.builtins.bool(x)) {
-                return null;
-            }
-            return null;
-        }
-        """
-    )
-
-
-@istest
-def test_transform_function_declaration_declares_variables_at_top_of_function():
-    _assert_transform(
-        nodes.typed(
-            parse_explicit_type("-> none"),
-            nodes.func(
-                name="f",
-                args=nodes.args([]),
-                body=[nodes.assign(["x"], nodes.ref("y"))],
-            ),
-        ),
-        """
-            function f() {
-                var x;
-                var $tmp0 = y;
-                x = $tmp0;
-                return null;
-            }
-        """
-    )
-
-
-@istest
-def test_transform_function_declaration_does_not_redeclare_variables_with_same_name_as_argument():
-    _assert_transform(
-        nodes.typed(
-            parse_explicit_type("-> none"),
-            nodes.func(
-                name="f",
-                args=nodes.args([nodes.arg("x")]),
-                body=[nodes.assign(["x"], nodes.ref("y"))],
-            ),
-        ),
-        """
-            function f(x) {
-                var $tmp0 = y;
-                x = $tmp0;
-                return null;
-            }
-        """
-    )
-
-
-@istest
 def test_transform_empty_class():
     _assert_transform(
-        nodes.class_def(
+        cc.class_(
             name="User",
+            methods=[],
             body=[],
         ),
         """
@@ -269,18 +196,19 @@ def test_transform_empty_class():
 @istest
 def test_transform_class_with_attributes():
     _assert_transform(
-        nodes.class_def(
+        cc.class_(
             name="User",
+            methods=[],
             body=[
-                nodes.assign([nodes.ref("x")], nodes.none())
+                cc.declare("x"),
+                cc.assign(cc.ref("x"), cc.none)
             ],
         ),
         """
             User = function() {
                 var $self0 = {};
                 var x;
-                var $tmp1 = null;
-                x = $tmp1;
+                x = null;
                 $self0.x = $nope.instanceAttribute($self0, x);
                 return $self0;
             };
@@ -291,15 +219,16 @@ def test_transform_class_with_attributes():
 @istest
 def test_transform_class_with_methods():
     _assert_transform(
-        nodes.class_def(
+        cc.class_(
             name="User",
-            body=[
-                nodes.func(
+            methods=[
+                cc.func(
                     "f",
-                    nodes.args([nodes.arg("self"), nodes.arg("x")]),
-                    [],
+                    [cc.arg("self"), cc.arg("x")],
+                    [cc.ret(cc.none)],
                 )
             ],
+            body=[]
         ),
         """
             function $f0(self, x) {
@@ -307,9 +236,7 @@ def test_transform_class_with_methods():
             }
             User = function() {
                 var $self1 = {};
-                var f;
-                f = $f0;
-                $self1.f = $nope.instanceAttribute($self1, f);
+                $self1.f = $nope.instanceAttribute($self1, $f0);
                 return $self1;
             };
         """
@@ -318,83 +245,43 @@ def test_transform_class_with_methods():
 
 @istest
 def test_transform_class_with_init_method():
-    class_node = nodes.class_def(
+    class_node = cc.class_(
         name="User",
-        body=[
-            nodes.func(
+        methods=[
+            cc.func(
                 "__init__",
-                nodes.args([nodes.arg("self"), nodes.arg("x")]),
+                [cc.arg("self"), cc.arg("x")],
                 [],
             )
         ],
+        body=[],
     )
-    class_type = types.scalar_type("User")
-    meta_type = types.meta_type(class_type, [
-        types.attr("__call__", types.func([types.str_type], types.none_type)),
-    ])
-    type_lookup = types.TypeLookup(IdentityDict([
-        (class_node, meta_type)
-    ]))
     _assert_transform(
         class_node,
         """
             function $__init__0(self, x) {
-                return null;
             }
             User = function($arg1) {
                 var $self2 = {};
-                var __init__;
-                __init__ = $__init__0;
-                __init__($self2, $arg1);
+                $__init__0($self2, $arg1);
                 return $self2;
             };
         """,
-        type_lookup=type_lookup
     )
 
 
 @istest
-def test_transform_single_assignment():
+def test_transform_assignment():
     _assert_transform(
-        nodes.assign(["x"], nodes.ref("z")),
-        """
-            var $tmp0 = z;
-            x = $tmp0;
-        """
-    )
-
-
-@istest
-def test_transform_compound_assignments():
-    _assert_transform(
-        nodes.assign(["x", "y"], nodes.ref("z")),
-        js.statements([
-            js.var("$tmp0", js.ref("z")),
-            js.assign_statement("x", js.ref("$tmp0")),
-            js.assign_statement("y", js.ref("$tmp0")),
-        ]),
-    )
-
-
-@istest
-def test_tuple_assignment():
-    _assert_transform(
-        nodes.assign(
-            [nodes.tuple_literal([nodes.ref("x"), nodes.ref("y")])],
-            nodes.ref("z")
-        ),
-        """
-            var $tmp0 = z;
-            x = $tmp0[0];
-            y = $tmp0[1];
-        """
+        cc.assign(cc.ref("x"), cc.ref("z")),
+        js.expression_statement(js.assign(js.ref("x"), js.ref("z"))),
     )
 
 
 @istest
 def test_transform_return():
     _assert_transform(
-        nodes.ret(nodes.ref("x")),
+        cc.ret(cc.ref("x")),
         js.ret(js.ref("x"))
     )
 
@@ -402,13 +289,13 @@ def test_transform_return():
 @istest
 def test_transform_if_else():
     _assert_transform(
-        nodes.if_else(
-            nodes.ref("x"),
-            [nodes.ret(nodes.ref("y"))],
-            [nodes.ret(nodes.ref("z"))],
+        cc.if_(
+            cc.ref("x"),
+            [cc.ret(cc.ref("y"))],
+            [cc.ret(cc.ref("z"))],
         ),
         js.if_else(
-            js.call(js.ref("$nope.builtins.bool"), [js.ref("x")]),
+            js.ref("x"),
             [js.ret(js.ref("y"))],
             [js.ret(js.ref("z"))],
         )
@@ -418,47 +305,21 @@ def test_transform_if_else():
 @istest
 def test_transform_while_loop():
     _assert_transform(
-        nodes.while_loop(
-            nodes.ref("x"),
-            [nodes.ret(nodes.ref("y"))],
+        cc.while_(
+            cc.ref("x"),
+            [cc.ret(cc.ref("y"))],
         ),
         js.while_loop(
-            js.call(js.ref("$nope.builtins.bool"), [js.ref("x")]),
+            js.ref("x"),
             [js.ret(js.ref("y"))],
         )
     )
 
 
 @istest
-def test_transform_for_loop():
-    _assert_transform(
-        nodes.for_loop(
-            nodes.ref("x"),
-            nodes.ref("xs"),
-            [nodes.ret(nodes.ref("x"))],
-        ),
-        js.statements([
-            js.var("$iterator0", js.call(js.ref("$nope.builtins.iter"), [js.ref("xs")])),
-            js.var("$element1"),
-            js.while_loop(
-                js.binary_operation(
-                    "!==",
-                    js.assign("$element1", js.call(js.ref("$nope.builtins.next"), [js.ref("$iterator0"), js.ref("$nope.loopSentinel")])),
-                    js.ref("$nope.loopSentinel"),
-                ),
-                [
-                    js.assign_statement(js.ref("x"), js.ref("$element1")),
-                    js.ret(js.ref("x")),
-                ],
-            ),
-        ])
-    )
-
-
-@istest
 def test_transform_break():
     _assert_transform(
-        nodes.break_statement(),
+        cc.break_,
         js.break_statement(),
     )
 
@@ -466,7 +327,7 @@ def test_transform_break():
 @istest
 def test_transform_continue():
     _assert_transform(
-        nodes.continue_statement(),
+        cc.continue_,
         js.continue_statement(),
     )
 
@@ -474,8 +335,8 @@ def test_transform_continue():
 @istest
 def test_transform_try_with_empty_finally_body():
     _assert_transform(
-        nodes.try_statement(
-            [nodes.ret(nodes.ref("x"))],
+        cc.try_(
+            [cc.ret(cc.ref("x"))],
             finally_body=[],
         ),
         """
@@ -487,9 +348,9 @@ def test_transform_try_with_empty_finally_body():
 @istest
 def test_transform_try_finally():
     _assert_transform(
-        nodes.try_statement(
-            [nodes.ret(nodes.ref("x"))],
-            finally_body=[nodes.ret(nodes.ref("y"))],
+        cc.try_(
+            [cc.ret(cc.ref("x"))],
+            finally_body=[cc.ret(cc.ref("y"))],
         ),
         """
             try {
@@ -504,10 +365,10 @@ def test_transform_try_finally():
 @istest
 def test_transform_try_except_with_no_name():
     _assert_transform(
-        nodes.try_statement(
-            [nodes.ret(nodes.ref("x"))],
+        cc.try_(
+            [cc.ret(cc.ref("x"))],
             handlers=[
-                nodes.except_handler(None, None, [nodes.ret(nodes.ref("y"))]),
+                cc.except_(None, None, [cc.ret(cc.ref("y"))]),
             ],
         ),
         """
@@ -531,10 +392,10 @@ def test_transform_try_except_with_no_name():
 @istest
 def test_transform_try_except_with_exception_type():
     _assert_transform(
-        nodes.try_statement(
-            [nodes.ret(nodes.ref("x"))],
+        cc.try_(
+            [cc.ret(cc.ref("x"))],
             handlers=[
-                nodes.except_handler(nodes.ref("AssertionError"), None, [nodes.ret(nodes.ref("y"))]),
+                cc.except_(cc.ref("AssertionError"), None, [cc.ret(cc.ref("y"))]),
             ],
         ),
         """
@@ -558,10 +419,10 @@ def test_transform_try_except_with_exception_type():
 @istest
 def test_transform_try_except_with_exception_type_and_name():
     _assert_transform(
-        nodes.try_statement(
-            [nodes.ret(nodes.ref("x"))],
+        cc.try_(
+            [cc.ret(cc.ref("x"))],
             handlers=[
-                nodes.except_handler(nodes.ref("AssertionError"), "error", [nodes.ret(nodes.ref("y"))]),
+                cc.except_(cc.ref("AssertionError"), cc.ref("error"), [cc.ret(cc.ref("y"))]),
             ],
         ),
         """
@@ -586,10 +447,10 @@ def test_transform_try_except_with_exception_type_and_name():
 @istest
 def test_transform_try_with_empty_except_body():
     _assert_transform(
-        nodes.try_statement(
-            [nodes.ret(nodes.ref("x"))],
+        cc.try_(
+            [cc.ret(cc.ref("x"))],
             handlers=[
-                nodes.except_handler(nodes.ref("AssertionError"), "error", []),
+                cc.except_(cc.ref("AssertionError"), cc.ref("error"), []),
             ],
         ),
         """
@@ -613,11 +474,11 @@ def test_transform_try_with_empty_except_body():
 @istest
 def test_transform_try_except_with_multiple_exception_handlers():
     _assert_transform(
-        nodes.try_statement(
-            [nodes.ret(nodes.ref("x"))],
+        cc.try_(
+            [cc.ret(cc.ref("x"))],
             handlers=[
-                nodes.except_handler(nodes.ref("AssertionError"), None, [nodes.ret(nodes.ref("y"))]),
-                nodes.except_handler(nodes.ref("Exception"), None, [nodes.ret(nodes.ref("z"))]),
+                cc.except_(cc.ref("AssertionError"), None, [cc.ret(cc.ref("y"))]),
+                cc.except_(cc.ref("Exception"), None, [cc.ret(cc.ref("z"))]),
             ],
         ),
         """
@@ -643,9 +504,37 @@ def test_transform_try_except_with_multiple_exception_handlers():
 
 
 @istest
+def test_transform_raise_without_exception_value():
+    _assert_transform(
+        cc.try_(
+            [cc.ret(cc.ref("x"))],
+            handlers=[
+                cc.except_(cc.ref("AssertionError"), cc.ref("error"), [cc.raise_()]),
+            ],
+        ),
+        """
+            try {
+                return x;
+            } catch ($exception0) {
+                if (($exception0.$nopeException) === ($nope.undefined)) {
+                    throw $exception0;
+                } else {
+                    if ($nope.builtins.isinstance($exception0.$nopeException, AssertionError)) {
+                        var error = $exception0.$nopeException;
+                        throw $exception0;
+                    } else {
+                        throw $exception0;
+                    }
+                }
+            }
+        """,
+    )
+
+
+@istest
 def test_transform_raise_with_exception_value():
     _assert_transform(
-        nodes.raise_statement(nodes.ref("error")),
+        cc.raise_(cc.ref("error")),
         """
             var $exception0 = error;
             var $error1 = new $nope.Error();
@@ -659,244 +548,95 @@ def test_transform_raise_with_exception_value():
 
 
 @istest
-def test_transform_with_statement_with_no_target():
-    _assert_transform(
-        nodes.with_statement(nodes.ref("manager"), None, [nodes.ret(nodes.ref("x"))]),
-        """
-            var $manager1 = manager;
-            var $exit2 = $nope.builtins.getattr($manager1, "__exit__");
-            var $hasExited4 = false;
-            $nope.builtins.getattr($manager1, "__enter__")();
-            try {
-                return x;
-            } catch ($error3) {
-                var $exception0 = $error3.$nopeException;
-                $hasExited4 = true;
-                if (!($nope.builtins.bool($exit2($nope.builtins.type($exception0), $exception0, null)))) {
-                    throw $error3;
-                }
-                
-            } finally {
-                if (!($hasExited4)) {
-                    $exit2(null, null, null);
-                }
-            }
-        """,
-    )
-
-
-@istest
-def test_transform_with_statement_with_target():
-    _assert_transform(
-        nodes.with_statement(nodes.ref("manager"), nodes.ref("value"), [nodes.ret(nodes.ref("x"))]),
-        """
-            var $manager1 = manager;
-            var $exit2 = $nope.builtins.getattr($manager1, "__exit__");
-            var $hasExited4 = false;
-            value = $nope.builtins.getattr($manager1, "__enter__")();
-            try {
-                return x;
-            } catch ($error3) {
-                var $exception0 = $error3.$nopeException;
-                $hasExited4 = true;
-                if (!($nope.builtins.bool($exit2($nope.builtins.type($exception0), $exception0, null)))) {
-                    throw $error3;
-                }
-                
-            } finally {
-                if (!($hasExited4)) {
-                    $exit2(null, null, null);
-                }
-            }
-        """,
-    )
-
-
-@istest
 def test_transform_call_with_positional_arguments():
-    func_node = nodes.ref("f")
-    type_lookup = types.TypeLookup(IdentityDict([
-        (func_node, types.func(
-            [types.str_type, types.str_type],
-            types.none_type
-        ))
-    ]))
-    
     _assert_transform(
-        nodes.call(func_node, [nodes.ref("x"), nodes.ref("y")]),
+        cc.call(cc.ref("f"), [cc.ref("x"), cc.ref("y")]),
         js.call(js.ref("f"), [js.ref("x"), js.ref("y")]),
-        type_lookup=type_lookup,
     )
 
 
 @istest
-def test_transform_call_with_keyword_arguments():
-    func_node = nodes.ref("f")
-    type_lookup = types.TypeLookup(IdentityDict([
-        (func_node, types.func(
-            [
-                types.func_arg("first", types.str_type),
-                types.func_arg("second", types.str_type),
-            ],
-            types.none_type
-        ))
-    ]))
-    
+def test_transform_attribute_access():
     _assert_transform(
-        nodes.call(func_node, [], {"first": nodes.ref("x"), "second": nodes.ref("y")}),
-        js.call(js.ref("f"), [js.ref("x"), js.ref("y")]),
-        type_lookup=type_lookup,
-    )
-
-
-@istest
-def test_transform_call_with_optional_positional_argument():
-    func_node = nodes.ref("f")
-    type_lookup = types.TypeLookup(IdentityDict([
-        (func_node, types.func(
-            [types.str_type, types.func_arg(None, types.str_type, optional=True)],
-            types.none_type
-        ))
-    ]))
-    
-    _assert_transform(
-        nodes.call(func_node, [nodes.ref("x")]),
-        js.call(js.ref("f"), [js.ref("x"), js.null]),
-        type_lookup=type_lookup,
-    )
-
-
-@istest
-def test_transform_call_magic_method():
-    func_node = nodes.ref("str")
-    type_lookup = types.TypeLookup(IdentityDict([
-        (func_node, types.str_meta_type)
-    ]))
-    
-    _assert_transform(
-        nodes.call(func_node, [nodes.ref("x")]),
-        """$nope.builtins.getattr(str, "__call__")(x);""",
-        type_lookup=type_lookup,
-    )
-
-
-@istest
-def test_transform_property_access():
-    _assert_transform(
-        nodes.attr(nodes.ref("x"), "y"),
+        cc.attr(cc.ref("x"), "y"),
         js.call(js.ref("$nope.builtins.getattr"), [js.ref("x"), js.string("y")])
     )
 
-
-@istest
-def test_transform_getitem_subscript():
-    _assert_transform(
-        nodes.subscript(nodes.ref("x"), nodes.ref("y")),
-        js.call(js.ref("$nope.operators.getitem"), [js.ref("x"), js.ref("y")])
-    )
-
-
-@istest
-def test_transform_setitem_subscript():
-    _assert_transform(
-        nodes.assign([nodes.subscript(nodes.ref("x"), nodes.ref("y"))], nodes.ref("z")),
-        """
-            var $tmp0 = z;
-            $nope.operators.setitem(x, y, $tmp0);
-        """
-    )
-
-
-@istest
-def test_transform_binary_operation():
-    _assert_transform(
-        nodes.add(nodes.ref("x"), nodes.ref("y")),
-        js.call(js.ref("$nope.operators.add"), [js.ref("x"), js.ref("y")])
-    )
-
-
-@istest
-def test_normal_js_addition_is_used_if_both_operands_are_ints_and_optimise_is_true():
-    left = nodes.ref("x")
-    right = nodes.ref("y")
-    
-    type_lookup = types.TypeLookup(IdentityDict([
-        (left, types.int_type),
-        (right, types.int_type),
-    ]))
-    
-    def assert_transform(expected_js, optimise):
-        _assert_transform(
-            nodes.add(left, right),
-            expected_js,
-            type_lookup=type_lookup,
-            optimise=optimise,
-        )
-    
-    assert_transform(js.binary_operation("+", js.ref("x"), js.ref("y")), optimise=True)
-    assert_transform(js.call(js.ref("$nope.operators.add"), [js.ref("x"), js.ref("y")]), optimise=False)
-    
-    # Doing this in the same test to make sure all arguments except optimise are the same
+# TODO:
+#~ @istest
+#~ def test_normal_js_addition_is_used_if_both_operands_are_ints_and_optimise_is_true():
+    #~ left = nodes.ref("x")
+    #~ right = nodes.ref("y")
+    #~ 
+    #~ type_lookup = types.TypeLookup(IdentityDict([
+        #~ (left, types.int_type),
+        #~ (right, types.int_type),
+    #~ ]))
+    #~ 
+    #~ def assert_transform(expected_js, optimise):
+        #~ _assert_transform(
+            #~ nodes.add(left, right),
+            #~ expected_js,
+            #~ type_lookup=type_lookup,
+            #~ optimise=optimise,
+        #~ )
+    #~ 
+    #~ assert_transform(js.binary_operation("+", js.ref("x"), js.ref("y")), optimise=True)
+    #~ assert_transform(js.call(js.ref("$nope.operators.add"), [js.ref("x"), js.ref("y")]), optimise=False)
+    #~ 
+    #~ # Doing this in the same test to make sure all arguments except optimise are the same
     
 
-@istest
-def test_normal_binary_operation_if_only_one_side_is_int():
-    x = nodes.ref("x")
-    y = nodes.ref("y")
-    
-    type_lookup = types.TypeLookup(IdentityDict([
-        (x, types.int_type),
-        (y, types.object_type),
-    ]))
-    
-    _assert_transform(
-        nodes.add(x, y),
-        js.call(js.ref("$nope.operators.add"), [js.ref("x"), js.ref("y")]),
-        type_lookup=type_lookup,
-    )
-    
-    _assert_transform(
-        nodes.add(y, x),
-        js.call(js.ref("$nope.operators.add"), [js.ref("y"), js.ref("x")]),
-        type_lookup=type_lookup,
-    )
+#~ @istest
+#~ def test_normal_binary_operation_if_only_one_side_is_int():
+    #~ x = nodes.ref("x")
+    #~ y = nodes.ref("y")
+    #~ 
+    #~ type_lookup = types.TypeLookup(IdentityDict([
+        #~ (x, types.int_type),
+        #~ (y, types.object_type),
+    #~ ]))
+    #~ 
+    #~ _assert_transform(
+        #~ nodes.add(x, y),
+        #~ js.call(js.ref("$nope.operators.add"), [js.ref("x"), js.ref("y")]),
+        #~ type_lookup=type_lookup,
+    #~ )
+    #~ 
+    #~ _assert_transform(
+        #~ nodes.add(y, x),
+        #~ js.call(js.ref("$nope.operators.add"), [js.ref("y"), js.ref("x")]),
+        #~ type_lookup=type_lookup,
+    #~ )
 
 
-@istest
-def test_transform_unary_operation():
-    _assert_transform(
-        nodes.neg(nodes.ref("x")),
-        js.call(js.ref("$nope.operators.neg"), [js.ref("x")])
-    )
-
-
-@istest
-def test_normal_javascript_negation_is_used_if_operand_is_int():
-    x = nodes.ref("x")
-    
-    type_lookup = types.TypeLookup(IdentityDict([
-        (x, types.int_type),
-    ]))
-    
-    _assert_transform(
-        nodes.neg(x),
-        js.unary_operation("-", js.ref("x")),
-        type_lookup=type_lookup,
-    )
+#~ @istest
+#~ def test_normal_javascript_negation_is_used_if_operand_is_int():
+    #~ x = nodes.ref("x")
+    #~ 
+    #~ type_lookup = types.TypeLookup(IdentityDict([
+        #~ (x, types.int_type),
+    #~ ]))
+    #~ 
+    #~ _assert_transform(
+        #~ nodes.neg(x),
+        #~ js.unary_operation("-", js.ref("x")),
+        #~ type_lookup=type_lookup,
+    #~ )
 
 
 @istest
 def test_transform_boolean_not():
     _assert_transform(
-        nodes.bool_not(nodes.ref("x")),
-        js.unary_operation("!", js.call(js.ref("$nope.builtins.bool"), [js.ref("x")]))
+        cc.not_(cc.ref("x")),
+        js.unary_operation("!", js.ref("x")),
     )
 
 
 @istest
 def test_transform_boolean_and():
     _assert_transform(
-        nodes.bool_and(nodes.ref("x"), nodes.ref("y")),
+        cc.and_(cc.ref("x"), cc.ref("y")),
         js.call(js.ref("$nope.booleanAnd"), [js.ref("x"), js.ref("y")]),
     )
 
@@ -904,7 +644,7 @@ def test_transform_boolean_and():
 @istest
 def test_transform_boolean_or():
     _assert_transform(
-        nodes.bool_or(nodes.ref("x"), nodes.ref("y")),
+        cc.or_(cc.ref("x"), cc.ref("y")),
         js.call(js.ref("$nope.booleanOr"), [js.ref("x"), js.ref("y")]),
     )
 
@@ -912,7 +652,7 @@ def test_transform_boolean_or():
 @istest
 def test_transform_is_operation():
     _assert_transform(
-        nodes.is_(nodes.ref("x"), nodes.ref("y")),
+        cc.is_(cc.ref("x"), cc.ref("y")),
         js.binary_operation("===", js.ref("x"), js.ref("y"))
     )
 
@@ -920,15 +660,23 @@ def test_transform_is_operation():
 @istest
 def test_transform_variable_reference():
     _assert_transform(
-        nodes.ref("x"),
+        cc.ref("x"),
         js.ref("x")
+    )
+
+
+@istest
+def test_transform_builtin_reference():
+    _assert_transform(
+        cc.builtin("x"),
+        js.ref("$nope.builtins.x")
     )
 
 
 @istest
 def test_transform_none_expression():
     _assert_transform(
-        nodes.none(),
+        cc.none,
         js.null
     )
 
@@ -936,11 +684,11 @@ def test_transform_none_expression():
 @istest
 def test_transform_boolean_expression():
     _assert_transform(
-        nodes.boolean(True),
+        cc.true,
         js.boolean(True)
     )
     _assert_transform(
-        nodes.boolean(False),
+        cc.false,
         js.boolean(False)
     )
 
@@ -948,7 +696,7 @@ def test_transform_boolean_expression():
 @istest
 def test_transform_string_expression():
     _assert_transform(
-        nodes.string("hello"),
+        cc.str_literal("hello"),
         js.string("hello")
     )
 
@@ -956,7 +704,7 @@ def test_transform_string_expression():
 @istest
 def test_transform_int_expression():
     _assert_transform(
-        nodes.int(42),
+        cc.int_literal(42),
         js.number(42),
     )
 
@@ -964,22 +712,13 @@ def test_transform_int_expression():
 @istest
 def test_transform_tuple_literal():
     _assert_transform(
-        nodes.tuple_literal([nodes.int(42), nodes.int(1)]),
+        cc.tuple_literal([cc.int_literal(42), cc.int_literal(1)]),
         """$nope.jsArrayToTuple([42, 1])"""
     )
 
 
-@istest
-def test_transform_slice():
-    _assert_transform(
-        nodes.slice(nodes.ref("x"), nodes.ref("y"), nodes.none()),
-        "$nope.builtins.slice(x, y, null)",
-    )
-
-
-def _assert_transform(nope, expected_js, type_lookup=None, module_resolver=None, optimise=True):
+def _assert_transform(nope, expected_js, module_resolver=None, optimise=True):
     transformed_js = _transform_node(nope,
-        type_lookup=type_lookup,
         module_resolver=module_resolver,
         optimise=optimise,
     )
@@ -995,15 +734,11 @@ def _assert_node(actual, expected_js):
         assert_equal(expected_js, actual)
 
 
-def _transform_node(nope, type_lookup=None, module_resolver=None, optimise=True):
-    if type_lookup is None:
-        type_lookup = types.TypeLookup(IdentityDict())
-
+def _transform_node(nope, module_resolver=None, optimise=True):
     if module_resolver is None:
         module_resolver = FakeModuleResolver()
     
     return _transform(nope,
-        type_lookup=type_lookup,
         module_resolver=module_resolver, 
         optimise=optimise,
     )
@@ -1038,13 +773,9 @@ def _normalise_js(js):
         raise SyntaxError("{}\nin:\n{}".format(error, js))
 
 
-def _transform(nope_node, type_lookup, module_resolver, optimise):
-    declaration_finder = DeclarationFinder()
+def _transform(nope_node, module_resolver, optimise):
     transformer = NodeTransformer(
-        type_lookup=type_lookup,
         module_resolver=module_resolver,
-        module_exports=ModuleExports(declaration_finder),
-        declarations=declaration_finder,
         optimise=optimise,
     )
     return transformer.transform(nope_node)

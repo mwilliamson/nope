@@ -1,6 +1,6 @@
 import zuice
 
-from ... import nodes, returns, types
+from ... import nodes, types, couscous as cc
 from ...modules import ModuleExports, BuiltinModule
 from ...name_declaration import DeclarationFinder
 from ...module_resolution import ModuleResolver
@@ -12,50 +12,43 @@ optimise = zuice.key("optimise")
 
 
 class NodeTransformer(zuice.Base):
-    _type_lookup = zuice.dependency(types.TypeLookup)
     _module_resolver = zuice.dependency(ModuleResolver)
-    _module_exports = zuice.dependency(ModuleExports)
-    _declarations = zuice.dependency(DeclarationFinder)
     _optimise = zuice.dependency(optimise)
     
     @zuice.init
     def init(self):
         self._transformers = {
-            nodes.Module: self._module,
-            nodes.Import: self._import,
-            nodes.ImportFrom: self._import_from,
+            cc.Module: self._module,
+            cc.Import: self._import,
+            cc.ImportFrom: self._import_from,
             
-            nodes.ExpressionStatement:self. _expression_statement,
-            nodes.Assignment: self._assign,
-            nodes.ClassDefinition: self._class_definition,
-            nodes.TypeDefinition: lambda *args, **kwargs: None,
-            nodes.FunctionDef: self._function_def,
-            nodes.ReturnStatement: self._return_statement,
-            nodes.IfElse: self._if_else,
-            nodes.WhileLoop: self._while_loop,
-            nodes.ForLoop: self._for_loop,
-            nodes.BreakStatement: self._break_statement,
-            nodes.ContinueStatement: self._continue_statement,
-            nodes.TryStatement: self._try_statement,
-            nodes.RaiseStatement: self._raise_statement,
-            nodes.AssertStatement: self._assert_statement,
-            nodes.WithStatement: self._with_statement,
+            cc.ExpressionStatement:self. _expression_statement,
+            cc.VariableDeclaration: self._declare,
+            cc.Assignment: self._assign,
+            cc.ClassDefinition: self._class_definition,
+            cc.FunctionDefinition: self._function_def,
+            cc.ReturnStatement: self._return_statement,
+            cc.IfStatement: self._if_else,
+            cc.WhileLoop: self._while_loop,
+            cc.BreakStatement: self._break_statement,
+            cc.ContinueStatement: self._continue_statement,
+            cc.TryStatement: self._try_statement,
+            cc.RaiseStatement: self._raise_statement,
+            cc.Statements: self._statements,
             
-            nodes.Call: self._call,
-            nodes.AttributeAccess: self._attr,
-            nodes.BinaryOperation: self._binary_operation,
-            nodes.UnaryOperation: self._unary_operation,
-            nodes.Subscript: self._subscript,
-            nodes.Slice: self._slice,
-            nodes.VariableReference: _ref,
-            nodes.NoneLiteral: _none,
-            nodes.BooleanLiteral: _bool,
-            nodes.IntLiteral: _int,
-            nodes.StringLiteral: _str,
-            nodes.ListLiteral: self._list_literal,
-            nodes.TupleLiteral: self._tuple_literal,
-            
-            ConvertedNode: lambda node: node.js_node,
+            cc.Call: self._call,
+            cc.AttributeAccess: self._attr,
+            cc.BinaryOperation: self._binary_operation,
+            cc.UnaryOperation: self._unary_operation,
+            cc.VariableReference: _ref,
+            cc.BuiltinReference: _builtin_ref,
+            cc.InternalReference: _internal_ref,
+            cc.NoneLiteral: _none,
+            cc.BooleanLiteral: _bool,
+            cc.IntLiteral: _int,
+            cc.StrLiteral: _str,
+            cc.ListLiteral: self._list_literal,
+            cc.TupleLiteral: self._tuple_literal,
         }
         
         self._optimised_transformers = {
@@ -64,6 +57,10 @@ class NodeTransformer(zuice.Base):
         }
         
         self._unique_name_index = 0
+        # TODO: find a nicer way of dealing with the handler stack
+        # TODO: do we need to prevent re-raise if not in the scope of a handler?
+        # or can we assume that that IR code is never generated?
+        self._handler_stack = []
     
     def transform(self, nope_node):
         node_type = type(nope_node)
@@ -72,16 +69,14 @@ class NodeTransformer(zuice.Base):
             if result is not None:
                 return result
         
-        return self._transformers[node_type](nope_node)
+        if node_type in self._transformers:
+            return self._transformers[node_type](nope_node)
+        
+        raise Exception("Could not transform node: {}".format(nope_node))
     
     def _module(self, module):
-        var_statements = [
-            js.var(name)
-            for name in sorted(self._declarations.declarations_in_module(module).names())
-        ]
-        body_statements = var_statements + self._transform_all(module.body)
-        export_names = self._module_exports.names(module)
-                
+        body_statements = self._transform_all(module.body)
+        
         export_statements = [
             js.expression_statement(
                 js.assign(
@@ -92,7 +87,7 @@ class NodeTransformer(zuice.Base):
                     js.ref(export_name)
                 )
             )
-            for export_name in export_names
+            for export_name in module.exported_names
         ]
         return js.statements(body_statements + export_statements)
 
@@ -157,56 +152,39 @@ class NodeTransformer(zuice.Base):
         return js.expression_statement(self.transform(statement.value))
 
 
+    def _declare(self, declaration):
+        if declaration.value is None:
+            return js.var(declaration.name)
+        else:
+            return js.var(declaration.name, self.transform(declaration.value))
+
+
     def _assign(self, assignment):
         value = self.transform(assignment.value)
         
-        tmp_name = self._unique_name("tmp")
-        assignments = [
-            self._create_single_assignment(target, js.ref(tmp_name))
-            for target in assignment.targets
-        ]
-        return js.statements([js.var(tmp_name, value)] + assignments)
-    
-    def _create_single_assignment(self, target, value):
-        if isinstance(target, nodes.Subscript):
-            call = self._operation(
-                "setitem",
-                [target.value, target.slice, ConvertedNode(value)]
-            )
-            return js.expression_statement(call)
-        elif isinstance(target, nodes.TupleLiteral):
-            return js.statements([
-                self._create_single_assignment(target_element, js.property_access(value, js.number(index)))
-                for index, target_element in enumerate(target.elements)
-            ])
-        # TODO: test this! Is using setattr necessary?
-        elif isinstance(target, nodes.AttributeAccess):
-            return js.assign_statement(
-                js.property_access(self.transform(target.value), target.attr),
-                value
-            )
-        elif isinstance(target, nodes.VariableReference):
-            return js.assign_statement(self.transform(target), value)
+        if isinstance(assignment.target, cc.AttributeAccess):
+            # TODO: test this case properly
+            target = js.property_access(self.transform(assignment.target.obj), assignment.target.attr)
         else:
-            raise Exception("Unhandled case")
+            target = self.transform(assignment.target)
+        
+        return js.assign_statement(target, value)
         
     
     def _class_definition(self, class_definition):
-        # TODO: come up with a more general way of detecting names that only
-        # occur at compile-time and removing them from actual output
-        declared_names = list(self._declarations.declarations_in_class(class_definition).names())
-        declared_names.remove("Self")
-        declared_names.sort()
-        
-        renamed_methods, method_definitions = self._transform_class_methods(class_definition.body)
-        
-        if "__init__" in declared_names:
-            init_type = self._type_of(class_definition).attrs.type_of("__call__")
+        renamed_methods, method_definitions = self._transform_class_methods(class_definition.methods)
+        declared_names = set(
+            node.name
+            for node in class_definition.body
+            if isinstance(node, cc.VariableDeclaration)
+        )
+        if "__init__" in renamed_methods:
+            init_method = next(method for method in class_definition.methods if method.name == "__init__")
             # The type checker should guarantee that init_type exists and
             # is a function type (a stronger constraint than simply callable)
             constructor_arg_names = [
                 self._unique_name("arg")
-                for arg in init_type.args
+                for arg_index in range(len(init_method.args) - 1)
             ]
         else:
             constructor_arg_names = []
@@ -215,20 +193,28 @@ class NodeTransformer(zuice.Base):
         self_ref = js.ref(self_name)
         
         declare_self = js.var(self_name, js.obj({}))
-        declarations = [js.var(name) for name in declared_names]
-        execute_body = self._transform_class_body(class_definition.body, renamed_methods)
-        assign_attrs = [
-            js.assign_statement(
+        execute_body = self._transform_class_body(class_definition.body)
+        
+        def create_attr_assignment(name, value):
+            return js.assign_statement(
                 js.property_access(self_ref, name),
-                call_internal(["instanceAttribute"], [self_ref, js.ref(name)])
+                call_internal(["instanceAttribute"], [self_ref, value])
             )
+        
+        assign_attrs = [
+            create_attr_assignment(name, js.ref(name))
             for name in declared_names
-            if name != "__init__"
         ]
         
-        if "__init__" in declared_names:
+        assign_methods = [
+            create_attr_assignment(method.name, js.ref(renamed_methods[method.name]))
+            for method in class_definition.methods
+            if method.name != "__init__"
+        ]
+        
+        if "__init__" in renamed_methods:
             init_args = [self_ref] + [js.ref(name) for name in constructor_arg_names]
-            call_init = [js.expression_statement(js.call(js.ref("__init__"), init_args))]
+            call_init = [js.expression_statement(js.call(js.ref(renamed_methods["__init__"]), init_args))]
         else:
             call_init = []
         
@@ -236,9 +222,9 @@ class NodeTransformer(zuice.Base):
         
         body = (
             [declare_self] +
-            declarations +
             execute_body +
             assign_attrs +
+            assign_methods +
             call_init + 
             [return_self]
         )
@@ -251,55 +237,33 @@ class NodeTransformer(zuice.Base):
         return js.statements(method_definitions + [assign_class])
     
     
-    def _transform_class_methods(self, body):
+    def _transform_class_methods(self, methods):
         renamed_methods = {}
         method_definitions = []
         
-        for statement in body:
-            if isinstance(statement, nodes.FunctionDef):
-                unique_name = self._unique_name(statement.name)
-                renamed_methods[statement.name] = unique_name
-                function = self.transform(statement)
-                function.name = unique_name
-                method_definitions.append(function)
+        for method in methods:
+            unique_name = self._unique_name(method.name)
+            renamed_methods[method.name] = unique_name
+            function = self.transform(method)
+            function.name = unique_name
+            method_definitions.append(function)
         
         return renamed_methods, method_definitions
     
     
-    def _transform_class_body(self, body, renamed_methods):
-        return [
-            self._transform_class_body_statement(statement, renamed_methods)
-            for statement in body
-        ]
-    
-    
-    def _transform_class_body_statement(self, statement, renamed_methods):
-        if isinstance(statement, nodes.FunctionDef):
-            # Compound statements are not allowed in class bodies, so we don't
-            # need to recurse
-            name = statement.name
-            return js.assign_statement(js.ref(name), js.ref(renamed_methods[name]));
-        else:
-            return self.transform(statement)
+    def _transform_class_body(self, body):
+        return list(map(self.transform, body))
     
     
     def _function_def(self, func):
-        declared_names = set(self._declarations.declarations_in_function(func).names())
-        arg_names = [arg.name for arg in func.args.args]
-        declared_names.difference_update(arg_names)
-        
-        body = [js.var(name) for name in declared_names] + self._transform_all(func.body)
-        
-        if not returns.has_unconditional_return(func.body):
-            body += [js.ret(js.null)]
+        body = self._transform_all(func.body)
         
         return js.function_declaration(
             name=func.name,
-            args=arg_names,
+            args=[arg.name for arg in func.args],
             body=body,
         )
         
-
 
     def _return_statement(self, statement):
         return js.ret(self.transform(statement.value))
@@ -307,75 +271,17 @@ class NodeTransformer(zuice.Base):
 
     def _if_else(self, statement):
         return js.if_else(
-            self._condition(statement.condition),
+            self.transform(statement.condition),
             self._transform_all(statement.true_body),
             self._transform_all(statement.false_body),
         )
     
     
     def _while_loop(self, loop):
-        condition = self._condition(loop.condition)
-        return self._loop(loop, condition, at_loop_start=[])
-        
-    
-    def _condition(self, condition):
-        return self._builtins_bool(self.transform(condition))
-    
-    
-    def _builtins_bool(self, js_condition):
-        return _call_builtin("bool", [js_condition])
-    
-    
-    def _for_loop(self, loop):
-        iterator_name = self._unique_name("iterator")
-        element_name = self._unique_name("element")
-        sentinel = js.ref("$nope.loopSentinel")
-        
-        condition = js.binary_operation(
-            "!==",
-            js.assign(element_name, _call_builtin("next", [js.ref(iterator_name), sentinel])),
-            sentinel,
+        return js.while_loop(
+            self.transform(loop.condition),
+            self._transform_all(loop.body),
         )
-        assign_loop_target = self._create_single_assignment(loop.target, js.ref(element_name))
-        
-        return js.statements([
-            js.var(iterator_name, _call_builtin("iter", [self.transform(loop.iterable)])),
-            js.var(element_name),
-            self._loop(loop, condition, at_loop_start=[assign_loop_target]),
-        ])
-    
-    def _loop(self, loop, condition, at_loop_start):
-        body = at_loop_start + self._transform_all(loop.body)
-        
-        if loop.else_body:
-            else_body = self._transform_all(loop.else_body)
-            
-            normal_exit_name = self._unique_name("normalExit")
-            normal_exit = js.ref(normal_exit_name)
-            
-            def assign_normal_exit(value):
-                return js.assign_statement(normal_exit, js.boolean(value))
-            
-            return js.statements([
-                js.var(normal_exit_name, js.boolean(True)),
-                js.while_loop(
-                    js.boolean(True),
-                    [assign_normal_exit(True)] +
-                        [js.if_else(condition, [], [js.break_statement()])] +
-                        [assign_normal_exit(False)] +
-                        body,
-                ),
-                js.if_else(
-                    normal_exit,
-                    else_body,
-                    []
-                )
-            ])
-        else:
-            return js.while_loop(
-                condition,
-                body,
-            )
     
     
     def _break_statement(self, statement):
@@ -403,7 +309,11 @@ class NodeTransformer(zuice.Base):
                 if handler.target is not None:
                     handler_body.append(js.var(handler.target.name, nope_exception))
                 
-                handler_body += self._transform_all(handler.body)
+                self._handler_stack.append(exception_name)
+                try:
+                    handler_body += self._transform_all(handler.body)
+                finally:
+                    self._handler_stack.pop()
                 
                 js_handler = js.if_else(
                     _call_builtin("isinstance", [nope_exception, handler_type]),
@@ -433,24 +343,11 @@ class NodeTransformer(zuice.Base):
             return js.statements(body)
     
     def _raise_statement(self, statement):
-        exception_value = self.transform(statement.value)
-        return self._generate_raise(exception_value)
-    
-    
-    def _assert_statement(self, statement):
-        if statement.message is None:
-            message = js.string("")
+        if statement.value is None:
+            return js.throw(js.ref(self._handler_stack[-1]))
         else:
-            message = self.transform(statement.message)
-        
-        exception_value = _call_builtin("AssertionError", [message])
-        
-        return js.if_else(
-            self._condition(statement.condition),
-            [],
-            [self._generate_raise(exception_value)],
-        )
-    
+            exception_value = self.transform(statement.value)
+            return self._generate_raise(exception_value)
     
     def _generate_raise(self, exception_value):
         exception_name = self._unique_name("exception")
@@ -487,91 +384,24 @@ class NodeTransformer(zuice.Base):
         ])
     
     
-    def _with_statement(self, statement):
-        exception_name = self._unique_name("exception")
-        manager_name = self._unique_name("manager")
-        exit_method_var_name = self._unique_name("exit")
-        error_name = self._unique_name("error")
-        has_exited_name = self._unique_name("hasExited")
-        
-        manager_ref = js.ref(manager_name)
-        
-        enter_value = js.call(self._get_magic_method(manager_ref, "enter"), [])
-        if statement.target is None:
-            enter_statement = js.expression_statement(enter_value)
-        else:
-            enter_statement = self._create_single_assignment(statement.target, enter_value)
-        
-        return js.statements([
-            js.var(manager_name, self.transform(statement.value)),
-            js.var(exit_method_var_name, self._get_magic_method(manager_ref, "exit")),
-            js.var(has_exited_name, js.boolean(False)),
-            enter_statement,
-            js.try_catch(
-                self._transform_all(statement.body),
-                error_name=error_name,
-                catch_body=[
-                    js.var(exception_name, self._get_nope_exception_from_error(js.ref(error_name))),
-                    js.assign_statement(js.ref(has_exited_name), js.boolean(True)),
-                    js.if_else(
-                        js.unary_operation("!", self._builtins_bool(js.call(js.ref(exit_method_var_name), [
-                            _call_builtin("type", [js.ref(exception_name)]),
-                            js.ref(exception_name),
-                            js.null,
-                        ]))),
-                        [js.throw(js.ref(error_name))],
-                        [],
-                    ),
-                    
-                ],
-                finally_body=[
-                    js.if_else(
-                        js.unary_operation("!", js.ref(has_exited_name)),
-                        [
-                            js.expression_statement(js.call(js.ref(exit_method_var_name), [js.null, js.null, js.null])),
-                        ],
-                        [],
-                    ),
-                ],
-            ),
-        ])
-
-
+    def _statements(self, statements):
+        return js.statements([self.transform(statement) for statement in statements.body])
+    
+    
     def _call(self, call):
-        # TODO: proper support for __call__
-        # at the moment, we only support meta-types that are directly callable e.g. str()
-        # a better solution might be have such values have a $call attribute (or similar)
-        # to avoid clashing with actual __call__ attributes
-        args = []
-        
-        call_func_type = self._type_of(call.func)
-        call_ref = call.func
-        while not types.is_func_type(call_func_type) and not types.is_generic_func(call_func_type):
-            call_func_type = call_func_type.attrs.type_of("__call__")
-            call_ref = nodes.attr(call_ref, "__call__")
-        
-        for index, formal_arg in enumerate(call_func_type.args):
-            if index < len(call.args):
-                actual_arg_node = call.args[index]
-            elif formal_arg.name in call.kwargs:
-                actual_arg_node = call.kwargs[formal_arg.name]
-            else:
-                actual_arg_node = nodes.none()
-                
-            args.append(self.transform(actual_arg_node))
-            
-        return js.call(self.transform(call_ref), args)
+        args = [self.transform(arg) for arg in call.args]
+        return js.call(self.transform(call.func), args)
 
     def _attr(self, attr):
-        return self._getattr(self.transform(attr.value), attr.attr)
+        return self._getattr(self.transform(attr.obj), attr.attr)
     
     def _binary_operation(self, operation):
-        if operation.operator == "bool_and":
+        if operation.operator == "and":
             return call_internal(
                 ["booleanAnd"],
                 [self.transform(operation.left), self.transform(operation.right)]
             )
-        elif operation.operator == "bool_or":
+        elif operation.operator == "or":
             return call_internal(
                 ["booleanOr"],
                 [self.transform(operation.left), self.transform(operation.right)]
@@ -585,7 +415,7 @@ class NodeTransformer(zuice.Base):
                 self.transform(operation.left),
                 self.transform(operation.right))
         else:
-            return self._operation(operation.operator, [operation.left, operation.right])
+            raise Exception("Unrecognised binary operator: {}".format(operation.operator))
     
     def _optimised_binary_operation(self, operation):
         if (operation.operator in operations.number and
@@ -598,10 +428,10 @@ class NodeTransformer(zuice.Base):
     
     
     def _unary_operation(self, operation):
-        if operation.operator == "bool_not":
-            return js.unary_operation("!", self._condition(operation.operand))
+        if operation.operator == "not":
+            return js.unary_operation("!", self.transform(operation.operand))
         else:
-            return self._operation(operation.operator, [operation.operand])
+            raise Exception("Unrecognised unary operator: {}".format(operation.operator))
     
     def _optimised_unnary_operation(self, operation):
         if (operation.operator in operations.number and
@@ -617,13 +447,6 @@ class NodeTransformer(zuice.Base):
     def _get_magic_method(self, receiver, name):
         # TODO: get magic method through the same mechanism as self._call
         return self._getattr(receiver, "__{}__".format(name))
-    
-    def _subscript(self, subscript):
-        return self._operation("getitem", [subscript.value, subscript.slice])
-    
-    
-    def _slice(self, node):
-        return _call_builtin("slice", self._transform_all([node.start, node.stop, node.step]))
 
 
     def _list_literal(self, node):
@@ -647,9 +470,6 @@ class NodeTransformer(zuice.Base):
         return list(filter(None, map(self.transform, nodes)))
     
     
-    def _type_of(self, node):
-        return self._type_lookup.type_of(node)
-    
     def _unique_name(self, base):
         name = "${}{}".format(base, self._unique_name_index)
         self._unique_name_index += 1
@@ -667,6 +487,14 @@ def _ref(ref):
     return js.ref(ref.name)
 
 
+def _internal_ref(ref):
+    return js.ref("$nope.{}".format(ref.name))
+
+
+def _builtin_ref(ref):
+    return js.ref("$nope.builtins.{}".format(ref.name))
+
+
 def _none(none):
     return js.null
 
@@ -681,8 +509,3 @@ def _int(node):
 
 def _str(node):
     return js.string(node.value)
-
-
-class ConvertedNode(object):
-    def __init__(self, js_node):
-        self.js_node = js_node
