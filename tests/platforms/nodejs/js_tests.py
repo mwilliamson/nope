@@ -229,6 +229,18 @@ class PrettyPrintTests(object):
             js.expression_statement(js.ref("x")),
         ])
         assert_equal("y;\nx;\n", self._dumps(statements))
+
+
+    @istest
+    def bodies_of_blocks_are_indented(self):
+        node = js.while_loop(
+            js.ref("condition"),
+            [
+                js.expression_statement(js.ref("y")),
+                js.expression_statement(js.ref("x")),
+            ]
+        )
+        assert_equal("while (condition) {\n    y;\n    x;\n}\n", self._dumps(node))
     
     def _dumps(self, node):
         return js.dumps(node, pretty_print=True)

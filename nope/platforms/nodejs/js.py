@@ -20,9 +20,15 @@ class _Writer(object):
     def __init__(self, writer, **kwargs):
         self._writer = writer
         self._pretty_print = kwargs.pop("pretty_print", True)
+        self._indentation = 0
+        self._pending_indentation = False
         assert not kwargs
     
     def write(self, value):
+        if self._pending_indentation:
+            self._writer.write(" " * (self._indentation * 4))
+            self._pending_indentation = False
+        
         self._writer.write(value)
     
     def dump(self, node):
@@ -30,7 +36,24 @@ class _Writer(object):
     
     def newline(self):
         if self._pretty_print:
-            self._writer.write("\n")
+            self.write("\n")
+            self._pending_indentation = True
+    
+    def start_block(self):
+        if self._pretty_print:
+            self.write("{")
+            self._indentation += 1
+            self.newline()
+        else:
+            self.write("{ ")
+    
+    def end_block(self):
+        if self._pretty_print:
+            self._indentation -= 1
+            self.write("}")
+            self.newline()
+        else:
+            self.write(" }")
 
 
 def _serialize_statements(obj, writer):
@@ -74,12 +97,8 @@ def _serialize_function(obj, writer, name):
             writer.write(", ")
         writer.write(arg)
     
-    writer.write(") { ")
-    
-    for statement in obj.body:
-        writer.dump(statement)
-    
-    writer.write(" }")
+    writer.write(") ")
+    _serialize_block(obj.body, writer)
 
 
 @_simple_statement
@@ -141,10 +160,10 @@ def _serialize_try_catch(obj, writer):
 
 
 def _serialize_block(statements, writer):
-    writer.write("{ ")
+    writer.start_block()
     for statement in statements:
         writer.dump(statement)
-    writer.write(" }")
+    writer.end_block()
 
 
 @_simple_statement
