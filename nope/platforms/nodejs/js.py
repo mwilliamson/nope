@@ -5,7 +5,8 @@ import dodge
 
 
 def dump(obj, fileobj):
-    _serializers[type(obj)](obj, fileobj)
+    writer = _Writer(fileobj)
+    writer.dump(obj)
 
 
 def dumps(obj):
@@ -14,205 +15,216 @@ def dumps(obj):
     return output.getvalue()
 
 
-def _serialize_statements(obj, fileobj):
+class _Writer(object):
+    def __init__(self, writer):
+        self._writer = writer
+    
+    def write(self, value):
+        self._writer.write(value)
+    
+    def dump(self, node):
+        _serializers[type(node)](node, self)
+
+
+def _serialize_statements(obj, writer):
     for statement in obj.statements:
-        dump(statement, fileobj)
+        writer.dump(statement)
 
 
-def _serialize_expression_statement(obj, fileobj):
-    dump(obj.value, fileobj)
-    fileobj.write(";")
+def _serialize_expression_statement(obj, writer):
+    writer.dump(obj.value)
+    writer.write(";")
 
 
-def _serialize_function_declaration(obj, fileobj):
-    _serialize_function(obj, fileobj, name=obj.name)
+def _serialize_function_declaration(obj, writer):
+    _serialize_function(obj, writer, name=obj.name)
 
 
-def _serialize_function_expression(obj, fileobj):
-    _serialize_function(obj, fileobj, name=None)
+def _serialize_function_expression(obj, writer):
+    _serialize_function(obj, writer, name=None)
 
 
-def _serialize_function(obj, fileobj, name):
-    fileobj.write("function")
+def _serialize_function(obj, writer, name):
+    writer.write("function")
     if name is not None:
-        fileobj.write(" ")
-        fileobj.write(name)
-    fileobj.write("(")
+        writer.write(" ")
+        writer.write(name)
+    writer.write("(")
     
     for index, arg in enumerate(obj.args):
         if index > 0:
-            fileobj.write(", ");
-        fileobj.write(arg)
+            writer.write(", ");
+        writer.write(arg)
     
-    fileobj.write(") { ")
+    writer.write(") { ")
     
     for statement in obj.body:
-        dump(statement, fileobj)
+        writer.dump(statement)
     
-    fileobj.write(" }")
+    writer.write(" }")
 
 
-def _serialize_return_statement(obj, fileobj):
-    fileobj.write("return ")
-    dump(obj.value, fileobj)
-    fileobj.write(";")
+def _serialize_return_statement(obj, writer):
+    writer.write("return ")
+    writer.dump(obj.value)
+    writer.write(";")
 
 
-def _serialize_variable_declaration(obj, fileobj):
-    fileobj.write("var ")
-    fileobj.write(obj.name)
+def _serialize_variable_declaration(obj, writer):
+    writer.write("var ")
+    writer.write(obj.name)
     
     if obj.value is not None:
-        fileobj.write(" = ")
-        dump(obj.value, fileobj)
+        writer.write(" = ")
+        writer.dump(obj.value)
     
-    fileobj.write(";")
+    writer.write(";")
 
 
-def _serialize_if_else(obj, fileobj):
-    fileobj.write("if (")
-    dump(obj.condition, fileobj)
-    fileobj.write(") ");
-    _serialize_block(obj.true_body, fileobj)
+def _serialize_if_else(obj, writer):
+    writer.write("if (")
+    writer.dump(obj.condition)
+    writer.write(") ");
+    _serialize_block(obj.true_body, writer)
     if obj.false_body:
-        fileobj.write(" else ")
-        _serialize_block(obj.false_body, fileobj)
+        writer.write(" else ")
+        _serialize_block(obj.false_body, writer)
 
 
-def _serialize_while_loop(obj, fileobj):
-    fileobj.write("while (")
-    dump(obj.condition, fileobj)
-    fileobj.write(") ")
-    _serialize_block(obj.body, fileobj)
+def _serialize_while_loop(obj, writer):
+    writer.write("while (")
+    writer.dump(obj.condition)
+    writer.write(") ")
+    _serialize_block(obj.body, writer)
 
 
-def _serialize_break_statement(obj, fileobj):
-    fileobj.write("break;")
+def _serialize_break_statement(obj, writer):
+    writer.write("break;")
 
 
-def _serialize_continue_statement(obj, fileobj):
-    fileobj.write("continue;")
+def _serialize_continue_statement(obj, writer):
+    writer.write("continue;")
 
 
-def _serialize_try_catch(obj, fileobj):
-    fileobj.write("try ")
-    _serialize_block(obj.try_body, fileobj)
+def _serialize_try_catch(obj, writer):
+    writer.write("try ")
+    _serialize_block(obj.try_body, writer)
     
     if obj.catch_body:
-        fileobj.write(" catch (")
-        fileobj.write(obj.error_name)
-        fileobj.write(") ")
-        _serialize_block(obj.catch_body, fileobj)
+        writer.write(" catch (")
+        writer.write(obj.error_name)
+        writer.write(") ")
+        _serialize_block(obj.catch_body, writer)
     
     if obj.finally_body:
-        fileobj.write(" finally ")
-        _serialize_block(obj.finally_body, fileobj)
+        writer.write(" finally ")
+        _serialize_block(obj.finally_body, writer)
 
 
-def _serialize_block(statements, fileobj):
-    fileobj.write("{ ")
+def _serialize_block(statements, writer):
+    writer.write("{ ")
     for statement in statements:
-        dump(statement, fileobj)
-    fileobj.write(" }")
+        writer.dump(statement)
+    writer.write(" }")
 
 
-def _serialize_throw(obj, fileobj):
-    fileobj.write("throw ");
-    dump(obj.value, fileobj)
-    fileobj.write(";")
+def _serialize_throw(obj, writer):
+    writer.write("throw ");
+    writer.dump(obj.value)
+    writer.write(";")
 
 
-def _serialize_assignment(obj, fileobj):
-    dump(obj.target, fileobj)
-    fileobj.write(" = ")
-    dump(obj.value, fileobj)
+def _serialize_assignment(obj, writer):
+    writer.dump(obj.target)
+    writer.write(" = ")
+    writer.dump(obj.value)
 
 
-def _serialize_property_access(obj, fileobj):
-    fileobj.write("(")
-    dump(obj.value, fileobj)
-    fileobj.write(")")
+def _serialize_property_access(obj, writer):
+    writer.write("(")
+    writer.dump(obj.value)
+    writer.write(")")
     if isinstance(obj.property, str):
-        fileobj.write(".")
-        fileobj.write(obj.property)
+        writer.write(".")
+        writer.write(obj.property)
     else:
-        fileobj.write("[")
-        dump(obj.property, fileobj)
-        fileobj.write("]")
+        writer.write("[")
+        writer.dump(obj.property)
+        writer.write("]")
 
 
-def _serialize_binary_operation(obj, fileobj):
-    fileobj.write("(")
-    dump(obj.left, fileobj)
-    fileobj.write(") ")
-    fileobj.write(obj.operator)
-    fileobj.write(" (")
-    dump(obj.right, fileobj)
-    fileobj.write(")")
+def _serialize_binary_operation(obj, writer):
+    writer.write("(")
+    writer.dump(obj.left)
+    writer.write(") ")
+    writer.write(obj.operator)
+    writer.write(" (")
+    writer.dump(obj.right)
+    writer.write(")")
 
 
-def _serialize_unary_operation(obj, fileobj):
-    fileobj.write(obj.operator)
-    fileobj.write("(")
-    dump(obj.operand, fileobj)
-    fileobj.write(")")
+def _serialize_unary_operation(obj, writer):
+    writer.write(obj.operator)
+    writer.write("(")
+    writer.dump(obj.operand)
+    writer.write(")")
 
 
-def _serialize_call(obj, fileobj):
-    dump(obj.func, fileobj)
-    fileobj.write("(")
+def _serialize_call(obj, writer):
+    writer.dump(obj.func)
+    writer.write("(")
     
     for index, arg in enumerate(obj.args):
         if index > 0:
-            fileobj.write(", ");
-        dump(arg, fileobj)
+            writer.write(", ");
+        writer.dump(arg)
     
-    fileobj.write(")")
+    writer.write(")")
     
 
-def _serialize_ref(obj, fileobj):
-    fileobj.write(obj.name)
+def _serialize_ref(obj, writer):
+    writer.write(obj.name)
 
 
-def _serialize_number(obj, fileobj):
-    fileobj.write(str(obj.value))
+def _serialize_number(obj, writer):
+    writer.write(str(obj.value))
 
 
-def _serialize_null(obj, fileobj):
-    fileobj.write("null")
+def _serialize_null(obj, writer):
+    writer.write("null")
 
 
-def _serialize_boolean(obj, fileobj):
+def _serialize_boolean(obj, writer):
     serialized_value = "true" if obj.value else "false"
-    fileobj.write(serialized_value)
+    writer.write(serialized_value)
 
 
-def _serialize_string(obj, fileobj):
-    json.dump(obj.value, fileobj)
+def _serialize_string(obj, writer):
+    json.dump(obj.value, writer)
 
 
-def _serialize_array(obj, fileobj):
-    fileobj.write("[")
+def _serialize_array(obj, writer):
+    writer.write("[")
     
     for index, arg in enumerate(obj.elements):
         if index > 0:
-            fileobj.write(", ");
-        dump(arg, fileobj)
+            writer.write(", ");
+        writer.dump(arg)
     
-    fileobj.write("]")
+    writer.write("]")
 
-def _serialize_object(obj, fileobj):
-    fileobj.write("{")
+def _serialize_object(obj, writer):
+    writer.write("{")
     
     for index, (key, value) in enumerate(obj.properties.items()):
         if index > 0:
-            fileobj.write(", ");
+            writer.write(", ");
             
-        json.dump(key, fileobj)
-        fileobj.write(": ")
-        dump(value, fileobj)
+        json.dump(key, writer)
+        writer.write(": ")
+        writer.dump(value)
         
-    fileobj.write("}")
+    writer.write("}")
 
 statements = Statements = dodge.data_class("Statements", ["statements"])
 
