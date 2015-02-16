@@ -31,7 +31,7 @@ class CodeGenerator(zuice.Base):
             with open(dest_path, "w") as dest_file:
                 _generate_prelude(dest_file, module.node.is_executable, relative_path)
                 node_transformer = self._node_transformer({Module: module})
-                js.dump(node_transformer.transform(module.node), dest_file)
+                js.dump(node_transformer.transform(module.node), dest_file, pretty_print=True)
         
         _write_nope_js(destination_root)
         _write_builtins(destination_root)

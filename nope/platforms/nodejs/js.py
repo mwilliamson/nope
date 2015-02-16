@@ -17,9 +17,10 @@ def dumps(obj, **kwargs):
 
 
 class _Writer(object):
-    def __init__(self, writer, pretty_print=None):
+    def __init__(self, writer, **kwargs):
         self._writer = writer
-        self._pretty_print = pretty_print
+        self._pretty_print = kwargs.pop("pretty_print", True)
+        assert not kwargs
     
     def write(self, value):
         self._writer.write(value)
