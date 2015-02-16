@@ -94,10 +94,10 @@ def _generate_prelude(fileobj, is_executable, relative_path):
     fileobj.write(_define_require)
     
     for builtin_name in _builtin_names:
-        builtin_assign = js.expression_statement(js.assign(
+        builtin_assign = js.var(
             builtin_name,
             js.property_access(js.ref("$nope.builtins"), builtin_name),
-        ))
+        )
         js.dump(builtin_assign, fileobj)
 
 
