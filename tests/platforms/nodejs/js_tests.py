@@ -214,3 +214,17 @@ def test_serialize_continue():
 def test_serialize_throw():
     node = js.throw(js.ref("error"))
     assert_equal("throw error;", js.dumps(node))
+
+
+@istest
+class PrettyPrintTests(object):
+    @istest
+    def statements_are_separated_by_new_lines(self):
+        statements = js.statements([
+            js.expression_statement(js.ref("y")),
+            js.expression_statement(js.ref("x")),
+        ])
+        assert_equal("y;\nx;\n", self._dumps(statements))
+    
+    def _dumps(self, node):
+        return js.dumps(node, pretty_print=True)

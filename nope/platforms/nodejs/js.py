@@ -1,29 +1,35 @@
 import io
 import json
+import functools
 
 import dodge
 
 
-def dump(obj, fileobj):
-    writer = _Writer(fileobj)
+def dump(obj, fileobj, **kwargs):
+    writer = _Writer(fileobj, **kwargs)
     writer.dump(obj)
 
 
-def dumps(obj):
+def dumps(obj, **kwargs):
     output = io.StringIO()
-    dump(obj, output)
+    dump(obj, output, **kwargs)
     return output.getvalue()
 
 
 class _Writer(object):
-    def __init__(self, writer):
+    def __init__(self, writer, pretty_print=None):
         self._writer = writer
+        self._pretty_print = pretty_print
     
     def write(self, value):
         self._writer.write(value)
     
     def dump(self, node):
         _serializers[type(node)](node, self)
+    
+    def newline(self):
+        if self._pretty_print:
+            self._writer.write("\n")
 
 
 def _serialize_statements(obj, writer):
@@ -31,9 +37,20 @@ def _serialize_statements(obj, writer):
         writer.dump(statement)
 
 
+def _simple_statement(func):
+    @functools.wraps(func)
+    def write(value, writer):
+        func(value, writer)
+        writer.write(";")
+        writer.newline()
+    
+    return write
+    
+
+
+@_simple_statement
 def _serialize_expression_statement(obj, writer):
     writer.dump(obj.value)
-    writer.write(";")
 
 
 def _serialize_function_declaration(obj, writer):
@@ -53,7 +70,7 @@ def _serialize_function(obj, writer, name):
     
     for index, arg in enumerate(obj.args):
         if index > 0:
-            writer.write(", ");
+            writer.write(", ")
         writer.write(arg)
     
     writer.write(") { ")
@@ -64,12 +81,13 @@ def _serialize_function(obj, writer, name):
     writer.write(" }")
 
 
+@_simple_statement
 def _serialize_return_statement(obj, writer):
     writer.write("return ")
     writer.dump(obj.value)
-    writer.write(";")
 
 
+@_simple_statement
 def _serialize_variable_declaration(obj, writer):
     writer.write("var ")
     writer.write(obj.name)
@@ -77,14 +95,12 @@ def _serialize_variable_declaration(obj, writer):
     if obj.value is not None:
         writer.write(" = ")
         writer.dump(obj.value)
-    
-    writer.write(";")
 
 
 def _serialize_if_else(obj, writer):
     writer.write("if (")
     writer.dump(obj.condition)
-    writer.write(") ");
+    writer.write(") ")
     _serialize_block(obj.true_body, writer)
     if obj.false_body:
         writer.write(" else ")
@@ -98,12 +114,14 @@ def _serialize_while_loop(obj, writer):
     _serialize_block(obj.body, writer)
 
 
+@_simple_statement
 def _serialize_break_statement(obj, writer):
-    writer.write("break;")
+    writer.write("break")
 
 
+@_simple_statement
 def _serialize_continue_statement(obj, writer):
-    writer.write("continue;")
+    writer.write("continue")
 
 
 def _serialize_try_catch(obj, writer):
@@ -128,10 +146,10 @@ def _serialize_block(statements, writer):
     writer.write(" }")
 
 
+@_simple_statement
 def _serialize_throw(obj, writer):
-    writer.write("throw ");
+    writer.write("throw ")
     writer.dump(obj.value)
-    writer.write(";")
 
 
 def _serialize_assignment(obj, writer):
@@ -176,7 +194,7 @@ def _serialize_call(obj, writer):
     
     for index, arg in enumerate(obj.args):
         if index > 0:
-            writer.write(", ");
+            writer.write(", ")
         writer.dump(arg)
     
     writer.write(")")
@@ -208,7 +226,7 @@ def _serialize_array(obj, writer):
     
     for index, arg in enumerate(obj.elements):
         if index > 0:
-            writer.write(", ");
+            writer.write(", ")
         writer.dump(arg)
     
     writer.write("]")
@@ -218,7 +236,7 @@ def _serialize_object(obj, writer):
     
     for index, (key, value) in enumerate(obj.properties.items()):
         if index > 0:
-            writer.write(", ");
+            writer.write(", ")
             
         json.dump(key, writer)
         writer.write(": ")
