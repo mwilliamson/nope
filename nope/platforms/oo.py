@@ -13,6 +13,15 @@ continue_statement = ContinueStatement = dodge.data_class("ContinueStatement", [
 expression_statement = ExpressionStatement = dodge.data_class("ExpressionStatement", ["value"])
 ret = ReturnStatement = dodge.data_class("ReturnStatement", ["value"])
 
+
+AssignmentExpression = dodge.data_class("AssignmentExpression", ["target", "value"])
+
+def assignment_expression(target, value):
+    if isinstance(target, str):
+        target = ref(target)
+    
+    return AssignmentExpression(target, value)
+
 property_access = PropertyAccess = dodge.data_class("PropertyAccess", ["value", "property"])
 binary_operation = BinaryOperation = dodge.data_class("BinaryOperation", ["operator", "left", "right"])
 unary_operation = UnaryOperation = dodge.data_class("UnaryOperation", ["operator", "operand"])
@@ -120,6 +129,12 @@ def _serialize_return_statement(obj, writer):
     writer.end_simple_statement()
 
 
+def _serialize_assignment_expression(obj, writer):
+    writer.dump(obj.target)
+    writer.write(" = ")
+    writer.dump(obj.value)
+
+
 def _serialize_property_access(obj, writer):
     writer.write("(")
     writer.dump(obj.value)
@@ -194,6 +209,7 @@ _default_serializers = {
     ExpressionStatement: _serialize_expression_statement,
     ReturnStatement: _serialize_return_statement,
     
+    AssignmentExpression: _serialize_assignment_expression,
     PropertyAccess: _serialize_property_access,
     BinaryOperation: _serialize_binary_operation,
     UnaryOperation: _serialize_unary_operation,

@@ -18,6 +18,7 @@ from ..oo import (
     ExpressionStatement, expression_statement,
     ReturnStatement, ret,
     
+    AssignmentExpression, assignment_expression as assign,
     PropertyAccess, property_access,
     BinaryOperation, binary_operation,
     UnaryOperation, unary_operation,
@@ -100,12 +101,6 @@ def _serialize_throw(obj, writer):
     writer.end_simple_statement()
 
 
-def _serialize_assignment(obj, writer):
-    writer.dump(obj.target)
-    writer.write(" = ")
-    writer.dump(obj.value)
-
-
 def _serialize_array(obj, writer):
     writer.write("[")
     
@@ -143,14 +138,6 @@ def try_catch(try_body, error_name=None, catch_body=None, finally_body=None):
     return TryCatch(try_body, error_name, catch_body, finally_body)
 throw = Throw = dodge.data_class("Throw", ["value"])
 
-Assignment = dodge.data_class("Assignment", ["target", "value"])
-
-def assign(target, value):
-    if isinstance(target, str):
-        target = ref(target)
-    
-    return Assignment(target, value)
-
 def assign_statement(target, value):
     return expression_statement(assign(target, value))
 
@@ -165,7 +152,6 @@ _serializers = oo.serializers({
     TryCatch: _serialize_try_catch,
     Throw: _serialize_throw,
     
-    Assignment: _serialize_assignment,
     Array: _serialize_array,
     Object: _serialize_object,
 })
