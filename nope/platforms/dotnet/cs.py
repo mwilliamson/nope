@@ -1,5 +1,8 @@
 import dodge
 
+from .. import oo
+
+
 statements = Statements = dodge.data_class("Statements", ["statements"])
 
 expression_statement = ExpressionStatement = dodge.data_class("ExpressionStatement", ["value"])
@@ -48,7 +51,7 @@ _writers = {
     
     ExpressionStatement: _write_expression_statement,
     
-    Call: _write_call,
-    VariableReference: _write_variable_reference,
-    IntegerLiteral: _write_integer_literal,
+    oo.Call: _write_call,
+    oo.VariableReference: _write_variable_reference,
+    oo.IntegerLiteral: _write_integer_literal,
 }

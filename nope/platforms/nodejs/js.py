@@ -4,6 +4,17 @@ import functools
 
 import dodge
 
+from ..oo import (
+    PropertyAccess, property_access,
+    BinaryOperation, binary_operation,
+    UnaryOperation, unary_operation,
+    Call, call,
+    VariableReference, ref,
+    Number, number, 
+    NullLiteral, null,
+    Boolean, boolean,
+    String, string)
+
 
 def dump(obj, fileobj, **kwargs):
     writer = _Writer(fileobj, **kwargs)
@@ -299,16 +310,7 @@ def assign(target, value):
 def assign_statement(target, value):
     return expression_statement(assign(target, value))
 
-property_access = PropertyAccess = dodge.data_class("PropertyAccess", ["value", "property"])
-binary_operation = BinaryOperation = dodge.data_class("BinaryOperation", ["operator", "left", "right"])
-unary_operation = UnaryOperation = dodge.data_class("UnaryOperation", ["operator", "operand"])
-call = Call = dodge.data_class("Call", ["func", "args"])
-ref = VariableReference = dodge.data_class("VariableReference", ["name"])
-number = Number = dodge.data_class("Number", ["value"])
-NullLiteral = dodge.data_class("NullLiteral", [])
-null = NullLiteral()
-boolean = Boolean = dodge.data_class("Boolean", ["value"])
-string = String = dodge.data_class("String", ["value"])
+
 array = Array = dodge.data_class("Array", ["elements"])
 obj = Object = dodge.data_class("Object", ["properties"])
 
