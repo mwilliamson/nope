@@ -17,8 +17,8 @@ string = String = dodge.data_class("String", ["value"])
 
 
 class Writer(object):
-    def __init__(self, serializers, writer, **kwargs):
-        self._writer = writer
+    def __init__(self, serializers, fileobj, **kwargs):
+        self._fileobj = fileobj
         self._serializers = serializers
         self._pretty_print = kwargs.pop("pretty_print", True)
         self._indentation = 0
@@ -27,10 +27,10 @@ class Writer(object):
     
     def write(self, value):
         if self._pending_indentation:
-            self._writer.write(" " * (self._indentation * 4))
+            self._fileobj.write(" " * (self._indentation * 4))
             self._pending_indentation = False
         
-        self._writer.write(value)
+        self._fileobj.write(value)
     
     def dump(self, node):
         self._serializers[type(node)](node, self)
