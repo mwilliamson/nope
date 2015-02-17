@@ -34,20 +34,9 @@ def _serialize_statements(obj, writer):
         writer.dump(statement)
 
 
-def _simple_statement(func):
-    @functools.wraps(func)
-    def write(value, writer):
-        func(value, writer)
-        writer.write(";")
-        writer.newline()
-    
-    return write
-    
-
-
-@_simple_statement
 def _serialize_expression_statement(obj, writer):
     writer.dump(obj.value)
+    writer.end_simple_statement()
 
 
 def _serialize_function_declaration(obj, writer):
@@ -74,13 +63,12 @@ def _serialize_function(obj, writer, name):
     _serialize_block(obj.body, writer)
 
 
-@_simple_statement
 def _serialize_return_statement(obj, writer):
     writer.write("return ")
     writer.dump(obj.value)
+    writer.end_simple_statement()
 
 
-@_simple_statement
 def _serialize_variable_declaration(obj, writer):
     writer.write("var ")
     writer.write(obj.name)
@@ -88,6 +76,8 @@ def _serialize_variable_declaration(obj, writer):
     if obj.value is not None:
         writer.write(" = ")
         writer.dump(obj.value)
+    
+    writer.end_simple_statement()
 
 
 def _serialize_if_else(obj, writer):
@@ -107,14 +97,14 @@ def _serialize_while_loop(obj, writer):
     _serialize_block(obj.body, writer)
 
 
-@_simple_statement
 def _serialize_break_statement(obj, writer):
     writer.write("break")
+    writer.end_simple_statement()
 
 
-@_simple_statement
 def _serialize_continue_statement(obj, writer):
     writer.write("continue")
+    writer.end_simple_statement()
 
 
 def _serialize_try_catch(obj, writer):
@@ -139,10 +129,10 @@ def _serialize_block(statements, writer):
     writer.end_block()
 
 
-@_simple_statement
 def _serialize_throw(obj, writer):
     writer.write("throw ")
     writer.dump(obj.value)
+    writer.end_simple_statement()
 
 
 def _serialize_assignment(obj, writer):

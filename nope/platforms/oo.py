@@ -55,6 +55,10 @@ class Writer(object):
             self.newline()
         else:
             self.write(" }")
+    
+    def end_simple_statement(self):
+        self.write(";")
+        self.newline()
 
 
 def _serialize_property_access(obj, writer):
