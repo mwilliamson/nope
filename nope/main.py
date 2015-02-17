@@ -1,7 +1,7 @@
 import argparse
 
 import nope
-from nope import textseek
+from nope import textseek, platforms
 from nope.inference import ephemeral
 
 
@@ -40,7 +40,7 @@ class CompileCommand(object):
     @staticmethod
     def create_parser(parser):
         parser.add_argument("path")
-        parser.add_argument("--backend", required=True)
+        parser.add_argument("--backend", required=True, choices=platforms.names())
         parser.add_argument("--output-dir", required=True)
     
     @staticmethod
