@@ -16,6 +16,47 @@ boolean = Boolean = dodge.data_class("Boolean", ["value"])
 string = String = dodge.data_class("String", ["value"])
 
 
+class Writer(object):
+    def __init__(self, serializers, writer, **kwargs):
+        self._writer = writer
+        self._serializers = serializers
+        self._pretty_print = kwargs.pop("pretty_print", True)
+        self._indentation = 0
+        self._pending_indentation = False
+        assert not kwargs
+    
+    def write(self, value):
+        if self._pending_indentation:
+            self._writer.write(" " * (self._indentation * 4))
+            self._pending_indentation = False
+        
+        self._writer.write(value)
+    
+    def dump(self, node):
+        self._serializers[type(node)](node, self)
+    
+    def newline(self):
+        if self._pretty_print:
+            self.write("\n")
+            self._pending_indentation = True
+    
+    def start_block(self):
+        if self._pretty_print:
+            self.write("{")
+            self._indentation += 1
+            self.newline()
+        else:
+            self.write("{ ")
+    
+    def end_block(self):
+        if self._pretty_print:
+            self._indentation -= 1
+            self.write("}")
+            self.newline()
+        else:
+            self.write(" }")
+
+
 def _serialize_property_access(obj, writer):
     writer.write("(")
     writer.dump(obj.value)

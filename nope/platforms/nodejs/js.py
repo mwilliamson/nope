@@ -6,6 +6,7 @@ import dodge
 
 from .. import oo
 from ..oo import (
+    Writer,
     PropertyAccess, property_access,
     BinaryOperation, binary_operation,
     UnaryOperation, unary_operation,
@@ -18,7 +19,7 @@ from ..oo import (
 
 
 def dump(obj, fileobj, **kwargs):
-    writer = _Writer(fileobj, **kwargs)
+    writer = Writer(_serializers, fileobj, **kwargs)
     writer.dump(obj)
 
 
@@ -26,46 +27,6 @@ def dumps(obj, **kwargs):
     output = io.StringIO()
     dump(obj, output, **kwargs)
     return output.getvalue()
-
-
-class _Writer(object):
-    def __init__(self, writer, **kwargs):
-        self._writer = writer
-        self._pretty_print = kwargs.pop("pretty_print", True)
-        self._indentation = 0
-        self._pending_indentation = False
-        assert not kwargs
-    
-    def write(self, value):
-        if self._pending_indentation:
-            self._writer.write(" " * (self._indentation * 4))
-            self._pending_indentation = False
-        
-        self._writer.write(value)
-    
-    def dump(self, node):
-        _serializers[type(node)](node, self)
-    
-    def newline(self):
-        if self._pretty_print:
-            self.write("\n")
-            self._pending_indentation = True
-    
-    def start_block(self):
-        if self._pretty_print:
-            self.write("{")
-            self._indentation += 1
-            self.newline()
-        else:
-            self.write("{ ")
-    
-    def end_block(self):
-        if self._pretty_print:
-            self._indentation -= 1
-            self.write("}")
-            self.newline()
-        else:
-            self.write(" }")
 
 
 def _serialize_statements(obj, writer):
