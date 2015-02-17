@@ -1,9 +1,10 @@
 import io
-import json
 import functools
+import json
 
 import dodge
 
+from .. import oo
 from ..oo import (
     PropertyAccess, property_access,
     BinaryOperation, binary_operation,
@@ -189,69 +190,6 @@ def _serialize_assignment(obj, writer):
     writer.dump(obj.value)
 
 
-def _serialize_property_access(obj, writer):
-    writer.write("(")
-    writer.dump(obj.value)
-    writer.write(")")
-    if isinstance(obj.property, str):
-        writer.write(".")
-        writer.write(obj.property)
-    else:
-        writer.write("[")
-        writer.dump(obj.property)
-        writer.write("]")
-
-
-def _serialize_binary_operation(obj, writer):
-    writer.write("(")
-    writer.dump(obj.left)
-    writer.write(") ")
-    writer.write(obj.operator)
-    writer.write(" (")
-    writer.dump(obj.right)
-    writer.write(")")
-
-
-def _serialize_unary_operation(obj, writer):
-    writer.write(obj.operator)
-    writer.write("(")
-    writer.dump(obj.operand)
-    writer.write(")")
-
-
-def _serialize_call(obj, writer):
-    writer.dump(obj.func)
-    writer.write("(")
-    
-    for index, arg in enumerate(obj.args):
-        if index > 0:
-            writer.write(", ")
-        writer.dump(arg)
-    
-    writer.write(")")
-    
-
-def _serialize_ref(obj, writer):
-    writer.write(obj.name)
-
-
-def _serialize_number(obj, writer):
-    writer.write(str(obj.value))
-
-
-def _serialize_null(obj, writer):
-    writer.write("null")
-
-
-def _serialize_boolean(obj, writer):
-    serialized_value = "true" if obj.value else "false"
-    writer.write(serialized_value)
-
-
-def _serialize_string(obj, writer):
-    json.dump(obj.value, writer)
-
-
 def _serialize_array(obj, writer):
     writer.write("[")
     
@@ -314,7 +252,7 @@ def assign_statement(target, value):
 array = Array = dodge.data_class("Array", ["elements"])
 obj = Object = dodge.data_class("Object", ["properties"])
 
-_serializers = {
+_serializers = oo.serializers({
     Statements: _serialize_statements,
     
     ExpressionStatement: _serialize_expression_statement,
@@ -330,15 +268,6 @@ _serializers = {
     Throw: _serialize_throw,
     
     Assignment: _serialize_assignment,
-    PropertyAccess: _serialize_property_access,
-    BinaryOperation: _serialize_binary_operation,
-    UnaryOperation: _serialize_unary_operation,
-    Call: _serialize_call,
-    VariableReference: _serialize_ref,
-    Number: _serialize_number,
-    NullLiteral: _serialize_null,
-    Boolean: _serialize_boolean,
-    String: _serialize_string,
     Array: _serialize_array,
     Object: _serialize_object,
-}
+})
