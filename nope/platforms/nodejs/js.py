@@ -7,6 +7,17 @@ import dodge
 from .. import oo
 from ..oo import (
     Writer,
+    
+    Statements, statements,
+    
+    IfElse, if_else,
+    WhileLoop, while_loop,
+    ContinueStatement, continue_statement,
+    BreakStatement, break_statement,
+    
+    ExpressionStatement, expression_statement,
+    ReturnStatement, ret,
+    
     PropertyAccess, property_access,
     BinaryOperation, binary_operation,
     UnaryOperation, unary_operation,
@@ -27,16 +38,6 @@ def dumps(obj, **kwargs):
     output = io.StringIO()
     dump(obj, output, **kwargs)
     return output.getvalue()
-
-
-def _serialize_statements(obj, writer):
-    for statement in obj.statements:
-        writer.dump(statement)
-
-
-def _serialize_expression_statement(obj, writer):
-    writer.dump(obj.value)
-    writer.end_simple_statement()
 
 
 def _serialize_function_declaration(obj, writer):
@@ -63,12 +64,6 @@ def _serialize_function(obj, writer, name):
     _serialize_block(obj.body, writer)
 
 
-def _serialize_return_statement(obj, writer):
-    writer.write("return ")
-    writer.dump(obj.value)
-    writer.end_simple_statement()
-
-
 def _serialize_variable_declaration(obj, writer):
     writer.write("var ")
     writer.write(obj.name)
@@ -77,33 +72,6 @@ def _serialize_variable_declaration(obj, writer):
         writer.write(" = ")
         writer.dump(obj.value)
     
-    writer.end_simple_statement()
-
-
-def _serialize_if_else(obj, writer):
-    writer.write("if (")
-    writer.dump(obj.condition)
-    writer.write(") ")
-    _serialize_block(obj.true_body, writer)
-    if obj.false_body:
-        writer.write(" else ")
-        _serialize_block(obj.false_body, writer)
-
-
-def _serialize_while_loop(obj, writer):
-    writer.write("while (")
-    writer.dump(obj.condition)
-    writer.write(") ")
-    _serialize_block(obj.body, writer)
-
-
-def _serialize_break_statement(obj, writer):
-    writer.write("break")
-    writer.end_simple_statement()
-
-
-def _serialize_continue_statement(obj, writer):
-    writer.write("continue")
     writer.end_simple_statement()
 
 
@@ -123,10 +91,7 @@ def _serialize_try_catch(obj, writer):
 
 
 def _serialize_block(statements, writer):
-    writer.start_block()
-    for statement in statements:
-        writer.dump(statement)
-    writer.end_block()
+    writer.dump_block(statements)
 
 
 def _serialize_throw(obj, writer):
@@ -164,28 +129,18 @@ def _serialize_object(obj, writer):
         
     writer.write("}")
 
-statements = Statements = dodge.data_class("Statements", ["statements"])
-
-expression_statement = ExpressionStatement = dodge.data_class("ExpressionStatement", ["value"])
 function_declaration = FunctionDeclaration = dodge.data_class("FunctionDeclaration", ["name", "args", "body"])
 function_expression = FunctionExpression = dodge.data_class("FunctionExpression", ["args", "body"])
-ret = ReturnStatement = dodge.data_class("ReturnStatement", ["value"])
 
 VariableDeclaration = dodge.data_class("VariableDeclaration", ["name", "value"])
 
 def var(name, value=None):
     return VariableDeclaration(name, value)
 
-if_else = IfElse = dodge.data_class("IfElse", ["condition", "true_body", "false_body"])
 TryCatch = dodge.data_class("TryCatch", ["try_body", "error_name", "catch_body", "finally_body"])
 
 def try_catch(try_body, error_name=None, catch_body=None, finally_body=None):
     return TryCatch(try_body, error_name, catch_body, finally_body)
-    
-
-while_loop = WhileLoop = dodge.data_class("WhileLoop", ["condition", "body"])
-break_statement = BreakStatement = dodge.data_class("BreakStatement", [])
-continue_statement = ContinueStatement = dodge.data_class("ContinueStatement", [])
 throw = Throw = dodge.data_class("Throw", ["value"])
 
 Assignment = dodge.data_class("Assignment", ["target", "value"])
@@ -204,17 +159,9 @@ array = Array = dodge.data_class("Array", ["elements"])
 obj = Object = dodge.data_class("Object", ["properties"])
 
 _serializers = oo.serializers({
-    Statements: _serialize_statements,
-    
-    ExpressionStatement: _serialize_expression_statement,
     FunctionDeclaration: _serialize_function_declaration,
     FunctionExpression: _serialize_function_expression,
-    ReturnStatement: _serialize_return_statement,
     VariableDeclaration: _serialize_variable_declaration,
-    IfElse: _serialize_if_else,
-    WhileLoop: _serialize_while_loop,
-    BreakStatement: _serialize_break_statement,
-    ContinueStatement: _serialize_continue_statement,
     TryCatch: _serialize_try_catch,
     Throw: _serialize_throw,
     

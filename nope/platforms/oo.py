@@ -3,6 +3,16 @@ import json
 import dodge
 
 
+statements = Statements = dodge.data_class("Statements", ["statements"])
+
+if_else = IfElse = dodge.data_class("IfElse", ["condition", "true_body", "false_body"])
+while_loop = WhileLoop = dodge.data_class("WhileLoop", ["condition", "body"])
+break_statement = BreakStatement = dodge.data_class("BreakStatement", [])
+continue_statement = ContinueStatement = dodge.data_class("ContinueStatement", [])
+
+expression_statement = ExpressionStatement = dodge.data_class("ExpressionStatement", ["value"])
+ret = ReturnStatement = dodge.data_class("ReturnStatement", ["value"])
+
 property_access = PropertyAccess = dodge.data_class("PropertyAccess", ["value", "property"])
 binary_operation = BinaryOperation = dodge.data_class("BinaryOperation", ["operator", "left", "right"])
 unary_operation = UnaryOperation = dodge.data_class("UnaryOperation", ["operator", "operand"])
@@ -40,6 +50,12 @@ class Writer(object):
             self.write("\n")
             self._pending_indentation = True
     
+    def dump_block(self, statements):
+        self.start_block()
+        for statement in statements:
+            self.dump(statement)
+        self.end_block()
+    
     def start_block(self):
         if self._pretty_print:
             self.write("{")
@@ -59,6 +75,49 @@ class Writer(object):
     def end_simple_statement(self):
         self.write(";")
         self.newline()
+
+
+def _serialize_statements(obj, writer):
+    for statement in obj.statements:
+        writer.dump(statement)
+
+
+def _serialize_if_else(obj, writer):
+    writer.write("if (")
+    writer.dump(obj.condition)
+    writer.write(") ")
+    writer.dump_block(obj.true_body)
+    if obj.false_body:
+        writer.write(" else ")
+        writer.dump_block(obj.false_body)
+
+
+def _serialize_while_loop(obj, writer):
+    writer.write("while (")
+    writer.dump(obj.condition)
+    writer.write(") ")
+    writer.dump_block(obj.body)
+
+
+def _serialize_break_statement(obj, writer):
+    writer.write("break")
+    writer.end_simple_statement()
+
+
+def _serialize_continue_statement(obj, writer):
+    writer.write("continue")
+    writer.end_simple_statement()
+
+
+def _serialize_expression_statement(obj, writer):
+    writer.dump(obj.value)
+    writer.end_simple_statement()
+
+
+def _serialize_return_statement(obj, writer):
+    writer.write("return ")
+    writer.dump(obj.value)
+    writer.end_simple_statement()
 
 
 def _serialize_property_access(obj, writer):
@@ -125,6 +184,16 @@ def _serialize_string(obj, writer):
 
 
 _default_serializers = {
+    Statements: _serialize_statements,
+    
+    IfElse: _serialize_if_else,
+    WhileLoop: _serialize_while_loop,
+    BreakStatement: _serialize_break_statement,
+    ContinueStatement: _serialize_continue_statement,
+    
+    ExpressionStatement: _serialize_expression_statement,
+    ReturnStatement: _serialize_return_statement,
+    
     PropertyAccess: _serialize_property_access,
     BinaryOperation: _serialize_binary_operation,
     UnaryOperation: _serialize_unary_operation,
