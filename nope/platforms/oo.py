@@ -181,7 +181,7 @@ def _serialize_ref(obj, writer):
     writer.write(obj.name)
 
 
-def _serialize_number(obj, writer):
+def _serialize_literal_value(obj, writer):
     writer.write(str(obj.value))
 
 
@@ -215,7 +215,8 @@ _default_serializers = {
     UnaryOperation: _serialize_unary_operation,
     Call: _serialize_call,
     VariableReference: _serialize_ref,
-    Number: _serialize_number,
+    Number: _serialize_literal_value,
+    IntegerLiteral: _serialize_literal_value,
     NullLiteral: _serialize_null,
     Boolean: _serialize_boolean,
     String: _serialize_string,
