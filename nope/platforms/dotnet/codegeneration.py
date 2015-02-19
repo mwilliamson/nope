@@ -41,6 +41,41 @@ internal class __NopeNone
 }
 
 
+internal class __NopeBoolean
+{
+    internal static readonly __NopeBoolean True = new __NopeBoolean(true);
+    internal static readonly __NopeBoolean False = new __NopeBoolean(false);
+    
+    internal static __NopeBoolean Value(bool value)
+    {
+        return value ? True : False;
+    }
+    
+    private readonly bool _value;
+    
+    private __NopeBoolean(bool value)
+    {
+        _value = value;
+    }
+    
+    internal bool __Value { get { return _value; } }
+    internal __NopeBoolean __Negate()
+    {
+        return _value ? False : True;
+    }
+    
+    public __NopeBoolean __bool__()
+    {
+        return this;
+    }
+    
+    public override string ToString()
+    {
+        return _value ? "True" : "False";
+    }
+}
+
+
 internal class __NopeInteger
 {
     internal static __NopeInteger Value(int value)
@@ -225,6 +260,37 @@ internal class __NopeList
     }
 }
 
+namespace __Nope
+{
+    internal class Builtins
+    {
+        internal static __NopeBoolean @bool(dynamic value)
+        {
+            if (value.GetType().GetMethod("__bool__") != null)
+            {
+                return value.__bool__();
+            }
+            else
+            {
+                return __NopeBoolean.False;
+            }
+        }
+    }
+    
+    internal class Internals
+    {
+        internal static __NopeBoolean op_is(object left, object right)
+        {
+            return __NopeBoolean.Value(System.Object.ReferenceEquals(left, right));
+        }
+        
+        internal static __NopeBoolean op_is_not(object left, object right)
+        {
+            return __NopeBoolean.Value(!System.Object.ReferenceEquals(left, right));
+        }
+    }
+}
+
 
 internal class Program
 {
@@ -235,7 +301,6 @@ internal class Program
         System.Action<object> print = System.Console.WriteLine;""")
         
                 cs.dump(cs_module, dest_cs_file)
-        
                 dest_cs_file.write("""
     }
 }
@@ -249,17 +314,29 @@ def _transform(node):
     return _transformers[type(node)](node)
 
 
+def _transform_all(nodes):
+    return list(map(_transform, nodes))
+
+
 def _transform_module(module):
-    return cs.statements(list(map(_transform, module.body)))
+    return cs.statements(_transform_all(module.body))
 
 
 def _transform_function_definition(function):
     func_type = cs.type_apply(cs.ref("System.Func"), [cs.dynamic] * (len(function.args) + 1))
     args = [cs.arg(arg.name) for arg in function.args]
-    body = list(map(_transform, function.body))
+    body = _transform_all(function.body)
     lambda_expression = cs.lambda_(args, body)
     assignment = cs.assign(cs.ref(function.name), cs.cast(func_type, lambda_expression))
     return cs.expression_statement(assignment)
+
+
+def _transform_if_statement(statement):
+    return cs.if_(
+        cs.property_access(_transform(statement.condition), "__Value"),
+        _transform_all(statement.true_body),
+        _transform_all(statement.false_body)
+    )
 
 
 def _transform_expression_statement(statement):
@@ -271,16 +348,14 @@ def _transform_variable_declaration(declaration):
 
 
 def _transform_binary_operation(operation):
-    if operation.operator == "is":
+    if operation.operator in ["is", "is_not"]:
         return _transform_is(operation)
-    elif operation.operator == "is_not":
-        return cs.not_(_transform_is(operation))
     else:
         raise Exception("Unhandled operator: {}".format(operation.operator))
 
 
 def _transform_is(operation):
-    return cs.call(cs.ref("System.Object.ReferenceEquals"), [
+    return cs.call(cs.ref("__Nope.Internals.op_{}".format(operation.operator)), [
         _transform(operation.left),
         _transform(operation.right),
     ])
@@ -290,16 +365,24 @@ def _transform_return_statement(statement):
     return cs.ret(_transform(statement.value))
 
 
+def _transform_assignment(assignment):
+    return cs.expression_statement(cs.assign(_transform(assignment.target), _transform(assignment.value)))
+
+
 def _transform_list_literal(literal):
-    return cs.call(cs.ref("__NopeList.Values"), list(map(_transform, literal.elements)))
+    return cs.call(cs.ref("__NopeList.Values"), _transform_all(literal.elements))
 
 
 def _transform_call(call):
-    return cs.call(_transform(call.func), list(map(_transform, call.args)))
+    return cs.call(_transform(call.func), _transform_all(call.args))
 
 
 def _transform_attribute_access(node):
     return cs.property_access(_transform(node.obj), node.attr)
+
+
+def _transform_builtin_reference(reference):
+    return cs.ref("__Nope.Builtins.@{}".format(reference.name))
 
 
 def _transform_variable_reference(reference):
@@ -323,14 +406,18 @@ _transformers = {
     
     cc.FunctionDefinition: _transform_function_definition,
     
+    cc.IfStatement: _transform_if_statement,
+    
     cc.ExpressionStatement: _transform_expression_statement,
     cc.VariableDeclaration: _transform_variable_declaration,
     cc.ReturnStatement: _transform_return_statement,
     
+    cc.Assignment: _transform_assignment,
     cc.ListLiteral: _transform_list_literal,
     cc.BinaryOperation: _transform_binary_operation,
     cc.Call: _transform_call,
     cc.AttributeAccess: _transform_attribute_access,
+    cc.BuiltinReference: _transform_builtin_reference,
     cc.VariableReference: _transform_variable_reference,
     cc.StrLiteral: _transform_string_literal,
     cc.IntLiteral: _transform_int_literal,

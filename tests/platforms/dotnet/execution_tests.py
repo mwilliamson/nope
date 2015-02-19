@@ -21,8 +21,6 @@ class DotNetExecutionTests(execution.ExecutionTests):
     can_read_attributes_of_builtins = wip(execution.ExecutionTests.can_read_attributes_of_builtins)
     fib_program_prints_result_to_stdout = wip(execution.ExecutionTests.fib_program_prints_result_to_stdout)
     function_calls_with_generics = wip(execution.ExecutionTests.function_calls_with_generics)
-    function_definition_with_if_none_assignment = wip(execution.ExecutionTests.function_definition_with_if_none_assignment)
-    function_definition_with_if_not_none_branch = wip(execution.ExecutionTests.function_definition_with_if_not_none_branch)
     functions_can_be_defined_out_of_order = wip(execution.ExecutionTests.functions_can_be_defined_out_of_order)
     test_assert_false_with_message = wip(execution.ExecutionTests.test_assert_false_with_message)
     test_assert_false_without_message = wip(execution.ExecutionTests.test_assert_false_without_message)

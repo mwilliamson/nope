@@ -7,6 +7,8 @@ from .. import oo
 from ..oo import (
     Statements, statements,
     
+    IfElse, if_else as if_,
+    
     ExpressionStatement, expression_statement,
     ReturnStatement, ret,
     AssignmentExpression, assignment_expression as assign,
