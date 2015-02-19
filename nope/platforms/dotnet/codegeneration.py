@@ -29,6 +29,18 @@ class CodeGenerator(zuice.Base):
                 cs_module = _transform(module.node)
                 
                 dest_cs_file.write("""
+internal class __NopeNone
+{
+    internal static readonly __NopeNone Value = new __NopeNone();
+    private __NopeNone() { }
+    
+    public override string ToString()
+    {
+        return "None";
+    }
+}
+
+
 internal class Program
 {
     internal static void Main()
@@ -92,7 +104,7 @@ def _transform_int_literal(literal):
 
 
 def _transform_none_literal(literal):
-    return cs.null
+    return cs.ref("__NopeNone.Value")
 
 
 _transformers = {

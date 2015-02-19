@@ -20,7 +20,6 @@ class DotNetExecutionTests(execution.ExecutionTests):
     can_import_value_from_local_package = wip(execution.ExecutionTests.can_import_value_from_local_package)
     can_read_attributes_of_builtins = wip(execution.ExecutionTests.can_read_attributes_of_builtins)
     fib_program_prints_result_to_stdout = wip(execution.ExecutionTests.fib_program_prints_result_to_stdout)
-    function_call_with_default_value = wip(execution.ExecutionTests.function_call_with_default_value)
     function_calls_with_generics = wip(execution.ExecutionTests.function_calls_with_generics)
     function_definition_with_if_none_assignment = wip(execution.ExecutionTests.function_definition_with_if_none_assignment)
     function_definition_with_if_not_none_branch = wip(execution.ExecutionTests.function_definition_with_if_not_none_branch)
