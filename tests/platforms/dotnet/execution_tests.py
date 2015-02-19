@@ -27,7 +27,6 @@ class DotNetExecutionTests(execution.ExecutionTests):
     function_definition_with_if_none_assignment = wip(execution.ExecutionTests.function_definition_with_if_none_assignment)
     function_definition_with_if_not_none_branch = wip(execution.ExecutionTests.function_definition_with_if_not_none_branch)
     functions_can_be_defined_out_of_order = wip(execution.ExecutionTests.functions_can_be_defined_out_of_order)
-    print_def_program_prints_to_stdout = wip(execution.ExecutionTests.print_def_program_prints_to_stdout)
     test_abs_int = wip(execution.ExecutionTests.test_abs_int)
     test_add_int = wip(execution.ExecutionTests.test_add_int)
     test_arithmetic = wip(execution.ExecutionTests.test_arithmetic)

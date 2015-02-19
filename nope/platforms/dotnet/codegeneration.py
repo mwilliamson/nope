@@ -54,8 +54,25 @@ def _transform_module(module):
     return cs.statements(list(map(_transform, module.body)))
 
 
+def _transform_function_definition(function):
+    func_type = cs.type_apply(cs.ref("System.Func"), [cs.dynamic] * (len(function.args) + 1))
+    args = [cs.arg(arg.name) for arg in function.args]
+    body = list(map(_transform, function.body))
+    lambda_expression = cs.lambda_(args, body)
+    assignment = cs.assign(cs.ref(function.name), cs.cast(func_type, lambda_expression))
+    return cs.expression_statement(assignment)
+
+
 def _transform_expression_statement(statement):
     return cs.expression_statement(_transform(statement.value))
+
+
+def _transform_variable_declaration(declaration):
+    return cs.declare(declaration.name)
+
+
+def _transform_return_statement(statement):
+    return cs.ret(_transform(statement.value))
 
 
 def _transform_call(call):
@@ -70,12 +87,21 @@ def _transform_int_literal(literal):
     return cs.integer_literal(literal.value)
 
 
+def _transform_none_literal(literal):
+    return cs.null
+
+
 _transformers = {
     cc.Module: _transform_module,
     
+    cc.FunctionDefinition: _transform_function_definition,
+    
     cc.ExpressionStatement: _transform_expression_statement,
+    cc.VariableDeclaration: _transform_variable_declaration,
+    cc.ReturnStatement: _transform_return_statement,
     
     cc.Call: _transform_call,
     cc.VariableReference: _transform_variable_reference,
     cc.IntLiteral: _transform_int_literal,
+    cc.NoneLiteral: _transform_none_literal,
 }
