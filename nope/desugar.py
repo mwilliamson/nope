@@ -2,7 +2,7 @@ import itertools
 
 import zuice
 
-from . import nodes, couscous as cc, types, returns
+from . import nodes, couscous as cc, types, returns, name_declaration
 from .name_declaration import DeclarationFinder
 from .modules import LocalModule
 
@@ -246,7 +246,12 @@ class Desugarrer(zuice.Base):
         return cc.class_(node.name, methods=methods, body=body)
     
     def _function_definition(self, node):
-        declared_names = set(self._declarations.declarations_in_function(node).names())
+        declarations_without_type_declarations = (
+            declaration
+            for declaration in self._declarations.declarations_in_function(node)
+            if not isinstance(declaration, name_declaration.TypeDeclarationNode)
+        )
+        declared_names = set(declaration.name for declaration in declarations_without_type_declarations)
         arg_names = [arg.name for arg in node.args.args]
         declared_names.difference_update(arg_names)
         declarations = list(map(cc.declare, sorted(declared_names)))

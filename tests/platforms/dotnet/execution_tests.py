@@ -13,7 +13,6 @@ def wip(*args):
 class DotNetExecutionTests(execution.ExecutionTests):
     platform = DotNet
     
-    can_call_generic_identity_function = wip(execution.ExecutionTests.can_call_generic_identity_function)
     can_import_local_module = wip(execution.ExecutionTests.can_import_local_module)
     can_import_local_package = wip(execution.ExecutionTests.can_import_local_package)
     can_import_module_in_package = wip(execution.ExecutionTests.can_import_module_in_package)

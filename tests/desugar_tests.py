@@ -116,6 +116,26 @@ class FunctionDefinitionTests(object):
             ])
         )
 
+    @istest
+    def test_does_not_redeclare_variables_with_same_name_as_type_parameter(self):
+        _assert_transform(
+            nodes.typed(
+                nodes.signature(
+                    type_params=[nodes.formal_type_parameter("T")],
+                    args=[],
+                    returns=nodes.ref("T"),
+                ),
+                nodes.func(
+                    name="f",
+                    args=nodes.args([]),
+                    body=[],
+                ),
+            ),
+            cc.func("f", [], [
+                cc.ret(cc.none),
+            ])
+        )
+
 
     @istest
     def test_function_without_explicit_return_on_all_paths_returns_none_at_end(self):
