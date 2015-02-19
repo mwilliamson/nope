@@ -1,4 +1,5 @@
 import io
+import functools
 
 import dodge
 
@@ -10,6 +11,7 @@ from ..oo import (
     ReturnStatement, ret,
     AssignmentExpression, assignment_expression as assign,
     
+    UnaryOperation, unary_operation,
     Call, call,
     PropertyAccess, property_access,
     VariableReference, ref,
@@ -38,6 +40,7 @@ cast = Cast = dodge.data_class("Cast", ["type", "value"])
 
 dynamic = ref("dynamic")
 null = ref("null")
+not_ = functools.partial(unary_operation, "!")
 
 
 def _serialize_variable_declaration(node, writer):

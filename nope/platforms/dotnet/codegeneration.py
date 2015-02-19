@@ -205,6 +205,26 @@ internal class __NopeTuple
     }
 }
 
+internal class __NopeList
+{
+    internal static __NopeList Values(params dynamic[] values)
+    {
+        return new __NopeList(values);
+    }
+    
+    private readonly dynamic[] _values;
+    
+    private __NopeList(dynamic[] values)
+    {
+        _values = values;
+    }
+    
+    public override string ToString()
+    {
+        return "[" + string.Join(", ", System.Linq.Enumerable.Select(_values, value => value.ToString())) + "]";
+    }
+}
+
 
 internal class Program
 {
@@ -250,8 +270,28 @@ def _transform_variable_declaration(declaration):
     return cs.declare(declaration.name)
 
 
+def _transform_binary_operation(operation):
+    if operation.operator == "is":
+        return _transform_is(operation)
+    elif operation.operator == "is_not":
+        return cs.not_(_transform_is(operation))
+    else:
+        raise Exception("Unhandled operator: {}".format(operation.operator))
+
+
+def _transform_is(operation):
+    return cs.call(cs.ref("System.Object.ReferenceEquals"), [
+        _transform(operation.left),
+        _transform(operation.right),
+    ])
+
+
 def _transform_return_statement(statement):
     return cs.ret(_transform(statement.value))
+
+
+def _transform_list_literal(literal):
+    return cs.call(cs.ref("__NopeList.Values"), list(map(_transform, literal.elements)))
 
 
 def _transform_call(call):
@@ -287,6 +327,8 @@ _transformers = {
     cc.VariableDeclaration: _transform_variable_declaration,
     cc.ReturnStatement: _transform_return_statement,
     
+    cc.ListLiteral: _transform_list_literal,
+    cc.BinaryOperation: _transform_binary_operation,
     cc.Call: _transform_call,
     cc.AttributeAccess: _transform_attribute_access,
     cc.VariableReference: _transform_variable_reference,

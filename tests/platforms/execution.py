@@ -331,14 +331,14 @@ True
         self._test_expression("None is None", b"True")
         self._test_expression("None is 1", b"False")
         self._test_expression("1 is '1'", b"False")
-        self._test_expression("AssertionError('') is AssertionError('')", b"False")
+        self._test_expression("[] is []", b"False")
     
     @istest
     def test_is_not(self):
         self._test_expression("None is not None", b"False")
         self._test_expression("None is not 1", b"True")
         self._test_expression("1 is not '1'", b"True")
-        self._test_expression("AssertionError('') is not AssertionError('')", b"True")
+        self._test_expression("[] is not []", b"True")
     
     @istest
     def test_getitem_list(self):

@@ -49,8 +49,6 @@ class DotNetExecutionTests(execution.ExecutionTests):
     test_import_of_module_in_standard_library = wip(execution.ExecutionTests.test_import_of_module_in_standard_library)
     test_in_operator_list = wip(execution.ExecutionTests.test_in_operator_list)
     test_init_method_is_used_to_construct_instance = wip(execution.ExecutionTests.test_init_method_is_used_to_construct_instance)
-    test_is = wip(execution.ExecutionTests.test_is)
-    test_is_not = wip(execution.ExecutionTests.test_is_not)
     test_le_int = wip(execution.ExecutionTests.test_le_int)
     test_lt_int = wip(execution.ExecutionTests.test_lt_int)
     test_method_can_call_function_defined_later = wip(execution.ExecutionTests.test_method_can_call_function_defined_later)
