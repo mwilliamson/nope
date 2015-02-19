@@ -12,6 +12,7 @@ from ..oo import (
     
     Call, call,
     VariableReference, ref,
+    String as StringLiteral, string as string_literal,
     IntegerLiteral, integer_literal,
 )
 

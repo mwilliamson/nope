@@ -83,6 +83,10 @@ def _transform_variable_reference(reference):
     return cs.ref(reference.name)
 
 
+def _transform_string_literal(literal):
+    return cs.string_literal(literal.value)
+
+
 def _transform_int_literal(literal):
     return cs.integer_literal(literal.value)
 
@@ -102,6 +106,7 @@ _transformers = {
     
     cc.Call: _transform_call,
     cc.VariableReference: _transform_variable_reference,
+    cc.StrLiteral: _transform_string_literal,
     cc.IntLiteral: _transform_int_literal,
     cc.NoneLiteral: _transform_none_literal,
 }
