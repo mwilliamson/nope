@@ -11,6 +11,7 @@ from ..oo import (
     AssignmentExpression, assignment_expression as assign,
     
     Call, call,
+    PropertyAccess, property_access,
     VariableReference, ref,
     String as StringLiteral, string as string_literal,
     IntegerLiteral, integer_literal,

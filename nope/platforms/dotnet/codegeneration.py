@@ -41,6 +41,32 @@ internal class __NopeNone
 }
 
 
+internal class __NopeInteger
+{
+    internal static __NopeInteger Value(int value)
+    {
+        return new __NopeInteger(value);
+    }
+    
+    private readonly int _value;
+    
+    private __NopeInteger(int value)
+    {
+        _value = value;
+    }
+    
+    public __NopeInteger __add__(__NopeInteger other)
+    {
+        return Value(_value + other._value);
+    }
+    
+    public override string ToString()
+    {
+        return _value.ToString();
+    }
+}
+
+
 internal class Program
 {
     internal static void Main()
@@ -91,6 +117,10 @@ def _transform_call(call):
     return cs.call(_transform(call.func), list(map(_transform, call.args)))
 
 
+def _transform_attribute_access(node):
+    return cs.property_access(_transform(node.obj), node.attr)
+
+
 def _transform_variable_reference(reference):
     return cs.ref(reference.name)
 
@@ -100,7 +130,7 @@ def _transform_string_literal(literal):
 
 
 def _transform_int_literal(literal):
-    return cs.integer_literal(literal.value)
+    return cs.call(cs.ref("__NopeInteger.Value"), [cs.integer_literal(literal.value)])
 
 
 def _transform_none_literal(literal):
@@ -117,6 +147,7 @@ _transformers = {
     cc.ReturnStatement: _transform_return_statement,
     
     cc.Call: _transform_call,
+    cc.AttributeAccess: _transform_attribute_access,
     cc.VariableReference: _transform_variable_reference,
     cc.StrLiteral: _transform_string_literal,
     cc.IntLiteral: _transform_int_literal,
