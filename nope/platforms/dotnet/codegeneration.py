@@ -294,6 +294,34 @@ internal class __NopeList
         _values = values;
     }
     
+    internal Iterator __iter__()
+    {
+        return new Iterator(_values);
+    }
+    
+    internal class Iterator
+    {
+        private readonly dynamic[] _values;
+        private int _nextIndex = 0;
+    
+        internal Iterator(dynamic[] values)
+        {
+            _values = values;
+        }
+        
+        internal dynamic __next__()
+        {
+            if (_nextIndex < _values.Length)
+            {
+                return _values[_nextIndex++];
+            }
+            else
+            {
+                throw new __Nope.Builtins.StopIteration();
+            }
+        }
+    }
+    
     public override string ToString()
     {
         return "[" + string.Join(", ", System.Linq.Enumerable.Select(_values, value => value.ToString())) + "]";
@@ -315,10 +343,33 @@ namespace __Nope
                 return __NopeBoolean.False;
             }
         }
+        
+        internal static dynamic next(dynamic iterator, dynamic stopValue)
+        {
+            try
+            {
+                return iterator.__next__();
+            }
+            catch (StopIteration)
+            {
+                return stopValue;
+            }
+        }
+        
+        internal static dynamic iter(dynamic iterable)
+        {
+            return iterable.__iter__();
+        }
+        
+        internal class StopIteration : System.Exception
+        {
+        }
     }
     
     internal class Internals
     {
+        internal static readonly object loop_sentinel = new object();
+    
         internal static __NopeBoolean op_is(object left, object right)
         {
             return __NopeBoolean.Value(System.Object.ReferenceEquals(left, right));
@@ -449,6 +500,10 @@ def _transform_builtin_reference(reference):
     return cs.ref("__Nope.Builtins.@{}".format(reference.name))
 
 
+def _transform_internal_reference(reference):
+    return cs.ref("__Nope.Internals.@{}".format(reference.name))
+
+
 def _transform_variable_reference(reference):
     return cs.ref(reference.name)
 
@@ -492,6 +547,7 @@ _transformers = {
     cc.Call: _transform_call,
     cc.AttributeAccess: _transform_attribute_access,
     cc.BuiltinReference: _transform_builtin_reference,
+    cc.InternalReference: _transform_internal_reference,
     cc.VariableReference: _transform_variable_reference,
     cc.StrLiteral: _transform_string_literal,
     cc.IntLiteral: _transform_int_literal,
