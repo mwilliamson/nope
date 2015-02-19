@@ -90,6 +90,8 @@ internal class __NopeInteger
         _value = value;
     }
     
+    internal int __Value { get { return _value; } }
+    
     public __NopeBoolean __bool__()
     {
         return __NopeBoolean.Value(_value != 0);
@@ -364,6 +366,40 @@ namespace __Nope
         internal class StopIteration : System.Exception
         {
         }
+        
+        internal static RangeIterator range(__NopeInteger start, __NopeInteger end)
+        {
+            return new RangeIterator(start.__Value, end.__Value);
+        }
+        
+        internal class RangeIterator
+        {
+            private int _index;
+            private readonly int _end;
+        
+            internal RangeIterator(int start, int end)
+            {
+                _index = start;
+                _end = end;
+            }
+            
+            internal RangeIterator __iter__()
+            {
+                return this;
+            }
+            
+            internal __NopeInteger __next__()
+            {
+                if (_index < _end)
+                {
+                    return __NopeInteger.Value(_index++);
+                }
+                else
+                {
+                    throw new StopIteration();
+                }
+            }
+        }
     }
     
     internal class Internals
@@ -389,6 +425,7 @@ internal class Program
     {
         System.Func<dynamic, dynamic> abs = __x_1 => __x_1.__abs__();
         System.Func<dynamic, dynamic, dynamic> divmod = (__x_1, __y_1) => __x_1.__divmod__(__y_1);
+        System.Func<dynamic, dynamic, dynamic> range = (__x_1, __y_1) => __Nope.Builtins.range(__x_1, __y_1);
         System.Action<object> print = System.Console.WriteLine;""")
         
                 cs.dump(cs_module, dest_cs_file)
