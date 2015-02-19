@@ -197,6 +197,36 @@ internal class __NopeInteger
         return Value(_value ^ other._value);
     }
     
+    public __NopeBoolean __eq__(__NopeInteger other)
+    {
+        return __NopeBoolean.Value(_value == other._value);
+    }
+    
+    public __NopeBoolean __ne__(__NopeInteger other)
+    {
+        return __NopeBoolean.Value(_value != other._value);
+    }
+    
+    public __NopeBoolean __le__(__NopeInteger other)
+    {
+        return __NopeBoolean.Value(_value <= other._value);
+    }
+    
+    public __NopeBoolean __lt__(__NopeInteger other)
+    {
+        return __NopeBoolean.Value(_value < other._value);
+    }
+    
+    public __NopeBoolean __ge__(__NopeInteger other)
+    {
+        return __NopeBoolean.Value(_value >= other._value);
+    }
+    
+    public __NopeBoolean __gt__(__NopeInteger other)
+    {
+        return __NopeBoolean.Value(_value > other._value);
+    }
+    
     public override string ToString()
     {
         return _value.ToString();
