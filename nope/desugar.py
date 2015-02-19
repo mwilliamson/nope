@@ -427,7 +427,7 @@ class Desugarrer(zuice.Base):
         return cc.builtin(name)
 
     def _generate_unique_name(self, name):
-        return "${}{}".format(name, next(self._unique_count))
+        return "__nope_u_{}{}".format(name, next(self._unique_count))
     
     def _desugar_or_none(self, value):
         if value is None:

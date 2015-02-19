@@ -90,6 +90,11 @@ internal class __NopeInteger
         _value = value;
     }
     
+    public __NopeBoolean __bool__()
+    {
+        return __NopeBoolean.Value(_value != 0);
+    }
+    
     public __NopeInteger __add__(__NopeInteger other)
     {
         return Value(_value + other._value);
@@ -213,6 +218,11 @@ internal class __NopeFloat
         _value = value;
     }
     
+    public __NopeBoolean __bool__()
+    {
+        return __NopeBoolean.Value(_value != 0);
+    }
+    
     public override string ToString()
     {
         return _value.ToString();
@@ -296,8 +306,8 @@ internal class Program
 {
     internal static void Main()
     {
-        System.Func<dynamic, dynamic> abs = x => x.__abs__();
-        System.Func<dynamic, dynamic, dynamic> divmod = (x, y) => x.__divmod__(y);
+        System.Func<dynamic, dynamic> abs = __x_1 => __x_1.__abs__();
+        System.Func<dynamic, dynamic, dynamic> divmod = (__x_1, __y_1) => __x_1.__divmod__(__y_1);
         System.Action<object> print = System.Console.WriteLine;""")
         
                 cs.dump(cs_module, dest_cs_file)
@@ -318,8 +328,19 @@ def _transform_all(nodes):
     return list(map(_transform, nodes))
 
 
+def _transform_or_none(node):
+    if node is None:
+        return None
+    else:
+        return _transform(node)
+
+
 def _transform_module(module):
     return cs.statements(_transform_all(module.body))
+
+
+def _transform_statements(node):
+    return cs.statements(_transform_all(node.body))
 
 
 def _transform_function_definition(function):
@@ -339,17 +360,26 @@ def _transform_if_statement(statement):
     )
 
 
+def _transform_while_loop(statement):
+    return cs.while_(
+        cs.property_access(_transform(statement.condition), "__Value"),
+        _transform_all(statement.body),
+    )
+
+
 def _transform_expression_statement(statement):
     return cs.expression_statement(_transform(statement.value))
 
 
 def _transform_variable_declaration(declaration):
-    return cs.declare(declaration.name)
+    return cs.declare(declaration.name, _transform_or_none(declaration.value))
 
 
-def _transform_binary_operation(operation):
+def _transform_operation(operation):
     if operation.operator in ["is", "is_not"]:
         return _transform_is(operation)
+    elif operation.operator == "not":
+        return _transform_not(operation)
     else:
         raise Exception("Unhandled operator: {}".format(operation.operator))
 
@@ -359,6 +389,10 @@ def _transform_is(operation):
         _transform(operation.left),
         _transform(operation.right),
     ])
+
+
+def _transform_not(operation):
+    return cs.call(cs.property_access(_transform(operation.operand), "__Negate"), [])
 
 
 def _transform_return_statement(statement):
@@ -397,6 +431,10 @@ def _transform_int_literal(literal):
     return cs.call(cs.ref("__NopeInteger.Value"), [cs.integer_literal(literal.value)])
 
 
+def _transform_bool_literal(literal):
+    return cs.ref("__NopeBoolean.{}".format("True" if literal.value else "False"))
+
+
 def _transform_none_literal(literal):
     return cs.ref("__NopeNone.Value")
 
@@ -404,9 +442,14 @@ def _transform_none_literal(literal):
 _transformers = {
     cc.Module: _transform_module,
     
+    cc.Statements: _transform_statements,
+    
     cc.FunctionDefinition: _transform_function_definition,
     
     cc.IfStatement: _transform_if_statement,
+    cc.WhileLoop: _transform_while_loop,
+    cc.BreakStatement: lambda node: cs.break_,
+    cc.ContinueStatement: lambda node: cs.continue_,
     
     cc.ExpressionStatement: _transform_expression_statement,
     cc.VariableDeclaration: _transform_variable_declaration,
@@ -414,12 +457,14 @@ _transformers = {
     
     cc.Assignment: _transform_assignment,
     cc.ListLiteral: _transform_list_literal,
-    cc.BinaryOperation: _transform_binary_operation,
+    cc.BinaryOperation: _transform_operation,
+    cc.UnaryOperation: _transform_operation,
     cc.Call: _transform_call,
     cc.AttributeAccess: _transform_attribute_access,
     cc.BuiltinReference: _transform_builtin_reference,
     cc.VariableReference: _transform_variable_reference,
     cc.StrLiteral: _transform_string_literal,
     cc.IntLiteral: _transform_int_literal,
+    cc.BooleanLiteral: _transform_bool_literal,
     cc.NoneLiteral: _transform_none_literal,
 }

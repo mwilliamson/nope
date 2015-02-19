@@ -186,19 +186,19 @@ class WithStatementTests(object):
         _assert_transform(
             nodes.with_statement(nodes.ref("manager"), None, [nodes.ret(nodes.ref("x"))]),
             """
-                var $manager1 = manager
-                var $exit2 = $manager1.__exit__
-                var $has_exited3 = False
-                $manager1.__enter__()
+                var __nope_u_manager1 = manager
+                var __nope_u_exit2 = __nope_u_manager1.__exit__
+                var __nope_u_has_exited3 = False
+                __nope_u_manager1.__enter__()
                 try:
                     return x
-                except $builtins.Exception as $exception0:
-                    $has_exited3 = True
-                    if not $builtins.bool($exit2($builtins.type($exception0), $exception0, None)):
+                except $builtins.Exception as __nope_u_exception0:
+                    __nope_u_has_exited3 = True
+                    if not $builtins.bool(__nope_u_exit2($builtins.type(__nope_u_exception0), __nope_u_exception0, None)):
                         raise
                 finally:
-                    if not $has_exited3:
-                        $exit2(None, None, None)
+                    if not __nope_u_has_exited3:
+                        __nope_u_exit2(None, None, None)
             """
         )
 
@@ -208,19 +208,19 @@ class WithStatementTests(object):
         _assert_transform(
             nodes.with_statement(nodes.ref("manager"), nodes.ref("value"), [nodes.ret(nodes.ref("x"))]),
             """
-                var $manager1 = manager
-                var $exit2 = $manager1.__exit__
-                var $has_exited3 = False
-                value = $manager1.__enter__()
+                var __nope_u_manager1 = manager
+                var __nope_u_exit2 = __nope_u_manager1.__exit__
+                var __nope_u_has_exited3 = False
+                value = __nope_u_manager1.__enter__()
                 try:
                     return x
-                except $builtins.Exception as $exception0:
-                    $has_exited3 = True
-                    if not $builtins.bool($exit2($builtins.type($exception0), $exception0, None)):
+                except $builtins.Exception as __nope_u_exception0:
+                    __nope_u_has_exited3 = True
+                    if not $builtins.bool(__nope_u_exit2($builtins.type(__nope_u_exception0), __nope_u_exception0, None)):
                         raise
                 finally:
-                    if not $has_exited3:
-                        $exit2(None, None, None)
+                    if not __nope_u_has_exited3:
+                        __nope_u_exit2(None, None, None)
             """
         )
 
@@ -268,13 +268,13 @@ class WhileLoopTests(object):
                 
             ),
             """
-                var $normal_exit0 = False
+                var __nope_u_normal_exit0 = False
                 while True:
                     if not $builtins.bool(x):
-                        $normal_exit0 = True
+                        __nope_u_normal_exit0 = True
                         break
                     return y
-                if $normal_exit0:
+                if __nope_u_normal_exit0:
                     return z
             """
         )
@@ -291,13 +291,13 @@ class ForLoopTests(object):
                 [nodes.ret(nodes.ref("x"))],
             ),
             """
-                var $iterator0 = $builtins.iter(xs)
-                var $element1
+                var __nope_u_iterator0 = $builtins.iter(xs)
+                var __nope_u_element1
                 while True:
-                    $element1 = $builtins.next($iterator0, $internals.loop_sentinel)
-                    if $element1 is $internals.loop_sentinel:
+                    __nope_u_element1 = $builtins.next(__nope_u_iterator0, $internals.loop_sentinel)
+                    if __nope_u_element1 is $internals.loop_sentinel:
                         break
-                    x = $element1
+                    x = __nope_u_element1
                     return x
             """
         )
@@ -312,17 +312,17 @@ class ForLoopTests(object):
                 [nodes.ret(nodes.ref("y"))],
             ),
             """
-                var $iterator0 = $builtins.iter(xs)
-                var $element1
-                var $normal_exit2 = False
+                var __nope_u_iterator0 = $builtins.iter(xs)
+                var __nope_u_element1
+                var __nope_u_normal_exit2 = False
                 while True:
-                    $element1 = $builtins.next($iterator0, $internals.loop_sentinel)
-                    if $element1 is $internals.loop_sentinel:
-                        $normal_exit2 = True
+                    __nope_u_element1 = $builtins.next(__nope_u_iterator0, $internals.loop_sentinel)
+                    if __nope_u_element1 is $internals.loop_sentinel:
+                        __nope_u_normal_exit2 = True
                         break
-                    x = $element1
+                    x = __nope_u_element1
                     return x
-                if $normal_exit2:
+                if __nope_u_normal_exit2:
                     return y
             """
         )
@@ -396,9 +396,9 @@ class AssignmentTests(object):
         _assert_transform(
             nodes.assign(["x", "y"], nodes.ref("z")),
             cc.statements([
-                cc.declare("$tmp0", cc.ref("z")),
-                cc.assign(cc.ref("x"), cc.ref("$tmp0")),
-                cc.assign(cc.ref("y"), cc.ref("$tmp0")),
+                cc.declare("__nope_u_tmp0", cc.ref("z")),
+                cc.assign(cc.ref("x"), cc.ref("__nope_u_tmp0")),
+                cc.assign(cc.ref("y"), cc.ref("__nope_u_tmp0")),
             ]),
         )
 
@@ -411,9 +411,9 @@ class AssignmentTests(object):
                 nodes.ref("z")
             ),
             """
-                var $tmp0 = z
-                x = $tmp0.__getitem__(0)
-                y = $tmp0.__getitem__(1)
+                var __nope_u_tmp0 = z
+                x = __nope_u_tmp0.__getitem__(0)
+                y = __nope_u_tmp0.__getitem__(1)
             """
         )
 
@@ -423,8 +423,8 @@ class AssignmentTests(object):
         _assert_transform(
             nodes.assign([nodes.subscript(nodes.ref("x"), nodes.ref("y"))], nodes.ref("z")),
             """
-                var $tmp0 = z
-                x.__setitem__(y, $tmp0)
+                var __nope_u_tmp0 = z
+                x.__setitem__(y, __nope_u_tmp0)
             """
         )
         

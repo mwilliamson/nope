@@ -8,6 +8,9 @@ from ..oo import (
     Statements, statements,
     
     IfElse, if_else as if_,
+    WhileLoop, while_loop as while_,
+    break_statement,
+    continue_statement,
     
     ExpressionStatement, expression_statement,
     ReturnStatement, ret,
@@ -32,7 +35,7 @@ def dumps(node):
     dump(node, output)
     return output.getvalue()
 
-declare = VariableDeclaration = dodge.data_class("VariableDeclaration", ["name"])
+declare = VariableDeclaration = dodge.data_class("VariableDeclaration", ["name", "value"])
 
 lambda_ = LambdaExpression = dodge.data_class("LambdaExpression", ["args", "body"])
 arg = Argument = dodge.data_class("Argument", ["name"])
@@ -43,11 +46,16 @@ cast = Cast = dodge.data_class("Cast", ["type", "value"])
 dynamic = ref("dynamic")
 null = ref("null")
 not_ = functools.partial(unary_operation, "!")
+break_ = break_statement()
+continue_ = continue_statement()
 
 
 def _serialize_variable_declaration(node, writer):
     writer.write("dynamic ")
     writer.write(node.name)
+    if node.value is not None:
+        writer.write(" = ")
+        writer.dump(node.value)
     writer.end_simple_statement()
 
 
