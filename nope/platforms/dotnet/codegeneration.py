@@ -60,9 +60,143 @@ internal class __NopeInteger
         return Value(_value + other._value);
     }
     
+    public __NopeInteger __sub__(__NopeInteger other)
+    {
+        return Value(_value - other._value);
+    }
+    
+    public __NopeInteger __mul__(__NopeInteger other)
+    {
+        return Value(_value * other._value);
+    }
+    
+    public __NopeFloat __truediv__(__NopeInteger other)
+    {
+        return __NopeFloat.Value((double)_value / (double)other._value);
+    }
+    
+    public __NopeInteger __floordiv__(__NopeInteger other)
+    {
+        return __NopeInteger.Value(__floordiv__int(_value, other._value));
+    }
+    
+    private static int __floordiv__int(int left, int right)
+    {
+        var roundedTowardsZero = left / right;
+        var wasRounded = (left % right) != 0;
+        
+        if (wasRounded && (left < 0 ^ right < 0)) {
+            return roundedTowardsZero - 1;
+        }
+        else
+        {
+            return roundedTowardsZero;
+        }
+    }
+    
+    public __NopeInteger __mod__(__NopeInteger other)
+    {
+        return Value((_value % other._value + other._value) % other._value);
+    }
+    
+    public __NopeTuple __divmod__(__NopeInteger other)
+    {
+        return __NopeTuple.Values(
+            __floordiv__(other),
+            __mod__(other)
+        );
+    }
+    
+    public __NopeFloat __pow__(__NopeInteger other)
+    {
+        return __NopeFloat.Value(System.Math.Pow(_value, other._value));
+    }
+    
+    public __NopeInteger __pos__()
+    {
+        return this;
+    }
+    
+    public __NopeInteger __neg__()
+    {
+        return Value(-_value);
+    }
+    
+    public __NopeInteger __abs__()
+    {
+        return Value(System.Math.Abs(_value));
+    }
+    
+    public __NopeInteger __lshift__(__NopeInteger other)
+    {
+        return Value(_value << other._value);
+    }
+    
+    public __NopeInteger __rshift__(__NopeInteger other)
+    {
+        return Value(_value >> other._value);
+    }
+    
+    public __NopeInteger __and__(__NopeInteger other)
+    {
+        return Value(_value & other._value);
+    }
+    
+    public __NopeInteger __or__(__NopeInteger other)
+    {
+        return Value(_value | other._value);
+    }
+    
+    public __NopeInteger __xor__(__NopeInteger other)
+    {
+        return Value(_value ^ other._value);
+    }
+    
     public override string ToString()
     {
         return _value.ToString();
+    }
+}
+
+
+internal class __NopeFloat
+{
+    internal static __NopeFloat Value(double value)
+    {
+        return new __NopeFloat(value);
+    }
+    
+    private readonly double _value;
+    
+    private __NopeFloat(double value)
+    {
+        _value = value;
+    }
+    
+    public override string ToString()
+    {
+        return _value.ToString();
+    }
+}
+
+
+internal class __NopeTuple
+{
+    internal static __NopeTuple Values(params dynamic[] values)
+    {
+        return new __NopeTuple(values);
+    }
+    
+    private readonly dynamic[] _values;
+    
+    private __NopeTuple(dynamic[] values)
+    {
+        _values = values;
+    }
+    
+    public override string ToString()
+    {
+        return "(" + string.Join(", ", System.Linq.Enumerable.Select(_values, value => value.ToString())) + ")";
     }
 }
 
@@ -71,6 +205,8 @@ internal class Program
 {
     internal static void Main()
     {
+        System.Func<dynamic, dynamic> abs = x => x.__abs__();
+        System.Func<dynamic, dynamic, dynamic> divmod = (x, y) => x.__divmod__(y);
         System.Action<object> print = System.Console.WriteLine;""")
         
                 cs.dump(cs_module, dest_cs_file)
