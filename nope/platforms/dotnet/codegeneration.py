@@ -127,6 +127,11 @@ internal class __NopeInteger
         return Value(System.Math.Abs(_value));
     }
     
+    public __NopeInteger __invert__()
+    {
+        return Value(~_value);
+    }
+    
     public __NopeInteger __lshift__(__NopeInteger other)
     {
         return Value(_value << other._value);

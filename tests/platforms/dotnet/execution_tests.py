@@ -50,7 +50,6 @@ class DotNetExecutionTests(execution.ExecutionTests):
     test_import_of_module_in_standard_library = wip(execution.ExecutionTests.test_import_of_module_in_standard_library)
     test_in_operator_list = wip(execution.ExecutionTests.test_in_operator_list)
     test_init_method_is_used_to_construct_instance = wip(execution.ExecutionTests.test_init_method_is_used_to_construct_instance)
-    test_invert_int = wip(execution.ExecutionTests.test_invert_int)
     test_is = wip(execution.ExecutionTests.test_is)
     test_is_not = wip(execution.ExecutionTests.test_is_not)
     test_le_int = wip(execution.ExecutionTests.test_le_int)
