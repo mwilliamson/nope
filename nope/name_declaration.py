@@ -3,7 +3,7 @@ from nope.identity_dict import IdentityDict
 
 
 def _declare(node, declarations):
-    visitor = visit.Visitor()
+    visitor = visit.Visitor(visit_explicit_types=False)
     visitor.before(nodes.Assignment, _declare_assignment)
     visitor.before(nodes.ForLoop, _declare_for_loop)
     visitor.before(nodes.TryStatement, _declare_try)

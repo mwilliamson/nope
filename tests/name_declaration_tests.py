@@ -88,6 +88,22 @@ def names_in_function_are_not_declared():
 
 
 @istest
+def names_in_function_signature_are_not_declared():
+    node = nodes.typed(
+        nodes.signature(
+            type_params=[nodes.formal_type_parameter("T")],
+            args=[],
+            returns=nodes.ref("T"),
+        ),
+        nodes.func("f", nodes.arguments([]), []),
+    )
+    
+    declarations = _new_declarations()
+    declare(node, declarations)
+    assert not declarations.is_declared("T")
+
+
+@istest
 def class_definition_is_declared():
     node = nodes.class_def("User", [])
     
