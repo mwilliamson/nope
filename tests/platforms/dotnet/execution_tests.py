@@ -25,7 +25,6 @@ class DotNetExecutionTests(execution.ExecutionTests):
     test_assert_false_without_message = wip(execution.ExecutionTests.test_assert_false_without_message)
     test_assert_true_shows_no_output = wip(wip(execution.ExecutionTests.test_assert_true_shows_no_output))
     test_bool_and = wip(execution.ExecutionTests.test_bool_and)
-    test_bool_not = wip(execution.ExecutionTests.test_bool_not)
     test_bool_or = wip(execution.ExecutionTests.test_bool_or)
     test_break_for = wip(execution.ExecutionTests.test_break_for)
     test_call_method_of_class_with_default_constructor = wip(execution.ExecutionTests.test_call_method_of_class_with_default_constructor)
@@ -71,4 +70,3 @@ class DotNetExecutionTests(execution.ExecutionTests):
     test_with_statement_does_not_suppress_exception_when_exit_returns_false = wip(execution.ExecutionTests.test_with_statement_does_not_suppress_exception_when_exit_returns_false)
     test_with_statement_passes_exception_info_to_exit_method_if_body_raises_exception = wip(execution.ExecutionTests.test_with_statement_passes_exception_info_to_exit_method_if_body_raises_exception)
     test_with_statement_suppresses_exception_when_exit_returns_true = wip(execution.ExecutionTests.test_with_statement_suppresses_exception_when_exit_returns_true)
-    type_definition_using_type_union = wip(execution.ExecutionTests.type_definition_using_type_union)
