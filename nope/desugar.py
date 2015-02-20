@@ -336,9 +336,9 @@ class Desugarrer(zuice.Base):
         elif node.operator == "is_not":
             return cc.is_not(left, right)
         elif node.operator == "bool_and":
-            return cc.and_(left, right)
+            return cc.ternary_conditional(_bool(left), right, left)
         elif node.operator == "bool_or":
-            return cc.or_(left, right)
+            return cc.ternary_conditional(_bool(left), left, right)
         else:
             return self._call_magic_method(left, node.operator, right)
     

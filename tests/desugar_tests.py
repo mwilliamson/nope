@@ -466,14 +466,22 @@ class OperationTests(object):
     def test_transform_boolean_and(self):
         _assert_transform(
             nodes.bool_and(nodes.ref("x"), nodes.ref("y")),
-            cc.and_(cc.ref("x"), cc.ref("y")),
+            cc.ternary_conditional(
+                cc.call(cc.builtin("bool"), [cc.ref("x")]),
+                cc.ref("y"),
+                cc.ref("x")
+            ),
         )
         
     @istest
     def test_transform_boolean_or(self):
         _assert_transform(
             nodes.bool_or(nodes.ref("x"), nodes.ref("y")),
-            cc.or_(cc.ref("x"), cc.ref("y")),
+            cc.ternary_conditional(
+                cc.call(cc.builtin("bool"), [cc.ref("x")]),
+                cc.ref("x"),
+                cc.ref("y")
+            ),
         )
         
     @istest

@@ -631,6 +631,14 @@ def test_transform_attribute_access():
 
 
 @istest
+def test_transform_ternary_conditional():
+    _assert_transform(
+        cc.ternary_conditional(cc.ref("x"), cc.ref("y"), cc.ref("z")),
+        js.ternary_conditional(js.ref("x"), js.ref("y"), js.ref("z")),
+    )
+
+
+@istest
 def test_transform_boolean_not():
     _assert_transform(
         cc.not_(cc.ref("x")),
@@ -642,7 +650,7 @@ def test_transform_boolean_not():
 def test_transform_boolean_and():
     _assert_transform(
         cc.and_(cc.ref("x"), cc.ref("y")),
-        js.call(js.ref("$nope.booleanAnd"), [js.ref("x"), js.ref("y")]),
+        js.and_(js.ref("x"), js.ref("y")),
     )
 
 
@@ -650,7 +658,7 @@ def test_transform_boolean_and():
 def test_transform_boolean_or():
     _assert_transform(
         cc.or_(cc.ref("x"), cc.ref("y")),
-        js.call(js.ref("$nope.booleanOr"), [js.ref("x"), js.ref("y")]),
+        js.or_(js.ref("x"), js.ref("y")),
     )
 
 

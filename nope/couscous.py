@@ -285,6 +285,8 @@ is_not = functools.partial(BinaryOperation, "is_not")
 and_ = functools.partial(BinaryOperation, "and")
 or_ = functools.partial(BinaryOperation, "or")
 
+ternary_conditional = TernaryConditional = dodge.data_class("TernaryConditional", ["condition", "true_value", "false_value"])
+
 list_literal = ListLiteral = dodge.data_class("ListLiteral", ["elements"])
 tuple_literal = TupleLiteral = dodge.data_class("TupleLiteral", ["elements"])
 

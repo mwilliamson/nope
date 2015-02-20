@@ -35,6 +35,7 @@ class NodeTransformer(zuice.Base):
             cc.AttributeAccess: self._attr,
             cc.BinaryOperation: self._binary_operation,
             cc.UnaryOperation: self._unary_operation,
+            cc.TernaryConditional: self._ternary_conditional,
             cc.VariableReference: _ref,
             cc.BuiltinReference: _builtin_ref,
             cc.InternalReference: _internal_ref,
@@ -391,14 +392,14 @@ class NodeTransformer(zuice.Base):
     
     def _binary_operation(self, operation):
         if operation.operator == "and":
-            return call_internal(
-                ["booleanAnd"],
-                [self.transform(operation.left), self.transform(operation.right)]
+            return js.and_(
+                self.transform(operation.left),
+                self.transform(operation.right),
             )
         elif operation.operator == "or":
-            return call_internal(
-                ["booleanOr"],
-                [self.transform(operation.left), self.transform(operation.right)]
+            return js.or_(
+                self.transform(operation.left),
+                self.transform(operation.right),
             )
         elif operation.operator == "is":
             return js.binary_operation("===",
@@ -437,7 +438,13 @@ class NodeTransformer(zuice.Base):
             ["operators", operator_name],
             [self.transform(operand) for operand in operands],
         )
-    
+
+    def _ternary_conditional(self, node):
+        return js.ternary_conditional(
+            self.transform(node.condition),
+            self.transform(node.true_value),
+            self.transform(node.false_value),
+        )
 
     def _list_literal(self, node):
         return js.array(self._transform_all(node.elements))

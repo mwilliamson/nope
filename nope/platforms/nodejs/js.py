@@ -146,6 +146,10 @@ def assign_statement(target, value):
 array = Array = dodge.data_class("Array", ["elements"])
 obj = Object = dodge.data_class("Object", ["properties"])
 
+or_ = functools.partial(binary_operation, "||")
+and_ = functools.partial(binary_operation, "&&")
+
+
 _serializers = oo.serializers({
     FunctionDeclaration: _serialize_function_declaration,
     FunctionExpression: _serialize_function_expression,
