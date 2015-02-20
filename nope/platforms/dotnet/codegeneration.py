@@ -322,12 +322,12 @@ internal class __NopeList
 {
     internal static __NopeList Values(params dynamic[] values)
     {
-        return new __NopeList(values);
+        return new __NopeList(new System.Collections.Generic.List<dynamic>(values));
     }
     
-    private readonly dynamic[] _values;
+    private readonly System.Collections.Generic.IList<dynamic> _values;
     
-    private __NopeList(dynamic[] values)
+    private __NopeList(System.Collections.Generic.IList<dynamic> values)
     {
         _values = values;
     }
@@ -339,17 +339,17 @@ internal class __NopeList
     
     internal class Iterator
     {
-        private readonly dynamic[] _values;
+        private readonly System.Collections.Generic.IList<dynamic> _values;
         private int _nextIndex = 0;
     
-        internal Iterator(dynamic[] values)
+        internal Iterator(System.Collections.Generic.IList<dynamic> values)
         {
             _values = values;
         }
         
         internal dynamic __next__()
         {
-            if (_nextIndex < _values.Length)
+            if (_nextIndex < _values.Count)
             {
                 return _values[_nextIndex++];
             }
@@ -362,7 +362,18 @@ internal class __NopeList
     
     public __NopeBoolean __bool__()
     {
-        return __NopeBoolean.Value(_values.Length > 0);
+        return __NopeBoolean.Value(_values.Count > 0);
+    }
+    
+    public dynamic __getitem__(__NopeInteger key)
+    {
+        var index = key.__Value;
+        return index < 0 ? _values[_values.Count + index] : _values[index];
+    }
+    
+    public void append(dynamic value)
+    {
+        _values.Add(value);
     }
     
     public override string ToString()
