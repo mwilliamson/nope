@@ -23,8 +23,6 @@ class DotNetExecutionTests(execution.ExecutionTests):
     test_assert_false_with_message = wip(execution.ExecutionTests.test_assert_false_with_message)
     test_assert_false_without_message = wip(execution.ExecutionTests.test_assert_false_without_message)
     test_assert_true_shows_no_output = wip(wip(execution.ExecutionTests.test_assert_true_shows_no_output))
-    test_bool_and = wip(execution.ExecutionTests.test_bool_and)
-    test_bool_or = wip(execution.ExecutionTests.test_bool_or)
     test_call_method_of_class_with_default_constructor = wip(execution.ExecutionTests.test_call_method_of_class_with_default_constructor)
     test_first_matching_exception_handler_runs_first = wip(execution.ExecutionTests.test_first_matching_exception_handler_runs_first)
     test_for_unpacking = wip(execution.ExecutionTests.test_for_unpacking)

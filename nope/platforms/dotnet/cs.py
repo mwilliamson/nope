@@ -17,6 +17,7 @@ from ..oo import (
     AssignmentExpression, assignment_expression as assign,
     
     UnaryOperation, unary_operation,
+    TernaryConditional, ternary_conditional,
     Call, call,
     PropertyAccess, property_access,
     VariableReference, ref,

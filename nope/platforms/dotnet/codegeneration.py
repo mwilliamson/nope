@@ -472,7 +472,7 @@ def _transform_function_definition(function):
 
 def _transform_if_statement(statement):
     return cs.if_(
-        cs.property_access(_transform(statement.condition), "__Value"),
+        _transform_condition(statement.condition),
         _transform_all(statement.true_body),
         _transform_all(statement.false_body)
     )
@@ -480,9 +480,12 @@ def _transform_if_statement(statement):
 
 def _transform_while_loop(statement):
     return cs.while_(
-        cs.property_access(_transform(statement.condition), "__Value"),
+        _transform_condition(statement.condition),
         _transform_all(statement.body),
     )
+
+def _transform_condition(condition):
+    return cs.property_access(_transform(condition), "__Value")
 
 
 def _transform_expression_statement(statement):
@@ -504,6 +507,14 @@ def _transform_operation(operation):
         return _transform_not(operation)
     else:
         raise Exception("Unhandled operator: {}".format(operation.operator))
+
+
+def _transform_ternary_conditional(conditional):
+    return cs.ternary_conditional(
+        _transform_condition(conditional.condition),
+        _transform(conditional.true_value),
+        _transform(conditional.false_value),
+    )
 
 
 def _transform_is(operation):
@@ -585,6 +596,7 @@ _transformers = {
     cc.ListLiteral: _transform_list_literal,
     cc.BinaryOperation: _transform_operation,
     cc.UnaryOperation: _transform_operation,
+    cc.TernaryConditional: _transform_ternary_conditional,
     cc.Call: _transform_call,
     cc.AttributeAccess: _transform_attribute_access,
     cc.BuiltinReference: _transform_builtin_reference,
