@@ -262,6 +262,37 @@ internal class __NopeFloat
 }
 
 
+internal class __NopeString
+{
+    internal static __NopeString Value(string value)
+    {
+        return new __NopeString(value);
+    }
+    
+    private readonly string _value;
+    
+    private __NopeString(string value)
+    {
+        _value = value;
+    }
+    
+    public __NopeBoolean __bool__()
+    {
+        return __NopeBoolean.Value(_value.Length > 0);
+    }
+    
+    public override string ToString()
+    {
+        return _value;
+    }
+    
+    public int find(__NopeString substring)
+    {
+        return _value.IndexOf(substring._value);
+    }
+}
+
+
 internal class __NopeTuple
 {
     internal static __NopeTuple Values(params dynamic[] values)
@@ -561,7 +592,7 @@ def _transform_variable_reference(reference):
 
 
 def _transform_string_literal(literal):
-    return cs.string_literal(literal.value)
+    return cs.call(cs.ref("__NopeString.Value"), [cs.string_literal(literal.value)])
 
 
 def _transform_int_literal(literal):

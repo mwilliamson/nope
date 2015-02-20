@@ -18,7 +18,6 @@ class DotNetExecutionTests(execution.ExecutionTests):
     can_import_module_in_package = wip(execution.ExecutionTests.can_import_module_in_package)
     can_import_module_in_package_using_import_from = wip(execution.ExecutionTests.can_import_module_in_package_using_import_from)
     can_import_value_from_local_package = wip(execution.ExecutionTests.can_import_value_from_local_package)
-    can_read_attributes_of_builtins = wip(execution.ExecutionTests.can_read_attributes_of_builtins)
     fib_program_prints_result_to_stdout = wip(execution.ExecutionTests.fib_program_prints_result_to_stdout)
     test_assert_false_with_message = wip(execution.ExecutionTests.test_assert_false_with_message)
     test_assert_false_without_message = wip(execution.ExecutionTests.test_assert_false_without_message)
