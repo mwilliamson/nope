@@ -22,6 +22,7 @@ from ..oo import (
     PropertyAccess, property_access,
     BinaryOperation, binary_operation,
     UnaryOperation, unary_operation,
+    TernaryConditional, ternary_conditional,
     Call, call,
     VariableReference, ref,
     Number, number, 

@@ -25,6 +25,7 @@ def assignment_expression(target, value):
 property_access = PropertyAccess = dodge.data_class("PropertyAccess", ["value", "property"])
 binary_operation = BinaryOperation = dodge.data_class("BinaryOperation", ["operator", "left", "right"])
 unary_operation = UnaryOperation = dodge.data_class("UnaryOperation", ["operator", "operand"])
+ternary_conditional = TernaryConditional = dodge.data_class("TernaryConditional", ["condition", "true_value", "false_value"])
 call = Call = dodge.data_class("Call", ["func", "args"])
 ref = VariableReference = dodge.data_class("VariableReference", ["name"])
 integer_literal = IntegerLiteral = dodge.data_class("IntegerLiteral", ["value"])
@@ -165,6 +166,14 @@ def _serialize_unary_operation(obj, writer):
     writer.write(")")
 
 
+def _serialize_ternary_conditional(node, writer):
+    writer.dump(node.condition)
+    writer.write(" ? ")
+    writer.dump(node.true_value)
+    writer.write(" : ")
+    writer.dump(node.false_value)
+
+
 def _serialize_call(obj, writer):
     writer.dump(obj.func)
     writer.write("(")
@@ -213,6 +222,7 @@ _default_serializers = {
     PropertyAccess: _serialize_property_access,
     BinaryOperation: _serialize_binary_operation,
     UnaryOperation: _serialize_unary_operation,
+    TernaryConditional: _serialize_ternary_conditional,
     Call: _serialize_call,
     VariableReference: _serialize_ref,
     Number: _serialize_literal_value,

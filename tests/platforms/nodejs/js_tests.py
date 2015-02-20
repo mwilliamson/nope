@@ -78,6 +78,12 @@ def test_serialize_unary_operation():
 
 
 @istest
+def test_ternary_conditional_operation():
+    conditional = js.ternary_conditional(js.ref("x"), js.ref("y"), js.ref("z"))
+    assert_equal("x ? y : z", _dumps(conditional))
+
+
+@istest
 def test_serialize_assignment():
     assignment = js.assign("x", js.ref("y"))
     assert_equal("x = y", _dumps(assignment))
