@@ -12,6 +12,8 @@ from ..oo import (
     break_statement,
     continue_statement,
     
+    Throw, throw,
+    
     ExpressionStatement, expression_statement,
     ReturnStatement, ret,
     AssignmentExpression, assignment_expression as assign,

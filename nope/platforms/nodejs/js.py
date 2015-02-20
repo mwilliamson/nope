@@ -15,6 +15,8 @@ from ..oo import (
     ContinueStatement, continue_statement,
     BreakStatement, break_statement,
     
+    Throw, throw,
+    
     ExpressionStatement, expression_statement,
     ReturnStatement, ret,
     
@@ -96,12 +98,6 @@ def _serialize_block(statements, writer):
     writer.dump_block(statements)
 
 
-def _serialize_throw(obj, writer):
-    writer.write("throw ")
-    writer.dump(obj.value)
-    writer.end_simple_statement()
-
-
 def _serialize_array(obj, writer):
     writer.write("[")
     
@@ -137,7 +133,6 @@ TryCatch = dodge.data_class("TryCatch", ["try_body", "error_name", "catch_body",
 
 def try_catch(try_body, error_name=None, catch_body=None, finally_body=None):
     return TryCatch(try_body, error_name, catch_body, finally_body)
-throw = Throw = dodge.data_class("Throw", ["value"])
 
 def assign_statement(target, value):
     return expression_statement(assign(target, value))
@@ -155,7 +150,6 @@ _serializers = oo.serializers({
     FunctionExpression: _serialize_function_expression,
     VariableDeclaration: _serialize_variable_declaration,
     TryCatch: _serialize_try_catch,
-    Throw: _serialize_throw,
     
     Array: _serialize_array,
     Object: _serialize_object,

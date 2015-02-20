@@ -10,6 +10,8 @@ while_loop = WhileLoop = dodge.data_class("WhileLoop", ["condition", "body"])
 break_statement = BreakStatement = dodge.data_class("BreakStatement", [])
 continue_statement = ContinueStatement = dodge.data_class("ContinueStatement", [])
 
+throw = Throw = dodge.data_class("Throw", ["value"])
+
 expression_statement = ExpressionStatement = dodge.data_class("ExpressionStatement", ["value"])
 ret = ReturnStatement = dodge.data_class("ReturnStatement", ["value"])
 
@@ -119,6 +121,12 @@ def _serialize_continue_statement(obj, writer):
     writer.end_simple_statement()
 
 
+def _serialize_throw(obj, writer):
+    writer.write("throw ")
+    writer.dump(obj.value)
+    writer.end_simple_statement()
+
+
 def _serialize_expression_statement(obj, writer):
     writer.dump(obj.value)
     writer.end_simple_statement()
@@ -214,6 +222,8 @@ _default_serializers = {
     WhileLoop: _serialize_while_loop,
     BreakStatement: _serialize_break_statement,
     ContinueStatement: _serialize_continue_statement,
+    
+    Throw: _serialize_throw,
     
     ExpressionStatement: _serialize_expression_statement,
     ReturnStatement: _serialize_return_statement,

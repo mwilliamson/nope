@@ -276,6 +276,8 @@ internal class __NopeString
         _value = value;
     }
     
+    internal string __Value { get { return _value; } }
+    
     public __NopeBoolean __bool__()
     {
         return __NopeBoolean.Value(_value.Length > 0);
@@ -391,6 +393,19 @@ namespace __Nope
 {
     internal class Builtins
     {
+        // TODO: resolve needing AssertionError to be both a class and a callable
+        internal class _AssertionError : System.Exception
+        {
+            internal _AssertionError(__NopeString message) : base(message.__Value)
+            {
+            }
+        }
+    
+        internal static _AssertionError AssertionError(__NopeString message)
+        {
+            return new _AssertionError(message);
+        }
+    
         internal static __NopeBoolean @bool(dynamic value)
         {
             if (value.GetType().GetMethod("__bool__") != null)
@@ -545,6 +560,10 @@ def _transform_condition(condition):
     return cs.property_access(_transform(condition), "__Value")
 
 
+def _transform_raise_statement(statement):
+    return cs.throw(_transform(statement.value))
+
+
 def _transform_expression_statement(statement):
     return cs.expression_statement(_transform(statement.value))
 
@@ -644,6 +663,8 @@ _transformers = {
     cc.WhileLoop: _transform_while_loop,
     cc.BreakStatement: lambda node: cs.break_,
     cc.ContinueStatement: lambda node: cs.continue_,
+    
+    cc.RaiseStatement: _transform_raise_statement,
     
     cc.ExpressionStatement: _transform_expression_statement,
     cc.VariableDeclaration: _transform_variable_declaration,
