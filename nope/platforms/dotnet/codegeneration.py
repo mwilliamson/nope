@@ -490,7 +490,11 @@ def _transform_expression_statement(statement):
 
 
 def _transform_variable_declaration(declaration):
-    return cs.declare(declaration.name, _transform_or_none(declaration.value))
+    if declaration.value is None:
+        value = cs.null
+    else:
+        value = _transform(declaration.value)
+    return cs.declare(declaration.name, value)
 
 
 def _transform_operation(operation):

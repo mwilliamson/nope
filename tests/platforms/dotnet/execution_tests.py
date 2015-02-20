@@ -20,7 +20,6 @@ class DotNetExecutionTests(execution.ExecutionTests):
     can_import_value_from_local_package = wip(execution.ExecutionTests.can_import_value_from_local_package)
     can_read_attributes_of_builtins = wip(execution.ExecutionTests.can_read_attributes_of_builtins)
     fib_program_prints_result_to_stdout = wip(execution.ExecutionTests.fib_program_prints_result_to_stdout)
-    functions_can_be_defined_out_of_order = wip(execution.ExecutionTests.functions_can_be_defined_out_of_order)
     test_assert_false_with_message = wip(execution.ExecutionTests.test_assert_false_with_message)
     test_assert_false_without_message = wip(execution.ExecutionTests.test_assert_false_without_message)
     test_assert_true_shows_no_output = wip(wip(execution.ExecutionTests.test_assert_true_shows_no_output))
