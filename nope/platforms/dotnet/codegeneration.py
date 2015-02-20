@@ -371,6 +371,11 @@ internal class __NopeList
         return index < 0 ? _values[_values.Count + index] : _values[index];
     }
     
+    public void __setitem__(__NopeInteger key, dynamic value)
+    {
+        _values[key.__Value] = value;
+    }
+    
     public void append(dynamic value)
     {
         _values.Add(value);
