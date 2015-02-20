@@ -307,6 +307,11 @@ internal class __NopeTuple
         _values = values;
     }
     
+    public __NopeBoolean __bool__()
+    {
+        return __NopeBoolean.Value(_values.Length > 0);
+    }
+    
     public override string ToString()
     {
         return "(" + string.Join(", ", System.Linq.Enumerable.Select(_values, value => value.ToString())) + ")";
@@ -353,6 +358,11 @@ internal class __NopeList
                 throw new __Nope.Builtins.StopIteration();
             }
         }
+    }
+    
+    public __NopeBoolean __bool__()
+    {
+        return __NopeBoolean.Value(_values.Length > 0);
     }
     
     public override string ToString()

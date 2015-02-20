@@ -33,7 +33,6 @@ class DotNetExecutionTests(execution.ExecutionTests):
     test_in_operator_list = wip(execution.ExecutionTests.test_in_operator_list)
     test_init_method_is_used_to_construct_instance = wip(execution.ExecutionTests.test_init_method_is_used_to_construct_instance)
     test_method_can_call_function_defined_later = wip(execution.ExecutionTests.test_method_can_call_function_defined_later)
-    test_output_of_bool = wip(execution.ExecutionTests.test_output_of_bool)
     test_settitem_list = wip(execution.ExecutionTests.test_settitem_list)
     test_slice_list = wip(execution.ExecutionTests.test_slice_list)
     test_slice_list_swaps_default_start_and_stop_when_step_is_negative = wip(execution.ExecutionTests.test_slice_list_swaps_default_start_and_stop_when_step_is_negative)
