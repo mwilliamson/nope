@@ -1,4 +1,4 @@
-from . import nodejs, python
+from . import nodejs, python, dotnet
 
 
 def find_platform_by_name(platform_name):
@@ -12,6 +12,7 @@ def names():
 _all = [
     python.Python3,
     nodejs.NodeJs,
+    dotnet.DotNet,
 ]
 
 
