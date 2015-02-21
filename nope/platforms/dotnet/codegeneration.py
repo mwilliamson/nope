@@ -335,6 +335,10 @@ internal class __NopeList
     
     private readonly System.Collections.Generic.IList<dynamic> _values;
     
+    internal __NopeList() : this(new System.Collections.Generic.List<dynamic>())
+    {
+    }
+    
     private __NopeList(System.Collections.Generic.IList<dynamic> values)
     {
         _values = values;
@@ -373,10 +377,46 @@ internal class __NopeList
         return __NopeBoolean.Value(_values.Count > 0);
     }
     
-    public dynamic __getitem__(__NopeInteger key)
+    public dynamic __getitem__(dynamic key)
     {
-        var index = key.__Value;
-        return index < 0 ? _values[_values.Count + index] : _values[index];
+        if (key is __Nope.Builtins.Slice)
+        {
+            // TODO: exception on step of 0
+            // TODO: implement this in nope
+            var result = new __NopeList();
+            var step = System.Object.ReferenceEquals(key.step, __NopeNone.Value)
+                ? 1 : key.step.__Value;
+            
+            if (step < 0)
+            {
+                var start = System.Object.ReferenceEquals(key.start, __NopeNone.Value)
+                    ? _values.Count - 1
+                    : key.start.__Value;
+                var stop = System.Object.ReferenceEquals(key.stop, __NopeNone.Value)
+                    ? -1 : key.stop.__Value;
+                
+                for (var i = start; i > stop; i += step) {
+                    result.append(_values[i]);
+                }
+            }
+            else
+            {
+                var start = System.Object.ReferenceEquals(key.start, __NopeNone.Value)
+                    ? 0 : key.start.__Value;
+                var stop = System.Object.ReferenceEquals(key.stop, __NopeNone.Value)
+                    ? _values.Count : key.stop.__Value;
+                
+                for (var i = start; i < stop; i += step) {
+                    result.append(_values[i]);
+                }
+            }
+            return result;
+        }
+        else
+        {
+            var index = key.__Value;
+            return index < 0 ? _values[_values.Count + index] : _values[index];
+        }
     }
     
     public void __setitem__(__NopeInteger key, dynamic value)
@@ -477,6 +517,29 @@ namespace __Nope
                     throw new StopIteration();
                 }
             }
+        }
+        
+        internal static Slice slice(dynamic start, dynamic stop, dynamic step)
+        {
+            return new Slice(start, stop, step);
+        }
+        
+        internal class Slice
+        {
+            private readonly dynamic _start;
+            private readonly dynamic _stop;
+            private readonly dynamic _step;
+            
+            internal Slice(dynamic start, dynamic stop, dynamic step)
+            {
+                _start = start;
+                _stop = stop;
+                _step = step;
+            }
+            
+            internal dynamic start { get { return _start; } }
+            internal dynamic stop { get { return _stop; } }
+            internal dynamic step { get { return _step; } }
         }
     }
     
