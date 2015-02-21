@@ -46,6 +46,7 @@ def dumps(obj, **kwargs):
 
 def _serialize_function_declaration(obj, writer):
     _serialize_function(obj, writer, name=obj.name)
+    writer.end_compound_statement()
 
 
 def _serialize_function_expression(obj, writer):
@@ -65,7 +66,7 @@ def _serialize_function(obj, writer, name):
         writer.write(arg)
     
     writer.write(") ")
-    _serialize_block(obj.body, writer)
+    writer.dump_block(obj.body)
 
 
 def _serialize_variable_declaration(obj, writer):
@@ -81,21 +82,19 @@ def _serialize_variable_declaration(obj, writer):
 
 def _serialize_try_catch(obj, writer):
     writer.write("try ")
-    _serialize_block(obj.try_body, writer)
+    writer.dump_block(obj.try_body)
     
     if obj.catch_body:
         writer.write(" catch (")
         writer.write(obj.error_name)
         writer.write(") ")
-        _serialize_block(obj.catch_body, writer)
+        writer.dump_block(obj.catch_body)
     
     if obj.finally_body:
         writer.write(" finally ")
-        _serialize_block(obj.finally_body, writer)
-
-
-def _serialize_block(statements, writer):
-    writer.dump_block(statements)
+        writer.dump_block(obj.finally_body)
+    
+    writer.end_compound_statement()
 
 
 def _serialize_array(obj, writer):

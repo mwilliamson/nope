@@ -238,7 +238,17 @@ class PrettyPrintTests(object):
 
 
     @istest
-    def bodies_of_blocks_are_indented(self):
+    def bodies_of_if_else_are_indented(self):
+        node = js.if_else(
+            js.ref("condition"),
+            [js.expression_statement(js.ref("y"))],
+            [js.expression_statement(js.ref("x"))]
+        )
+        assert_equal("if (condition) {\n    y;\n} else {\n    x;\n}\n", self._dumps(node))
+
+
+    @istest
+    def body_of_while_is_indented(self):
         node = js.while_loop(
             js.ref("condition"),
             [
@@ -247,6 +257,40 @@ class PrettyPrintTests(object):
             ]
         )
         assert_equal("while (condition) {\n    y;\n    x;\n}\n", self._dumps(node))
+
+
+    @istest
+    def body_of_function_declaration_is_indented(self):
+        node = js.function_declaration("f", [], [js.ret(js.ref("x"))])
+        assert_equal("function f() {\n    return x;\n}\n", self._dumps(node))
+
+
+    @istest
+    def body_of_try_catch_are_indented(self):
+        node = js.try_catch(
+            [js.ret(js.ref("x"))],
+            "error",
+            [js.ret(js.ref("y"))],
+            [js.ret(js.ref("z"))],
+        )
+        expected = """try {
+    return x;
+} catch (error) {
+    return y;
+} finally {
+    return z;
+}
+"""
+        assert_equal(expected, self._dumps(node))
+
+
+    @istest
+    def closing_brace_of_function_expression_is_on_same_line_as_closing_paren_of_call(self):
+        node = js.call(
+            js.ref("f"),
+            [js.function_expression([], [js.ret(js.ref("x"))])]
+        )
+        assert_equal("f(function() {\n    return x;\n})", self._dumps(node))
     
     def _dumps(self, node):
         return js.dumps(node, pretty_print=True)

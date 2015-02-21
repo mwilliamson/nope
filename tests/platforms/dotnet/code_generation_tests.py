@@ -17,8 +17,7 @@ class FunctionDefinitionTests(object):
 f = ((System.Func<dynamic>)(() =>
 {
     return __NopeNone.Value;
-}
-));"""
+}));"""
         assert_equal(expected.strip(), cs.dumps(transform(node)).strip())
         
     @istest
@@ -29,6 +28,5 @@ f = ((System.Func<dynamic>)(() =>
 f = ((System.Func<dynamic, dynamic, dynamic>)((dynamic x, dynamic y) =>
 {
     return __NopeNone.Value;
-}
-));"""
+}));"""
         assert_equal(expected.strip(), cs.dumps(transform(node)).strip())

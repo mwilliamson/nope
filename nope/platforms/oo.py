@@ -80,12 +80,14 @@ class Writer(object):
         if self._pretty_print:
             self._indentation -= 1
             self.write("}")
-            self.newline()
         else:
             self.write(" }")
     
     def end_simple_statement(self):
         self.write(";")
+        self.newline()
+    
+    def end_compound_statement(self):
         self.newline()
 
 
@@ -98,10 +100,13 @@ def _serialize_if_else(obj, writer):
     writer.write("if (")
     writer.dump(obj.condition)
     writer.write(") ")
+    
     writer.dump_block(obj.true_body)
     if obj.false_body:
         writer.write(" else ")
         writer.dump_block(obj.false_body)
+    
+    writer.end_compound_statement()
 
 
 def _serialize_while_loop(obj, writer):
@@ -109,6 +114,7 @@ def _serialize_while_loop(obj, writer):
     writer.dump(obj.condition)
     writer.write(") ")
     writer.dump_block(obj.body)
+    writer.end_compound_statement()
 
 
 def _serialize_break_statement(obj, writer):
