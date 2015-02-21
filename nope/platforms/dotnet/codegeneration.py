@@ -314,6 +314,12 @@ internal class __NopeTuple
         return __NopeBoolean.Value(_values.Length > 0);
     }
     
+    public dynamic __getitem__(__NopeInteger key)
+    {
+        var index = key.__Value;
+        return index < 0 ? _values[_values.Length + index] : _values[index];
+    }
+    
     public override string ToString()
     {
         return "(" + string.Join(", ", System.Linq.Enumerable.Select(_values, value => value.ToString())) + ")";
@@ -616,6 +622,10 @@ def _transform_list_literal(literal):
     return cs.call(cs.ref("__NopeList.Values"), _transform_all(literal.elements))
 
 
+def _transform_tuple_literal(literal):
+    return cs.call(cs.ref("__NopeTuple.Values"), _transform_all(literal.elements))
+
+
 def _transform_call(call):
     return cs.call(_transform(call.func), _transform_all(call.args))
 
@@ -672,6 +682,7 @@ _transformers = {
     
     cc.Assignment: _transform_assignment,
     cc.ListLiteral: _transform_list_literal,
+    cc.TupleLiteral: _transform_tuple_literal,
     cc.BinaryOperation: _transform_operation,
     cc.UnaryOperation: _transform_operation,
     cc.TernaryConditional: _transform_ternary_conditional,
