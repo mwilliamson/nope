@@ -73,10 +73,7 @@ def _serialize_lambda(node, writer):
     
     writer.write(") =>")
     writer.newline()
-    writer.start_block()
-    for child in node.body:
-        writer.dump(child)
-    writer.end_block()
+    writer.dump_block(node.body)
     writer.write(")")
 
 
