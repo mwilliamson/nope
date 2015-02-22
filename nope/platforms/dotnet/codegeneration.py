@@ -37,9 +37,7 @@ internal class Program
         System.Func<dynamic, dynamic, dynamic> divmod = (__x_1, __y_1) => __x_1.__divmod__(__y_1);
         System.Func<dynamic, dynamic, dynamic> range = (__x_1, __y_1) => __Nope.Builtins.range(__x_1, __y_1);
         System.Action<object> print = System.Console.WriteLine;
-        var Exception = new {
-            __call__ = (System.Func<dynamic, dynamic>)(message => new System.Exception(message.__Value))
-        };
+        var Exception = __Nope.Builtins.Exception;
         """)
         
                 cs.dump(cs_module, dest_cs_file)
@@ -109,19 +107,21 @@ def _transform_condition(condition):
 
 
 def _transform_try_statement(statement):
+    if statement.handlers:
+        handler, = statement.handlers
+        catch = [cs.catch(_internal_ref("__NopeException"), None, _transform_all(handler.body))]
+    else:
+        catch = []
+    
     return cs.try_(
         _transform_all(statement.body),
-        handlers=_transform_all(statement.handlers),
+        catch,
         finally_body=_transform_all(statement.finally_body),
     )
 
 
-def _transform_except_handler(handler):
-    return cs.catch(None, None, _transform_all(handler.body))
-
-
 def _transform_raise_statement(statement):
-    return cs.throw(_transform(statement.value))
+    return cs.throw(cs.call(_internal_ref("CreateException"), [_transform(statement.value)]))
 
 
 def _transform_expression_statement(statement):
@@ -189,11 +189,19 @@ def _transform_attribute_access(node):
 
 
 def _transform_builtin_reference(reference):
-    return cs.ref("__Nope.Builtins.@{}".format(reference.name))
+    return _builtin_ref(reference.name)
+
+
+def _builtin_ref(name):
+    return cs.ref("__Nope.Builtins.@{}".format(name))
 
 
 def _transform_internal_reference(reference):
-    return cs.ref("__Nope.Internals.@{}".format(reference.name))
+    return _internal_ref(reference.name)
+
+
+def _internal_ref(name):
+    return cs.ref("__Nope.Internals.@{}".format(name))
 
 
 def _transform_variable_reference(reference):
@@ -229,7 +237,6 @@ _transformers = {
     cc.ContinueStatement: lambda node: cs.continue_,
     
     cc.TryStatement: _transform_try_statement,
-    cc.ExceptHandler: _transform_except_handler,
     cc.RaiseStatement: _transform_raise_statement,
     
     cc.ExpressionStatement: _transform_expression_statement,

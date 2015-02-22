@@ -1,19 +1,28 @@
+using System;
+
 namespace __Nope
 {
     internal class Builtins
     {
-        // TODO: resolve needing AssertionError to be both a class and a callable
-        internal class _AssertionError : System.Exception
+        internal static readonly dynamic AssertionError = new
         {
-            internal _AssertionError(__NopeString message) : base(message.__Value)
+            Name = "AssertionError",
+            __call__ = (System.Func<dynamic, dynamic>)(message => new
             {
-            }
-        }
-    
-        internal static _AssertionError AssertionError(__NopeString message)
+                __Type = AssertionError,
+                __str__ = (Func<dynamic>)(() => message)
+            })
+        };
+        
+        internal static readonly dynamic Exception = new
         {
-            return new _AssertionError(message);
-        }
+            Name = "Exception",
+            __call__ = (System.Func<dynamic, dynamic>)(message => new
+            {
+                __Type = Exception,
+                __str__ = (Func<dynamic>)(() => message)
+            })
+        };
     
         internal static __NopeBoolean @bool(dynamic value)
         {

@@ -33,6 +33,17 @@ f = ((System.Func<dynamic, dynamic, dynamic>)((dynamic x, dynamic y) =>
 
 
 @istest
+class RaiseStatementTests(object):
+    @istest
+    def raise_generates_throw_with_nope_exception_contained_in_csharp_exception(self):
+        node = cc.raise_(cc.ref("x"))
+        
+        expected = """throw __Nope.Internals.@CreateException(x);
+"""
+        assert_equal(expected, cs.dumps(transform(node)))
+
+
+@istest
 class TryStatementTests(object):
     @istest
     def try_with_finally_is_converted_to_try_with_finally(self):
@@ -44,6 +55,22 @@ class TryStatementTests(object):
         expected = """try {
     return x;
 } finally {
+    y;
+}
+"""
+        assert_equal(expected, cs.dumps(transform(node)))
+
+
+    @istest
+    def except_handler_is_converted_to_catch_for_nope_exceptions(self):
+        node = cc.try_(
+            [cc.ret(cc.ref("x"))],
+            handlers=[cc.except_(None, None, [cc.expression_statement(cc.ref("y"))])]
+        )
+        
+        expected = """try {
+    return x;
+} catch (__Nope.Internals.@__NopeException) {
     y;
 }
 """

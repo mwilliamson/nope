@@ -395,7 +395,7 @@ class AssertStatementTests(object):
             nodes.assert_statement(nodes.ref("value")),
             """
                 if not value:
-                    raise $builtins.AssertionError("")
+                    raise $builtins.AssertionError.__call__("")
             """
         )
 

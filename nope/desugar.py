@@ -283,8 +283,7 @@ class Desugarrer(zuice.Base):
             message = cc.str_literal("")
         else:
             message = self.desugar(node.message)
-        
-        exception_value = self._call_builtin("AssertionError", [message])
+        exception_value = cc.call(cc.attr(self._builtin_ref("AssertionError"), "__call__"), [message])
         
         return cc.if_(
             cc.not_(self.desugar(node.condition)),
