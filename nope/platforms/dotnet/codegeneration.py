@@ -36,7 +36,11 @@ internal class Program
         System.Func<dynamic, dynamic> abs = __x_1 => __x_1.__abs__();
         System.Func<dynamic, dynamic, dynamic> divmod = (__x_1, __y_1) => __x_1.__divmod__(__y_1);
         System.Func<dynamic, dynamic, dynamic> range = (__x_1, __y_1) => __Nope.Builtins.range(__x_1, __y_1);
-        System.Action<object> print = System.Console.WriteLine;""")
+        System.Action<object> print = System.Console.WriteLine;
+        var Exception = new {
+            __call__ = (System.Func<dynamic, dynamic>)(message => new System.Exception(message.__Value))
+        };
+        """)
         
                 cs.dump(cs_module, dest_cs_file)
                 dest_cs_file.write("""

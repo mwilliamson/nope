@@ -32,7 +32,6 @@ class DotNetExecutionTests(execution.ExecutionTests):
     test_try_except_with_exception_handles_subexception = wip(execution.ExecutionTests.test_try_except_with_exception_handles_subexception)
     test_try_except_with_exception_ignores_superexception = wip(execution.ExecutionTests.test_try_except_with_exception_ignores_superexception)
     test_try_named_except_finally_with_exception = wip(execution.ExecutionTests.test_try_named_except_finally_with_exception)
-    test_unhandled_exception = wip(execution.ExecutionTests.test_unhandled_exception)
     test_unnested_generator_expression = wip(execution.ExecutionTests.test_unnested_generator_expression)
     test_unnested_list_comprehension = wip(execution.ExecutionTests.test_unnested_list_comprehension)
     test_with_statement_calls_enter_and_exit_methods_when_body_exits_normally = wip(execution.ExecutionTests.test_with_statement_calls_enter_and_exit_methods_when_body_exits_normally)
