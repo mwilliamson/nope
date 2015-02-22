@@ -73,14 +73,26 @@ def _serialize_try_statement(node, writer):
     for handler in node.handlers:
         writer.dump(handler)
     
-    writer.write(" finally ")
-    writer.dump_block(node.finally_body)
+    if node.finally_body:
+        writer.write(" finally ")
+        writer.dump_block(node.finally_body)
     
     writer.end_compound_statement()
 
 
 def _serialize_catch(node, writer):
     writer.write(" catch ")
+    
+    if node.type is not None:
+        writer.write("(")
+        writer.dump(node.type)
+    
+        if node.name is not None:
+            writer.write(" ")
+            writer.write(node.name)
+        
+        writer.write(") ")
+    
     writer.dump_block(node.body)
 
 
