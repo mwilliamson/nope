@@ -38,6 +38,19 @@ def dumps(node):
     dump(node, output)
     return output.getvalue()
 
+TryStatement = dodge.data_class("TryStatement", ["try_body", "handlers", "finally_body"])
+
+def try_(try_body, handlers=None, finally_body=None):
+    if handlers is None:
+        handlers = []
+    if finally_body is None:
+        finally_body = []
+    return TryStatement(try_body, handlers, finally_body)
+
+
+catch = CatchStatement = dodge.data_class("CatchStatement", ["type", "name", "body"])
+
+
 declare = VariableDeclaration = dodge.data_class("VariableDeclaration", ["name", "value"])
 
 lambda_ = LambdaExpression = dodge.data_class("LambdaExpression", ["args", "body"])
@@ -51,6 +64,24 @@ null = ref("null")
 not_ = functools.partial(unary_operation, "!")
 break_ = break_statement()
 continue_ = continue_statement()
+
+
+def _serialize_try_statement(node, writer):
+    writer.write("try ")
+    writer.dump_block(node.try_body)
+    
+    for handler in node.handlers:
+        writer.dump(handler)
+    
+    writer.write(" finally ")
+    writer.dump_block(node.finally_body)
+    
+    writer.end_compound_statement()
+
+
+def _serialize_catch(node, writer):
+    writer.write(" catch ")
+    writer.dump_block(node.body)
 
 
 def _serialize_variable_declaration(node, writer):
@@ -101,6 +132,8 @@ def _serialize_type_application(node, writer):
 
 
 _serializers = oo.serializers({
+    TryStatement: _serialize_try_statement,
+    CatchStatement: _serialize_catch,
     VariableDeclaration: _serialize_variable_declaration,
 
     LambdaExpression: _serialize_lambda,

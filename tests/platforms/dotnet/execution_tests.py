@@ -27,7 +27,6 @@ class DotNetExecutionTests(execution.ExecutionTests):
     test_init_method_is_used_to_construct_instance = wip(execution.ExecutionTests.test_init_method_is_used_to_construct_instance)
     test_method_can_call_function_defined_later = wip(execution.ExecutionTests.test_method_can_call_function_defined_later)
     test_transformer_for_collections_namedtuple = wip(execution.ExecutionTests.test_transformer_for_collections_namedtuple)
-    test_try_except_finally_with_exception = wip(execution.ExecutionTests.test_try_except_finally_with_exception)
     test_try_except_finally_with_no_exception = wip(execution.ExecutionTests.test_try_except_finally_with_no_exception)
     test_try_except_with_exception_handles_subexception = wip(execution.ExecutionTests.test_try_except_with_exception_handles_subexception)
     test_try_except_with_exception_ignores_superexception = wip(execution.ExecutionTests.test_try_except_with_exception_ignores_superexception)

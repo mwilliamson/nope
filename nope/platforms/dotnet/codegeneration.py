@@ -108,6 +108,18 @@ def _transform_condition(condition):
     return cs.property_access(_transform(condition), "__Value")
 
 
+def _transform_try_statement(statement):
+    return cs.try_(
+        _transform_all(statement.body),
+        handlers=_transform_all(statement.handlers),
+        finally_body=_transform_all(statement.finally_body),
+    )
+
+
+def _transform_except_handler(handler):
+    return cs.catch(None, None, _transform_all(handler.body))
+
+
 def _transform_raise_statement(statement):
     return cs.throw(_transform(statement.value))
 
@@ -216,6 +228,8 @@ _transformers = {
     cc.BreakStatement: lambda node: cs.break_,
     cc.ContinueStatement: lambda node: cs.continue_,
     
+    cc.TryStatement: _transform_try_statement,
+    cc.ExceptHandler: _transform_except_handler,
     cc.RaiseStatement: _transform_raise_statement,
     
     cc.ExpressionStatement: _transform_expression_statement,

@@ -574,8 +574,8 @@ finally:
 print("done")
         """
         result = self._run_program_string(program)
-        assert_equal(b"try-before\nexcept\nfinally\ndone\n", result.output)
         assert_equal(b"", result.stderr_output)
+        assert_equal(b"try-before\nexcept\nfinally\ndone\n", result.output)
     
     @istest
     def test_try_named_except_finally_with_exception(self):
