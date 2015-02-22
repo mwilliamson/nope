@@ -101,6 +101,30 @@ class TryStatementTests(object):
 
 
     @istest
+    def handlers_are_converted_to_if_statements_in_order(self):
+        node = cc.try_(
+            [],
+            handlers=[
+                cc.except_(cc.ref("AssertionError"), None, []),
+                cc.except_(cc.ref("Exception"), None, []),
+            ]
+        )
+        
+        expected = """try {
+} catch (__Nope.Internals.@__NopeException __exception) {
+    if ((__Nope.Builtins.@isinstance((__exception).__Value, AssertionError)).__Value) {
+    } else {
+        if ((__Nope.Builtins.@isinstance((__exception).__Value, Exception)).__Value) {
+        } else {
+            throw;
+        }
+    }
+}
+"""
+        assert_equal(expected, cs.dumps(transform(node)))
+
+
+    @istest
     def nope_exception_is_extracted_from_dotnet_exception_if_exception_is_named_in_catch(self):
         node = cc.try_(
             [],
