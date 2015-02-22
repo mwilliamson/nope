@@ -183,7 +183,10 @@ def _transform_except_handlers(handlers):
 
 
 def _transform_raise_statement(statement):
-    return cs.throw(cs.call(_internal_ref("CreateException"), [_transform(statement.value)]))
+    if statement.value is None:
+        return cs.throw()
+    else:
+        return cs.throw(cs.call(_internal_ref("CreateException"), [_transform(statement.value)]))
 
 
 def _transform_expression_statement(statement):

@@ -67,6 +67,11 @@ namespace __Nope
             return __NopeBoolean.Value(isinstance);
         }
         
+        internal static dynamic type(dynamic obj)
+        {
+            return obj.__Type;
+        }
+        
         internal class StopIteration : System.Exception
         {
         }

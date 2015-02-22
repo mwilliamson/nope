@@ -186,6 +186,7 @@ class WithStatementTests(object):
         _assert_transform(
             nodes.with_statement(nodes.ref("manager"), None, [nodes.ret(nodes.ref("x"))]),
             """
+                var __nope_u_exception0
                 var __nope_u_manager1 = manager
                 var __nope_u_exit2 = __nope_u_manager1.__exit__
                 var __nope_u_has_exited3 = False
@@ -208,6 +209,7 @@ class WithStatementTests(object):
         _assert_transform(
             nodes.with_statement(nodes.ref("manager"), nodes.ref("value"), [nodes.ret(nodes.ref("x"))]),
             """
+                var __nope_u_exception0
                 var __nope_u_manager1 = manager
                 var __nope_u_exit2 = __nope_u_manager1.__exit__
                 var __nope_u_has_exited3 = False

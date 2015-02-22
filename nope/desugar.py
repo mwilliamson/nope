@@ -118,6 +118,7 @@ class Desugarrer(zuice.Base):
             enter_statement = cc.assign(self.desugar(statement.target), enter_value)
         
         return cc.statements([
+            cc.declare(exception_name),
             cc.declare(manager_name, self.desugar(statement.value)),
             cc.declare(exit_method_var_name, self._get_magic_method(manager_ref, "exit")),
             cc.declare(has_exited_name, cc.false),
