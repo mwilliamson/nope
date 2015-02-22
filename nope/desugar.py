@@ -187,7 +187,11 @@ class Desugarrer(zuice.Base):
         
     
     def _condition(self, condition):
-        return self._builtins_bool(self.desugar(condition))
+        cc_condition = self.desugar(condition)
+        if self._is_type(condition, types.bool_type):
+            return cc_condition
+        else:
+            return self._builtins_bool(cc_condition)
     
     
     def _builtins_bool(self, cc_condition):
@@ -412,6 +416,9 @@ class Desugarrer(zuice.Base):
         else:
             return cc.not_(node)
 
+
+    def _is_type(self, node, type_):
+        return self._type_of(node) == type_
     
     def _type_of(self, node):
         return self._type_lookup.type_of(node)

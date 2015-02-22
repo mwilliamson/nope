@@ -228,7 +228,7 @@ class WithStatementTests(object):
 @istest
 class IfTests(object):
     @istest
-    def test_transform_if(self):
+    def test_condition_is_transformed_using_bool_builtin(self):
         _assert_transform(
             nodes.if_else(
                 nodes.ref("x"),
@@ -240,6 +240,25 @@ class IfTests(object):
                 [cc.ret(cc.ref("y"))],
                 [cc.ret(cc.ref("z"))],
             )
+        )
+    
+    @istest
+    def test_condition_is_not_transformed_using_bool_builtin_if_already_a_bool(self):
+        condition_node = nodes.ref("x")
+        _assert_transform(
+            nodes.if_else(
+                condition_node,
+                [nodes.ret(nodes.ref("y"))],
+                [nodes.ret(nodes.ref("z"))],
+            ),
+            cc.if_(
+                cc.ref("x"),
+                [cc.ret(cc.ref("y"))],
+                [cc.ret(cc.ref("z"))],
+            ),
+            type_lookup=[
+                (condition_node, types.bool_type),
+            ],
         )
 
 
@@ -650,8 +669,10 @@ class NoneLiteralTests(object):
 
 
 def _assert_transform(nope, expected_result, type_lookup=None):
-    if type_lookup is not None:
-        type_lookup = types.TypeLookup(IdentityDict(type_lookup))
+    if type_lookup is None:
+        type_lookup = []
+    type_lookup = types.TypeLookup(IdentityDict(type_lookup))
+    
     result = desugar(nope, type_lookup=type_lookup, declarations=DeclarationFinder())
     if isinstance(expected_result, str):
         lines = list(filter(lambda line: line.strip(), expected_result.splitlines()))
