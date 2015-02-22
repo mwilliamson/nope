@@ -4,8 +4,9 @@ from nose.tools import istest, assert_equal
 
 from nope.platforms.dotnet import cs
 
+
 @istest
-class TryStatements(object):
+class TryStatementsTests(object):
     @istest
     def test_serialize_try_with_finally_body(self):
         node = cs.try_(
@@ -64,3 +65,19 @@ class TryStatements(object):
 }
 """
         assert_equal(expected, cs.dumps(node))
+
+
+@istest
+class VariableDeclarationTests(object):
+    @istest
+    def variable_without_initial_value_is_declared_as_dynamic(self):
+        node = cs.declare("x", None)
+        expected = """dynamic x;\n"""
+        assert_equal(expected, cs.dumps(node))
+    
+    @istest
+    def variable_with_initial_value_is_declared_as_dynamic_with_initial_value(self):
+        node = cs.declare("x", cs.null)
+        expected = """dynamic x = null;\n"""
+        assert_equal(expected, cs.dumps(node))
+        
