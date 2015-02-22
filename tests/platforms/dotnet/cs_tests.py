@@ -111,3 +111,23 @@ class LambdaTests(object):
 })"""
         assert_equal(expected, cs.dumps(node))
         
+
+@istest
+class AnonymousObjectTests(object):
+    @istest
+    def object_is_created_with_new_keyword(self):
+        node = cs.obj([])
+        expected = """new
+{
+}"""
+        assert_equal(expected, cs.dumps(node))
+        
+    @istest
+    def object_members_are_assigned_with_equals_sign(self):
+        node = cs.obj([("X", cs.ref("x")), ("Y", cs.ref("y"))])
+        expected = """new
+{
+    X = x,
+    Y = y,
+}"""
+        assert_equal(expected, cs.dumps(node))
