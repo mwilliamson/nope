@@ -128,8 +128,12 @@ def _serialize_continue_statement(obj, writer):
 
 
 def _serialize_throw(obj, writer):
-    writer.write("throw ")
-    writer.dump(obj.value)
+    writer.write("throw")
+    
+    if obj.value is not None:
+        writer.write(" ")
+        writer.dump(obj.value)
+    
     writer.end_simple_statement()
 
 

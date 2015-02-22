@@ -5,6 +5,7 @@ from nose.tools import istest, assert_equal
 from nope import couscous as cc
 from nope.platforms.dotnet import cs
 from nope.platforms.dotnet.codegeneration import _transform as transform
+from ...testing import wip
 
 
 @istest
@@ -64,14 +65,60 @@ class TryStatementTests(object):
     @istest
     def except_handler_is_converted_to_catch_for_nope_exceptions(self):
         node = cc.try_(
-            [cc.ret(cc.ref("x"))],
+            [],
             handlers=[cc.except_(None, None, [cc.expression_statement(cc.ref("y"))])]
         )
         
         expected = """try {
-    return x;
-} catch (__Nope.Internals.@__NopeException) {
+} catch (__Nope.Internals.@__NopeException __exception) {
     y;
+}
+"""
+        assert_equal(expected, cs.dumps(transform(node)))
+
+
+    @istest
+    def type_of_nope_exception_is_checked_if_handler_has_exception_type(self):
+        node = cc.try_(
+            [],
+            handlers=[
+                cc.except_(cc.ref("Exception"), None, [
+                    cc.ret(cc.ref("value"))
+                ])
+            ]
+        )
+        
+        expected = """try {
+} catch (__Nope.Internals.@__NopeException __exception) {
+    if ((__Nope.Builtins.@isinstance((__exception).__Value, Exception)).__Value) {
+        return value;
+    } else {
+        throw;
+    }
+}
+"""
+        assert_equal(expected, cs.dumps(transform(node)))
+
+
+    @istest
+    def nope_exception_is_extracted_from_dotnet_exception_if_exception_is_named_in_catch(self):
+        node = cc.try_(
+            [],
+            handlers=[
+                cc.except_(cc.ref("Exception"), cc.ref("error"), [
+                    cc.ret(cc.ref("error"))
+                ])
+            ]
+        )
+        
+        expected = """try {
+} catch (__Nope.Internals.@__NopeException __exception) {
+    if ((__Nope.Builtins.@isinstance((__exception).__Value, Exception)).__Value) {
+        error = (__exception).__Value;
+        return error;
+    } else {
+        throw;
+    }
 }
 """
         assert_equal(expected, cs.dumps(transform(node)))

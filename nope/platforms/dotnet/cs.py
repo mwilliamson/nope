@@ -12,7 +12,7 @@ from ..oo import (
     break_statement,
     continue_statement,
     
-    Throw, throw,
+    Throw,
     
     ExpressionStatement, expression_statement,
     ReturnStatement, ret,
@@ -50,6 +50,8 @@ def try_(try_body, handlers=None, finally_body=None):
 
 catch = CatchStatement = dodge.data_class("CatchStatement", ["type", "name", "body"])
 
+def throw(value=None):
+    return Throw(value)
 
 declare = VariableDeclaration = dodge.data_class("VariableDeclaration", ["name", "value"])
 

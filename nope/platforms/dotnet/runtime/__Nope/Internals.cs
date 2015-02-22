@@ -34,6 +34,8 @@ namespace __Nope
             {
                 _nopeException = nopeException;
             }
+            
+            internal dynamic __Value { get { return _nopeException; } }
         }
     }
 }

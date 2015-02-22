@@ -38,6 +38,8 @@ internal class Program
         System.Func<dynamic, dynamic, dynamic> range = (__x_1, __y_1) => __Nope.Builtins.range(__x_1, __y_1);
         System.Action<object> print = System.Console.WriteLine;
         var Exception = __Nope.Builtins.Exception;
+        var AssertionError = __Nope.Builtins.AssertionError;
+        var str = __Nope.Builtins.str;
         """)
         
                 cs.dump(cs_module, dest_cs_file)
@@ -108,8 +110,7 @@ def _transform_condition(condition):
 
 def _transform_try_statement(statement):
     if statement.handlers:
-        handler, = statement.handlers
-        catch = [cs.catch(_internal_ref("__NopeException"), None, _transform_all(handler.body))]
+        catch = [_transform_except_handlers(statement.handlers)]
     else:
         catch = []
     
@@ -118,6 +119,36 @@ def _transform_try_statement(statement):
         catch,
         finally_body=_transform_all(statement.finally_body),
     )
+
+
+def _transform_except_handlers(handlers):
+    catch_body = [cs.throw()]
+    
+    dotnet_exception_name = "__exception"
+    dotnet_exception = cs.ref(dotnet_exception_name)
+    
+    nope_exception = cs.property_access(dotnet_exception, "__Value")
+    
+    for handler in reversed(handlers):
+        handler_body = _transform_all(handler.body)
+        
+        if handler.type is None:
+            catch_body = handler_body
+        else:
+            if handler.target is None:
+                before_body = []
+            else:
+                before_body = [cs.expression_statement(cs.assign(cs.ref(handler.target.name), nope_exception))]
+            
+            catch_body = [
+                cs.if_(
+                    cs.property_access(cs.call(_builtin_ref("isinstance"), [nope_exception, _transform(handler.type)]), "__Value"),
+                    before_body + handler_body,
+                    catch_body,
+                )
+            ]
+    
+    return cs.catch(_internal_ref("__NopeException"), dotnet_exception_name, catch_body)
 
 
 def _transform_raise_statement(statement):

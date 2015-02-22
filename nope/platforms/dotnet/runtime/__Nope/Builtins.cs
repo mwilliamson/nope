@@ -53,6 +53,16 @@ namespace __Nope
             return iterable.__iter__();
         }
         
+        internal static readonly dynamic str = new
+        {
+            __call__ = (Func<dynamic, __NopeString>)(value => value.__str__())
+        };
+        
+        internal static __NopeBoolean isinstance(dynamic obj, dynamic type)
+        {
+            return __NopeBoolean.Value(obj.__Type == type);
+        }
+        
         internal class StopIteration : System.Exception
         {
         }
