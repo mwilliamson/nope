@@ -81,13 +81,44 @@ def _transform_statements(node):
     return cs.statements(_transform_all(node.body))
 
 
+def _transform_class_definition(node):
+    methods = [
+        (method.name, _transform_method(method))
+        for method in node.methods
+    ]
+    
+    call_func = cs.lambda_([], [
+        cs.declare("__self", cs.null),
+        cs.expression_statement(cs.assign(cs.ref("__self"), cs.obj(methods))),
+        cs.ret(cs.ref("__self"))
+    ])
+    
+    class_obj = cs.obj([
+        ("__call__", cs.cast(_func_type(0), call_func)),
+    ])
+    return cs.expression_statement(cs.assign(node.name, class_obj))
+
+
+def _transform_method(method):
+    args = method.args[1:]
+    func_type = _func_type(len(args))
+    args = [cs.arg(arg.name) for arg in args]
+    body = [cs.declare(method.args[0].name, cs.ref("__self"))] + _transform_all(method.body)
+    lambda_expression = cs.lambda_(args, body)
+    return cs.cast(func_type, lambda_expression)
+
+
 def _transform_function_definition(function):
-    func_type = cs.type_apply(cs.ref("System.Func"), [cs.dynamic] * (len(function.args) + 1))
+    func_type = _func_type(len(function.args))
     args = [cs.arg(arg.name) for arg in function.args]
     body = _transform_all(function.body)
     lambda_expression = cs.lambda_(args, body)
     assignment = cs.assign(cs.ref(function.name), cs.cast(func_type, lambda_expression))
     return cs.expression_statement(assignment)
+
+
+def _func_type(length):
+    return cs.type_apply(cs.ref("System.Func"), [cs.dynamic] * (length + 1))
 
 
 def _transform_if_statement(statement):
@@ -260,6 +291,7 @@ _transformers = {
     
     cc.Statements: _transform_statements,
     
+    cc.ClassDefinition: _transform_class_definition,
     cc.FunctionDefinition: _transform_function_definition,
     
     cc.IfStatement: _transform_if_statement,

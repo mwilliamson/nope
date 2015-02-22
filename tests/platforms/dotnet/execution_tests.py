@@ -18,7 +18,6 @@ class DotNetExecutionTests(execution.ExecutionTests):
     can_import_module_in_package = wip(execution.ExecutionTests.can_import_module_in_package)
     can_import_module_in_package_using_import_from = wip(execution.ExecutionTests.can_import_module_in_package_using_import_from)
     can_import_value_from_local_package = wip(execution.ExecutionTests.can_import_value_from_local_package)
-    test_call_method_of_class_with_default_constructor = wip(execution.ExecutionTests.test_call_method_of_class_with_default_constructor)
     test_generic_class_type_parameters_are_inferred_from_init_method = wip(execution.ExecutionTests.test_generic_class_type_parameters_are_inferred_from_init_method)
     test_getitem_dict = wip(execution.ExecutionTests.test_getitem_dict)
     test_import_of_module_in_standard_library = wip(execution.ExecutionTests.test_import_of_module_in_standard_library)

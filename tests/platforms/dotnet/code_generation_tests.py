@@ -146,3 +146,47 @@ class TryStatementTests(object):
 }
 """
         assert_equal(expected, cs.dumps(transform(node)))
+
+
+@istest
+class ClassDefinitionTests(object):
+    @istest
+    def class_definition_creates_object_with_call_method_for_init(self):
+        node = cc.class_("A", methods=[], body=[])
+        
+        expected = """A = new
+{
+    __call__ = ((System.Func<dynamic>)(() =>
+    {
+        dynamic __self = null;
+        __self = new
+        {
+        };
+        return __self;
+    })),
+};
+"""
+        assert_equal(expected, cs.dumps(transform(node)))
+    
+    @istest
+    def methods_are_set_as_members_on_object(self):
+        node = cc.class_("A", methods=[cc.func("f", [cc.arg("self")], [cc.ret(cc.ref("self"))])], body=[])
+        
+        expected = """A = new
+{
+    __call__ = ((System.Func<dynamic>)(() =>
+    {
+        dynamic __self = null;
+        __self = new
+        {
+            f = ((System.Func<dynamic>)(() =>
+            {
+                dynamic self = __self;
+                return self;
+            })),
+        };
+        return __self;
+    })),
+};
+"""
+        assert_equal(expected, cs.dumps(transform(node)))
