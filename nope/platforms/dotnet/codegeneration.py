@@ -47,7 +47,7 @@ internal class Program
     }
 }
 """)
-            subprocess.check_call(["mcs", "-out:{}".format(dest_exe_filename), dest_cs_filename] + list(_runtime_paths()))
+            subprocess.check_call(["mcs", "-nowarn:0162,0168,0219", "-out:{}".format(dest_exe_filename), dest_cs_filename] + list(_runtime_paths()))
         
         walk_tree(source_path, handle_dir, handle_file)
 
