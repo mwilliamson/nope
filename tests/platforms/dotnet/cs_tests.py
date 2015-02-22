@@ -80,4 +80,34 @@ class VariableDeclarationTests(object):
         node = cs.declare("x", cs.null)
         expected = """dynamic x = null;\n"""
         assert_equal(expected, cs.dumps(node))
+
+
+@istest
+class LambdaTests(object):
+    @istest
+    def lambda_without_arguments_has_body_serialized(self):
+        node = cs.lambda_([], [cs.ret(cs.ref("x"))])
+        expected = """(() =>
+{
+    return x;
+})"""
+        assert_equal(expected, cs.dumps(node))
+    
+    
+    @istest
+    def arguments_have_dynamic_type(self):
+        node = cs.lambda_([cs.arg("x")], [])
+        expected = """((dynamic x) =>
+{
+})"""
+        assert_equal(expected, cs.dumps(node))
+    
+    
+    @istest
+    def arguments_are_separated_by_commas(self):
+        node = cs.lambda_([cs.arg("x"), cs.arg("y")], [])
+        expected = """((dynamic x, dynamic y) =>
+{
+})"""
+        assert_equal(expected, cs.dumps(node))
         
