@@ -632,7 +632,7 @@ except AssertionError as error:
 except Exception as error:
     print("handling Exception")
         """
-        result = self._run_program_string(program, allow_error=True)
+        result = self._run_program_string(program)
         assert_equal(b"handling AssertionError\n", result.output)
         assert_equal(b"", result.stderr_output)
     

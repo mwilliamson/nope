@@ -4,22 +4,24 @@ namespace __Nope
 {
     internal class Builtins
     {
-        internal static readonly dynamic AssertionError = new
+        internal static readonly dynamic Exception = new
         {
-            Name = "AssertionError",
+            Name = "Exception",
+            __BaseClasses = new dynamic[] {},
             __call__ = (System.Func<dynamic, dynamic>)(message => new
             {
-                __Type = AssertionError,
+                __Type = Exception,
                 __str__ = (Func<dynamic>)(() => message)
             })
         };
         
-        internal static readonly dynamic Exception = new
+        internal static readonly dynamic AssertionError = new
         {
-            Name = "Exception",
+            Name = "AssertionError",
+            __BaseClasses = new dynamic[] {Exception},
             __call__ = (System.Func<dynamic, dynamic>)(message => new
             {
-                __Type = Exception,
+                __Type = AssertionError,
                 __str__ = (Func<dynamic>)(() => message)
             })
         };
@@ -60,7 +62,9 @@ namespace __Nope
         
         internal static __NopeBoolean isinstance(dynamic obj, dynamic type)
         {
-            return __NopeBoolean.Value(obj.__Type == type);
+            var isinstance = obj.__Type == type ||
+                System.Linq.Enumerable.Any(obj.__Type.__BaseClasses, (Func<dynamic, bool>)(baseClass => baseClass == type));
+            return __NopeBoolean.Value(isinstance);
         }
         
         internal class StopIteration : System.Exception
