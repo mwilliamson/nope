@@ -7,6 +7,9 @@ from nope.platforms.dotnet import cs
 from nope.platforms.dotnet.codegeneration import Transformer
 from ...testing import wip
 
+# TODO: put this hack somewhere neater
+import unittest
+unittest.TestCase.maxDiff = None
 
 @istest
 class FunctionDefinitionTests(object):
@@ -195,6 +198,38 @@ class ClassDefinitionTests(object):
                 return self;
             })),
         };
+        return __self;
+    })),
+};
+"""
+        transformer = Transformer()
+        assert_equal(expected, cs.dumps(transformer.transform(node)))
+        assert_equal(expected_aux, cs.dumps(transformer.aux()))
+    
+    @istest
+    def init_method_is_called_if_present(self):
+        node = cc.class_("A", methods=[
+            cc.func("__init__", [cc.arg("self"), cc.arg("value")], [
+                cc.expression_statement(cc.call(cc.ref("print"), [cc.ref("value")]))
+            ])
+        ], body=[])
+        expected_aux = """internal class __A {
+    internal dynamic __init__;
+}"""
+
+        expected = """A = new
+{
+    __call__ = ((System.Func<dynamic, dynamic>)((dynamic __value) =>
+    {
+        dynamic __self = null;
+        __self = new __A {
+            __init__ = ((System.Func<dynamic, dynamic>)((dynamic value) =>
+            {
+                dynamic self = __self;
+                print(value);
+            })),
+        };
+        (__self).__init__(__value);
         return __self;
     })),
 };

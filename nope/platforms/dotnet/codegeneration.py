@@ -46,6 +46,7 @@ internal class Program
         """)
         
                 cs.dump(cs_module, dest_cs_file)
+                print(cs.dumps(cs_module))
                 dest_cs_file.write("""
     }""")
                 cs.dump(transformer.aux(), dest_cs_file)
@@ -139,20 +140,34 @@ class Transformer(object):
             (method.name, self._transform_method(method))
             for method in node.methods
         ]
+        method_names = [method.name for method in node.methods]
         
-        aux_class = cs.class_(aux_name, [method.name for method in node.methods])
+        if "__init__" in method_names:
+            init_method = next(method for method in node.methods if method.name == "__init__")
+            init_arg_names = ["__" + arg.name for arg in init_method.args[1:]]
+        else:
+            init_method = None
+            init_arg_names = []
+        
+        aux_class = cs.class_(aux_name, method_names)
         self._aux.append(aux_class)
         
         new_obj = cs.new(cs.ref(aux_name), [], methods)
         
-        call_func = cs.lambda_([], [
+        call_func_body = [
             cs.declare("__self", cs.null),
             cs.expression_statement(cs.assign(cs.ref("__self"), new_obj)),
-            cs.ret(cs.ref("__self"))
-        ])
+        ]
+        if init_method is not None:
+            init_ref = cs.property_access(cs.ref("__self"), "__init__")
+            call_init = cs.call(init_ref, list(map(cs.ref, init_arg_names)))
+            call_func_body.append(cs.expression_statement(call_init))
+        
+        call_func_body.append(cs.ret(cs.ref("__self")))
+        call_func = cs.lambda_(list(map(cs.arg, init_arg_names)), call_func_body)
         
         class_obj = cs.obj([
-            ("__call__", cs.cast(self._func_type(0), call_func)),
+            ("__call__", cs.cast(self._func_type(len(init_arg_names)), call_func)),
         ])
         return cs.expression_statement(cs.assign(node.name, class_obj))
 
