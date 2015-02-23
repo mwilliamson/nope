@@ -14,10 +14,12 @@ class CodeGenerator(zuice.Base):
     _source_tree = zuice.dependency(CouscousTree)
     
     def generate_files(self, source_path, destination_root):
+        
         def handle_dir(path, relative_path):
             files.mkdir_p(os.path.join(destination_root, relative_path))
         
         def handle_file(path, relative_path):
+            transformer = Transformer()
             module = self._source_tree.module(path)
             dest_cs_filename = files.replace_extension(
                 os.path.join(destination_root, relative_path),
@@ -26,28 +28,31 @@ class CodeGenerator(zuice.Base):
             dest_exe_filename = files.replace_extension(dest_cs_filename, "exe")
             
             with open(dest_cs_filename, "w") as dest_cs_file:
-                cs_module = _transform(module.node)
+                cs_module = transformer.transform(module.node)
                 
                 dest_cs_file.write("""
 internal class Program
 {
+    private static System.Func<dynamic, dynamic> abs = __x_1 => __x_1.__abs__();
+    private static System.Func<dynamic, dynamic, dynamic> divmod = (__x_1, __y_1) => __x_1.__divmod__(__y_1);
+    private static System.Func<dynamic, dynamic, dynamic> range = (__x_1, __y_1) => __Nope.Builtins.range(__x_1, __y_1);
+    private static System.Action<object> print = System.Console.WriteLine;
+    private static dynamic Exception = __Nope.Builtins.Exception;
+    private static dynamic AssertionError = __Nope.Builtins.AssertionError;
+    private static dynamic str = __Nope.Builtins.str;
+    
     internal static void Main()
     {
-        System.Func<dynamic, dynamic> abs = __x_1 => __x_1.__abs__();
-        System.Func<dynamic, dynamic, dynamic> divmod = (__x_1, __y_1) => __x_1.__divmod__(__y_1);
-        System.Func<dynamic, dynamic, dynamic> range = (__x_1, __y_1) => __Nope.Builtins.range(__x_1, __y_1);
-        System.Action<object> print = System.Console.WriteLine;
-        var Exception = __Nope.Builtins.Exception;
-        var AssertionError = __Nope.Builtins.AssertionError;
-        var str = __Nope.Builtins.str;
         """)
         
                 cs.dump(cs_module, dest_cs_file)
                 dest_cs_file.write("""
-    }
+    }""")
+                cs.dump(transformer.aux(), dest_cs_file)
+                dest_cs_file.write("""
 }
 """)
-            subprocess.check_call(["mcs", "-nowarn:0162,0168,0219", "-out:{}".format(dest_exe_filename), dest_cs_filename] + list(_runtime_paths()))
+            subprocess.check_call(["mcs", "-nowarn:0162,0168,0219,0414", "-out:{}".format(dest_exe_filename), dest_cs_filename] + list(_runtime_paths()))
         
         walk_tree(source_path, handle_dir, handle_file)
 
@@ -58,199 +63,252 @@ def _runtime_paths():
         for filename in filenames:
             yield os.path.join(root, filename)
 
-def _transform(node):
-    return _transformers[type(node)](node)
 
-
-def _transform_all(nodes):
-    return list(map(_transform, nodes))
-
-
-def _transform_or_none(node):
-    if node is None:
-        return None
-    else:
-        return _transform(node)
-
-
-def _transform_module(module):
-    return cs.statements(_transform_all(module.body))
-
-
-def _transform_statements(node):
-    return cs.statements(_transform_all(node.body))
-
-
-def _transform_class_definition(node):
-    methods = [
-        (method.name, _transform_method(method))
-        for method in node.methods
-    ]
-    
-    call_func = cs.lambda_([], [
-        cs.declare("__self", cs.null),
-        cs.expression_statement(cs.assign(cs.ref("__self"), cs.obj(methods))),
-        cs.ret(cs.ref("__self"))
-    ])
-    
-    class_obj = cs.obj([
-        ("__call__", cs.cast(_func_type(0), call_func)),
-    ])
-    return cs.expression_statement(cs.assign(node.name, class_obj))
-
-
-def _transform_method(method):
-    args = method.args[1:]
-    func_type = _func_type(len(args))
-    args = [cs.arg(arg.name) for arg in args]
-    body = [cs.declare(method.args[0].name, cs.ref("__self"))] + _transform_all(method.body)
-    lambda_expression = cs.lambda_(args, body)
-    return cs.cast(func_type, lambda_expression)
-
-
-def _transform_function_definition(function):
-    func_type = _func_type(len(function.args))
-    args = [cs.arg(arg.name) for arg in function.args]
-    body = _transform_all(function.body)
-    lambda_expression = cs.lambda_(args, body)
-    assignment = cs.assign(cs.ref(function.name), cs.cast(func_type, lambda_expression))
-    return cs.expression_statement(assignment)
-
-
-def _func_type(length):
-    return cs.type_apply(cs.ref("System.Func"), [cs.dynamic] * (length + 1))
-
-
-def _transform_if_statement(statement):
-    return cs.if_(
-        _transform_condition(statement.condition),
-        _transform_all(statement.true_body),
-        _transform_all(statement.false_body)
-    )
-
-
-def _transform_while_loop(statement):
-    return cs.while_(
-        _transform_condition(statement.condition),
-        _transform_all(statement.body),
-    )
-
-def _transform_condition(condition):
-    return cs.property_access(_transform(condition), "__Value")
-
-
-def _transform_try_statement(statement):
-    if statement.handlers:
-        catch = [_transform_except_handlers(statement.handlers)]
-    else:
-        catch = []
-    
-    return cs.try_(
-        _transform_all(statement.body),
-        catch,
-        finally_body=_transform_all(statement.finally_body),
-    )
-
-
-def _transform_except_handlers(handlers):
-    catch_body = [cs.throw()]
-    
-    dotnet_exception_name = "__exception"
-    dotnet_exception = cs.ref(dotnet_exception_name)
-    
-    nope_exception = cs.property_access(dotnet_exception, "__Value")
-    
-    for handler in reversed(handlers):
-        handler_body = _transform_all(handler.body)
-        
-        if handler.type is None:
-            catch_body = handler_body
-        else:
-            if handler.target is None:
-                before_body = []
-            else:
-                before_body = [cs.expression_statement(cs.assign(cs.ref(handler.target.name), nope_exception))]
+class Transformer(object):
+    def __init__(self):
+        self._transformers = {
+            cc.Module: self._transform_module,
             
-            catch_body = [
-                cs.if_(
-                    cs.property_access(cs.call(_builtin_ref("isinstance"), [nope_exception, _transform(handler.type)]), "__Value"),
-                    before_body + handler_body,
-                    catch_body,
-                )
-            ]
+            cc.Statements: self._transform_statements,
+            
+            cc.ClassDefinition: self._transform_class_definition,
+            cc.FunctionDefinition: self._transform_function_definition,
+            
+            cc.IfStatement: self._transform_if_statement,
+            cc.WhileLoop: self._transform_while_loop,
+            cc.BreakStatement: lambda node: cs.break_,
+            cc.ContinueStatement: lambda node: cs.continue_,
+            
+            cc.TryStatement: self._transform_try_statement,
+            cc.RaiseStatement: self._transform_raise_statement,
+            
+            cc.ExpressionStatement: self._transform_expression_statement,
+            cc.VariableDeclaration: self._transform_variable_declaration,
+            cc.ReturnStatement: self._transform_return_statement,
+            
+            cc.Assignment: self._transform_assignment,
+            cc.ListLiteral: self._transform_list_literal,
+            cc.TupleLiteral: self._transform_tuple_literal,
+            cc.BinaryOperation: self._transform_operation,
+            cc.UnaryOperation: self._transform_operation,
+            cc.TernaryConditional: self._transform_ternary_conditional,
+            cc.Call: self._transform_call,
+            cc.AttributeAccess: self._transform_attribute_access,
+            cc.BuiltinReference: _transform_builtin_reference,
+            cc.InternalReference: _transform_internal_reference,
+            cc.VariableReference: _transform_variable_reference,
+            cc.StrLiteral: _transform_string_literal,
+            cc.IntLiteral: _transform_int_literal,
+            cc.BooleanLiteral: _transform_bool_literal,
+            cc.NoneLiteral: _transform_none_literal,
+        }
+        self._aux = []
     
-    return cs.catch(_internal_ref("__NopeException"), dotnet_exception_name, catch_body)
+    
+    def transform(self, node):
+        return self._transformers[type(node)](node)
+    
+    
+    def aux(self):
+        return cs.statements(self._aux)
 
 
-def _transform_raise_statement(statement):
-    if statement.value is None:
-        return cs.throw()
-    else:
-        return cs.throw(cs.call(_internal_ref("CreateException"), [_transform(statement.value)]))
+    def _transform_all(self, nodes):
+        return list(map(self.transform, nodes))
 
 
-def _transform_expression_statement(statement):
-    return cs.expression_statement(_transform(statement.value))
+    def _transform_or_none(self, node):
+        if node is None:
+            return None
+        else:
+            return self.transform(node)
 
 
-def _transform_variable_declaration(declaration):
-    if declaration.value is None:
-        value = cs.null
-    else:
-        value = _transform(declaration.value)
-    return cs.declare(declaration.name, value)
+    def _transform_module(self, module):
+        return cs.statements(self._transform_all(module.body))
 
 
-def _transform_operation(operation):
-    if operation.operator in ["is", "is_not"]:
-        return _transform_is(operation)
-    elif operation.operator == "not":
-        return _transform_not(operation)
-    else:
-        raise Exception("Unhandled operator: {}".format(operation.operator))
+    def _transform_statements(self, node):
+        return cs.statements(self._transform_all(node.body))
 
 
-def _transform_ternary_conditional(conditional):
-    return cs.ternary_conditional(
-        _transform_condition(conditional.condition),
-        _transform(conditional.true_value),
-        _transform(conditional.false_value),
-    )
+    def _transform_class_definition(self, node):
+        aux_name = "__" + node.name
+        
+        methods = [
+            (method.name, self._transform_method(method))
+            for method in node.methods
+        ]
+        
+        aux_class = cs.class_(aux_name, [method.name for method in node.methods])
+        self._aux.append(aux_class)
+        
+        new_obj = cs.new(cs.ref(aux_name), [], methods)
+        
+        call_func = cs.lambda_([], [
+            cs.declare("__self", cs.null),
+            cs.expression_statement(cs.assign(cs.ref("__self"), new_obj)),
+            cs.ret(cs.ref("__self"))
+        ])
+        
+        class_obj = cs.obj([
+            ("__call__", cs.cast(self._func_type(0), call_func)),
+        ])
+        return cs.expression_statement(cs.assign(node.name, class_obj))
 
 
-def _transform_is(operation):
-    return cs.call(cs.ref("__Nope.Internals.op_{}".format(operation.operator)), [
-        _transform(operation.left),
-        _transform(operation.right),
-    ])
+    def _transform_method(self, method):
+        args = method.args[1:]
+        func_type = self._func_type(len(args))
+        args = [cs.arg(arg.name) for arg in args]
+        body = [cs.declare(method.args[0].name, cs.ref("__self"))] + self._transform_all(method.body)
+        lambda_expression = cs.lambda_(args, body)
+        return cs.cast(func_type, lambda_expression)
 
 
-def _transform_not(operation):
-    return cs.call(cs.property_access(_transform(operation.operand), "__Negate"), [])
+    def _transform_function_definition(self, function):
+        func_type = self._func_type(len(function.args))
+        args = [cs.arg(arg.name) for arg in function.args]
+        body = self._transform_all(function.body)
+        lambda_expression = cs.lambda_(args, body)
+        assignment = cs.assign(cs.ref(function.name), cs.cast(func_type, lambda_expression))
+        return cs.expression_statement(assignment)
 
 
-def _transform_return_statement(statement):
-    return cs.ret(_transform(statement.value))
+    def _func_type(self, length):
+        return cs.type_apply(cs.ref("System.Func"), [cs.dynamic] * (length + 1))
 
 
-def _transform_assignment(assignment):
-    return cs.expression_statement(cs.assign(_transform(assignment.target), _transform(assignment.value)))
+    def _transform_if_statement(self, statement):
+        return cs.if_(
+            self._transform_condition(statement.condition),
+            self._transform_all(statement.true_body),
+            self._transform_all(statement.false_body)
+        )
 
 
-def _transform_list_literal(literal):
-    return cs.call(cs.ref("__NopeList.Values"), _transform_all(literal.elements))
+    def _transform_while_loop(self, statement):
+        return cs.while_(
+            self._transform_condition(statement.condition),
+            self._transform_all(statement.body),
+        )
+
+    def _transform_condition(self, condition):
+        return cs.property_access(self.transform(condition), "__Value")
 
 
-def _transform_tuple_literal(literal):
-    return cs.call(cs.ref("__NopeTuple.Values"), _transform_all(literal.elements))
+    def _transform_try_statement(self, statement):
+        if statement.handlers:
+            catch = [self._transform_except_handlers(statement.handlers)]
+        else:
+            catch = []
+        
+        return cs.try_(
+            self._transform_all(statement.body),
+            catch,
+            finally_body=self._transform_all(statement.finally_body),
+        )
 
 
-def _transform_call(call):
-    return cs.call(_transform(call.func), _transform_all(call.args))
+    def _transform_except_handlers(self, handlers):
+        catch_body = [cs.throw()]
+        
+        dotnet_exception_name = "__exception"
+        dotnet_exception = cs.ref(dotnet_exception_name)
+        
+        nope_exception = cs.property_access(dotnet_exception, "__Value")
+        
+        for handler in reversed(handlers):
+            handler_body = self._transform_all(handler.body)
+            
+            if handler.type is None:
+                catch_body = handler_body
+            else:
+                if handler.target is None:
+                    before_body = []
+                else:
+                    before_body = [cs.expression_statement(cs.assign(cs.ref(handler.target.name), nope_exception))]
+                
+                catch_body = [
+                    cs.if_(
+                        cs.property_access(cs.call(_builtin_ref("isinstance"), [nope_exception, self.transform(handler.type)]), "__Value"),
+                        before_body + handler_body,
+                        catch_body,
+                    )
+                ]
+        
+        return cs.catch(_internal_ref("__NopeException"), dotnet_exception_name, catch_body)
 
 
-def _transform_attribute_access(node):
-    return cs.property_access(_transform(node.obj), node.attr)
+    def _transform_raise_statement(self, statement):
+        if statement.value is None:
+            return cs.throw()
+        else:
+            return cs.throw(cs.call(_internal_ref("CreateException"), [self.transform(statement.value)]))
+
+
+    def _transform_expression_statement(self, statement):
+        return cs.expression_statement(self.transform(statement.value))
+
+
+    def _transform_variable_declaration(self, declaration):
+        if declaration.value is None:
+            value = cs.null
+        else:
+            value = self.transform(declaration.value)
+        return cs.declare(declaration.name, value)
+
+
+    def _transform_operation(self, operation):
+        if operation.operator in ["is", "is_not"]:
+            return self._transform_is(operation)
+        elif operation.operator == "not":
+            return self._transform_not(operation)
+        else:
+            raise Exception("Unhandled operator: {}".format(operation.operator))
+
+
+    def _transform_ternary_conditional(self, conditional):
+        return cs.ternary_conditional(
+            self._transform_condition(conditional.condition),
+            self.transform(conditional.true_value),
+            self.transform(conditional.false_value),
+        )
+
+
+    def _transform_is(self, operation):
+        return cs.call(cs.ref("__Nope.Internals.op_{}".format(operation.operator)), [
+            self.transform(operation.left),
+            self.transform(operation.right),
+        ])
+
+
+    def _transform_not(self, operation):
+        return cs.call(cs.property_access(self.transform(operation.operand), "__Negate"), [])
+
+
+    def _transform_return_statement(self, statement):
+        return cs.ret(self.transform(statement.value))
+
+
+    def _transform_assignment(self, assignment):
+        return cs.expression_statement(cs.assign(self.transform(assignment.target), self.transform(assignment.value)))
+
+
+    def _transform_list_literal(self, literal):
+        return cs.call(cs.ref("__NopeList.Values"), self._transform_all(literal.elements))
+
+
+    def _transform_tuple_literal(self, literal):
+        return cs.call(cs.ref("__NopeTuple.Values"), self._transform_all(literal.elements))
+
+
+    def _transform_call(self, call):
+        return cs.call(self.transform(call.func), self._transform_all(call.args))
+
+
+    def _transform_attribute_access(self, node):
+        return cs.property_access(self.transform(node.obj), node.attr)
 
 
 def _transform_builtin_reference(reference):
@@ -287,41 +345,3 @@ def _transform_bool_literal(literal):
 
 def _transform_none_literal(literal):
     return cs.ref("__NopeNone.Value")
-
-
-_transformers = {
-    cc.Module: _transform_module,
-    
-    cc.Statements: _transform_statements,
-    
-    cc.ClassDefinition: _transform_class_definition,
-    cc.FunctionDefinition: _transform_function_definition,
-    
-    cc.IfStatement: _transform_if_statement,
-    cc.WhileLoop: _transform_while_loop,
-    cc.BreakStatement: lambda node: cs.break_,
-    cc.ContinueStatement: lambda node: cs.continue_,
-    
-    cc.TryStatement: _transform_try_statement,
-    cc.RaiseStatement: _transform_raise_statement,
-    
-    cc.ExpressionStatement: _transform_expression_statement,
-    cc.VariableDeclaration: _transform_variable_declaration,
-    cc.ReturnStatement: _transform_return_statement,
-    
-    cc.Assignment: _transform_assignment,
-    cc.ListLiteral: _transform_list_literal,
-    cc.TupleLiteral: _transform_tuple_literal,
-    cc.BinaryOperation: _transform_operation,
-    cc.UnaryOperation: _transform_operation,
-    cc.TernaryConditional: _transform_ternary_conditional,
-    cc.Call: _transform_call,
-    cc.AttributeAccess: _transform_attribute_access,
-    cc.BuiltinReference: _transform_builtin_reference,
-    cc.InternalReference: _transform_internal_reference,
-    cc.VariableReference: _transform_variable_reference,
-    cc.StrLiteral: _transform_string_literal,
-    cc.IntLiteral: _transform_int_literal,
-    cc.BooleanLiteral: _transform_bool_literal,
-    cc.NoneLiteral: _transform_none_literal,
-}

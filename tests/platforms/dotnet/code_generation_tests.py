@@ -4,7 +4,7 @@ from nose.tools import istest, assert_equal
 
 from nope import couscous as cc
 from nope.platforms.dotnet import cs
-from nope.platforms.dotnet.codegeneration import _transform as transform
+from nope.platforms.dotnet.codegeneration import Transformer
 from ...testing import wip
 
 
@@ -154,31 +154,41 @@ class ClassDefinitionTests(object):
     def class_definition_creates_object_with_call_method_for_init(self):
         node = cc.class_("A", methods=[], body=[])
         
-        expected = """A = new
-{
-    __call__ = ((System.Func<dynamic>)(() =>
-    {
-        dynamic __self = null;
-        __self = new
-        {
-        };
-        return __self;
-    })),
-};
-"""
-        assert_equal(expected, cs.dumps(transform(node)))
-    
-    @istest
-    def methods_are_set_as_members_on_object(self):
-        node = cc.class_("A", methods=[cc.func("f", [cc.arg("self")], [cc.ret(cc.ref("self"))])], body=[])
+        expected_aux = """internal class __A {
+}"""
         
         expected = """A = new
 {
     __call__ = ((System.Func<dynamic>)(() =>
     {
         dynamic __self = null;
-        __self = new
-        {
+        __self = new __A();
+        return __self;
+    })),
+};
+"""
+        transformer = Transformer()
+        assert_equal(expected, cs.dumps(transformer.transform(node)))
+        assert_equal(expected_aux, cs.dumps(transformer.aux()))
+    
+    @istest
+    def methods_are_set_as_members_on_object(self):
+        node = cc.class_("A", methods=[
+            cc.func("f", [cc.arg("self")], [
+                cc.ret(cc.ref("self"))
+            ])
+        ], body=[])
+        
+        expected_aux = """internal class __A {
+    internal dynamic f;
+}"""
+
+        expected = """A = new
+{
+    __call__ = ((System.Func<dynamic>)(() =>
+    {
+        dynamic __self = null;
+        __self = new __A {
             f = ((System.Func<dynamic>)(() =>
             {
                 dynamic self = __self;
@@ -189,4 +199,12 @@ class ClassDefinitionTests(object):
     })),
 };
 """
-        assert_equal(expected, cs.dumps(transform(node)))
+        transformer = Transformer()
+        assert_equal(expected, cs.dumps(transformer.transform(node)))
+        assert_equal(expected_aux, cs.dumps(transformer.aux()))
+
+
+def transform(node):
+    transformer = Transformer()
+    return transformer.transform(node)
+    

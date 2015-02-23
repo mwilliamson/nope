@@ -38,6 +38,10 @@ def dumps(node):
     dump(node, output)
     return output.getvalue()
 
+
+class_ = ClassDefinition = dodge.data_class("ClassDefinition", ["name", "members"])
+method = Method = dodge.data_class("Method", ["name", "args", "body"])
+
 TryStatement = dodge.data_class("TryStatement", ["try_body", "handlers", "finally_body"])
 
 def try_(try_body, handlers=None, finally_body=None):
@@ -55,7 +59,13 @@ def throw(value=None):
 
 declare = VariableDeclaration = dodge.data_class("VariableDeclaration", ["name", "value"])
 
-new = New = dodge.data_class("New", ["constructor", "args"])
+def new(constructor, args, members=None):
+    if members is None:
+        members = []
+    
+    return New(constructor, args, members)
+
+New = dodge.data_class("New", ["constructor", "args", "members"])
 obj = ObjectLiteral = dodge.data_class("ObjectLiteral", ["members"])
 lambda_ = LambdaExpression = dodge.data_class("LambdaExpression", ["args", "body"])
 arg = Argument = dodge.data_class("Argument", ["name"])
@@ -68,6 +78,33 @@ null = ref("null")
 not_ = functools.partial(unary_operation, "!")
 break_ = break_statement()
 continue_ = continue_statement()
+this = ref("this")
+
+
+def _serialize_class_definition(node, writer):
+    writer.write("internal class ")
+    writer.write(node.name)
+    writer.write(" ")
+    writer.start_block()
+    
+    for name in node.members:
+        writer.write("internal dynamic ")
+        writer.write(name)
+        writer.write(";")
+        writer.newline()
+    
+    writer.end_block()
+
+
+def _serialize_method(node, writer):
+    writer.write("internal dynamic ")
+    writer.write(node.name)
+    
+    _serialize_formal_args(node.args, writer)
+    writer.write(" ")
+    
+    writer.dump_block(node.body)
+    writer.end_compound_statement()
 
 
 def _serialize_try_statement(node, writer):
@@ -112,14 +149,27 @@ def _serialize_variable_declaration(node, writer):
 def _serialize_new(node, writer):
     writer.write("new ")
     writer.dump(node.constructor)
-    writer.write("(")
     
-    for index, arg in enumerate(node.args):
-        if index > 0:
-            writer.write(", ")
-        writer.dump(arg)
+    if not node.members or node.args:
+        writer.write("(")
+        
+        for index, arg in enumerate(node.args):
+            if index > 0:
+                writer.write(", ")
+            writer.dump(arg)
+        
+        writer.write(")")
     
-    writer.write(")")
+    if node.members:
+        writer.write(" ")
+        writer.start_block()
+        for name, value in node.members:
+            writer.write(name)
+            writer.write(" = ")
+            writer.dump(value)
+            writer.write(",")
+            writer.newline()
+        writer.end_block()
 
 
 def _serialize_object(node, writer):
@@ -138,17 +188,21 @@ def _serialize_object(node, writer):
 
 
 def _serialize_lambda(node, writer):
-    writer.write("((")
-    
-    for index, arg in enumerate(node.args):
+    writer.write("(")
+    _serialize_formal_args(node.args, writer)
+    writer.write(" =>")
+    writer.newline()
+    writer.dump_block(node.body)
+    writer.write(")")
+
+
+def _serialize_formal_args(args, writer):
+    writer.write("(")
+    for index, arg in enumerate(args):
         if index > 0:
             writer.write(", ")
         writer.write("dynamic ")
         writer.write(arg.name)
-    
-    writer.write(") =>")
-    writer.newline()
-    writer.dump_block(node.body)
     writer.write(")")
 
 
@@ -176,6 +230,9 @@ def _serialize_type_application(node, writer):
 
 
 _serializers = oo.serializers({
+    ClassDefinition: _serialize_class_definition,
+    Method: _serialize_method,
+
     TryStatement: _serialize_try_statement,
     CatchStatement: _serialize_catch,
     VariableDeclaration: _serialize_variable_declaration,

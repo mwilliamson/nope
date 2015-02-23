@@ -120,9 +120,18 @@ class NewTests(object):
         assert_equal("new A()", cs.dumps(node))
         
     @istest
-    def calls_reference_with_arguments(self):
+    def uses_parens_to_surround_arguments(self):
         node = cs.new(cs.ref("A"), [cs.ref("x"), cs.ref("y")])
         assert_equal("new A(x, y)", cs.dumps(node))
+        
+    @istest
+    def uses_braced_list_for_member_setters(self):
+        node = cs.new(cs.ref("A"), [], [("X", cs.ref("x")), ("Y", cs.ref("y"))])
+        expected = """new A {
+    X = x,
+    Y = y,
+}"""
+        assert_equal(expected, cs.dumps(node))
 
 
 @istest
@@ -143,4 +152,51 @@ class AnonymousObjectTests(object):
     X = x,
     Y = y,
 }"""
+        assert_equal(expected, cs.dumps(node))
+
+
+@istest
+class ClassTests(object):
+    @istest
+    def class_has_internal_visibility(self):
+        node = cs.class_("A", [])
+        expected = """internal class A {
+}"""
+        assert_equal(expected, cs.dumps(node))
+    
+    @istest
+    def class_members_are_written_out(self):
+        node = cs.class_("A", ["X", "Y"])
+        expected = """internal class A {
+    internal dynamic X;
+    internal dynamic Y;
+}"""
+        assert_equal(expected, cs.dumps(node))
+
+
+@istest
+class MethodTests(object):
+    @istest
+    def method_has_internal_visibility(self):
+        node = cs.method("f", [], [])
+        expected = """internal dynamic f() {
+}
+"""
+        assert_equal(expected, cs.dumps(node))
+    
+    @istest
+    def method_has_dynamic_arguments(self):
+        node = cs.method("f", [cs.arg("x"), cs.arg("y")], [])
+        expected = """internal dynamic f(dynamic x, dynamic y) {
+}
+"""
+        assert_equal(expected, cs.dumps(node))
+    
+    @istest
+    def method_has_body(self):
+        node = cs.method("f", [], [cs.ret(cs.ref("x"))])
+        expected = """internal dynamic f() {
+    return x;
+}
+"""
         assert_equal(expected, cs.dumps(node))
