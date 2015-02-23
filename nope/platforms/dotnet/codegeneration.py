@@ -36,7 +36,7 @@ internal class Program
     private static System.Func<dynamic, dynamic> abs = __x_1 => __x_1.__abs__();
     private static System.Func<dynamic, dynamic, dynamic> divmod = (__x_1, __y_1) => __x_1.__divmod__(__y_1);
     private static System.Func<dynamic, dynamic, dynamic> range = (__x_1, __y_1) => __Nope.Builtins.range(__x_1, __y_1);
-    private static System.Action<object> print = System.Console.WriteLine;
+    private static System.Action<dynamic> print = (System.Action<dynamic>)(obj => System.Console.WriteLine(obj.__str__().__Value));
     private static dynamic Exception = __Nope.Builtins.Exception;
     private static dynamic AssertionError = __Nope.Builtins.AssertionError;
     private static dynamic str = __Nope.Builtins.str;

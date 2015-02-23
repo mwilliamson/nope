@@ -7,4 +7,9 @@ internal class __NopeNone
     {
         return "None";
     }
+    
+    public __NopeString __str__()
+    {
+        return __NopeString.Value(ToString());
+    }
 }

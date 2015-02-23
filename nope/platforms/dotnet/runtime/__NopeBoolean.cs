@@ -30,4 +30,9 @@ internal class __NopeBoolean
     {
         return _value ? "True" : "False";
     }
+    
+    public __NopeString __str__()
+    {
+        return __NopeString.Value(ToString());
+    }
 }

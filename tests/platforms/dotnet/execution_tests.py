@@ -24,4 +24,3 @@ class DotNetExecutionTests(execution.ExecutionTests):
     test_transformer_for_collections_namedtuple = wip(execution.ExecutionTests.test_transformer_for_collections_namedtuple)
     test_unnested_generator_expression = wip(execution.ExecutionTests.test_unnested_generator_expression)
     test_unnested_list_comprehension = wip(execution.ExecutionTests.test_unnested_list_comprehension)
-    test_with_statement_passes_exception_info_to_exit_method_if_body_raises_exception = wip(execution.ExecutionTests.test_with_statement_passes_exception_info_to_exit_method_if_body_raises_exception)

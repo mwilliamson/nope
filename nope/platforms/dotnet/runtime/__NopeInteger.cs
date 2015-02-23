@@ -155,4 +155,9 @@ internal class __NopeInteger
     {
         return _value.ToString();
     }
+    
+    public __NopeString __str__()
+    {
+        return __NopeString.Value(ToString());
+    }
 }

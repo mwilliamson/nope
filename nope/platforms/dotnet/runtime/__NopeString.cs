@@ -24,8 +24,13 @@ internal class __NopeString
         return _value;
     }
     
-    public int find(__NopeString substring)
+    public __NopeString __str__()
     {
-        return _value.IndexOf(substring._value);
+        return __NopeString.Value(ToString());
+    }
+    
+    public __NopeInteger find(__NopeString substring)
+    {
+        return __NopeInteger.Value(_value.IndexOf(substring._value));
     }
 }

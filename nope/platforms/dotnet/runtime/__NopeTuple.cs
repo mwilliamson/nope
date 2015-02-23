@@ -27,4 +27,9 @@ internal class __NopeTuple
     {
         return "(" + string.Join(", ", System.Linq.Enumerable.Select(_values, value => value.ToString())) + ")";
     }
+    
+    public __NopeString __str__()
+    {
+        return __NopeString.Value(ToString());
+    }
 }
