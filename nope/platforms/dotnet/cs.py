@@ -55,6 +55,7 @@ def throw(value=None):
 
 declare = VariableDeclaration = dodge.data_class("VariableDeclaration", ["name", "value"])
 
+new = New = dodge.data_class("New", ["constructor", "args"])
 obj = ObjectLiteral = dodge.data_class("ObjectLiteral", ["members"])
 lambda_ = LambdaExpression = dodge.data_class("LambdaExpression", ["args", "body"])
 arg = Argument = dodge.data_class("Argument", ["name"])
@@ -106,6 +107,19 @@ def _serialize_variable_declaration(node, writer):
         writer.write(" = ")
         writer.dump(node.value)
     writer.end_simple_statement()
+
+
+def _serialize_new(node, writer):
+    writer.write("new ")
+    writer.dump(node.constructor)
+    writer.write("(")
+    
+    for index, arg in enumerate(node.args):
+        if index > 0:
+            writer.write(", ")
+        writer.dump(arg)
+    
+    writer.write(")")
 
 
 def _serialize_object(node, writer):
@@ -166,6 +180,7 @@ _serializers = oo.serializers({
     CatchStatement: _serialize_catch,
     VariableDeclaration: _serialize_variable_declaration,
 
+    New: _serialize_new,
     ObjectLiteral: _serialize_object,
     LambdaExpression: _serialize_lambda,
 

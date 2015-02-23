@@ -113,6 +113,19 @@ class LambdaTests(object):
         
 
 @istest
+class NewTests(object):
+    @istest
+    def calls_reference_with_new_keyword(self):
+        node = cs.new(cs.ref("A"), [])
+        assert_equal("new A()", cs.dumps(node))
+        
+    @istest
+    def calls_reference_with_arguments(self):
+        node = cs.new(cs.ref("A"), [cs.ref("x"), cs.ref("y")])
+        assert_equal("new A(x, y)", cs.dumps(node))
+
+
+@istest
 class AnonymousObjectTests(object):
     @istest
     def object_is_created_with_new_keyword(self):
