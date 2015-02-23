@@ -46,7 +46,6 @@ internal class Program
         """)
         
                 cs.dump(cs_module, dest_cs_file)
-                print(cs.dumps(cs_module))
                 dest_cs_file.write("""
     }""")
                 cs.dump(transformer.aux(), dest_cs_file)
@@ -145,11 +144,27 @@ class Transformer(object):
         if "__init__" in method_names:
             init_method = next(method for method in node.methods if method.name == "__init__")
             init_arg_names = ["__" + arg.name for arg in init_method.args[1:]]
+            
+            # TODO: this doesn't account for if statements and whatnot.
+            # Should probably just be using the class type that type inference generated.
+            assigned_names = [
+                assignment.target.attr
+                for assignment in _flatten_statements(init_method.body)
+                if (
+                    isinstance(assignment, cc.Assignment) and
+                    isinstance(assignment.target, cc.AttributeAccess) and
+                    isinstance(assignment.target.obj, cc.VariableReference) and
+                    assignment.target.obj.name == init_method.args[0].name
+                )
+            ]
         else:
             init_method = None
             init_arg_names = []
+            assigned_names = []
         
-        aux_class = cs.class_(aux_name, method_names)
+        member_names = method_names + assigned_names
+        
+        aux_class = cs.class_(aux_name, member_names)
         self._aux.append(aux_class)
         
         new_obj = cs.new(cs.ref(aux_name), [], methods)
@@ -360,3 +375,12 @@ def _transform_bool_literal(literal):
 
 def _transform_none_literal(literal):
     return cs.ref("__NopeNone.Value")
+
+
+def _flatten_statements(statements):
+    for statement in statements:
+        if isinstance(statement, cc.Statements):
+            for child in statement.body:
+                yield child
+        else:
+            yield statement
