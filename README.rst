@@ -78,6 +78,9 @@ TODO
 
 * Prevent re-definition of types and functions.
 
+* Check type of loops twice, in case assignments in the body of the loop change the type of variables.
+  Or just don't let the type change.
+
 Status
 ------
 
