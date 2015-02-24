@@ -175,7 +175,7 @@ def while_(condition, body, else_body=None):
 break_ = BreakStatement
 continue_ = ContinueStatement
 
-def try_statement(body, *, handlers=None, finally_body=None):
+def try_(body, *, handlers=None, finally_body=None):
     if handlers is None:
         handlers = []
     if finally_body is None:

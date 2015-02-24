@@ -67,7 +67,7 @@ def break_is_not_valid_in_class_in_while_loop_body():
 
 @istest
 def break_is_valid_in_try_finally_body():
-    node = nodes.try_statement([], finally_body=[nodes.break_()])
+    node = nodes.try_([], finally_body=[nodes.break_()])
     check_loop_control(node, True)
 
 
@@ -84,14 +84,14 @@ def continue_is_not_valid_in_module():
 
 @istest
 def continue_is_valid_in_try_body():
-    node = nodes.try_statement([nodes.continue_()])
+    node = nodes.try_([nodes.continue_()])
     check_loop_control(node, True)
 
 
 @istest
 def continue_is_not_valid_in_try_finally_body():
     continue_statement = nodes.continue_()
-    node = nodes.try_statement([], finally_body=[continue_statement])
+    node = nodes.try_([], finally_body=[continue_statement])
     try:
         check_loop_control(node, True)
         assert False, "Expected error"

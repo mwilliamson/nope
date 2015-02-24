@@ -130,7 +130,7 @@ def var(name, value=None):
 
 TryCatch = dodge.data_class("TryCatch", ["try_body", "error_name", "catch_body", "finally_body"])
 
-def try_catch(try_body, error_name=None, catch_body=None, finally_body=None):
+def try_(try_body, error_name=None, catch_body=None, finally_body=None):
     return TryCatch(try_body, error_name, catch_body, finally_body)
 
 def assign_statement(target, value):

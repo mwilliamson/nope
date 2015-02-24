@@ -266,7 +266,7 @@ class Converter(object):
         if getattr(node, "orelse", None):
             raise SyntaxError("'else' clause in 'try' statement is unsupported")
         
-        return self._nodes.try_statement(
+        return self._nodes.try_(
             self._statements(node.body),
             handlers=self._mapped(getattr(node, "handlers", [])),
             finally_body=self._statements(getattr(node, "finalbody", [])),

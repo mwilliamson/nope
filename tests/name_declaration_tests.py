@@ -39,7 +39,7 @@ def for_loop_target_is_declared():
 @istest
 def except_handler_target_is_declared():
     declarations = _new_declarations()
-    node = nodes.try_statement(
+    node = nodes.try_(
         [],
         handlers=[
             nodes.except_handler(nodes.none(), nodes.ref("error"), [])

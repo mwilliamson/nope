@@ -167,7 +167,7 @@ def test_serialize_statements():
 
 @istest
 def test_serialize_try_catch():
-    node = js.try_catch(
+    node = js.try_(
         [js.ret(js.ref("x"))],
         "error",
         [js.ret(js.ref("y"))]
@@ -177,7 +177,7 @@ def test_serialize_try_catch():
 
 @istest
 def test_serialize_try_finally():
-    node = js.try_catch(
+    node = js.try_(
         [js.ret(js.ref("x"))],
         finally_body=[js.ret(js.ref("z"))],
     )
@@ -186,7 +186,7 @@ def test_serialize_try_finally():
 
 @istest
 def test_serialize_try_catch_finally():
-    node = js.try_catch(
+    node = js.try_(
         [js.ret(js.ref("x"))],
         "error",
         [js.ret(js.ref("y"))],
@@ -265,7 +265,7 @@ class PrettyPrintTests(object):
 
     @istest
     def body_of_try_catch_are_indented(self):
-        node = js.try_catch(
+        node = js.try_(
             [js.ret(js.ref("x"))],
             "error",
             [js.ret(js.ref("y"))],

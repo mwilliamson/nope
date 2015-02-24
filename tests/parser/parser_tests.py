@@ -559,7 +559,7 @@ def test_parse_continue():
 
 @istest
 def test_parse_try_finally():
-    expected = nodes.try_statement(
+    expected = nodes.try_(
         [nodes.expression_statement(nodes.ref("x"))],
         finally_body=[nodes.expression_statement(nodes.ref("y"))],
     )
@@ -569,7 +569,7 @@ def test_parse_try_finally():
 
 @istest
 def test_parse_try_except_that_catches_all_exceptions():
-    expected = nodes.try_statement(
+    expected = nodes.try_(
         [nodes.expression_statement(nodes.ref("x"))],
         handlers=[
             nodes.except_handler(None, None, [
@@ -583,7 +583,7 @@ def test_parse_try_except_that_catches_all_exceptions():
 
 @istest
 def test_parse_try_except_with_specific_type():
-    expected = nodes.try_statement(
+    expected = nodes.try_(
         [nodes.expression_statement(nodes.ref("x"))],
         handlers=[
             nodes.except_handler(nodes.ref("AssertionError"), None, [
@@ -597,7 +597,7 @@ def test_parse_try_except_with_specific_type():
 
 @istest
 def test_parse_try_except_with_specific_type_and_identifier():
-    expected = nodes.try_statement(
+    expected = nodes.try_(
         [nodes.expression_statement(nodes.ref("x"))],
         handlers=[
             nodes.except_handler(nodes.ref("AssertionError"), "error", [

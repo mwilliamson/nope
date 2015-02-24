@@ -260,25 +260,25 @@ def declarations_in_both_body_and_else_body_of_for_loop_are_not_definitely_bound
 @istest
 def children_of_try_statement_are_checked():
     _assert_child_statement_is_checked(lambda generate:
-        nodes.try_statement([generate.unbound_ref_statement()]),
+        nodes.try_([generate.unbound_ref_statement()]),
     )
     _assert_child_statement_is_checked(lambda generate:
-        nodes.try_statement([], handlers=[
+        nodes.try_([], handlers=[
             nodes.except_handler(None, None, [generate.unbound_ref_statement()])
         ]),
     )
     _assert_child_expression_is_checked(lambda generate:
-        nodes.try_statement([], handlers=[
+        nodes.try_([], handlers=[
             nodes.except_handler(generate.unbound_ref(), None, [])
         ]),
     )
     _assert_child_expression_is_checked(lambda generate:
-        nodes.try_statement([], handlers=[
+        nodes.try_([], handlers=[
             nodes.except_handler(nodes.none(), nodes.attr(generate.unbound_ref(), "blah"), [])
         ]),
     )
     _assert_child_statement_is_checked(lambda generate:
-        nodes.try_statement([], finally_body=[
+        nodes.try_([], finally_body=[
             generate.unbound_ref_statement()
         ]),
     )
@@ -287,7 +287,7 @@ def children_of_try_statement_are_checked():
 @istest
 def declarations_in_body_and_handler_body_and_finally_body_of_try_statement_are_not_definitely_bound():
     _assert_name_is_not_definitely_bound(lambda generate:
-        nodes.try_statement(
+        nodes.try_(
             [generate.assignment()],
             handlers=[
                 nodes.except_handler(None, None, [generate.assignment()])
@@ -300,7 +300,7 @@ def declarations_in_body_and_handler_body_and_finally_body_of_try_statement_are_
 @istest
 def except_handler_target_is_defined_but_not_definitely_bound():
     _assert_name_is_not_definitely_bound(lambda generate:
-        nodes.try_statement(
+        nodes.try_(
             [],
             handlers=[
                 nodes.except_handler(nodes.none(), generate.target(), [])
@@ -312,7 +312,7 @@ def except_handler_target_is_defined_but_not_definitely_bound():
 @istest
 def except_handler_targets_in_same_try_statement_can_share_their_name():
     _assert_name_is_not_definitely_bound(lambda generate:
-        nodes.try_statement(
+        nodes.try_(
             [],
             handlers=[
                 nodes.except_handler(nodes.none(), generate.target(), []),
@@ -326,11 +326,11 @@ def except_handler_targets_in_same_try_statement_can_share_their_name():
 def except_handler_targets_cannot_share_their_name_when_nested():
     first_target_node = nodes.ref("error")
     second_target_node = nodes.ref("error")
-    node = nodes.try_statement(
+    node = nodes.try_(
         [],
         handlers=[
             nodes.except_handler(nodes.none(), first_target_node, [
-                nodes.try_statement(
+                nodes.try_(
                     [],
                     handlers=[
                         nodes.except_handler(nodes.none(), second_target_node, [])
@@ -526,7 +526,7 @@ def exception_handler_targets_cannot_be_accessed_from_nested_function():
     ref_node = nodes.ref("error")
     body = [nodes.ret(ref_node)]
     func_node = nodes.func("f", nodes.arguments([]), body)
-    try_node = nodes.try_statement(
+    try_node = nodes.try_(
         [],
         handlers=[
             nodes.except_handler(nodes.none(), target_node, [func_node])

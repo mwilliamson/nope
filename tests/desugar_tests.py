@@ -166,7 +166,7 @@ class TryStatementTests(object):
     @istest
     def test_statements_in_bodies_are_transformed(self):
         _assert_transform(
-            nodes.try_statement(
+            nodes.try_(
                 [nodes.ret(nodes.ref("x"))],
                 handlers=[nodes.except_handler(nodes.ref("Exception"), nodes.ref("error"), [nodes.ref("y")])],
                 finally_body=[nodes.ret(nodes.ref("z"))],

@@ -11,14 +11,14 @@ from .util import (
 @istest
 def try_body_is_type_checked():
     assert_statement_is_type_checked(
-        lambda bad_statement: nodes.try_statement([bad_statement])
+        lambda bad_statement: nodes.try_([bad_statement])
     )
 
 
 @istest
 def except_handler_type_must_be_type():
     type_node = nodes.ref("x")
-    node = nodes.try_statement([], handlers=[
+    node = nodes.try_([], handlers=[
         nodes.except_handler(type_node, None, []),
     ])
     assert_type_mismatch(
@@ -32,7 +32,7 @@ def except_handler_type_must_be_type():
 @istest
 def except_handler_type_must_be_exception_type():
     type_node = nodes.ref("int")
-    node = nodes.try_statement([], handlers=[
+    node = nodes.try_([], handlers=[
         nodes.except_handler(type_node, None, []),
     ])
     meta_type = types.meta_type(types.int_type)
@@ -46,7 +46,7 @@ def except_handler_type_must_be_exception_type():
 
 @istest
 def except_handler_updates_type_of_error_target():
-    node = nodes.try_statement([], handlers=[
+    node = nodes.try_([], handlers=[
         nodes.except_handler(
             nodes.ref("Exception"),
             "error",
@@ -63,7 +63,7 @@ def except_handler_updates_type_of_error_target():
 @istest
 def try_except_handler_body_is_type_checked():
     assert_statement_is_type_checked(
-        lambda bad_statement: nodes.try_statement([], handlers=[
+        lambda bad_statement: nodes.try_([], handlers=[
             nodes.except_handler(None, None, [bad_statement]),
         ])
     )
@@ -72,13 +72,13 @@ def try_except_handler_body_is_type_checked():
 @istest
 def try_finally_body_is_type_checked():
     assert_statement_is_type_checked(
-        lambda bad_statement: nodes.try_statement([], finally_body=[bad_statement])
+        lambda bad_statement: nodes.try_([], finally_body=[bad_statement])
     )
 
 
 @istest
 def after_try_statement_variables_could_have_previous_type_or_assigned_type():
-    node = nodes.try_statement([], finally_body=[
+    node = nodes.try_([], finally_body=[
         nodes.assign([nodes.ref("x")], nodes.none())
     ])
     type_bindings = {"x": types.int_type}

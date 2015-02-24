@@ -328,7 +328,7 @@ class NodeTransformer(zuice.Base):
         finally_body = self._transform_all(statement.finally_body)
         
         if js_handler or finally_body:
-            return js.try_catch(
+            return js.try_(
                 body,
                 exception_name,
                 [js_handler] if js_handler else None,

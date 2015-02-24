@@ -218,7 +218,7 @@ class Visitor(object):
         )
 
     def _visit_try(self, node, *args):
-        return nodes.try_statement(
+        return nodes.try_(
             self._visit_statements(node.body, *args),
             handlers=self._visit_all(node.handlers, *args),
             finally_body=self._visit_all(node.finally_body, *args),

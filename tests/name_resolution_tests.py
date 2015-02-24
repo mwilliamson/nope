@@ -188,26 +188,26 @@ def continue_has_no_references():
 @istest
 def try_statement_has_child_names_resolved():
     _assert_children_resolved(
-        lambda ref: nodes.try_statement([nodes.expression_statement(ref)]),
+        lambda ref: nodes.try_([nodes.expression_statement(ref)]),
     )
     _assert_children_resolved(
-        lambda ref: nodes.try_statement([], handlers=[
+        lambda ref: nodes.try_([], handlers=[
             nodes.except_handler(None, None, [nodes.expression_statement(ref)])
         ]),
     )
     _assert_children_resolved(
-        lambda ref: nodes.try_statement([], handlers=[
+        lambda ref: nodes.try_([], handlers=[
             nodes.except_handler(ref, None, [])
         ]),
     )
     _assert_children_resolved(
-        lambda ref: nodes.try_statement([], handlers=[
+        lambda ref: nodes.try_([], handlers=[
             nodes.except_handler(nodes.ref("Exception"), ref, [])
         ]),
         other_names=["Exception"],
     )
     _assert_children_resolved(
-        lambda ref: nodes.try_statement([], finally_body=[
+        lambda ref: nodes.try_([], finally_body=[
             nodes.expression_statement(ref)
         ]),
     )
