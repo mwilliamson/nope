@@ -210,7 +210,7 @@ class Visitor(object):
     def _visit_for_loop(self, node, *args):
         iterable = self.visit(node.iterable, *args)
         target = self.visit(node.target, *args)
-        return nodes.for_loop(
+        return nodes.for_(
             target,
             iterable,
             self._visit_statements(node.body, *args),
@@ -232,16 +232,16 @@ class Visitor(object):
         )
 
     def _visit_raise(self, node, *args):
-        return nodes.raise_statement(self.visit(node.value, *args))
+        return nodes.raise_(self.visit(node.value, *args))
 
     def _visit_assert(self, node, *args):
-        return nodes.assert_statement(
+        return nodes.assert_(
             self.visit(node.condition, *args),
             self.visit(node.message, *args),
         )
     
     def _visit_with(self, node, *args):
-        return nodes.with_statement(
+        return nodes.with_(
             self.visit(node.value, *args),
             self.visit(node.target, *args),
             self._visit_statements(node.body, *args),

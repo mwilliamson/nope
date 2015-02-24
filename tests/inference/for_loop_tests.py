@@ -11,7 +11,7 @@ def for_statement_accepts_iterable_with_iter_method():
     cls = types.scalar_type("Blah")
     cls.attrs.add("__iter__", types.func([], types.iterator(types.str_type)))
     
-    node = nodes.for_loop(nodes.ref("x"), nodes.ref("xs"), [])
+    node = nodes.for_(nodes.ref("x"), nodes.ref("xs"), [])
     
     type_bindings = {
         "xs": cls,
@@ -27,7 +27,7 @@ def for_statement_accepts_iterable_with_getitem_method():
     cls = types.scalar_type("Blah")
     cls.attrs.add("__getitem__", types.func([types.int_type], types.str_type))
     
-    node = nodes.for_loop(nodes.ref("x"), nodes.ref("xs"), [])
+    node = nodes.for_(nodes.ref("x"), nodes.ref("xs"), [])
     
     type_bindings = {
         "xs": cls,
@@ -44,7 +44,7 @@ def for_statement_requires_iterable_getitem_method_to_accept_integers():
     cls.attrs.add("__getitem__", types.func([types.str_type], types.str_type))
     
     ref_node = nodes.ref("xs")
-    node = nodes.for_loop(nodes.ref("x"), ref_node, [])
+    node = nodes.for_(nodes.ref("x"), ref_node, [])
     
     type_bindings = {
         "xs": cls,
@@ -66,7 +66,7 @@ def for_statement_requires_iterable_getitem_method_to_accept_integers():
 @istest
 def for_statement_has_iterable_type_checked():
     ref_node = nodes.ref("xs")
-    node = nodes.for_loop(nodes.ref("x"), ref_node, [])
+    node = nodes.for_(nodes.ref("x"), ref_node, [])
     
     try:
         update_context(node)
@@ -78,7 +78,7 @@ def for_statement_has_iterable_type_checked():
 @istest
 def for_statement_requires_iterable_to_have_iter_method():
     ref_node = nodes.ref("xs")
-    node = nodes.for_loop(nodes.ref("x"), ref_node, [])
+    node = nodes.for_(nodes.ref("x"), ref_node, [])
     
     try:
         update_context(node, type_bindings={"xs": types.int_type})
@@ -94,7 +94,7 @@ def iter_method_must_take_no_arguments():
     cls = types.scalar_type("Blah")
     cls.attrs.add("__iter__", types.func([types.str_type], types.iterable(types.str_type)))
     ref_node = nodes.ref("xs")
-    node = nodes.for_loop(nodes.ref("x"), ref_node, [])
+    node = nodes.for_(nodes.ref("x"), ref_node, [])
     
     try:
         update_context(node, type_bindings={"x": None, "xs": cls})
@@ -108,7 +108,7 @@ def iter_method_must_return_iterator():
     cls = types.scalar_type("Blah")
     cls.attrs.add("__iter__", types.func([], types.iterable(types.str_type)))
     ref_node = nodes.ref("xs")
-    node = nodes.for_loop(nodes.ref("x"), ref_node, [])
+    node = nodes.for_(nodes.ref("x"), ref_node, [])
     
     try:
         update_context(node, type_bindings={"x": None, "xs": cls})
@@ -120,7 +120,7 @@ def iter_method_must_return_iterator():
 @istest
 def for_statement_target_can_be_supertype_of_iterable_element_type():
     ref_node = nodes.ref("xs")
-    node = nodes.for_loop(nodes.subscript(nodes.ref("ys"), nodes.int_literal(0)), ref_node, [])
+    node = nodes.for_(nodes.subscript(nodes.ref("ys"), nodes.int_literal(0)), ref_node, [])
     
     update_context(node, type_bindings={
         "xs": types.list_type(types.int_type),
@@ -133,7 +133,7 @@ def for_statement_target_cannot_be_strict_subtype_of_iterable_element_type():
     target_sequence_node = nodes.ref("ys")
     target_node = nodes.subscript(target_sequence_node, nodes.int_literal(0))
     iterable_node = nodes.ref("xs")
-    node = nodes.for_loop(target_node, iterable_node, [])
+    node = nodes.for_(target_node, iterable_node, [])
     
     try:
         update_context(node, type_bindings={
@@ -153,7 +153,7 @@ def for_statement_target_cannot_be_strict_subtype_of_iterable_element_type():
 
 @istest
 def for_statement_target_can_be_variable():
-    node = nodes.for_loop(nodes.ref("x"), nodes.ref("xs"), [])
+    node = nodes.for_(nodes.ref("x"), nodes.ref("xs"), [])
     
     # Unassigned case
     update_context(node, type_bindings={
@@ -169,7 +169,7 @@ def for_statement_target_can_be_variable():
 @istest
 def body_of_for_loop_is_type_checked():
     assert_statement_is_type_checked(
-        lambda bad_statement: nodes.for_loop(nodes.ref("x"), nodes.ref("xs"), [
+        lambda bad_statement: nodes.for_(nodes.ref("x"), nodes.ref("xs"), [
             bad_statement,
         ]),
         type_bindings={
@@ -181,7 +181,7 @@ def body_of_for_loop_is_type_checked():
 @istest
 def else_body_of_for_loop_is_type_checked():
     assert_statement_is_type_checked(
-        lambda bad_statement: nodes.for_loop(nodes.ref("x"), nodes.ref("xs"), [], [
+        lambda bad_statement: nodes.for_(nodes.ref("x"), nodes.ref("xs"), [], [
             bad_statement
         ]),
         type_bindings={
@@ -192,7 +192,7 @@ def else_body_of_for_loop_is_type_checked():
 
 @istest
 def after_while_loop_variables_could_have_previous_type_or_assigned_type():
-    node = nodes.for_loop(nodes.ref("x"), nodes.ref("xs"),
+    node = nodes.for_(nodes.ref("x"), nodes.ref("xs"),
         [nodes.assign([nodes.ref("y")], nodes.none())],
         [nodes.assign([nodes.ref("y")], nodes.none())],
     )

@@ -206,7 +206,7 @@ def declarations_in_both_body_and_else_body_of_while_loop_are_not_definitely_bou
 @istest
 def children_of_for_loop_are_checked():
     _assert_child_expression_is_checked(lambda generate:
-        nodes.for_loop(
+        nodes.for_(
             nodes.attr(generate.unbound_ref(), "blah"),
             nodes.list_literal([]),
             [],
@@ -214,7 +214,7 @@ def children_of_for_loop_are_checked():
         )
     )
     _assert_child_expression_is_checked(lambda generate:
-        nodes.for_loop(
+        nodes.for_(
             generate.target(),
             generate.unbound_ref(),
             [],
@@ -222,7 +222,7 @@ def children_of_for_loop_are_checked():
         ),
     )
     _assert_child_statement_is_checked(lambda generate:
-        nodes.for_loop(
+        nodes.for_(
             generate.target(),
             nodes.list_literal([]),
             [generate.unbound_ref_statement()],
@@ -230,7 +230,7 @@ def children_of_for_loop_are_checked():
         ),
     )
     _assert_child_statement_is_checked(lambda generate:
-        nodes.for_loop(
+        nodes.for_(
             generate.target(),
             nodes.list_literal([]),
             [],
@@ -241,14 +241,14 @@ def children_of_for_loop_are_checked():
 @istest
 def for_loop_target_is_defined_but_not_definitely_bound():
     _assert_name_is_not_definitely_bound(lambda generate:
-        nodes.for_loop(generate.target(), nodes.list_literal([]), [], [])
+        nodes.for_(generate.target(), nodes.list_literal([]), [], [])
     )
 
 
 @istest
 def declarations_in_both_body_and_else_body_of_for_loop_are_not_definitely_bound():
     _assert_name_is_not_definitely_bound(lambda generate:
-        nodes.for_loop(
+        nodes.for_(
             generate.target(),
             nodes.list_literal([]),
             [generate.assignment()],
@@ -353,21 +353,21 @@ def children_of_with_statement_are_checked():
     context_manager_type = context_manager_class(exit_type=types.none_type)
     
     _assert_child_expression_is_checked(lambda generate:
-        nodes.with_statement(
+        nodes.with_(
             generate.unbound_ref(),
             None,
             []
         ),
     )
     _assert_child_expression_is_checked(lambda generate:
-        nodes.with_statement(
+        nodes.with_(
             generate.bound_ref("manager", context_manager_type),
             nodes.attr(generate.unbound_ref(), "blah"),
             []
         ),
     )
     _assert_child_statement_is_checked(lambda generate:
-        nodes.with_statement(
+        nodes.with_(
             generate.bound_ref("manager", context_manager_type),
             None,
             [generate.unbound_ref_statement()]
@@ -380,7 +380,7 @@ def with_statement_target_is_definitely_bound_in_body():
     manager_ref = nodes.ref("manager")
     target_ref = nodes.ref("target")
     var_ref = nodes.ref("target")
-    statement = nodes.with_statement(manager_ref, target_ref, [nodes.expression_statement(var_ref)])
+    statement = nodes.with_(manager_ref, target_ref, [nodes.expression_statement(var_ref)])
     
     _updated_bindings(
         statement,
@@ -393,7 +393,7 @@ def with_statement_target_is_definitely_bound_in_body():
 def assigned_variables_in_with_statement_body_are_still_bound_after_exit_if_exit_method_always_returns_none():
     context_manager_type = context_manager_class(exit_type=types.none_type)
     _assert_name_is_definitely_bound(lambda generate:
-        nodes.with_statement(
+        nodes.with_(
             generate.bound_ref("manager", context_manager_type),
             None,
             [generate.assignment()]
@@ -405,7 +405,7 @@ def assigned_variables_in_with_statement_body_are_still_bound_after_exit_if_exit
 def assigned_variables_in_with_statement_body_are_unbound_after_exit_if_exit_method_does_not_return_none():
     context_manager_type = context_manager_class(exit_type=types.bool_type)
     _assert_name_is_not_definitely_bound(lambda generate:
-        nodes.with_statement(
+        nodes.with_(
             generate.bound_ref("manager", context_manager_type),
             None,
             [generate.assignment()]

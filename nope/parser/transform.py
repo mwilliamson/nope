@@ -246,7 +246,7 @@ class Converter(object):
     
     
     def _for(self, node):
-        return self._nodes.for_loop(
+        return self._nodes.for_(
             self.convert(node.target),
             self.convert(node.iter),
             self._statements(node.body),
@@ -287,7 +287,7 @@ class Converter(object):
     
     
     def _raise(self, node):
-        return self._nodes.raise_statement(self.convert(node.exc))
+        return self._nodes.raise_(self.convert(node.exc))
     
     
     def _assert(self, node):
@@ -296,7 +296,7 @@ class Converter(object):
             message = None
         else:
             message = self.convert(node.msg)
-        return self._nodes.assert_statement(condition, message)
+        return self._nodes.assert_(condition, message)
 
 
     def _with(self, node):
@@ -314,7 +314,7 @@ class Converter(object):
             else:
                 target = self.convert(item.optional_vars)
             
-            result = [self._nodes.with_statement(
+            result = [self._nodes.with_(
                 self.convert(item.context_expr),
                 target,
                 result,

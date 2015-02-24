@@ -531,14 +531,14 @@ def test_parse_while_loop_with_else_body():
 
 @istest
 def test_parse_for_loop():
-    expected = nodes.for_loop(nodes.ref("x"), nodes.ref("xs"), [nodes.ret(nodes.ref("x"))])
+    expected = nodes.for_(nodes.ref("x"), nodes.ref("xs"), [nodes.ret(nodes.ref("x"))])
     
     _assert_statement_parse(expected, "for x in xs:\n  return x")
 
 
 @istest
 def test_parse_for_loop_with_else_body():
-    expected = nodes.for_loop(
+    expected = nodes.for_(
         nodes.ref("x"), nodes.ref("xs"),
         [],
         [nodes.ret(nodes.ref("x"))],
@@ -619,25 +619,25 @@ def test_error_if_trying_to_parse_try_statement_with_else_block():
 
 @istest
 def test_parse_raise():
-    _assert_statement_parse(nodes.raise_statement(nodes.ref("x")), "raise x")
+    _assert_statement_parse(nodes.raise_(nodes.ref("x")), "raise x")
 
 
 @istest
 def test_parse_assert_simple_form():
-    _assert_statement_parse(nodes.assert_statement(nodes.ref("x")), "assert x")
+    _assert_statement_parse(nodes.assert_(nodes.ref("x")), "assert x")
 
 
 @istest
 def test_parse_assert_extended_form():
     _assert_statement_parse(
-        nodes.assert_statement(nodes.ref("x"), nodes.str_literal("Oops")),
+        nodes.assert_(nodes.ref("x"), nodes.str_literal("Oops")),
         "assert x, 'Oops'"
     )
 
 
 @istest
 def test_parse_with_statement_single_context_manager_no_target():
-    expected_node = nodes.with_statement(
+    expected_node = nodes.with_(
         nodes.ref("x"),
         None,
         [nodes.ret(nodes.ref("y"))],
@@ -647,7 +647,7 @@ def test_parse_with_statement_single_context_manager_no_target():
 
 @istest
 def test_parse_with_statement_single_context_manager_with_target():
-    expected_node = nodes.with_statement(
+    expected_node = nodes.with_(
         nodes.ref("x"),
         nodes.ref("x2"),
         [nodes.ret(nodes.ref("y"))],
@@ -657,11 +657,11 @@ def test_parse_with_statement_single_context_manager_with_target():
 
 @istest
 def test_parse_with_statement_with_multiple_context_managers():
-    expected_node = nodes.with_statement(
+    expected_node = nodes.with_(
         nodes.ref("x"),
         nodes.ref("x2"),
         [
-            nodes.with_statement(
+            nodes.with_(
                 nodes.ref("y"),
                 None,
                 [nodes.ret(nodes.ref("z"))],

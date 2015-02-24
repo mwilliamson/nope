@@ -30,7 +30,7 @@ def assignment_to_tuple_declares_variables_in_tuple():
 @istest
 def for_loop_target_is_declared():
     declarations = _new_declarations()
-    node = nodes.for_loop(nodes.ref("target"), nodes.list_literal([]), [], [])
+    node = nodes.for_(nodes.ref("target"), nodes.list_literal([]), [], [])
     declare(node, declarations)
     assert_equal("target", declarations.declaration("target").name)
     assert isinstance(declarations.declaration("target"), name_declaration.VariableDeclarationNode)
@@ -53,7 +53,7 @@ def except_handler_target_is_declared():
 @istest
 def with_statement_target_is_declared():
     declarations = _new_declarations()
-    node = nodes.with_statement(nodes.ref("manager"), nodes.ref("target"), [])
+    node = nodes.with_(nodes.ref("manager"), nodes.ref("target"), [])
     declare(node, declarations)
     assert_equal("target", declarations.declaration("target").name)
     assert isinstance(declarations.declaration("target"), name_declaration.VariableDeclarationNode)
@@ -62,7 +62,7 @@ def with_statement_target_is_declared():
 @istest
 def with_statement_target_can_be_none():
     declarations = _new_declarations()
-    node = nodes.with_statement(nodes.ref("manager"), None, [])
+    node = nodes.with_(nodes.ref("manager"), None, [])
     declare(node, declarations)
 
 

@@ -159,18 +159,18 @@ def while_loop_has_child_names_resolved():
 @istest
 def for_loop_has_child_names_resolved():
     _assert_children_resolved(
-        lambda ref: nodes.for_loop(ref, nodes.list_literal([]), [], []),
+        lambda ref: nodes.for_(ref, nodes.list_literal([]), [], []),
     )
     _assert_children_resolved(
-        lambda ref: nodes.for_loop(nodes.ref("target"), ref, [], []),
+        lambda ref: nodes.for_(nodes.ref("target"), ref, [], []),
         other_names=["target"]
     )
     _assert_children_resolved(
-        lambda ref: nodes.for_loop(nodes.ref("target"), nodes.list_literal([]), [nodes.expression_statement(ref)], []),
+        lambda ref: nodes.for_(nodes.ref("target"), nodes.list_literal([]), [nodes.expression_statement(ref)], []),
         other_names=["target"]
     )
     _assert_children_resolved(
-        lambda ref: nodes.for_loop(nodes.ref("target"), nodes.list_literal([]), [], [nodes.expression_statement(ref)]),
+        lambda ref: nodes.for_(nodes.ref("target"), nodes.list_literal([]), [], [nodes.expression_statement(ref)]),
         other_names=["target"]
     )
 
@@ -216,17 +216,17 @@ def try_statement_has_child_names_resolved():
 @istest
 def raise_statement_has_child_names_resolved():
     _assert_children_resolved(
-        lambda ref: nodes.raise_statement(ref),
+        lambda ref: nodes.raise_(ref),
     )
 
 
 @istest
 def assert_statement_has_child_names_resolved():
     _assert_children_resolved(
-        lambda ref: nodes.assert_statement(ref),
+        lambda ref: nodes.assert_(ref),
     )
     _assert_children_resolved(
-        lambda ref: nodes.assert_statement(nodes.bool_literal(False), ref),
+        lambda ref: nodes.assert_(nodes.bool_literal(False), ref),
     )
     
     

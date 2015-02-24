@@ -17,7 +17,7 @@ def break_is_not_valid_in_module():
 
 @istest
 def break_is_valid_in_for_loop_body():
-    node = nodes.for_loop(nodes.ref("x"), nodes.ref("xs"), [nodes.break_()])
+    node = nodes.for_(nodes.ref("x"), nodes.ref("xs"), [nodes.break_()])
     check_loop_control(node, False)
 
 

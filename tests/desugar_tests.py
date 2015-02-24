@@ -184,7 +184,7 @@ class WithStatementTests(object):
     @istest
     def test_transform_with_statement_with_no_target(self):
         _assert_transform(
-            nodes.with_statement(nodes.ref("manager"), None, [nodes.ret(nodes.ref("x"))]),
+            nodes.with_(nodes.ref("manager"), None, [nodes.ret(nodes.ref("x"))]),
             """
                 var __nope_u_exception0
                 var __nope_u_manager1 = manager
@@ -207,7 +207,7 @@ class WithStatementTests(object):
     @istest
     def test_transform_with_statement_with_target(self):
         _assert_transform(
-            nodes.with_statement(nodes.ref("manager"), nodes.ref("value"), [nodes.ret(nodes.ref("x"))]),
+            nodes.with_(nodes.ref("manager"), nodes.ref("value"), [nodes.ret(nodes.ref("x"))]),
             """
                 var __nope_u_exception0
                 var __nope_u_manager1 = manager
@@ -306,7 +306,7 @@ class ForLoopTests(object):
     @istest
     def test_transform_for_loop(self):
         _assert_transform(
-            nodes.for_loop(
+            nodes.for_(
                 nodes.ref("x"),
                 nodes.ref("xs"),
                 [nodes.ret(nodes.ref("x"))],
@@ -326,7 +326,7 @@ class ForLoopTests(object):
     @istest
     def test_transform_for_loop_with_else_branch(self):
         _assert_transform(
-            nodes.for_loop(
+            nodes.for_(
                 nodes.ref("x"),
                 nodes.ref("xs"),
                 [nodes.ret(nodes.ref("x"))],
@@ -384,7 +384,7 @@ class RaiseStatementTests(object):
     @istest
     def test_transform_raise_statement_transforms_value(self):
         _assert_transform(
-            nodes.raise_statement(nodes.ref("value")),
+            nodes.raise_(nodes.ref("value")),
             cc.raise_(cc.ref("value"))
         )
 
@@ -394,7 +394,7 @@ class AssertStatementTests(object):
     @istest
     def test_assert_without_message_is_transformed_to_conditional_raise(self):
         _assert_transform(
-            nodes.assert_statement(nodes.ref("value")),
+            nodes.assert_(nodes.ref("value")),
             """
                 if not value:
                     raise $builtins.AssertionError.__call__("")

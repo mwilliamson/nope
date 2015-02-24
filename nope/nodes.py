@@ -155,7 +155,7 @@ def assign(targets, value, *, explicit_type=None):
 
 if_ = IfElse
 
-def for_loop(target, iterable, body, else_body=None):
+def for_(target, iterable, body, else_body=None):
     if else_body is None:
         else_body = []
     
@@ -185,13 +185,13 @@ def except_(type, target, body):
     
     return ExceptHandler(type, target, body)
 
-raise_statement = RaiseStatement
+raise_ = RaiseStatement
 
-def assert_statement(condition, message=None):
+def assert_(condition, message=None):
     return AssertStatement(condition, message)
 
 
-with_statement = WithStatement
+with_ = WithStatement
 
 
 def typed(type_, node):
