@@ -12,17 +12,17 @@ def none_has_no_references():
 
 @istest
 def bool_has_no_references():
-    _assert_no_references(nodes.boolean(True))
+    _assert_no_references(nodes.bool_literal(True))
 
 
 @istest
 def int_has_no_references():
-    _assert_no_references(nodes.int(4))
+    _assert_no_references(nodes.int_literal(4))
 
 
 @istest
 def str_has_no_references():
-    _assert_no_references(nodes.string(""))
+    _assert_no_references(nodes.str_literal(""))
 
 
 @istest
@@ -136,10 +136,10 @@ def if_else_has_child_names_resolved():
         lambda ref: nodes.if_(ref, [], []),
     )
     _assert_children_resolved(
-        lambda ref: nodes.if_(nodes.boolean(True), [nodes.expression_statement(ref)], []),
+        lambda ref: nodes.if_(nodes.bool_literal(True), [nodes.expression_statement(ref)], []),
     )
     _assert_children_resolved(
-        lambda ref: nodes.if_(nodes.boolean(True), [], [nodes.expression_statement(ref)]),
+        lambda ref: nodes.if_(nodes.bool_literal(True), [], [nodes.expression_statement(ref)]),
     )
 
 
@@ -149,10 +149,10 @@ def while_loop_has_child_names_resolved():
         lambda ref: nodes.while_(ref, [], []),
     )
     _assert_children_resolved(
-        lambda ref: nodes.while_(nodes.boolean(True), [nodes.expression_statement(ref)], []),
+        lambda ref: nodes.while_(nodes.bool_literal(True), [nodes.expression_statement(ref)], []),
     )
     _assert_children_resolved(
-        lambda ref: nodes.while_(nodes.boolean(True), [], [nodes.expression_statement(ref)]),
+        lambda ref: nodes.while_(nodes.bool_literal(True), [], [nodes.expression_statement(ref)]),
     )
 
 
@@ -226,7 +226,7 @@ def assert_statement_has_child_names_resolved():
         lambda ref: nodes.assert_statement(ref),
     )
     _assert_children_resolved(
-        lambda ref: nodes.assert_statement(nodes.boolean(False), ref),
+        lambda ref: nodes.assert_statement(nodes.bool_literal(False), ref),
     )
     
     

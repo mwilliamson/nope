@@ -9,8 +9,8 @@ from .inference.util import FakeModuleTypes, FakeModuleResolver, module
 @istest
 def check_generates_type_lookup_for_all_expressions():
     int_ref_node = nodes.ref("a")
-    int_node = nodes.int(3)
-    str_node = nodes.string("Hello")
+    int_node = nodes.int_literal(3)
+    str_node = nodes.str_literal("Hello")
     
     module_node = nodes.module([
         nodes.assign(["a"], int_node),
@@ -29,10 +29,10 @@ def check_generates_type_lookup_for_all_expressions():
 @istest
 def module_exports_are_specified_using_all():
     module_node = nodes.module([
-        nodes.assign(["__all__"], nodes.list_literal([nodes.string("x"), nodes.string("z")])),
-        nodes.assign(["x"], nodes.string("one")),
-        nodes.assign(["y"], nodes.string("two")),
-        nodes.assign(["z"], nodes.int(3)),
+        nodes.assign(["__all__"], nodes.list_literal([nodes.str_literal("x"), nodes.str_literal("z")])),
+        nodes.assign(["x"], nodes.str_literal("one")),
+        nodes.assign(["y"], nodes.str_literal("two")),
+        nodes.assign(["z"], nodes.int_literal(3)),
     ])
     
     module, type_lookup = _check(LocalModule(None, module_node))
@@ -44,9 +44,9 @@ def module_exports_are_specified_using_all():
 @istest
 def module_exports_default_to_values_without_leading_underscore_if_all_is_not_specified():
     module_node = nodes.module([
-        nodes.assign(["x"], nodes.string("one")),
-        nodes.assign(["_y"], nodes.string("two")),
-        nodes.assign(["z"], nodes.int(3)),
+        nodes.assign(["x"], nodes.str_literal("one")),
+        nodes.assign(["_y"], nodes.str_literal("two")),
+        nodes.assign(["z"], nodes.int_literal(3)),
     ])
     
     module, type_lookup = _check(LocalModule(None, module_node))
@@ -59,13 +59,13 @@ def module_exports_default_to_values_without_leading_underscore_if_all_is_not_sp
 def only_values_that_are_definitely_bound_are_exported():
     module_node = nodes.module([
         nodes.if_(
-            nodes.boolean(True),
+            nodes.bool_literal(True),
             [
-                nodes.assign(["x"], nodes.string("one")),
-                nodes.assign(["y"], nodes.string("two")),
+                nodes.assign(["x"], nodes.str_literal("one")),
+                nodes.assign(["y"], nodes.str_literal("two")),
             ],
             [
-                nodes.assign(["y"], nodes.string("three")),
+                nodes.assign(["y"], nodes.str_literal("three")),
             ]
         )
     ])
@@ -78,7 +78,7 @@ def only_values_that_are_definitely_bound_are_exported():
 @istest
 def error_is_raised_if_value_in_package_has_same_name_as_module():
     target_node = nodes.ref("x")
-    node = nodes.module([nodes.assign([target_node], nodes.int(1))], is_executable=False)
+    node = nodes.module([nodes.assign([target_node], nodes.int_literal(1))], is_executable=False)
     
     try:
         _check_module(LocalModule("root/__init__.py", node), {
@@ -92,7 +92,7 @@ def error_is_raised_if_value_in_package_has_same_name_as_module():
 
 @istest
 def values_can_have_same_name_as_child_module_if_they_are_not_in_module_scope():
-    value_node = nodes.assign([nodes.ref("x")], nodes.int(1))
+    value_node = nodes.assign([nodes.ref("x")], nodes.int_literal(1))
     node = nodes.module([
         nodes.func("f", nodes.args([]), [value_node])
     ], is_executable=False)

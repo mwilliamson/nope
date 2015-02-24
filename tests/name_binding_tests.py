@@ -103,10 +103,10 @@ def no_error_if_name_is_definitely_bound():
 @istest
 def declarations_in_exactly_one_if_else_branch_are_not_definitely_bound():
     _assert_name_is_not_definitely_bound(lambda generate:
-        nodes.if_(nodes.boolean(True), [generate.assignment()], [])
+        nodes.if_(nodes.bool_literal(True), [generate.assignment()], [])
     )
     _assert_name_is_not_definitely_bound(lambda generate:
-        nodes.if_(nodes.boolean(True), [], [generate.assignment()])
+        nodes.if_(nodes.bool_literal(True), [], [generate.assignment()])
     )
 
 
@@ -114,7 +114,7 @@ def declarations_in_exactly_one_if_else_branch_are_not_definitely_bound():
 def variable_remains_definitely_bound_after_being_reassigned_in_one_branch_of_if_else():
     target_node = nodes.ref("x")
     node = nodes.if_(
-        nodes.boolean(True),
+        nodes.bool_literal(True),
         [nodes.assign([target_node], nodes.none())],
         []
     )
@@ -126,7 +126,7 @@ def variable_remains_definitely_bound_after_being_reassigned_in_one_branch_of_if
 @istest
 def declarations_in_both_if_else_branches_are_definitely_bound():
     _assert_name_is_definitely_bound(lambda generate:
-        nodes.if_(nodes.boolean(True), [generate.assignment()], [generate.assignment()])
+        nodes.if_(nodes.bool_literal(True), [generate.assignment()], [generate.assignment()])
     )
 
 
@@ -134,7 +134,7 @@ def declarations_in_both_if_else_branches_are_definitely_bound():
 def potentially_bound_variable_becomes_definitely_bound_after_being_assigned_in_both_branches_of_if_else():
     target_node = nodes.ref("x")
     node = nodes.if_(
-        nodes.boolean(True),
+        nodes.bool_literal(True),
         [nodes.assign([target_node], nodes.none())],
         []
     )
@@ -143,7 +143,7 @@ def potentially_bound_variable_becomes_definitely_bound_after_being_assigned_in_
     assert not bindings.is_definitely_bound(target_node)
     
     node = nodes.if_(
-        nodes.boolean(True),
+        nodes.bool_literal(True),
         [nodes.assign([target_node], nodes.none())],
         [nodes.assign([target_node], nodes.none())]
     )
@@ -162,14 +162,14 @@ def children_of_if_else_are_checked():
     )
     _assert_child_statement_is_checked(lambda generate:
         nodes.if_(
-            nodes.boolean(True),
+            nodes.bool_literal(True),
             [generate.unbound_ref_statement()],
             []
         )
     )
     _assert_child_statement_is_checked(lambda generate:
         nodes.if_(
-            nodes.boolean(True),
+            nodes.bool_literal(True),
             [],
             [generate.unbound_ref_statement()]
         )
@@ -183,14 +183,14 @@ def children_of_while_loop_are_checked():
     )
     _assert_child_statement_is_checked(lambda generate:
         nodes.while_(
-            nodes.boolean(True),
+            nodes.bool_literal(True),
             [generate.unbound_ref_statement()],
             []
         )
     )
     _assert_child_statement_is_checked(lambda generate:
         nodes.while_(
-            nodes.boolean(True),
+            nodes.bool_literal(True),
             [],
             [generate.unbound_ref_statement()]
         )
@@ -199,7 +199,7 @@ def children_of_while_loop_are_checked():
 @istest
 def declarations_in_both_body_and_else_body_of_while_loop_are_not_definitely_bound():
     _assert_name_is_not_definitely_bound(lambda generate:
-        nodes.while_(nodes.boolean(True), [generate.assignment()], [generate.assignment()])
+        nodes.while_(nodes.bool_literal(True), [generate.assignment()], [generate.assignment()])
     )
 
 

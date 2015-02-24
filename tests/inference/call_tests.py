@@ -8,7 +8,7 @@ from .util import assert_type_mismatch, infer
 @istest
 def can_infer_type_of_call_with_positional_arguments():
     type_bindings = {"f": types.func([types.str_type], types.int_type)}
-    assert_equal(types.int_type, infer(nodes.call(nodes.ref("f"), [nodes.string("")]), type_bindings=type_bindings))
+    assert_equal(types.int_type, infer(nodes.call(nodes.ref("f"), [nodes.str_literal("")]), type_bindings=type_bindings))
 
 
 @istest
@@ -19,7 +19,7 @@ def can_infer_type_of_call_with_keyword_arguments():
             return_type=types.bool_type,
         )
     }
-    node = nodes.call(nodes.ref("f"), [], {"name": nodes.string("Bob"), "hats": nodes.int(42)})
+    node = nodes.call(nodes.ref("f"), [], {"name": nodes.str_literal("Bob"), "hats": nodes.int_literal(42)})
     assert_equal(types.bool_type, infer(node, type_bindings=type_bindings))
 
 
@@ -43,7 +43,7 @@ def can_infer_type_of_call_with_optional_argument_specified():
             return_type=types.bool_type,
         )
     }
-    node = nodes.call(nodes.ref("f"), [nodes.string("blah")])
+    node = nodes.call(nodes.ref("f"), [nodes.str_literal("blah")])
     assert_equal(types.bool_type, infer(node, type_bindings=type_bindings))
 
 
@@ -53,7 +53,7 @@ def object_can_be_called_if_it_has_call_magic_method():
         types.attr("__call__", types.func([types.str_type], types.int_type)),
     ])
     type_bindings = {"f": cls}
-    assert_equal(types.int_type, infer(nodes.call(nodes.ref("f"), [nodes.string("")]), type_bindings=type_bindings))
+    assert_equal(types.int_type, infer(nodes.call(nodes.ref("f"), [nodes.str_literal("")]), type_bindings=type_bindings))
 
 
 @istest
@@ -65,7 +65,7 @@ def object_can_be_called_if_it_has_call_magic_method_that_returns_callable():
         types.attr("__call__", second_cls),
     ])
     type_bindings = {"f": first_cls}
-    assert_equal(types.int_type, infer(nodes.call(nodes.ref("f"), [nodes.string("")]), type_bindings=type_bindings))
+    assert_equal(types.int_type, infer(nodes.call(nodes.ref("f"), [nodes.str_literal("")]), type_bindings=type_bindings))
 
 
 @istest
@@ -81,7 +81,7 @@ def callee_can_be_overloaded_func_type_where_choice_is_unambiguous_given_args():
         types.func([types.str_type], types.int_type),
         types.func([types.int_type], types.str_type),
     )}
-    node = nodes.call(nodes.ref("f"), [nodes.string("")])
+    node = nodes.call(nodes.ref("f"), [nodes.str_literal("")])
     assert_equal(types.int_type, infer(node, type_bindings=type_bindings))
 
 
@@ -91,7 +91,7 @@ def return_type_is_common_super_type_of_possible_return_types_of_overloaded_func
         types.func([types.object_type], types.int_type),
         types.func([types.str_type], types.str_type),
     )}
-    node = nodes.call(nodes.ref("f"), [nodes.string("")])
+    node = nodes.call(nodes.ref("f"), [nodes.str_literal("")])
     assert_equal(
         types.common_super_type([types.int_type, types.str_type]),
         infer(node, type_bindings=type_bindings)
@@ -119,7 +119,7 @@ def callee_can_be_generic_func():
     type_bindings = {"f": types.generic_func(["T"], lambda T:
         types.func([T], types.int_type),
     )}
-    node = nodes.call(nodes.ref("f"), [nodes.string("")])
+    node = nodes.call(nodes.ref("f"), [nodes.str_literal("")])
     assert_equal(types.int_type, infer(node, type_bindings=type_bindings))
 
 
@@ -128,7 +128,7 @@ def generic_type_arguments_are_covariant():
     type_bindings = {"f": types.generic_func(["T"], lambda T:
         types.func([T, T], T),
     )}
-    node = nodes.call(nodes.ref("f"), [nodes.string(""), nodes.none()])
+    node = nodes.call(nodes.ref("f"), [nodes.str_literal(""), nodes.none()])
     assert_equal(
         types.common_super_type([types.str_type, types.none_type]),
         infer(node, type_bindings=type_bindings)
@@ -140,7 +140,7 @@ def error_if_generic_func_is_passed_wrong_arguments():
     type_bindings = {"f": types.generic_func(["T"], lambda T:
         types.func([T, types.int_type], T),
     )}
-    node = nodes.call(nodes.ref("f"), [nodes.string(""), nodes.none()])
+    node = nodes.call(nodes.ref("f"), [nodes.str_literal(""), nodes.none()])
     try:
         infer(node, type_bindings=type_bindings)
         assert False, "Expected error"
@@ -180,7 +180,7 @@ def call_attribute_must_be_function():
 @istest
 def type_of_positional_arguments_must_match():
     type_bindings = {"f": types.func([types.str_type], types.int_type)}
-    arg_node = nodes.int(4)
+    arg_node = nodes.int_literal(4)
     node = nodes.call(nodes.ref("f"), [arg_node])
     assert_type_mismatch(
         lambda: infer(node, type_bindings=type_bindings),
@@ -192,7 +192,7 @@ def type_of_positional_arguments_must_match():
 
 @istest
 def type_of_keyword_arguments_must_match():
-    node = nodes.call(nodes.ref("f"), [], {"name": nodes.string("Bob"), "hats": nodes.int(42)})
+    node = nodes.call(nodes.ref("f"), [], {"name": nodes.str_literal("Bob"), "hats": nodes.int_literal(42)})
     
     type_bindings = {
         "f": types.func(
@@ -200,7 +200,7 @@ def type_of_keyword_arguments_must_match():
             return_type=types.bool_type,
         )
     }
-    arg_node = nodes.int(4)
+    arg_node = nodes.int_literal(4)
     node = nodes.call(nodes.ref("f"), [], {"name": arg_node})
     assert_type_mismatch(
         lambda: infer(node, type_bindings=type_bindings),
@@ -234,7 +234,7 @@ def if_positional_has_name_then_that_name_is_used_in_missing_argument_message():
 
 @istest
 def error_if_extra_positional_argument():
-    node = _create_call([nodes.string("hello")])
+    node = _create_call([nodes.str_literal("hello")])
     try:
         _infer_function_call(types.func([], types.int_type), node)
         assert False, "Expected error"
@@ -245,7 +245,7 @@ def error_if_extra_positional_argument():
 
 @istest
 def error_if_extra_keyword_argument():
-    node = _create_call([], {"message": nodes.string("hello")})
+    node = _create_call([], {"message": nodes.str_literal("hello")})
     try:
         _infer_function_call(types.func([], types.int_type), node)
         assert False, "Expected error"
@@ -256,7 +256,7 @@ def error_if_extra_keyword_argument():
 
 @istest
 def error_if_argument_is_passed_both_by_position_and_keyword():
-    node = _create_call([nodes.string("Jim")], {"name": nodes.string("Bob")})
+    node = _create_call([nodes.str_literal("Jim")], {"name": nodes.str_literal("Bob")})
     
     func_type = types.func(
         args=[types.func_arg("name", types.str_type)],

@@ -120,7 +120,7 @@ def iter_method_must_return_iterator():
 @istest
 def for_statement_target_can_be_supertype_of_iterable_element_type():
     ref_node = nodes.ref("xs")
-    node = nodes.for_loop(nodes.subscript(nodes.ref("ys"), nodes.int(0)), ref_node, [])
+    node = nodes.for_loop(nodes.subscript(nodes.ref("ys"), nodes.int_literal(0)), ref_node, [])
     
     update_context(node, type_bindings={
         "xs": types.list_type(types.int_type),
@@ -131,7 +131,7 @@ def for_statement_target_can_be_supertype_of_iterable_element_type():
 @istest
 def for_statement_target_cannot_be_strict_subtype_of_iterable_element_type():
     target_sequence_node = nodes.ref("ys")
-    target_node = nodes.subscript(target_sequence_node, nodes.int(0))
+    target_node = nodes.subscript(target_sequence_node, nodes.int_literal(0))
     iterable_node = nodes.ref("xs")
     node = nodes.for_loop(target_node, iterable_node, [])
     

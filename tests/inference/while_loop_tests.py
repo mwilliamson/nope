@@ -22,7 +22,7 @@ def while_loop_has_condition_type_checked():
 def while_loop_has_body_type_checked():
     assert_statement_is_type_checked(
         lambda bad_statement:
-            nodes.while_(nodes.boolean(True), [bad_statement])
+            nodes.while_(nodes.bool_literal(True), [bad_statement])
     )
 
 
@@ -30,13 +30,13 @@ def while_loop_has_body_type_checked():
 def while_loop_has_else_body_type_checked():
     assert_statement_is_type_checked(
         lambda bad_statement:
-            nodes.while_(nodes.boolean(True), [], [bad_statement])
+            nodes.while_(nodes.bool_literal(True), [], [bad_statement])
     )
 
 
 @istest
 def after_while_loop_variables_could_have_previous_type_or_assigned_type():
-    node = nodes.while_(nodes.boolean(True),
+    node = nodes.while_(nodes.bool_literal(True),
         [nodes.assign([nodes.ref("x")], nodes.none())],
         [nodes.assign([nodes.ref("x")], nodes.none())],
     )

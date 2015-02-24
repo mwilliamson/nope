@@ -50,7 +50,7 @@ def attributes_assigned_in_init_can_be_used_outside_of_class():
             body=[
                 nodes.assign(
                     [nodes.attr(nodes.ref("self_init"), "message")],
-                    nodes.string("Hello")
+                    nodes.str_literal("Hello")
                 )
             ],
         )

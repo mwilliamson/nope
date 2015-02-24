@@ -279,39 +279,39 @@ def test_parse_none():
 
 @istest
 def test_parse_booleans():
-    _assert_expression_parse(nodes.boolean(True), "True")
-    _assert_expression_parse(nodes.boolean(False), "False")
+    _assert_expression_parse(nodes.bool_literal(True), "True")
+    _assert_expression_parse(nodes.bool_literal(False), "False")
 
 
 @istest
 def test_parse_int():
-    _assert_expression_parse(nodes.int(42), "42")
+    _assert_expression_parse(nodes.int_literal(42), "42")
 
 
 @istest
 def test_parse_string():
-    _assert_expression_parse(nodes.string("hello"), "'hello'")
+    _assert_expression_parse(nodes.str_literal("hello"), "'hello'")
 
 
 @istest
 def test_parse_tuple_literal():
     _assert_expression_parse(
-        nodes.tuple_literal([nodes.string("hello"), nodes.int(4)]),
+        nodes.tuple_literal([nodes.str_literal("hello"), nodes.int_literal(4)]),
         "('hello', 4)"
     )
 
 
 @istest
 def test_parse_list_literal():
-    _assert_expression_parse(nodes.list_literal([nodes.string("hello"), nodes.int(4)]), "['hello', 4]")
+    _assert_expression_parse(nodes.list_literal([nodes.str_literal("hello"), nodes.int_literal(4)]), "['hello', 4]")
 
 
 @istest
 def test_parse_dict_literal():
     _assert_expression_parse(
         nodes.dict_literal([
-            (nodes.string("hello"), nodes.int(4)),
-            (nodes.string("there"), nodes.int(5)),
+            (nodes.str_literal("hello"), nodes.int_literal(4)),
+            (nodes.str_literal("there"), nodes.int_literal(5)),
         ]),
         "{'hello': 4, 'there': 5}"
     )
@@ -630,7 +630,7 @@ def test_parse_assert_simple_form():
 @istest
 def test_parse_assert_extended_form():
     _assert_statement_parse(
-        nodes.assert_statement(nodes.ref("x"), nodes.string("Oops")),
+        nodes.assert_statement(nodes.ref("x"), nodes.str_literal("Oops")),
         "assert x, 'Oops'"
     )
 
@@ -703,7 +703,7 @@ def test_parse_empty_class():
 
 @istest
 def test_parse_class_with_body():
-    expected_node = nodes.class_("User", [nodes.assign([nodes.ref("x")], nodes.int(1))])
+    expected_node = nodes.class_("User", [nodes.assign([nodes.ref("x")], nodes.int_literal(1))])
     _assert_statement_parse(expected_node, "class User:\n  x = 1")
 
 

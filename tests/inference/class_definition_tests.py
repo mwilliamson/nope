@@ -43,7 +43,7 @@ def class_constructor_takes_no_args_and_returns_class_if_init_not_set():
 @istest
 def attributes_defined_in_class_definition_body_are_present_on_class_type():
     node = nodes.class_("User", [
-        nodes.assign([nodes.ref("is_person")], nodes.boolean(True)),
+        nodes.assign([nodes.ref("is_person")], nodes.bool_literal(True)),
     ])
     class_type = _infer_class_type(node, ["is_person"])
     assert_equal(types.bool_type, class_type.attrs.type_of("is_person"))
@@ -52,7 +52,7 @@ def attributes_defined_in_class_definition_body_are_present_on_class_type():
 @istest
 def attributes_defined_in_class_definition_body_are_present_on_meta_type():
     node = nodes.class_("User", [
-        nodes.assign([nodes.ref("is_person")], nodes.boolean(True)),
+        nodes.assign([nodes.ref("is_person")], nodes.bool_literal(True)),
     ])
     meta_type = _infer_meta_type(node, ["is_person"])
     assert_equal(types.bool_type, meta_type.attrs.type_of("is_person"))
@@ -80,7 +80,7 @@ def first_argument_in_method_signature_can_be_strict_supertype_of_class():
             nodes.func(
                 name="is_person",
                 args=nodes.args([nodes.arg("self")]),
-                body=[nodes.ret(nodes.boolean(True))],
+                body=[nodes.ret(nodes.bool_literal(True))],
             )
         ),
     ])
@@ -99,7 +99,7 @@ def attributes_with_function_type_defined_in_class_definition_body_are_bound_to_
             nodes.func(
                 name="is_person",
                 args=nodes.args([nodes.arg("self")]),
-                body=[nodes.ret(nodes.boolean(True))],
+                body=[nodes.ret(nodes.bool_literal(True))],
             ),
         )
     ])
@@ -118,7 +118,7 @@ def self_argument_in_method_signature_can_be_explicit_name_of_class():
             nodes.func(
                 name="is_person",
                 args=nodes.args([nodes.arg("self")]),
-                body=[nodes.ret(nodes.boolean(True))],
+                body=[nodes.ret(nodes.bool_literal(True))],
             ),
         )
     ])
@@ -136,7 +136,7 @@ def self_argument_in_method_signature_cannot_be_unrelated_type():
         nodes.func(
             name="is_person",
             args=nodes.args([nodes.arg("self")]),
-            body=[nodes.ret(nodes.boolean(True))],
+            body=[nodes.ret(nodes.bool_literal(True))],
         ),
     )
     node = nodes.class_("User", [func_node])
@@ -159,7 +159,7 @@ def methods_must_have_at_least_one_argument():
         nodes.func(
             name="is_person",
             args=nodes.args([]),
-            body=[nodes.ret(nodes.boolean(True))],
+            body=[nodes.ret(nodes.bool_literal(True))],
         ),
     )
     node = nodes.class_("User", [func_node])
@@ -222,7 +222,7 @@ def init_method_must_return_none():
             returns=nodes.ref("str")
         ),
         args=nodes.args([nodes.arg("self")]),
-        body=[nodes.ret(nodes.string(""))],
+        body=[nodes.ret(nodes.str_literal(""))],
     )
     try:
         _infer_meta_type(node, ["__init__"])
@@ -325,7 +325,7 @@ def attributes_assigned_in_init_can_be_used_in_methods():
             body=[
                 nodes.assign(
                     [nodes.attr(nodes.ref("self_init"), "message")],
-                    nodes.string("Hello")
+                    nodes.str_literal("Hello")
                 )
             ],
         )
@@ -360,7 +360,7 @@ def attributes_assigned_in_init_can_be_used_in_methods_when_init_method_is_defin
             body=[
                 nodes.assign(
                     [nodes.attr(nodes.ref("self_init"), "message")],
-                    nodes.string("Hello")
+                    nodes.str_literal("Hello")
                 )
             ],
         )

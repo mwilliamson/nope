@@ -339,13 +339,13 @@ class Converter(object):
     
 
     def _str_literal(self, node):
-        return self._nodes.string(node.s)
+        return self._nodes.str_literal(node.s)
 
 
     def _num_literal(self, node):
         value = node.n
         if isinstance(value, int):
-            return self._nodes.int(value)
+            return self._nodes.int_literal(value)
     
     
     def _tuple_literal(self, node):
@@ -364,9 +364,9 @@ class Converter(object):
         if node.id == "None":
             return self._nodes.none()
         elif node.id == "True":
-            return self._nodes.boolean(True)
+            return self._nodes.bool_literal(True)
         elif node.id == "False":
-            return self._nodes.boolean(False)
+            return self._nodes.bool_literal(False)
         else:
             return self._nodes.ref(node.id)
     
@@ -375,7 +375,7 @@ class Converter(object):
         if node.value is None:
             return self._nodes.none()
         elif isinstance(node.value, bool):
-            return self._nodes.boolean(node.value)
+            return self._nodes.bool_literal(node.value)
         else:
             raise ValueError("Unrecognised constant: {}".format(node.value))
     

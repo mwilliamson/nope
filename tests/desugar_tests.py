@@ -146,7 +146,7 @@ class FunctionDefinitionTests(object):
                 body=[
                     nodes.if_(
                         nodes.ref("x"),
-                        [nodes.ret(nodes.boolean(True))],
+                        [nodes.ret(nodes.bool_literal(True))],
                         []
                     ),
                 ],
@@ -637,7 +637,7 @@ class StringLiteralTests(object):
     @istest
     def test_transform(self):
         _assert_transform(
-            nodes.string("Many places I have been"),
+            nodes.str_literal("Many places I have been"),
             cc.str_literal("Many places I have been")
         )
 
@@ -656,8 +656,8 @@ class IntLiteralTests(object):
 class BooleanLiteralTests(object):
     @istest
     def test_transform(self):
-        _assert_transform(nodes.boolean(True), cc.true)
-        _assert_transform(nodes.boolean(False), cc.false)
+        _assert_transform(nodes.bool_literal(True), cc.true)
+        _assert_transform(nodes.bool_literal(False), cc.false)
 
 
 @istest

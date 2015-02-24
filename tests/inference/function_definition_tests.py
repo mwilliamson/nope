@@ -54,7 +54,7 @@ def can_infer_type_of_function_with_no_args_and_return_annotation():
             "f",
             args=nodes.arguments([]),
             body=[
-                nodes.ret(nodes.int(4))
+                nodes.ret(nodes.int_literal(4))
             ]
         )
     )
@@ -99,7 +99,7 @@ def can_infer_type_of_function_with_optional_arg():
 
 @istest
 def type_mismatch_if_return_type_is_incorrect():
-    return_node = nodes.ret(nodes.string("!"))
+    return_node = nodes.ret(nodes.str_literal("!"))
     node = nodes.typed(
         nodes.signature(returns=nodes.ref("int")),
         nodes.func(

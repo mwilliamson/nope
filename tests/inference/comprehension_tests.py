@@ -8,7 +8,7 @@ from .util import infer
 def can_infer_type_of_list_comprehension_over_list():
     type_bindings = {"xs": types.list_type(types.str_type)}
     node = nodes.list_comprehension(
-        nodes.int(1),
+        nodes.int_literal(1),
         nodes.comprehension(nodes.ref("x"), nodes.ref("xs")),
     )
     assert_equal(
@@ -21,7 +21,7 @@ def can_infer_type_of_list_comprehension_over_list():
 def can_infer_type_of_generator_expression_over_list():
     type_bindings = {"xs": types.list_type(types.str_type)}
     node = nodes.generator_expression(
-        nodes.int(1),
+        nodes.int_literal(1),
         nodes.comprehension(nodes.ref("x"), nodes.ref("xs")),
     )
     assert_equal(

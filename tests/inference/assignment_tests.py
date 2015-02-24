@@ -7,14 +7,14 @@ from .util import update_context
 
 @istest
 def assignment_sets_type_of_target_variable_to_type_of_value():
-    node = nodes.assign([nodes.ref("x")], nodes.int(1))
+    node = nodes.assign([nodes.ref("x")], nodes.int_literal(1))
     context = update_context(node)
     assert_equal(types.int_type, context.lookup_name("x"))
 
 
 @istest
 def assignment_to_list_allows_subtype():
-    node = nodes.assign([nodes.subscript(nodes.ref("x"), nodes.int(0))], nodes.string("Hello"))
+    node = nodes.assign([nodes.subscript(nodes.ref("x"), nodes.int_literal(0))], nodes.str_literal("Hello"))
     type_bindings = {"x": types.list_type(types.object_type)}
     update_context(node, type_bindings=type_bindings)
 
@@ -23,7 +23,7 @@ def assignment_to_list_allows_subtype():
 def assignment_to_list_does_not_allow_supertype():
     target_sequence_node = nodes.ref("x")
     value_node = nodes.ref("y")
-    node = nodes.assign([nodes.subscript(target_sequence_node, nodes.int(0))], value_node)
+    node = nodes.assign([nodes.subscript(target_sequence_node, nodes.int_literal(0))], value_node)
     type_bindings = {
         "x": types.list_type(types.str_type),
         "y": types.object_type,
@@ -45,7 +45,7 @@ def assignment_to_list_does_not_allow_supertype():
 def assignment_to_attribute_allows_subtype():
     cls = types.scalar_type("X", [types.attr("y", types.object_type, read_only=False)])
     
-    node = nodes.assign([nodes.attr(nodes.ref("x"), "y")], nodes.string("Hello"))
+    node = nodes.assign([nodes.attr(nodes.ref("x"), "y")], nodes.str_literal("Hello"))
     type_bindings = {"x": cls}
     update_context(node, type_bindings=type_bindings)
 
@@ -121,7 +121,7 @@ def cannot_reassign_read_only_attribute():
     cls = types.scalar_type("X", [types.attr("y", types.str_type, read_only=True)])
     
     attr_node = nodes.attr(nodes.ref("x"), "y")
-    node = nodes.assign([attr_node], nodes.string("Hello"))
+    node = nodes.assign([attr_node], nodes.str_literal("Hello"))
     type_bindings = {"x": cls}
     try:
         update_context(node, type_bindings=type_bindings)
@@ -133,7 +133,7 @@ def cannot_reassign_read_only_attribute():
 
 @istest
 def variables_can_change_type():
-    node = nodes.assign(["x"], nodes.int(1))
+    node = nodes.assign(["x"], nodes.int_literal(1))
     type_bindings = {"x": types.none_type}
     context = update_context(node, type_bindings=type_bindings)
     assert_equal(types.int_type, context.lookup_name("x"))
@@ -141,7 +141,7 @@ def variables_can_change_type():
 
 @istest
 def when_target_already_has_type_that_type_is_used_as_type_hint():
-    node = nodes.assign([nodes.ref("x")], nodes.list_literal([nodes.string("Hello")]))
+    node = nodes.assign([nodes.ref("x")], nodes.list_literal([nodes.str_literal("Hello")]))
     type_bindings = {"x": types.list_type(types.object_type)}
     context = update_context(node, type_bindings=type_bindings)
     assert_equal(types.list_type(types.object_type), context.lookup_name("x"))
@@ -151,7 +151,7 @@ def when_target_already_has_type_that_type_is_used_as_type_hint():
 def when_target_has_explicit_type_that_type_is_used_as_type_hint():
     node = nodes.assign(
         [nodes.ref("x")],
-        nodes.list_literal([nodes.string("Hello")]),
+        nodes.list_literal([nodes.str_literal("Hello")]),
         explicit_type=nodes.type_apply(nodes.ref("list"), [nodes.ref("object")])
     )
     context = update_context(node, type_bindings={

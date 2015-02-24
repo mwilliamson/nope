@@ -123,13 +123,9 @@ def none():
     return NoneLiteral()
 
 
-def int(value):
-    return IntLiteral(value)
-
-int_literal = int
-
-boolean = BooleanLiteral
-string = StringLiteral
+int_literal = IntLiteral
+bool_literal = BooleanLiteral
+str_literal = StringLiteral
 tuple_literal = TupleLiteral
 list_literal = ListLiteral
 dict_literal = DictLiteral

@@ -135,13 +135,13 @@ def can_infer_type_of_subscript_using_getitem():
         types.attr("__getitem__", types.func([types.int_type], types.str_type)),
     ])
     type_bindings = {"x": cls}
-    node = nodes.subscript(nodes.ref("x"), nodes.int(4))
+    node = nodes.subscript(nodes.ref("x"), nodes.int_literal(4))
     assert_equal(types.str_type, infer(node, type_bindings=type_bindings))
 
 
 @istest
 def can_infer_type_of_slice():
-    node = nodes.slice(nodes.string(""), nodes.int(4), nodes.none())
+    node = nodes.slice(nodes.str_literal(""), nodes.int_literal(4), nodes.none())
     assert_equal(
         types.slice_type(types.str_type, types.int_type, types.none_type),
         infer(node)
@@ -151,7 +151,7 @@ def can_infer_type_of_slice():
 @istest
 def can_infer_type_of_subscript_of_list():
     type_bindings = {"x": types.list_type(types.str_type)}
-    node = nodes.subscript(nodes.ref("x"), nodes.int(4))
+    node = nodes.subscript(nodes.ref("x"), nodes.int_literal(4))
     assert_equal(types.str_type, infer(node, type_bindings=type_bindings))
 
 
@@ -190,5 +190,5 @@ def type_of_is_operation_is_boolean():
 
 @istest
 def operands_of_is_operation_are_type_checked():
-    assert_subexpression_is_type_checked(lambda bad_ref: nodes.is_(bad_ref, nodes.int(1)))
-    assert_subexpression_is_type_checked(lambda bad_ref: nodes.is_(nodes.int(1), bad_ref))
+    assert_subexpression_is_type_checked(lambda bad_ref: nodes.is_(bad_ref, nodes.int_literal(1)))
+    assert_subexpression_is_type_checked(lambda bad_ref: nodes.is_(nodes.int_literal(1), bad_ref))
