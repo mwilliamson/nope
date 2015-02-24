@@ -517,14 +517,14 @@ def test_parse_if_else_statement():
 
 @istest
 def test_parse_while_loop():
-    expected = nodes.while_loop(nodes.ref("x"), [nodes.ret(nodes.ref("x"))])
+    expected = nodes.while_(nodes.ref("x"), [nodes.ret(nodes.ref("x"))])
     
     _assert_statement_parse(expected, "while x:\n  return x")
 
 
 @istest
 def test_parse_while_loop_with_else_body():
-    expected = nodes.while_loop(nodes.ref("x"), [], [nodes.ret(nodes.ref("x"))])
+    expected = nodes.while_(nodes.ref("x"), [], [nodes.ret(nodes.ref("x"))])
     
     _assert_statement_parse(expected, "while x:\n  pass\nelse:\n  return x")
 

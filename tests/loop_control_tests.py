@@ -23,14 +23,14 @@ def break_is_valid_in_for_loop_body():
 
 @istest
 def break_is_valid_in_while_loop_body():
-    node = nodes.while_loop(nodes.boolean(True), [nodes.break_statement()])
+    node = nodes.while_(nodes.boolean(True), [nodes.break_statement()])
     check_loop_control(node, False)
 
 
 @istest
 def break_is_not_valid_in_while_loop_else_body():
     break_node = nodes.break_statement()
-    node = nodes.while_loop(nodes.boolean(True), [], [break_node])
+    node = nodes.while_(nodes.boolean(True), [], [break_node])
     try:
         check_loop_control(node, False)
         assert False, "Expected error"
@@ -43,7 +43,7 @@ def break_is_not_valid_in_while_loop_else_body():
 def break_is_not_valid_in_function_in_while_loop_body():
     break_node = nodes.break_statement()
     func_node = nodes.func("f", nodes.args([]), [break_node])
-    node = nodes.while_loop(nodes.boolean(True), [func_node], [])
+    node = nodes.while_(nodes.boolean(True), [func_node], [])
     try:
         check_loop_control(node, False)
         assert False, "Expected error"
@@ -56,7 +56,7 @@ def break_is_not_valid_in_function_in_while_loop_body():
 def break_is_not_valid_in_class_in_while_loop_body():
     break_node = nodes.break_statement()
     func_node = nodes.class_def("User", [break_node])
-    node = nodes.while_loop(nodes.boolean(True), [func_node], [])
+    node = nodes.while_(nodes.boolean(True), [func_node], [])
     try:
         check_loop_control(node, False)
         assert False, "Expected error"

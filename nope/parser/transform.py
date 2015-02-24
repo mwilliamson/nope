@@ -238,7 +238,7 @@ class Converter(object):
     
     
     def _while(self, node):
-        return self._nodes.while_loop(
+        return self._nodes.while_(
             self.convert(node.test),
             self._statements(node.body),
             self._statements(node.orelse),

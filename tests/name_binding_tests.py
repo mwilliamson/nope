@@ -179,17 +179,17 @@ def children_of_if_else_are_checked():
 @istest
 def children_of_while_loop_are_checked():
     _assert_child_expression_is_checked(lambda generate:
-        nodes.while_loop(generate.unbound_ref(), [], [])
+        nodes.while_(generate.unbound_ref(), [], [])
     )
     _assert_child_statement_is_checked(lambda generate:
-        nodes.while_loop(
+        nodes.while_(
             nodes.boolean(True),
             [generate.unbound_ref_statement()],
             []
         )
     )
     _assert_child_statement_is_checked(lambda generate:
-        nodes.while_loop(
+        nodes.while_(
             nodes.boolean(True),
             [],
             [generate.unbound_ref_statement()]
@@ -199,7 +199,7 @@ def children_of_while_loop_are_checked():
 @istest
 def declarations_in_both_body_and_else_body_of_while_loop_are_not_definitely_bound():
     _assert_name_is_not_definitely_bound(lambda generate:
-        nodes.while_loop(nodes.boolean(True), [generate.assignment()], [generate.assignment()])
+        nodes.while_(nodes.boolean(True), [generate.assignment()], [generate.assignment()])
     )
 
 

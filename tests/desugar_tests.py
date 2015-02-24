@@ -269,7 +269,7 @@ class WhileLoopTests(object):
     @istest
     def test_transform_while_loop(self):
         _assert_transform(
-            nodes.while_loop(
+            nodes.while_(
                 nodes.ref("x"),
                 [nodes.ret(nodes.ref("y"))],
             ),
@@ -282,7 +282,7 @@ class WhileLoopTests(object):
     @istest
     def test_transform_while_loop_with_else_branch(self):
         _assert_transform(
-            nodes.while_loop(
+            nodes.while_(
                 nodes.ref("x"),
                 [nodes.ret(nodes.ref("y"))],
                 [nodes.ret(nodes.ref("z"))]

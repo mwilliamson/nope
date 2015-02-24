@@ -8,7 +8,7 @@ from ..oo import (
     Statements, statements,
     
     IfElse, if_,
-    WhileLoop, while_loop as while_,
+    WhileLoop, while_,
     break_statement,
     continue_statement,
     

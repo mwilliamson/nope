@@ -146,13 +146,13 @@ def if_else_has_child_names_resolved():
 @istest
 def while_loop_has_child_names_resolved():
     _assert_children_resolved(
-        lambda ref: nodes.while_loop(ref, [], []),
+        lambda ref: nodes.while_(ref, [], []),
     )
     _assert_children_resolved(
-        lambda ref: nodes.while_loop(nodes.boolean(True), [nodes.expression_statement(ref)], []),
+        lambda ref: nodes.while_(nodes.boolean(True), [nodes.expression_statement(ref)], []),
     )
     _assert_children_resolved(
-        lambda ref: nodes.while_loop(nodes.boolean(True), [], [nodes.expression_statement(ref)]),
+        lambda ref: nodes.while_(nodes.boolean(True), [], [nodes.expression_statement(ref)]),
     )
 
 

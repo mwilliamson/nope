@@ -197,7 +197,7 @@ def test_serialize_try_catch_finally():
 
 @istest
 def test_serialize_while_loop():
-    node = js.while_loop(
+    node = js.while_(
         js.ref("condition"),
         [js.ret(js.ref("value"))]
     )
@@ -249,7 +249,7 @@ class PrettyPrintTests(object):
 
     @istest
     def body_of_while_is_indented(self):
-        node = js.while_loop(
+        node = js.while_(
             js.ref("condition"),
             [
                 js.expression_statement(js.ref("y")),

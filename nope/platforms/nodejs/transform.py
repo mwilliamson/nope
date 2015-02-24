@@ -273,7 +273,7 @@ class NodeTransformer(zuice.Base):
     
     
     def _while_loop(self, loop):
-        return js.while_loop(
+        return js.while_(
             self.transform(loop.condition),
             self._transform_all(loop.body),
         )

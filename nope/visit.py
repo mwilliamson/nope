@@ -201,7 +201,7 @@ class Visitor(object):
         )
 
     def _visit_while_loop(self, node, *args):
-        return nodes.while_loop(
+        return nodes.while_(
             self.visit(node.condition, *args),
             self._visit_statements(node.body, *args),
             self._visit_statements(node.else_body, *args),

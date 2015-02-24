@@ -314,7 +314,7 @@ def test_transform_while_loop():
             cc.ref("x"),
             [cc.ret(cc.ref("y"))],
         ),
-        js.while_loop(
+        js.while_(
             js.ref("x"),
             [js.ret(js.ref("y"))],
         )

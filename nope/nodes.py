@@ -166,7 +166,7 @@ def for_loop(target, iterable, body, else_body=None):
     return ForLoop(target, iterable, body, else_body)
 
 
-def while_loop(condition, body, else_body=None):
+def while_(condition, body, else_body=None):
     if else_body is None:
         else_body = []
     
