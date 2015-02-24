@@ -172,8 +172,8 @@ def while_(condition, body, else_body=None):
     
     return WhileLoop(condition, body, else_body)
 
-break_statement = BreakStatement
-continue_statement = ContinueStatement
+break_ = BreakStatement
+continue_ = ContinueStatement
 
 def try_statement(body, *, handlers=None, finally_body=None):
     if handlers is None:

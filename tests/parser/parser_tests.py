@@ -549,12 +549,12 @@ def test_parse_for_loop_with_else_body():
 
 @istest
 def test_parse_break():
-    _assert_statement_parse(nodes.break_statement(), "break")
+    _assert_statement_parse(nodes.break_(), "break")
 
 
 @istest
 def test_parse_continue():
-    _assert_statement_parse(nodes.continue_statement(), "continue")
+    _assert_statement_parse(nodes.continue_(), "continue")
 
 
 @istest

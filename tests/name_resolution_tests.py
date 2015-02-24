@@ -177,12 +177,12 @@ def for_loop_has_child_names_resolved():
 
 @istest
 def break_has_no_references():
-    _assert_no_references(nodes.break_statement())
+    _assert_no_references(nodes.break_())
 
 
 @istest
 def continue_has_no_references():
-    _assert_no_references(nodes.continue_statement())
+    _assert_no_references(nodes.continue_())
 
 
 @istest

@@ -206,13 +206,13 @@ def test_serialize_while_loop():
 
 @istest
 def test_serialize_break():
-    node = js.break_statement()
+    node = js.break_()
     assert_equal("break;", _dumps(node))
 
 
 @istest
 def test_serialize_continue():
-    node = js.continue_statement()
+    node = js.continue_()
     assert_equal("continue;", _dumps(node))
 
 

@@ -9,8 +9,8 @@ from ..oo import (
     
     IfElse, if_,
     WhileLoop, while_,
-    break_statement,
-    continue_statement,
+    break_,
+    continue_,
     
     Throw,
     
@@ -76,8 +76,8 @@ cast = Cast = dodge.data_class("Cast", ["type", "value"])
 dynamic = ref("dynamic")
 null = ref("null")
 not_ = functools.partial(unary_operation, "!")
-break_ = break_statement()
-continue_ = continue_statement()
+break_ = break_()
+continue_ = continue_()
 this = ref("this")
 
 

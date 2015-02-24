@@ -6,7 +6,7 @@ from nope.loop_control import check_loop_control
 
 @istest
 def break_is_not_valid_in_module():
-    node = nodes.break_statement()
+    node = nodes.break_()
     try:
         check_loop_control(node, False)
         assert False, "Expected error"
@@ -17,19 +17,19 @@ def break_is_not_valid_in_module():
 
 @istest
 def break_is_valid_in_for_loop_body():
-    node = nodes.for_loop(nodes.ref("x"), nodes.ref("xs"), [nodes.break_statement()])
+    node = nodes.for_loop(nodes.ref("x"), nodes.ref("xs"), [nodes.break_()])
     check_loop_control(node, False)
 
 
 @istest
 def break_is_valid_in_while_loop_body():
-    node = nodes.while_(nodes.boolean(True), [nodes.break_statement()])
+    node = nodes.while_(nodes.boolean(True), [nodes.break_()])
     check_loop_control(node, False)
 
 
 @istest
 def break_is_not_valid_in_while_loop_else_body():
-    break_node = nodes.break_statement()
+    break_node = nodes.break_()
     node = nodes.while_(nodes.boolean(True), [], [break_node])
     try:
         check_loop_control(node, False)
@@ -41,7 +41,7 @@ def break_is_not_valid_in_while_loop_else_body():
 
 @istest
 def break_is_not_valid_in_function_in_while_loop_body():
-    break_node = nodes.break_statement()
+    break_node = nodes.break_()
     func_node = nodes.func("f", nodes.args([]), [break_node])
     node = nodes.while_(nodes.boolean(True), [func_node], [])
     try:
@@ -54,7 +54,7 @@ def break_is_not_valid_in_function_in_while_loop_body():
 
 @istest
 def break_is_not_valid_in_class_in_while_loop_body():
-    break_node = nodes.break_statement()
+    break_node = nodes.break_()
     func_node = nodes.class_def("User", [break_node])
     node = nodes.while_(nodes.boolean(True), [func_node], [])
     try:
@@ -67,13 +67,13 @@ def break_is_not_valid_in_class_in_while_loop_body():
 
 @istest
 def break_is_valid_in_try_finally_body():
-    node = nodes.try_statement([], finally_body=[nodes.break_statement()])
+    node = nodes.try_statement([], finally_body=[nodes.break_()])
     check_loop_control(node, True)
 
 
 @istest
 def continue_is_not_valid_in_module():
-    node = nodes.continue_statement()
+    node = nodes.continue_()
     try:
         check_loop_control(node, False)
         assert False, "Expected error"
@@ -84,13 +84,13 @@ def continue_is_not_valid_in_module():
 
 @istest
 def continue_is_valid_in_try_body():
-    node = nodes.try_statement([nodes.continue_statement()])
+    node = nodes.try_statement([nodes.continue_()])
     check_loop_control(node, True)
 
 
 @istest
 def continue_is_not_valid_in_try_finally_body():
-    continue_statement = nodes.continue_statement()
+    continue_statement = nodes.continue_()
     node = nodes.try_statement([], finally_body=[continue_statement])
     try:
         check_loop_control(node, True)

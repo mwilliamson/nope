@@ -7,8 +7,8 @@ statements = Statements = dodge.data_class("Statements", ["statements"])
 
 if_ = IfElse = dodge.data_class("IfElse", ["condition", "true_body", "false_body"])
 while_ = WhileLoop = dodge.data_class("WhileLoop", ["condition", "body"])
-break_statement = BreakStatement = dodge.data_class("BreakStatement", [])
-continue_statement = ContinueStatement = dodge.data_class("ContinueStatement", [])
+break_ = BreakStatement = dodge.data_class("BreakStatement", [])
+continue_ = ContinueStatement = dodge.data_class("ContinueStatement", [])
 
 throw = Throw = dodge.data_class("Throw", ["value"])
 

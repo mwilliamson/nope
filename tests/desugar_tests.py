@@ -354,7 +354,7 @@ class BreakTests(object):
     @istest
     def test_break(self):
         _assert_transform(
-            nodes.break_statement(),
+            nodes.break_(),
             cc.break_
         )
 
@@ -364,7 +364,7 @@ class ContinueTests(object):
     @istest
     def test_continue(self):
         _assert_transform(
-            nodes.continue_statement(),
+            nodes.continue_(),
             cc.continue_
         )
 

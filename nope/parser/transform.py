@@ -255,11 +255,11 @@ class Converter(object):
     
     
     def _break(self, node):
-        return self._nodes.break_statement()
+        return self._nodes.break_()
     
     
     def _continue(self, node):
-        return self._nodes.continue_statement()
+        return self._nodes.continue_()
     
     
     def _try(self, node):

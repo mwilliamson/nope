@@ -12,8 +12,8 @@ from ..oo import (
     
     IfElse, if_,
     WhileLoop, while_,
-    ContinueStatement, continue_statement,
-    BreakStatement, break_statement,
+    ContinueStatement, continue_,
+    BreakStatement, break_,
     
     Throw, throw,
     
