@@ -80,7 +80,7 @@ class ClassBuilderTransform(zuice.Base):
             )
         )
         
-        return nodes.class_def(
+        return nodes.class_(
             name=name.value,
             body=[
                 init

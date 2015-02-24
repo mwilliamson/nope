@@ -572,7 +572,7 @@ def test_parse_try_except_that_catches_all_exceptions():
     expected = nodes.try_(
         [nodes.expression_statement(nodes.ref("x"))],
         handlers=[
-            nodes.except_handler(None, None, [
+            nodes.except_(None, None, [
                 nodes.expression_statement(nodes.ref("y"))
             ]),
         ]
@@ -586,7 +586,7 @@ def test_parse_try_except_with_specific_type():
     expected = nodes.try_(
         [nodes.expression_statement(nodes.ref("x"))],
         handlers=[
-            nodes.except_handler(nodes.ref("AssertionError"), None, [
+            nodes.except_(nodes.ref("AssertionError"), None, [
                 nodes.expression_statement(nodes.ref("y"))
             ]),
         ]
@@ -600,7 +600,7 @@ def test_parse_try_except_with_specific_type_and_identifier():
     expected = nodes.try_(
         [nodes.expression_statement(nodes.ref("x"))],
         handlers=[
-            nodes.except_handler(nodes.ref("AssertionError"), "error", [
+            nodes.except_(nodes.ref("AssertionError"), "error", [
                 nodes.expression_statement(nodes.ref("y"))
             ]),
         ]
@@ -697,25 +697,25 @@ def nodes_have_position():
 
 @istest
 def test_parse_empty_class():
-    expected_node = nodes.class_def("User", [])
+    expected_node = nodes.class_("User", [])
     _assert_statement_parse(expected_node, "class User:\n  pass")
 
 
 @istest
 def test_parse_class_with_body():
-    expected_node = nodes.class_def("User", [nodes.assign([nodes.ref("x")], nodes.int(1))])
+    expected_node = nodes.class_("User", [nodes.assign([nodes.ref("x")], nodes.int(1))])
     _assert_statement_parse(expected_node, "class User:\n  x = 1")
 
 
 @istest
 def test_parse_class_with_base_classes():
-    expected_node = nodes.class_def("User", [], base_classes=[nodes.ref("Person")])
+    expected_node = nodes.class_("User", [], base_classes=[nodes.ref("Person")])
     _assert_statement_parse(expected_node, "class User(Person):\n  pass")
 
 
 @istest
 def test_parse_class_with_generics():
-    expected_node = nodes.class_def("Option", [], type_params=[nodes.formal_type_parameter("T")])
+    expected_node = nodes.class_("Option", [], type_params=[nodes.formal_type_parameter("T")])
     _assert_statement_parse(expected_node, "#:generic T\nclass Option:\n  pass")
 
 

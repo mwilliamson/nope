@@ -225,7 +225,7 @@ class Visitor(object):
         )
 
     def _visit_except_handler(self, node, *args):
-        return nodes.except_handler(
+        return nodes.except_(
             self.visit(node.type, *args),
             self.visit(node.target, *args),
             self._visit_statements(node.body, *args),
@@ -272,7 +272,7 @@ class Visitor(object):
     
     def _visit_class_definition(self, node, *args):
         base_classes = self._visit_all(node.base_classes, *args)
-        return nodes.class_def(
+        return nodes.class_(
             node.name,
             self._visit_statements(node.body, *args),
             base_classes=base_classes,

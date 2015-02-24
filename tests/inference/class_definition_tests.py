@@ -9,14 +9,14 @@ from ..testing import wip
 
 @istest
 def class_type_uses_name_from_node():
-    node = nodes.class_def("User", [])
+    node = nodes.class_("User", [])
     class_type = _infer_class_type(node, [])
     assert_equal("User", class_type.name)
     
 
 @istest
 def class_type_has_no_base_classes_if_object_is_explicit_base_class():
-    node = nodes.class_def("User", [], base_classes=[nodes.ref("object")])
+    node = nodes.class_("User", [], base_classes=[nodes.ref("object")])
     class_type = _infer_class_type(node, [])
     assert_equal("User", class_type.name)
     assert_equal([], class_type.base_classes)
@@ -25,7 +25,7 @@ def class_type_has_no_base_classes_if_object_is_explicit_base_class():
 @istest
 def error_if_base_class_is_not_object():
     type_bindings = {"Person": types.meta_type(types.scalar_type("Person"))}
-    node = nodes.class_def("User", [], base_classes=[nodes.ref("Person")])
+    node = nodes.class_("User", [], base_classes=[nodes.ref("Person")])
     try:
         _infer_class_type(node, [], type_bindings=type_bindings)
         assert False, "Expected error"
@@ -35,14 +35,14 @@ def error_if_base_class_is_not_object():
 
 @istest
 def class_constructor_takes_no_args_and_returns_class_if_init_not_set():
-    node = nodes.class_def("User", [])
+    node = nodes.class_("User", [])
     meta_type = _infer_meta_type(node, [])
     assert_equal(types.func([], meta_type.type), meta_type.attrs.type_of("__call__"))
 
 
 @istest
 def attributes_defined_in_class_definition_body_are_present_on_class_type():
-    node = nodes.class_def("User", [
+    node = nodes.class_("User", [
         nodes.assign([nodes.ref("is_person")], nodes.boolean(True)),
     ])
     class_type = _infer_class_type(node, ["is_person"])
@@ -51,7 +51,7 @@ def attributes_defined_in_class_definition_body_are_present_on_class_type():
 
 @istest
 def attributes_defined_in_class_definition_body_are_present_on_meta_type():
-    node = nodes.class_def("User", [
+    node = nodes.class_("User", [
         nodes.assign([nodes.ref("is_person")], nodes.boolean(True)),
     ])
     meta_type = _infer_meta_type(node, ["is_person"])
@@ -60,7 +60,7 @@ def attributes_defined_in_class_definition_body_are_present_on_meta_type():
 
 @istest
 def attributes_with_function_type_defined_in_class_definition_body_are_not_present_on_meta_type():
-    node = nodes.class_def("User", [
+    node = nodes.class_("User", [
         nodes.assign([nodes.ref("is_person")], nodes.ref("true_func")),
     ])
     meta_type = _infer_meta_type(node, ["is_person"], type_bindings={
@@ -71,7 +71,7 @@ def attributes_with_function_type_defined_in_class_definition_body_are_not_prese
 
 @istest
 def first_argument_in_method_signature_can_be_strict_supertype_of_class():
-    node = nodes.class_def("User", [
+    node = nodes.class_("User", [
         nodes.typed(
             nodes.signature(
                 args=[nodes.signature_arg(nodes.ref("object"))],
@@ -90,7 +90,7 @@ def first_argument_in_method_signature_can_be_strict_supertype_of_class():
 
 @istest
 def attributes_with_function_type_defined_in_class_definition_body_are_bound_to_class_type():
-    node = nodes.class_def("User", [
+    node = nodes.class_("User", [
         nodes.typed(
             nodes.signature(
                 args=[nodes.signature_arg(nodes.ref("Self"))],
@@ -109,7 +109,7 @@ def attributes_with_function_type_defined_in_class_definition_body_are_bound_to_
 
 @istest
 def self_argument_in_method_signature_can_be_explicit_name_of_class():
-    node = nodes.class_def("User", [
+    node = nodes.class_("User", [
         nodes.typed(
             nodes.signature(
                 args=[nodes.signature_arg(nodes.ref("User"))],
@@ -139,7 +139,7 @@ def self_argument_in_method_signature_cannot_be_unrelated_type():
             body=[nodes.ret(nodes.boolean(True))],
         ),
     )
-    node = nodes.class_def("User", [func_node])
+    node = nodes.class_("User", [func_node])
     try:
         _infer_class_type(node, ["is_person"])
         assert False, "Expected error"
@@ -162,7 +162,7 @@ def methods_must_have_at_least_one_argument():
             body=[nodes.ret(nodes.boolean(True))],
         ),
     )
-    node = nodes.class_def("User", [func_node])
+    node = nodes.class_("User", [func_node])
     try:
         _infer_class_type(node, ["is_person"])
         assert False, "Expected error"
@@ -174,7 +174,7 @@ def methods_must_have_at_least_one_argument():
 @istest
 def method_signature_is_checked_when_defined_by_assignment():
     func_node = nodes.assign([nodes.ref("is_person")], nodes.ref("f"))
-    node = nodes.class_def("User", [func_node])
+    node = nodes.class_("User", [func_node])
     try:
         _infer_class_type(node, ["is_person"], type_bindings={
             "f": types.func([], types.bool_type)
@@ -234,7 +234,7 @@ def init_method_must_return_none():
 @istest
 def init_must_be_function_definition():
     func_node = nodes.assign([nodes.ref("__init__")], nodes.ref("f"))
-    node = nodes.class_def("User", [func_node])
+    node = nodes.class_("User", [func_node])
     try:
         _infer_class_type(node, ["__init__"], type_bindings={
             "f": types.func([types.object_type], types.str_type)
@@ -246,7 +246,7 @@ def init_must_be_function_definition():
 
 @istest
 def method_can_call_method_on_same_instance_defined_later_in_body():
-    node = nodes.class_def("User", [
+    node = nodes.class_("User", [
         nodes.typed(
             nodes.signature(
                 args=[nodes.signature_arg(nodes.ref("Self"))],
@@ -279,7 +279,7 @@ def method_can_call_method_on_same_instance_defined_later_in_body():
 
 @istest
 def init_method_cannot_call_other_methods():
-    node = nodes.class_def("User", [
+    node = nodes.class_("User", [
         nodes.typed(
             nodes.signature(
                 args=[nodes.signature_arg(nodes.ref("Self"))],
@@ -330,7 +330,7 @@ def attributes_assigned_in_init_can_be_used_in_methods():
             ],
         )
     )
-    node = nodes.class_def("User", [
+    node = nodes.class_("User", [
         init_func,
         nodes.typed(
             nodes.signature(
@@ -365,7 +365,7 @@ def attributes_assigned_in_init_can_be_used_in_methods_when_init_method_is_defin
             ],
         )
     )
-    node = nodes.class_def("User", [
+    node = nodes.class_("User", [
         nodes.typed(
             nodes.signature(
                 args=[nodes.signature_arg(nodes.ref("Self"))],
@@ -383,13 +383,13 @@ def attributes_assigned_in_init_can_be_used_in_methods_when_init_method_is_defin
 
 @istest
 def name_of_instantiation_of_generic_class_includes_type_parameters():
-    node = nodes.class_def("Option", [], type_params=[nodes.formal_type_parameter("T")])
+    node = nodes.class_("Option", [], type_params=[nodes.formal_type_parameter("T")])
     class_type = _infer_class_type(node, [])
     assert_equal("Option[int]", class_type(types.int_type).name)
 
 
 def _create_class_with_init(signature, args, body):
-    return nodes.class_def("User", [
+    return nodes.class_("User", [
         nodes.typed(
             signature,
             nodes.func(

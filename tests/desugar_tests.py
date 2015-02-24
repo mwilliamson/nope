@@ -46,7 +46,7 @@ class ClassDefinitionTests(object):
     @istest
     def test_assignments_in_body_are_transformed(self):
         _assert_transform(
-            nodes.class_def("Blah", [nodes.assign([nodes.ref("value")], nodes.none())]),
+            nodes.class_("Blah", [nodes.assign([nodes.ref("value")], nodes.none())]),
             cc.class_(
                 "Blah",
                 methods=[],
@@ -60,7 +60,7 @@ class ClassDefinitionTests(object):
     @istest
     def test_function_definitions_in_body_are_stored_as_methods(self):
         _assert_transform(
-            nodes.class_def("Blah", [nodes.func("f", nodes.args([]), [])]),
+            nodes.class_("Blah", [nodes.func("f", nodes.args([]), [])]),
             cc.class_(
                 "Blah",
                 methods=[cc.func("f", [], [cc.ret(cc.none)])],
@@ -168,7 +168,7 @@ class TryStatementTests(object):
         _assert_transform(
             nodes.try_(
                 [nodes.ret(nodes.ref("x"))],
-                handlers=[nodes.except_handler(nodes.ref("Exception"), nodes.ref("error"), [nodes.ref("y")])],
+                handlers=[nodes.except_(nodes.ref("Exception"), nodes.ref("error"), [nodes.ref("y")])],
                 finally_body=[nodes.ret(nodes.ref("z"))],
             ),
             cc.try_(

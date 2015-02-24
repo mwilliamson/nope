@@ -55,7 +55,7 @@ def attributes_assigned_in_init_can_be_used_outside_of_class():
             ],
         )
     )
-    class_node = nodes.class_def("User", [init_func])
+    class_node = nodes.class_("User", [init_func])
     
     node = [
         class_node,

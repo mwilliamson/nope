@@ -42,7 +42,7 @@ def except_handler_target_is_declared():
     node = nodes.try_(
         [],
         handlers=[
-            nodes.except_handler(nodes.none(), nodes.ref("error"), [])
+            nodes.except_(nodes.none(), nodes.ref("error"), [])
         ],
     )
     declare(node, declarations)
@@ -105,7 +105,7 @@ def names_in_function_signature_are_not_declared():
 
 @istest
 def class_definition_is_declared():
-    node = nodes.class_def("User", [])
+    node = nodes.class_("User", [])
     
     declarations = _new_declarations()
     declare(node, declarations)
@@ -115,7 +115,7 @@ def class_definition_is_declared():
 
 @istest
 def names_in_class_are_not_declared():
-    node = nodes.class_def("User", [
+    node = nodes.class_("User", [
         nodes.assign([nodes.ref("x")], nodes.none())
     ])
     
@@ -239,7 +239,7 @@ def declarations_in_function_include_argument_declarations():
 
 @istest
 def declarations_in_class_include_declarations_in_body():
-    node = nodes.class_def("User", [
+    node = nodes.class_("User", [
         nodes.assign([nodes.ref("x")], nodes.none())
     ])
     
@@ -250,7 +250,7 @@ def declarations_in_class_include_declarations_in_body():
 
 @istest
 def declarations_in_class_include_self_class():
-    node = nodes.class_def("User", [
+    node = nodes.class_("User", [
         nodes.assign([nodes.ref("x")], nodes.none())
     ])
     
@@ -260,7 +260,7 @@ def declarations_in_class_include_self_class():
 
 @istest
 def declarations_in_class_include_formal_type_parameters():
-    node = nodes.class_def("Option", [], type_params=[nodes.formal_type_parameter("T")])
+    node = nodes.class_("Option", [], type_params=[nodes.formal_type_parameter("T")])
     
     declarations = declarations_in_class(node)
     assert isinstance(declarations.declaration("T"), name_declaration.TypeDeclarationNode)

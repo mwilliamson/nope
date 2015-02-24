@@ -19,7 +19,7 @@ def try_body_is_type_checked():
 def except_handler_type_must_be_type():
     type_node = nodes.ref("x")
     node = nodes.try_([], handlers=[
-        nodes.except_handler(type_node, None, []),
+        nodes.except_(type_node, None, []),
     ])
     assert_type_mismatch(
         lambda: update_context(node, type_bindings={"x": types.int_type}),
@@ -33,7 +33,7 @@ def except_handler_type_must_be_type():
 def except_handler_type_must_be_exception_type():
     type_node = nodes.ref("int")
     node = nodes.try_([], handlers=[
-        nodes.except_handler(type_node, None, []),
+        nodes.except_(type_node, None, []),
     ])
     meta_type = types.meta_type(types.int_type)
     assert_type_mismatch(
@@ -47,7 +47,7 @@ def except_handler_type_must_be_exception_type():
 @istest
 def except_handler_updates_type_of_error_target():
     node = nodes.try_([], handlers=[
-        nodes.except_handler(
+        nodes.except_(
             nodes.ref("Exception"),
             "error",
             [nodes.expression_statement(nodes.ref("error"))]
@@ -64,7 +64,7 @@ def except_handler_updates_type_of_error_target():
 def try_except_handler_body_is_type_checked():
     assert_statement_is_type_checked(
         lambda bad_statement: nodes.try_([], handlers=[
-            nodes.except_handler(None, None, [bad_statement]),
+            nodes.except_(None, None, [bad_statement]),
         ])
     )
 

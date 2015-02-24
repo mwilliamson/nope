@@ -183,7 +183,7 @@ def try_(body, *, handlers=None, finally_body=None):
     return TryStatement(body, handlers, finally_body)
 
 
-def except_handler(type, target, body):
+def except_(type, target, body):
     if isinstance(target, str):
         target = ref(target)
     
@@ -213,7 +213,7 @@ def func(name, args, body):
     return FunctionDef(name, args, body)
 
 
-def class_def(name, body, *, base_classes=None, type_params=None):
+def class_(name, body, *, base_classes=None, type_params=None):
     if base_classes is None:
         base_classes = []
     

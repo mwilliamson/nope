@@ -192,17 +192,17 @@ def try_statement_has_child_names_resolved():
     )
     _assert_children_resolved(
         lambda ref: nodes.try_([], handlers=[
-            nodes.except_handler(None, None, [nodes.expression_statement(ref)])
+            nodes.except_(None, None, [nodes.expression_statement(ref)])
         ]),
     )
     _assert_children_resolved(
         lambda ref: nodes.try_([], handlers=[
-            nodes.except_handler(ref, None, [])
+            nodes.except_(ref, None, [])
         ]),
     )
     _assert_children_resolved(
         lambda ref: nodes.try_([], handlers=[
-            nodes.except_handler(nodes.ref("Exception"), ref, [])
+            nodes.except_(nodes.ref("Exception"), ref, [])
         ]),
         other_names=["Exception"],
     )
@@ -376,7 +376,7 @@ def function_definitions_assignments_shadow_variables_of_same_name_in_outer_scop
 
 @istest
 def class_definition_is_resolved_to_class_declaration():
-    node = nodes.class_def("User", [])
+    node = nodes.class_("User", [])
     
     declarations = _create_declarations(["User"])
     references = resolve(node, declarations)
@@ -386,7 +386,7 @@ def class_definition_is_resolved_to_class_declaration():
 @istest
 def class_definition_base_classes_are_resolved():
     ref = nodes.ref("object")
-    node = nodes.class_def("User", [], base_classes=[ref])
+    node = nodes.class_("User", [], base_classes=[ref])
     
     declarations = _create_declarations(["User", "object"])
     references = resolve(node, declarations)
@@ -396,7 +396,7 @@ def class_definition_base_classes_are_resolved():
 @istest
 def class_definition_bodies_can_access_variables_from_outer_scope():
     ref = nodes.ref("x")
-    node = nodes.class_def("User", [nodes.expression_statement(ref)])
+    node = nodes.class_("User", [nodes.expression_statement(ref)])
     
     declarations = _create_declarations(["x", "User"])
     
@@ -408,7 +408,7 @@ def class_definition_bodies_can_access_variables_from_outer_scope():
 def class_definitions_assignments_shadow_variables_of_same_name_in_outer_scope():
     ref = nodes.ref("x")
     body = [nodes.assign([ref], nodes.none())]
-    node = nodes.class_def("User", body)
+    node = nodes.class_("User", body)
     
     declarations = _create_declarations(["x", "User"])
     
@@ -419,7 +419,7 @@ def class_definitions_assignments_shadow_variables_of_same_name_in_outer_scope()
 @istest
 def class_definition_functions_ignore_class_scope_when_resolving_references():
     ref = nodes.ref("x")
-    node = nodes.class_def("User", [
+    node = nodes.class_("User", [
         nodes.assign([nodes.ref("x")], nodes.none()),
         nodes.func("f", nodes.args([]), [nodes.ret(ref)]),
     ])

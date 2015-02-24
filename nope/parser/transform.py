@@ -279,7 +279,7 @@ class Converter(object):
         else:
             type_ = self.convert(node.type)
             
-        return self._nodes.except_handler(
+        return self._nodes.except_(
             type_,
             node.name,
             self._statements(node.body),
@@ -335,7 +335,7 @@ class Converter(object):
         base_classes = self._mapped(node.bases)
         lineno, col_offset = self._node_location(node)
         generics = self._comment_seeker.consume_generic(lineno, col_offset)
-        return self._nodes.class_def(node.name, body, base_classes=base_classes, type_params=generics)
+        return self._nodes.class_(node.name, body, base_classes=base_classes, type_params=generics)
     
 
     def _str_literal(self, node):

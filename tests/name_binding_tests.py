@@ -264,17 +264,17 @@ def children_of_try_statement_are_checked():
     )
     _assert_child_statement_is_checked(lambda generate:
         nodes.try_([], handlers=[
-            nodes.except_handler(None, None, [generate.unbound_ref_statement()])
+            nodes.except_(None, None, [generate.unbound_ref_statement()])
         ]),
     )
     _assert_child_expression_is_checked(lambda generate:
         nodes.try_([], handlers=[
-            nodes.except_handler(generate.unbound_ref(), None, [])
+            nodes.except_(generate.unbound_ref(), None, [])
         ]),
     )
     _assert_child_expression_is_checked(lambda generate:
         nodes.try_([], handlers=[
-            nodes.except_handler(nodes.none(), nodes.attr(generate.unbound_ref(), "blah"), [])
+            nodes.except_(nodes.none(), nodes.attr(generate.unbound_ref(), "blah"), [])
         ]),
     )
     _assert_child_statement_is_checked(lambda generate:
@@ -290,7 +290,7 @@ def declarations_in_body_and_handler_body_and_finally_body_of_try_statement_are_
         nodes.try_(
             [generate.assignment()],
             handlers=[
-                nodes.except_handler(None, None, [generate.assignment()])
+                nodes.except_(None, None, [generate.assignment()])
             ],
             finally_body=[generate.assignment()],
         )
@@ -303,7 +303,7 @@ def except_handler_target_is_defined_but_not_definitely_bound():
         nodes.try_(
             [],
             handlers=[
-                nodes.except_handler(nodes.none(), generate.target(), [])
+                nodes.except_(nodes.none(), generate.target(), [])
             ],
         )
     )
@@ -315,8 +315,8 @@ def except_handler_targets_in_same_try_statement_can_share_their_name():
         nodes.try_(
             [],
             handlers=[
-                nodes.except_handler(nodes.none(), generate.target(), []),
-                nodes.except_handler(nodes.none(), generate.target(), []),
+                nodes.except_(nodes.none(), generate.target(), []),
+                nodes.except_(nodes.none(), generate.target(), []),
             ],
         )
     )
@@ -329,11 +329,11 @@ def except_handler_targets_cannot_share_their_name_when_nested():
     node = nodes.try_(
         [],
         handlers=[
-            nodes.except_handler(nodes.none(), first_target_node, [
+            nodes.except_(nodes.none(), first_target_node, [
                 nodes.try_(
                     [],
                     handlers=[
-                        nodes.except_handler(nodes.none(), second_target_node, [])
+                        nodes.except_(nodes.none(), second_target_node, [])
                     ],
                 )
             ])
@@ -529,7 +529,7 @@ def exception_handler_targets_cannot_be_accessed_from_nested_function():
     try_node = nodes.try_(
         [],
         handlers=[
-            nodes.except_handler(nodes.none(), target_node, [func_node])
+            nodes.except_(nodes.none(), target_node, [func_node])
         ],
     )
     
@@ -550,7 +550,7 @@ def exception_handler_targets_cannot_be_accessed_from_nested_function():
 
 @istest
 def class_name_is_definitely_bound_after_class_definition():
-    node = nodes.class_def("User", [])
+    node = nodes.class_("User", [])
     bindings = _updated_bindings(node)
     assert_equal(True, bindings.is_definitely_bound(node))
 
@@ -564,7 +564,7 @@ def method_can_reference_later_function_if_class_is_not_used_in_the_interim():
     g = nodes.func("g", args=nodes.Arguments([]), body=[])
     
     _updated_bindings(nodes.module([
-        nodes.class_def("a", [f]),
+        nodes.class_("a", [f]),
         g,
     ]))
 
@@ -579,7 +579,7 @@ def class_cannot_be_referenced_if_method_dependencies_are_not_bound():
     
     try:
         _updated_bindings(nodes.module([
-            nodes.class_def("a", [f]),
+            nodes.class_("a", [f]),
             nodes.expression_statement(nodes.ref("a")),
             g,
         ]))
@@ -654,7 +654,7 @@ def _test_context(create_node):
             return nodes.func(*args, **kwargs)
         
         def class_def(self, *args, **kwargs):
-            return nodes.class_def(*args, **kwargs)
+            return nodes.class_(*args, **kwargs)
             
         
     node = create_node(NodeGenerator())
