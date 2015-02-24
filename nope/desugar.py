@@ -359,10 +359,6 @@ class Desugarrer(zuice.Base):
         return cc.call(cc.attr(obj, "__{}__".format(name)), list(args))
     
     def _call(self, node):
-        # TODO: proper support for __call__
-        # at the moment, we only support meta-types that are directly callable e.g. str()
-        # a better solution might be have such values have a $call attribute (or similar)
-        # to avoid clashing with actual __call__ attributes
         args = []
         
         call_func_type = self._type_of(node.func)
