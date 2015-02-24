@@ -76,8 +76,6 @@ cast = Cast = dodge.data_class("Cast", ["type", "value"])
 dynamic = ref("dynamic")
 null = ref("null")
 not_ = functools.partial(unary_operation, "!")
-break_ = break_()
-continue_ = continue_()
 this = ref("this")
 
 

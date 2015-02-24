@@ -325,7 +325,7 @@ def test_transform_while_loop():
 def test_transform_break():
     _assert_transform(
         cc.break_,
-        js.break_(),
+        js.break_,
     )
 
 
@@ -333,7 +333,7 @@ def test_transform_break():
 def test_transform_continue():
     _assert_transform(
         cc.continue_,
-        js.continue_(),
+        js.continue_,
     )
 
 

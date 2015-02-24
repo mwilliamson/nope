@@ -280,11 +280,11 @@ class NodeTransformer(zuice.Base):
     
     
     def _break_statement(self, statement):
-        return js.break_()
+        return js.break_
     
     
     def _continue_statement(self, statement):
-        return js.continue_()
+        return js.continue_
 
 
     def _try_statement(self, statement):
