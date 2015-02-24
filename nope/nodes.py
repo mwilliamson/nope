@@ -157,7 +157,7 @@ def assign(targets, value, *, explicit_type=None):
     return Assignment(target_nodes, value, explicit_type=explicit_type)
 
 
-if_else = IfElse
+if_ = IfElse
 
 def for_loop(target, iterable, body, else_body=None):
     if else_body is None:

@@ -11,7 +11,7 @@ from .util import (
 @istest
 def if_statement_has_condition_type_checked():
     ref_node = nodes.ref("y")
-    node = nodes.if_else(ref_node, [], [])
+    node = nodes.if_(ref_node, [], [])
     
     try:
         update_context(node)
@@ -23,7 +23,7 @@ def if_statement_has_condition_type_checked():
 @istest
 def if_statement_has_true_body_type_checked():
     assert_statement_is_type_checked(
-        lambda bad_statement: nodes.if_else(
+        lambda bad_statement: nodes.if_(
             nodes.int(1),
             [bad_statement],
             [],
@@ -34,7 +34,7 @@ def if_statement_has_true_body_type_checked():
 @istest
 def if_statement_has_false_body_type_checked():
     assert_statement_is_type_checked(
-        lambda bad_statement: nodes.if_else(
+        lambda bad_statement: nodes.if_(
             nodes.int(1),
             [],
             [bad_statement],
@@ -44,7 +44,7 @@ def if_statement_has_false_body_type_checked():
 
 @istest
 def assignment_in_both_branches_of_if_statement_is_added_to_context():
-    node = nodes.if_else(
+    node = nodes.if_(
         nodes.int(1),
         [nodes.assign("x", nodes.int(1))],
         [nodes.assign("x", nodes.int(2))],
@@ -55,7 +55,7 @@ def assignment_in_both_branches_of_if_statement_is_added_to_context():
 
 @istest
 def type_of_variable_is_common_super_type_of_variables_in_both_branches():
-    node = nodes.if_else(
+    node = nodes.if_(
         nodes.int(1),
         [nodes.assign("x", nodes.int_literal(42))],
         [nodes.assign("x", nodes.string("blah"))],
@@ -66,7 +66,7 @@ def type_of_variable_is_common_super_type_of_variables_in_both_branches():
 
 @istest
 def type_of_variable_is_narrowed_if_reassigned_in_if_body_with_is_none_condition():
-    node = nodes.if_else(
+    node = nodes.if_(
         nodes.is_(nodes.ref("x"), nodes.none()),
         [nodes.assign("x", nodes.int_literal(42))],
         [],
@@ -79,7 +79,7 @@ def type_of_variable_is_narrowed_if_reassigned_in_if_body_with_is_none_condition
 
 @istest
 def type_of_variable_is_narrowed_if_reassigned_in_if_body_with_negated_is_none_condition():
-    node = nodes.if_else(
+    node = nodes.if_(
         nodes.bool_not(nodes.is_(nodes.ref("x"), nodes.none())),
         [nodes.assign("x", nodes.string("blah"))],
         [],
@@ -92,7 +92,7 @@ def type_of_variable_is_narrowed_if_reassigned_in_if_body_with_negated_is_none_c
 
 @istest
 def type_of_variable_is_narrowed_if_reassigned_in_if_body_with_is_not_none_condition():
-    node = nodes.if_else(
+    node = nodes.if_(
         nodes.is_not(nodes.ref("x"), nodes.none()),
         [nodes.assign("x", nodes.string("blah"))],
         [],
@@ -111,7 +111,7 @@ def type_of_variable_is_narrowed_if_reassigned_in_if_body_with_isinstance_condit
     str_type_ref = nodes.ref("str")
     variable_declaration = name_declaration.VariableDeclarationNode("x")
     
-    node = nodes.if_else(
+    node = nodes.if_(
         nodes.call(isinstance_ref, [variable_in_condition_ref, str_type_ref]),
         [nodes.assign([variable_in_assignment_ref], nodes.int_literal(42))],
         [],

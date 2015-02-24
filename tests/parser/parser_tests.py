@@ -497,7 +497,7 @@ def test_parse_multiple_assignments():
 
 @istest
 def test_parse_if_statement():
-    expected = nodes.if_else(
+    expected = nodes.if_(
         nodes.ref("b"),
         [nodes.ret(nodes.ref("x"))],
         [],
@@ -507,7 +507,7 @@ def test_parse_if_statement():
 
 @istest
 def test_parse_if_else_statement():
-    expected = nodes.if_else(
+    expected = nodes.if_(
         nodes.ref("b"),
         [nodes.ret(nodes.ref("x"))],
         [nodes.ret(nodes.ref("y"))],

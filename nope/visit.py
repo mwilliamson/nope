@@ -194,7 +194,7 @@ class Visitor(object):
         return nodes.assign(targets, value)
 
     def _visit_if_else(self, node, *args):
-        return nodes.if_else(
+        return nodes.if_(
             self.visit(node.condition, *args),
             self._visit_statements(node.true_body, *args),
             self._visit_statements(node.false_body, *args),

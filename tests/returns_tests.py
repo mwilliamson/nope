@@ -18,7 +18,7 @@ def has_unconditional_return_is_true_if_list_contains_a_return_statement():
 @istest
 def has_unconditional_return_is_true_if_both_branches_of_if_statement_return():
     assert returns.has_unconditional_return([
-        nodes.if_else(
+        nodes.if_(
             nodes.int(1),
             [nodes.ret(nodes.int(1))],
             [nodes.ret(nodes.int(2))],
@@ -29,7 +29,7 @@ def has_unconditional_return_is_true_if_both_branches_of_if_statement_return():
 @istest
 def has_unconditional_return_is_false_if_only_true_branch_of_if_statement_returns():
     assert not returns.has_unconditional_return([
-        nodes.if_else(
+        nodes.if_(
             nodes.int(1),
             [nodes.ret(nodes.int(1))],
             [],
@@ -40,7 +40,7 @@ def has_unconditional_return_is_false_if_only_true_branch_of_if_statement_return
 @istest
 def has_unconditional_return_is_false_if_only_false_branch_of_if_statement_returns():
     assert not returns.has_unconditional_return([
-        nodes.if_else(
+        nodes.if_(
             nodes.int(1),
             [],
             [nodes.ret(nodes.int(2))],

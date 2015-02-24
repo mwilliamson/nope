@@ -230,7 +230,7 @@ class Converter(object):
     
     
     def _if(self, node):
-        return self._nodes.if_else(
+        return self._nodes.if_(
             self.convert(node.test),
             self._statements(node.body),
             self._statements(node.orelse),

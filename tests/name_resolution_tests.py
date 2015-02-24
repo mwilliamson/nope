@@ -133,13 +133,13 @@ def assignment_resolves_target_name():
 @istest
 def if_else_has_child_names_resolved():
     _assert_children_resolved(
-        lambda ref: nodes.if_else(ref, [], []),
+        lambda ref: nodes.if_(ref, [], []),
     )
     _assert_children_resolved(
-        lambda ref: nodes.if_else(nodes.boolean(True), [nodes.expression_statement(ref)], []),
+        lambda ref: nodes.if_(nodes.boolean(True), [nodes.expression_statement(ref)], []),
     )
     _assert_children_resolved(
-        lambda ref: nodes.if_else(nodes.boolean(True), [], [nodes.expression_statement(ref)]),
+        lambda ref: nodes.if_(nodes.boolean(True), [], [nodes.expression_statement(ref)]),
     )
 
 

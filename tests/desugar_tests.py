@@ -144,7 +144,7 @@ class FunctionDefinitionTests(object):
                 name="f",
                 args=nodes.args([]),
                 body=[
-                    nodes.if_else(
+                    nodes.if_(
                         nodes.ref("x"),
                         [nodes.ret(nodes.boolean(True))],
                         []
@@ -232,7 +232,7 @@ class IfTests(object):
     @istest
     def test_condition_is_transformed_using_bool_builtin(self):
         _assert_transform(
-            nodes.if_else(
+            nodes.if_(
                 nodes.ref("x"),
                 [nodes.ret(nodes.ref("y"))],
                 [nodes.ret(nodes.ref("z"))],
@@ -248,7 +248,7 @@ class IfTests(object):
     def test_condition_is_not_transformed_using_bool_builtin_if_already_a_bool(self):
         condition_node = nodes.ref("x")
         _assert_transform(
-            nodes.if_else(
+            nodes.if_(
                 condition_node,
                 [nodes.ret(nodes.ref("y"))],
                 [nodes.ret(nodes.ref("z"))],
