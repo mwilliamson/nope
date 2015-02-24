@@ -5,7 +5,7 @@ import dodge
 
 statements = Statements = dodge.data_class("Statements", ["statements"])
 
-if_else = IfElse = dodge.data_class("IfElse", ["condition", "true_body", "false_body"])
+if_ = IfElse = dodge.data_class("IfElse", ["condition", "true_body", "false_body"])
 while_loop = WhileLoop = dodge.data_class("WhileLoop", ["condition", "body"])
 break_statement = BreakStatement = dodge.data_class("BreakStatement", [])
 continue_statement = ContinueStatement = dodge.data_class("ContinueStatement", [])

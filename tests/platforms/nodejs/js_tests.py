@@ -139,7 +139,7 @@ def test_serialize_var_declaration_with_immediate_assignment():
 
 @istest
 def test_serialize_if():
-    if_else = js.if_else(
+    if_else = js.if_(
         js.ref("x"),
         [js.ret(js.ref("y"))],
         [],
@@ -149,7 +149,7 @@ def test_serialize_if():
 
 @istest
 def test_serialize_if_else():
-    if_else = js.if_else(
+    if_else = js.if_(
         js.ref("x"),
         [js.ret(js.ref("y"))],
         [js.ret(js.ref("z"))],
@@ -239,7 +239,7 @@ class PrettyPrintTests(object):
 
     @istest
     def bodies_of_if_else_are_indented(self):
-        node = js.if_else(
+        node = js.if_(
             js.ref("condition"),
             [js.expression_statement(js.ref("y"))],
             [js.expression_statement(js.ref("x"))]

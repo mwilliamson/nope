@@ -10,7 +10,7 @@ from ..oo import (
     
     Statements, statements,
     
-    IfElse, if_else,
+    IfElse, if_,
     WhileLoop, while_loop,
     ContinueStatement, continue_statement,
     BreakStatement, break_statement,

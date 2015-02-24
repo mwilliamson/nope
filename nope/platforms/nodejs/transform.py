@@ -265,7 +265,7 @@ class NodeTransformer(zuice.Base):
 
 
     def _if_else(self, statement):
-        return js.if_else(
+        return js.if_(
             self.transform(statement.condition),
             self._transform_all(statement.true_body),
             self._transform_all(statement.false_body),
@@ -310,13 +310,13 @@ class NodeTransformer(zuice.Base):
                 finally:
                     self._handler_stack.pop()
                 
-                js_handler = js.if_else(
+                js_handler = js.if_(
                     _call_builtin("isinstance", [nope_exception, handler_type]),
                     handler_body,
                     [js_handler],
                 )
             
-            js_handler = js.if_else(
+            js_handler = js.if_(
                 self._is_undefined(nope_exception),
                 [js.throw(js.ref(exception_name))],
                 [js_handler],

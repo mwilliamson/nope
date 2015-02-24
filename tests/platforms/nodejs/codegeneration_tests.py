@@ -299,7 +299,7 @@ def test_transform_if_else():
             [cc.ret(cc.ref("y"))],
             [cc.ret(cc.ref("z"))],
         ),
-        js.if_else(
+        js.if_(
             js.ref("x"),
             [js.ret(js.ref("y"))],
             [js.ret(js.ref("z"))],
