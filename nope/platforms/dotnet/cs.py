@@ -16,7 +16,7 @@ from ..oo import (
     
     ExpressionStatement, expression_statement,
     ReturnStatement, ret,
-    AssignmentExpression, assignment_expression as assign,
+    assignment_expression as assign,
     
     UnaryOperation, unary_operation,
     TernaryConditional, ternary_conditional,

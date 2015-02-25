@@ -20,7 +20,7 @@ from ..oo import (
     ExpressionStatement, expression_statement,
     ReturnStatement, ret,
     
-    AssignmentExpression, assignment_expression as assign,
+    assignment_expression as assign,
     PropertyAccess, property_access,
     BinaryOperation, binary_operation,
     UnaryOperation, unary_operation,
