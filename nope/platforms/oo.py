@@ -58,7 +58,12 @@ class Writer(object):
         self._fileobj.write(value)
     
     def dump(self, node):
-        self._serializers[type(node)](node, self)
+        serializer = self._serializers[type(node)]
+        serialize_method = getattr(serializer, "serialize", None)
+        if serialize_method is None:
+            serializer(node, self)
+        else:
+            serialize_method(node, self)
     
     def newline(self):
         if self._pretty_print:
@@ -157,17 +162,20 @@ def _serialize_assignment_expression(obj, writer):
     writer.dump(obj.value)
 
 
-def _serialize_property_access(obj, writer):
-    writer.write("(")
-    writer.dump(obj.value)
-    writer.write(")")
-    if isinstance(obj.property, str):
-        writer.write(".")
-        writer.write(obj.property)
-    else:
-        writer.write("[")
-        writer.dump(obj.property)
-        writer.write("]")
+class _PropertyAccessSerializer(object):
+    precedence = 18
+    
+    def serialize(self, node, writer):
+        writer.write("(")
+        writer.dump(node.value)
+        writer.write(")")
+        if isinstance(node.property, str):
+            writer.write(".")
+            writer.write(node.property)
+        else:
+            writer.write("[")
+            writer.dump(node.property)
+            writer.write("]")
 
 
 def _serialize_binary_operation(obj, writer):
@@ -242,7 +250,7 @@ _default_serializers = {
     ReturnStatement: _serialize_return_statement,
     
     AssignmentExpression: _serialize_assignment_expression,
-    PropertyAccess: _serialize_property_access,
+    PropertyAccess: _PropertyAccessSerializer(),
     BinaryOperation: _serialize_binary_operation,
     UnaryOperation: _serialize_unary_operation,
     TernaryConditional: _serialize_ternary_conditional,
