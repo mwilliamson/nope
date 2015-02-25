@@ -1,4 +1,5 @@
 import json
+import contextlib
 
 import dodge
 
@@ -48,7 +49,17 @@ class Writer(object):
         self._pretty_print = kwargs.pop("pretty_print", True)
         self._indentation = 0
         self._pending_indentation = False
+        self._precedence_stack = [None]
         assert not kwargs
+    
+    @contextlib.contextmanager
+    def precedence(self, precedence):
+        self._precedence_stack.append(precedence)
+        try:
+            yield
+        finally:
+            self._precedence_stack.pop()
+        
     
     def write(self, value):
         if self._pending_indentation:
@@ -60,10 +71,28 @@ class Writer(object):
     def dump(self, node):
         serializer = self._serializers[type(node)]
         serialize_method = getattr(serializer, "serialize", None)
+        
         if serialize_method is None:
-            serializer(node, self)
+            serialize = serializer
+            node_precedence = None
         else:
-            serialize_method(node, self)
+            serialize = serialize_method
+            node_precedence = serializer.precedence(node)
+            
+        needs_parens = (
+            self._precedence_stack[-1] is not None and
+            node_precedence is not None and
+            node_precedence <= self._precedence_stack[-1]
+        )
+        
+        if needs_parens:
+            self.write("(")
+            
+        with self.precedence(node_precedence):
+            serialize(node, self)
+        
+        if needs_parens:
+            self.write(")")
     
     def newline(self):
         if self._pretty_print:
@@ -167,9 +196,7 @@ class _PropertyAccessSerializer(object):
         return 18
     
     def serialize(self, node, writer):
-        writer.write("(")
         writer.dump(node.value)
-        writer.write(")")
         if isinstance(node.property, str):
             writer.write(".")
             writer.write(node.property)
@@ -181,20 +208,39 @@ class _PropertyAccessSerializer(object):
 
 class _BinaryOperationSerializer(object):
     _precedences = {
-        "||": 5
+        "*": 14,
+        "/": 14,
+        "%": 14,
+        "+": 13,
+        "-": 13,
+        "<<": 12,
+        ">>": 12,
+        ">>>": 12,
+        "<": 11,
+        "<=": 11,
+        ">": 11,
+        ">=": 11,
+        "==": 10,
+        "!=": 10,
+        "===": 10,
+        "!==": 10,
+        "&": 9,
+        "^": 8,
+        "|": 7,
+        "&&": 6,
+        "||": 5,
+        
     }
     
     def precedence(self, node):
         return self._precedences[node.operator]
     
     def serialize(self, node, writer):
-        writer.write("(")
         writer.dump(node.left)
-        writer.write(") ")
+        writer.write(" ")
         writer.write(node.operator)
-        writer.write(" (")
+        writer.write(" ")
         writer.dump(node.right)
-        writer.write(")")
 
 
 def _serialize_unary_operation(obj, writer):

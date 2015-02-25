@@ -59,17 +59,17 @@ def test_serialize_call_with_multiple_args():
 
 @istest
 def test_serialize_property_access_with_dot_notation():
-    assert_equal("(x).y", _dumps(js.property_access(js.ref("x"), "y")))
+    assert_equal("x.y", _dumps(js.property_access(js.ref("x"), "y")))
 
 
 @istest
 def test_serialize_property_access_with_subscript_notation():
-    assert_equal("(x)[y]", _dumps(js.property_access(js.ref("x"), js.ref("y"))))
+    assert_equal("x[y]", _dumps(js.property_access(js.ref("x"), js.ref("y"))))
     
 
 @istest
 def test_serialize_binary_operation():
-    assert_equal("(x) + (y)", _dumps(js.binary_operation("+", js.ref("x"), js.ref("y"))))
+    assert_equal("x + y", _dumps(js.binary_operation("+", js.ref("x"), js.ref("y"))))
     
 
 @istest
@@ -218,6 +218,16 @@ def test_serialize_continue():
 def test_serialize_throw():
     node = js.throw(js.ref("error"))
     assert_equal("throw error;", _dumps(node))
+
+
+@istest
+def test_parens_are_used_if_low_precedence_operation_is_inside_high_precedence_operation():
+    assert_equal("(x || y).z", _dumps(js.property_access(js.or_(js.ref("x"), js.ref("y")), "z")))
+
+
+@istest
+def test_parens_are_not_used_if_high_precedence_operation_is_inside_low_precedence_operation():
+    assert_equal("x.y || z", _dumps(js.or_(js.property_access(js.ref("x"), "y"), js.ref("z"))))
 
 
 def _dumps(node):

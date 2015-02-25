@@ -61,7 +61,7 @@ def test_transform_import_from_current_package():
     _assert_transform(
         cc.import_from(["."], [cc.import_alias("x", None)]),
         """
-            x = ($require("./")).x;
+            x = $require("./").x;
         """
     )
 
@@ -71,7 +71,7 @@ def test_transform_import_from_parent_package():
     _assert_transform(
         cc.import_from([".."], [cc.import_alias("x", None)]),
         """
-            x = ($require("../")).x
+            x = $require("../").x
         """
     )
 
@@ -84,8 +84,8 @@ def test_transform_import_from_with_multiple_names():
             cc.import_alias("y", None),
         ]),
         """
-            x = ($require("./")).x;
-            y = ($require("./")).y;
+            x = $require("./").x;
+            y = $require("./").y;
         """
     )
 
@@ -97,7 +97,7 @@ def test_transform_import_from_with_alias():
             cc.import_alias("x", "y"),
         ]),
         """
-            y = ($require("./")).x
+            y = $require("./").x
         """
     )
 
@@ -107,7 +107,7 @@ def test_transform_import_from_child_package():
     _assert_transform(
         cc.import_from([".", "x"], [cc.import_alias("y", None)]),
         """
-            y = ($require("./x")).y
+            y = $require("./x").y
         """
     )
 
@@ -117,7 +117,7 @@ def test_transform_import_module_from_absolute_package():
     _assert_transform(
         cc.import_from(["x"], [cc.import_alias("y", None)]),
         """
-            y = ($require("x")).y;
+            y = $require("x").y;
         """
     )
 
@@ -380,7 +380,7 @@ def test_transform_try_except_with_no_name():
             try {
                 return x;
             } catch ($exception0) {
-                if (($exception0.$nopeException) === ($nope.undefined)) {
+                if ($exception0.$nopeException === $nope.undefined) {
                     throw $exception0;
                 } else {
                     if ($nope.builtins.isinstance($exception0.$nopeException, $nope.builtins.Exception)) {
@@ -407,7 +407,7 @@ def test_transform_try_except_with_exception_type():
             try {
                 return x;
             } catch ($exception0) {
-                if (($exception0.$nopeException) === ($nope.undefined)) {
+                if ($exception0.$nopeException === $nope.undefined) {
                     throw $exception0;
                 } else {
                     if ($nope.builtins.isinstance($exception0.$nopeException, AssertionError)) {
@@ -434,7 +434,7 @@ def test_transform_try_except_with_exception_type_and_name():
             try {
                 return x;
             } catch ($exception0) {
-                if (($exception0.$nopeException) === ($nope.undefined)) {
+                if ($exception0.$nopeException === $nope.undefined) {
                     throw $exception0;
                 } else {
                     if ($nope.builtins.isinstance($exception0.$nopeException, AssertionError)) {
@@ -462,7 +462,7 @@ def test_transform_try_with_empty_except_body():
             try {
                 return x;
             } catch ($exception0) {
-                if (($exception0.$nopeException) === ($nope.undefined)) {
+                if ($exception0.$nopeException === $nope.undefined) {
                     throw $exception0;
                 } else {
                     if ($nope.builtins.isinstance($exception0.$nopeException, AssertionError)) {
@@ -490,7 +490,7 @@ def test_transform_try_except_with_multiple_exception_handlers():
             try {
                 return x;
             } catch ($exception0) {
-                if (($exception0.$nopeException) === ($nope.undefined)) {
+                if ($exception0.$nopeException === $nope.undefined) {
                     throw $exception0;
                 } else {
                     if ($nope.builtins.isinstance($exception0.$nopeException, AssertionError)) {
@@ -521,7 +521,7 @@ def test_transform_raise_without_exception_value():
             try {
                 return x;
             } catch ($exception0) {
-                if (($exception0.$nopeException) === ($nope.undefined)) {
+                if ($exception0.$nopeException === $nope.undefined) {
                     throw $exception0;
                 } else {
                     if ($nope.builtins.isinstance($exception0.$nopeException, AssertionError)) {
@@ -545,7 +545,7 @@ def test_transform_raise_with_exception_value():
             var $error1 = new $nope.Error();
             $error1.$nopeException = $exception0;
             $error1.toString = function() {
-                return (($nope.builtins.getattr($nope.builtins.type($exception0), "__name__")) + ": ") + ($nope.builtins.str($exception0));
+                return ($nope.builtins.getattr($nope.builtins.type($exception0), "__name__") + ": ") + $nope.builtins.str($exception0);
             };
             throw $error1;
         """,
