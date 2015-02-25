@@ -163,7 +163,8 @@ def _serialize_assignment_expression(obj, writer):
 
 
 class _PropertyAccessSerializer(object):
-    precedence = 18
+    def precedence(self, node):
+        return 18
     
     def serialize(self, node, writer):
         writer.write("(")
@@ -178,14 +179,22 @@ class _PropertyAccessSerializer(object):
             writer.write("]")
 
 
-def _serialize_binary_operation(obj, writer):
-    writer.write("(")
-    writer.dump(obj.left)
-    writer.write(") ")
-    writer.write(obj.operator)
-    writer.write(" (")
-    writer.dump(obj.right)
-    writer.write(")")
+class _BinaryOperationSerializer(object):
+    _precedences = {
+        "||": 5
+    }
+    
+    def precedence(self, node):
+        return self._precedences[node.operator]
+    
+    def serialize(self, node, writer):
+        writer.write("(")
+        writer.dump(node.left)
+        writer.write(") ")
+        writer.write(node.operator)
+        writer.write(" (")
+        writer.dump(node.right)
+        writer.write(")")
 
 
 def _serialize_unary_operation(obj, writer):
@@ -251,7 +260,7 @@ _default_serializers = {
     
     AssignmentExpression: _serialize_assignment_expression,
     PropertyAccess: _PropertyAccessSerializer(),
-    BinaryOperation: _serialize_binary_operation,
+    BinaryOperation: _BinaryOperationSerializer(),
     UnaryOperation: _serialize_unary_operation,
     TernaryConditional: _serialize_ternary_conditional,
     Call: _serialize_call,
