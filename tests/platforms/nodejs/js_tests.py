@@ -74,7 +74,7 @@ def test_serialize_binary_operation():
 
 @istest
 def test_serialize_unary_operation():
-    assert_equal("-(x)", _dumps(js.unary_operation("-", js.ref("x"))))
+    assert_equal("-x", _dumps(js.unary_operation("-", js.ref("x"))))
 
 
 @istest

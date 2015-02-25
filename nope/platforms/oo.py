@@ -235,31 +235,42 @@ class _BinaryOperationSerializer(object):
         writer.dump(node.right)
 
 
-def _serialize_unary_operation(obj, writer):
-    writer.write(obj.operator)
-    writer.write("(")
-    writer.dump(obj.operand)
-    writer.write(")")
-
-
-def _serialize_ternary_conditional(node, writer):
-    writer.dump(node.condition)
-    writer.write(" ? ")
-    writer.dump(node.true_value)
-    writer.write(" : ")
-    writer.dump(node.false_value)
-
-
-def _serialize_call(obj, writer):
-    writer.dump(obj.func)
-    writer.write("(")
+class _UnaryOperationSerializer(object):
+    def precedence(self, node):
+        return 15
     
-    for index, arg in enumerate(obj.args):
-        if index > 0:
-            writer.write(", ")
-        writer.dump(arg)
+    def serialize(self, obj, writer):
+        writer.write(obj.operator)
+        writer.dump(obj.operand)
+
+
+class _TernaryConditionalSerializer(object):
+    def precedence(self, node):
+        return 4
     
-    writer.write(")")
+    def serialize(self, node, writer):
+        writer.dump(node.condition)
+        writer.write(" ? ")
+        writer.dump(node.true_value)
+        writer.write(" : ")
+        writer.dump(node.false_value)
+
+
+class _CallSerializer(object):
+    def precedence(self, node):
+        return 17
+    
+    def serialize(self, obj, writer):
+        writer.dump(obj.func)
+        writer.write("(")
+        
+        with writer.precedence(None):
+            for index, arg in enumerate(obj.args):
+                if index > 0:
+                    writer.write(", ")
+                writer.dump(arg)
+        
+        writer.write(")")
     
 
 def _serialize_ref(obj, writer):
@@ -298,9 +309,9 @@ _default_serializers = {
     
     PropertyAccess: _PropertyAccessSerializer(),
     BinaryOperation: _BinaryOperationSerializer(),
-    UnaryOperation: _serialize_unary_operation,
-    TernaryConditional: _serialize_ternary_conditional,
-    Call: _serialize_call,
+    UnaryOperation: _UnaryOperationSerializer(),
+    TernaryConditional: _TernaryConditionalSerializer(),
+    Call: _CallSerializer(),
     VariableReference: _serialize_ref,
     Number: _serialize_literal_value,
     IntegerLiteral: _serialize_literal_value,

@@ -93,7 +93,7 @@ class TryStatementTests(object):
         
         expected = """try {
 } catch (__Nope.Internals.@__NopeException __exception) {
-    if (__Nope.Builtins.@isinstance(__exception.__Value, Exception).__Value) {
+    if ((__Nope.Builtins.@isinstance(__exception.__Value, Exception)).__Value) {
         return value;
     } else {
         throw;
@@ -115,9 +115,9 @@ class TryStatementTests(object):
         
         expected = """try {
 } catch (__Nope.Internals.@__NopeException __exception) {
-    if (__Nope.Builtins.@isinstance(__exception.__Value, AssertionError).__Value) {
+    if ((__Nope.Builtins.@isinstance(__exception.__Value, AssertionError)).__Value) {
     } else {
-        if (__Nope.Builtins.@isinstance(__exception.__Value, Exception).__Value) {
+        if ((__Nope.Builtins.@isinstance(__exception.__Value, Exception)).__Value) {
         } else {
             throw;
         }
@@ -140,7 +140,7 @@ class TryStatementTests(object):
         
         expected = """try {
 } catch (__Nope.Internals.@__NopeException __exception) {
-    if (__Nope.Builtins.@isinstance(__exception.__Value, Exception).__Value) {
+    if ((__Nope.Builtins.@isinstance(__exception.__Value, Exception)).__Value) {
         error = __exception.__Value;
         return error;
     } else {

@@ -61,7 +61,7 @@ def test_transform_import_from_current_package():
     _assert_transform(
         cc.import_from(["."], [cc.import_alias("x", None)]),
         """
-            x = $require("./").x;
+            x = ($require("./")).x;
         """
     )
 
@@ -71,7 +71,7 @@ def test_transform_import_from_parent_package():
     _assert_transform(
         cc.import_from([".."], [cc.import_alias("x", None)]),
         """
-            x = $require("../").x
+            x = ($require("../")).x
         """
     )
 
@@ -84,8 +84,8 @@ def test_transform_import_from_with_multiple_names():
             cc.import_alias("y", None),
         ]),
         """
-            x = $require("./").x;
-            y = $require("./").y;
+            x = ($require("./")).x;
+            y = ($require("./")).y;
         """
     )
 
@@ -97,7 +97,7 @@ def test_transform_import_from_with_alias():
             cc.import_alias("x", "y"),
         ]),
         """
-            y = $require("./").x
+            y = ($require("./")).x
         """
     )
 
@@ -107,7 +107,7 @@ def test_transform_import_from_child_package():
     _assert_transform(
         cc.import_from([".", "x"], [cc.import_alias("y", None)]),
         """
-            y = $require("./x").y
+            y = ($require("./x")).y
         """
     )
 
@@ -117,7 +117,7 @@ def test_transform_import_module_from_absolute_package():
     _assert_transform(
         cc.import_from(["x"], [cc.import_alias("y", None)]),
         """
-            y = $require("x").y;
+            y = ($require("x")).y;
         """
     )
 
