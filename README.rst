@@ -46,7 +46,8 @@ TODO
 
 * Inheritance
 
-* Standard library support
+* Define builtin types and functions and the standard library in nope where possible,
+  define a minimal set of types and functions (such as integers) per-platform.
 
 * A way of specifying dependencies on a per-platform basis to allow shimming
   of existing libraries into a common interface.
