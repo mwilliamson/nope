@@ -21,6 +21,5 @@ class DotNetExecutionTests(execution.ExecutionTests):
     test_getitem_dict = wip(execution.ExecutionTests.test_getitem_dict)
     test_import_of_module_in_standard_library = wip(execution.ExecutionTests.test_import_of_module_in_standard_library)
     test_in_operator_list = wip(execution.ExecutionTests.test_in_operator_list)
-    test_transformer_for_collections_namedtuple = wip(execution.ExecutionTests.test_transformer_for_collections_namedtuple)
     test_unnested_generator_expression = wip(execution.ExecutionTests.test_unnested_generator_expression)
     test_unnested_list_comprehension = wip(execution.ExecutionTests.test_unnested_list_comprehension)
