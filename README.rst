@@ -2,7 +2,7 @@ The Nope Programming Language
 =============================
 
 Nope is a statically-typed subset of Python 3 that can be compiled to multiple targets.
-At the moment, only Python and node.js are supported.
+At the moment, Python, node.js and C# are supported with varying degrees of feature-completeness.
 Any valid Nope program can be run directly as a Python 3 program.
 
 Static typing is supported for two main reasons:
