@@ -72,6 +72,8 @@ TODO
 
 * Check type of loops twice, in case assignments in the body of the loop change the type of variables.
   Or just don't let the type change.
+  
+* Find a way to speed up the C# tests. Record/replay?
 
 Status
 ------
