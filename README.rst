@@ -5,12 +5,6 @@ Nope is a statically-typed subset of Python 3 that can be compiled to multiple t
 At the moment, Python, node.js and C# are supported with varying degrees of feature-completeness.
 Any valid Nope program can be run directly as a Python 3 program.
 
-Static typing is supported for two main reasons:
-
-* Static typing can detect some programming errors more quickly
-
-* Static typing allows optimisations to be applied to the generated code
-
 The static types are expressed using comments, rather than annotations, for
 several reasons:
 
@@ -67,8 +61,6 @@ TODO
 * Proper tests for builtin functions
 
 * Prevent re-definition of functions and classes
-
-* Allow mutually recursive functions
 
 * Ensure that all signatures are used in typing rules
 
