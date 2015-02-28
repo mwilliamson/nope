@@ -141,7 +141,7 @@ def test_transform_import_builtin_module():
     _assert_transform(
         cc.import_([cc.import_alias("cgi", None)]),
         """
-            cgi = $require("__builtins/cgi");
+            cgi = $require("__stdlib/cgi");
         """,
         module_resolver=FakeModuleResolver({
             (("cgi", ), None): ResolvedImport(["cgi"], module, None)

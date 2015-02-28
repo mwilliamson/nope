@@ -31,13 +31,13 @@ class CodeGenerator(zuice.Base):
 
     def _write_stdlib(self, destination_root):
         stdlib_path = os.path.join(os.path.dirname(__file__), "../../../stdlib")
-        destination_stdlib_path = os.path.join(destination_root, "__builtins")
+        destination_stdlib_path = os.path.join(destination_root, "__stdlib")
         
         def handle_dir(path, relative_path):
             files.mkdir_p(os.path.join(destination_stdlib_path, relative_path))
         
         def handle_file(path, relative_path):
-            self._generate_file(path, destination_root, os.path.join("__builtins", relative_path))
+            self._generate_file(path, destination_root, os.path.join("__stdlib", relative_path))
         
         walk_tree(stdlib_path, handle_dir, handle_file)
     
