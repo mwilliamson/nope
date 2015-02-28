@@ -21,23 +21,37 @@ class CodeGenerator(zuice.Base):
             files.mkdir_p(os.path.join(destination_root, relative_path))
         
         def handle_file(path, relative_path):
-            module = self._source_tree.module(path)
-            
-            destination_dir = os.path.dirname(os.path.join(destination_root, relative_path))
-            
-            source_filename = os.path.basename(path)
-            dest_filename = _js_filename(source_filename)
-            dest_path = os.path.join(destination_dir, dest_filename)
-            with open(dest_path, "w") as dest_file:
-                _generate_prelude(dest_file, module.node.is_executable, relative_path)
-                node_transformer = self._node_transformer({Module: module})
-                js.dump(node_transformer.transform(module.node), dest_file, pretty_print=True)
+            self._generate_file(path, destination_root, relative_path)
         
         _write_nope_js(destination_root)
-        _write_builtins(destination_root)
+        self._write_stdlib(destination_root)
         
         walk_tree(source_path, handle_dir, handle_file)
 
+
+    def _write_stdlib(self, destination_root):
+        stdlib_path = os.path.join(os.path.dirname(__file__), "../../../stdlib")
+        destination_stdlib_path = os.path.join(destination_root, "__builtins")
+        
+        def handle_dir(path, relative_path):
+            files.mkdir_p(os.path.join(destination_stdlib_path, relative_path))
+        
+        def handle_file(path, relative_path):
+            self._generate_file(path, destination_root, os.path.join("__builtins", relative_path))
+        
+        walk_tree(stdlib_path, handle_dir, handle_file)
+    
+    def _generate_file(self, source_path, destination_root, relative_path):
+        destination_dir = os.path.dirname(os.path.join(destination_root, relative_path))
+        module = self._source_tree.module(source_path)
+        source_filename = os.path.basename(source_path)
+        dest_filename = _js_filename(source_filename)
+        dest_path = os.path.join(destination_dir, dest_filename)
+        with open(dest_path, "w") as dest_file:
+            _generate_prelude(dest_file, module.node.is_executable, relative_path)
+            node_transformer = self._node_transformer({Module: module})
+            js.dump(node_transformer.transform(module.node), dest_file, pretty_print=True)
+        
 
 def _write_nope_js(destination_dir):
     nope_js_path = os.path.join(os.path.dirname(__file__), "nope.js")
@@ -46,11 +60,6 @@ def _write_nope_js(destination_dir):
         
         with open(os.path.join(nope_js_path)) as source_file:
             shutil.copyfileobj(source_file, dest_file)
-
-
-def _write_builtins(destination_dir):
-    builtins_path = os.path.join(os.path.dirname(__file__), "__builtins")
-    files.copy_recursive(builtins_path, os.path.join(destination_dir, "__builtins"))
 
 
 def _number_methods_ast():

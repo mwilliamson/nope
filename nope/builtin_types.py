@@ -44,6 +44,7 @@ _int_or_none = union(int_type, none_type)
 str_type = scalar_type("str")
 str_type.attrs.add("__eq__", func([str_type], bool_type))
 str_type.attrs.add("find", func([str_type], int_type))
+str_type.attrs.add("replace", func([str_type, str_type], str_type))
 str_type.attrs.add("format", overloaded_func(
     func([object_type], str_type),
     func([object_type, object_type], str_type),

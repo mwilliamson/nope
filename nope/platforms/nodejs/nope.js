@@ -67,6 +67,7 @@ function createMagicTernaryFunction(operatorName) {
 
 var stringMethods = {
     find: String.prototype.indexOf,
+    replace: String.prototype.replace,
     __str__: function() {
         return "" + this;
     },
