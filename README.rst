@@ -153,8 +153,8 @@ Note that not all backends may support all features.
 
 * **Import statements**: partially supported.
   The various forms of import statement are supported.
-  However, only local modules are currently supported.
-  Modules from the standard library or dependencies are unsupported.
+  However, only local modules and a subset of the standard library are currently supported.
+  Modules from dependencies are unsupported.
   
 * **global keyword**: unsupported.
 
