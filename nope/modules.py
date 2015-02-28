@@ -15,6 +15,9 @@ class LocalModule(Module):
     def __init__(self, path, node):
         self.path = path
         self.node = node
+    
+    def __repr__(self):
+        return "LocalModule({})".format(repr(self.path))
 
 
 class BuiltinModule(Module):

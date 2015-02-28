@@ -24,11 +24,23 @@ class ModuleResolver(zuice.Base):
         imported_module = self.resolve_import_path(names)
         if value_name is None:
             return ResolvedImport(names, imported_module, None)
-        elif self._module_declares_name(imported_module, value_name):
-            return ResolvedImport(names, imported_module, value_name)
-        else:
+        
+        # This differs from Python's import semantics in that it favours modules
+        # over values in packages with the same name. However, nope's
+        # type-checker prevents a package having a value with the same name as
+        # a module unless that value *is* the module, making this consistent.
+        # Preferring the module allows us to avoid circular dependencies.
+        
+        try:
             module_names = names + [value_name]
             return ResolvedImport(module_names, self.resolve_import_path(module_names), None)
+        except errors.ModuleNotFoundError:
+            if self._module_declares_name(imported_module, value_name):
+                return ResolvedImport(names, imported_module, value_name)
+            else:
+                message = "Could not import name '{}' from module '{}'".format(
+                    value_name, ".".join(names))
+                raise errors.ModuleNotFoundError(None, message)
     
     def _module_declares_name(self, imported_module, name):
         if isinstance(imported_module, modules.BuiltinModule):
