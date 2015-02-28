@@ -119,7 +119,9 @@ Note that not all backends may support all features.
           for i in range(0, repeat):
               print(message)
 
-* **Class definitions**: unsupported.
+* **Class definitions**: partially supported.
+  Most notably, inheritance, metaclasses and dynamic gubbins such as ``__getattr__``
+  are unsupported.
 
 * **Return statements**: supported.
 
