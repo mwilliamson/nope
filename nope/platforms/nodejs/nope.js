@@ -311,16 +311,6 @@ function issubclass(cls, clsinfo) {
     return false;
 }
 
-var slice = function(start, stop, step) {
-    // TODO: this could be implemented in pure Python/nope
-    return {
-        $nopeType: slice,
-        start: start,
-        stop: stop,
-        step: step
-    };
-};
-
 var builtins = {
     str: str,
     getattr: getattr,
@@ -373,3 +363,6 @@ var $nope = module.exports = {
     
     jsArrayToTuple: tuple
 };
+
+var slice = require("./__stdlib/builtins").slice;
+$nope.builtins.slice = slice;
