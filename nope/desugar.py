@@ -128,7 +128,7 @@ class Desugarrer(zuice.Base):
                 handlers=[cc.except_(self._builtin_ref("Exception"), cc.ref(exception_name), [
                     cc.assign(cc.ref(has_exited_name), cc.true),
                     cc.if_(
-                        cc.not_(_bool(cc.call(cc.ref(exit_method_var_name), [
+                        cc.not_(self._builtins_bool(cc.call(cc.ref(exit_method_var_name), [
                             cc.call(self._builtin_ref("type"), [cc.ref(exception_name)]),
                             cc.ref(exception_name),
                             cc.none,
@@ -340,9 +340,9 @@ class Desugarrer(zuice.Base):
         elif node.operator == "is_not":
             return cc.is_not(left, right)
         elif node.operator == "bool_and":
-            return cc.ternary_conditional(_bool(left), right, left)
+            return cc.ternary_conditional(self._condition(node.left), right, left)
         elif node.operator == "bool_or":
-            return cc.ternary_conditional(_bool(left), left, right)
+            return cc.ternary_conditional(self._condition(node.left), left, right)
         else:
             return self._call_magic_method(left, node.operator, right)
     
@@ -437,6 +437,3 @@ class Desugarrer(zuice.Base):
             return None
         else:
             return self.desugar(value)
-
-def _bool(value):
-    return cc.call(cc.builtin("bool"), [value])
