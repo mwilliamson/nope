@@ -183,7 +183,9 @@ def test_transform_empty_class():
         ),
         """
             User = function() {
-                var $self0 = {};
+                var $self0 = {
+                    "$nopeType": User
+                };
                 return $self0;
             };
         """
@@ -203,7 +205,9 @@ def test_transform_class_with_attributes():
         ),
         """
             User = function() {
-                var $self0 = {};
+                var $self0 = {
+                    "$nopeType": User
+                };
                 var x;
                 x = null;
                 $self0.x = $nope.instanceAttribute($self0, x);
@@ -232,7 +236,9 @@ def test_transform_class_with_methods():
                 return null;
             }
             User = function() {
-                var $self1 = {};
+                var $self1 = {
+                    "$nopeType": User
+                };
                 $self1.f = $nope.instanceAttribute($self1, $f0);
                 return $self1;
             };
@@ -259,7 +265,9 @@ def test_transform_class_with_init_method():
             function $__init__0(self, x) {
             }
             User = function($arg1) {
-                var $self2 = {};
+                var $self2 = {
+                    "$nopeType": User
+                };
                 $__init__0($self2, $arg1);
                 return $self2;
             };

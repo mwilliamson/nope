@@ -187,7 +187,9 @@ class NodeTransformer(zuice.Base):
         self_name = self._unique_name("self")
         self_ref = js.ref(self_name)
         
-        declare_self = js.var(self_name, js.obj({}))
+        declare_self = js.var(self_name, js.obj({
+            "$nopeType": js.ref(class_definition.name)
+        }))
         execute_body = self._transform_class_body(class_definition.body)
         
         def create_attr_assignment(name, value):
