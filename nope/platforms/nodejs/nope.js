@@ -183,29 +183,6 @@ function bool(value) {
     return !!value;
 }
 
-function range(start, end) {
-    return {
-        __iter__: function() {
-            var index = start;
-            var iterator = {
-                __iter__: function() {
-                    return iterator;
-                },
-                __next__: function() {
-                    if (index < end) {
-                        return index++;
-                    } else {
-                        var error = new Error();
-                        error.$nopeException = StopIteration();
-                        throw error;
-                    }
-                }
-            };
-            return iterator;
-        }
-    };
-}
-
 function iter(iterable) {
     return getattr(iterable, "__iter__")();
 }
@@ -215,7 +192,7 @@ function next(iterable, stopValue) {
     try {
         return iterable.__next__();
     } catch (error) {
-        if (isinstance(error.$nopeException, StopIteration)) {
+        if (error.$nopeException && isinstance(error.$nopeException, StopIteration)) {
             return stopValue;
         } else {
             throw error;
@@ -318,11 +295,11 @@ var builtins = {
     print: print,
     abs: abs,
     divmod: divmod,
-    range: range,
     iter: iter,
     next: next,
     Exception: Exception,
     AssertionError: AssertionError,
+    StopIteration: StopIteration,
     type: type,
     isinstance: isinstance,
     slice: slice
@@ -364,5 +341,7 @@ var $nope = module.exports = {
     jsArrayToTuple: tuple
 };
 
-var slice = require("./__stdlib/builtins").slice;
-$nope.builtins.slice = slice;
+var __builtinsModule = require("./__stdlib/builtins");
+var slice = $nope.builtins.slice = __builtinsModule.slice;
+var range = $nope.builtins.range = __builtinsModule.range;
+

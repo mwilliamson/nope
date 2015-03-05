@@ -1,4 +1,4 @@
-from . import types, name_declaration
+from . import types, builtin_types, name_declaration
 from .modules import BuiltinModule
 
 
@@ -11,6 +11,7 @@ _builtin_types = {
     "dict": types.dict_meta_type,
     "Exception": types.exception_meta_type,
     "AssertionError": types.assertion_error_meta_type,
+    "StopIteration": builtin_types.stop_iteration_meta_type,
     
     "print": types.func([types.object_type], types.none_type),
     "bool": types.bool_meta_type,

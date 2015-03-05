@@ -123,6 +123,10 @@ assertion_error_meta_type = meta_type(assertion_error_type, [
     attr("__call__", func([str_type], assertion_error_type)),
 ])
 
+stop_iteration_type = scalar_type("StopIteration", base_classes=[exception_type])
+stop_iteration_meta_type = meta_type(stop_iteration_type, [
+    attr("__call__", func([], stop_iteration_type)),
+])
 
 def _create_tuple_class(length):
     return generic_class(
