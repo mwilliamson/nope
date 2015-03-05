@@ -16,6 +16,13 @@ def has_unconditional_return_is_true_if_list_contains_a_return_statement():
 
 
 @istest
+def has_unconditional_return_is_true_if_list_contains_a_raise_statement():
+    assert returns.has_unconditional_return([
+        nodes.raise_(nodes.ref("error"))
+    ])
+
+
+@istest
 def has_unconditional_return_is_true_if_both_branches_of_if_statement_return():
     assert returns.has_unconditional_return([
         nodes.if_(
