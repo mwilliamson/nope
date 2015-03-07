@@ -252,6 +252,7 @@ def argument(name, optional=False):
 
 arg = argument
 
+import_ = Import
 import_from = ImportFrom
 import_alias = ImportAlias
 

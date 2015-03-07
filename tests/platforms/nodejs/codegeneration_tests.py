@@ -36,23 +36,18 @@ def test_transform_module_with_exports():
 
 
 @istest
-def test_transform_basic_import_of_top_level_module():
+def test_transform_reference_to_top_level_module():
     _assert_transform(
-        cc.import_([cc.import_alias("x", None)]),
-        js.statements([
-            js.assign_statement("x", js.call(js.ref("$require"), [js.string("x")])),
-        ])
+        cc.module_ref("x"),
+        js.call(js.ref("$require"), [js.string("x")]),
     )
 
 
 @istest
-def test_transform_basic_import_of_module_in_package():
+def test_transform_reference_to_module_in_package():
     _assert_transform(
-        cc.import_([cc.import_alias("x.y", None)]),
-        js.statements([
-            js.assign_statement("x", js.call(js.ref("$require"), [js.string("x")])),
-            js.assign_statement(js.property_access(js.ref("x"), "y"), js.call(js.ref("$require"), [js.string("x/y")])),
-        ])
+        cc.module_ref(["x", "y"]),
+        js.call(js.ref("$require"), [js.string("x/y")]),
     )
 
 
@@ -136,13 +131,11 @@ def test_transform_import_value_from_absolute_package():
 
 
 @istest
-def test_transform_import_builtin_module():
+def test_transform_reference_to_builtin_module():
     module = BuiltinModule("cgi", None)
     _assert_transform(
-        cc.import_([cc.import_alias("cgi", None)]),
-        """
-            cgi = $require("__stdlib/cgi");
-        """,
+        cc.module_ref(["cgi"]),
+        """$require("__stdlib/cgi");""",
         module_resolver=FakeModuleResolver({
             (("cgi", ), None): ResolvedImport(["cgi"], module, None)
         })

@@ -24,7 +24,7 @@ class Desugarrer(zuice.Base):
             LocalModule: self._local_module,
             
             nodes.Module: self._module,
-            nodes.Import: lambda node: node,
+            nodes.Import: self._import,
             nodes.ImportFrom: lambda node: node,
             nodes.ImportAlias: lambda node: node,
             
@@ -88,6 +88,39 @@ class Desugarrer(zuice.Base):
             is_executable=module.is_executable,
             exported_names=exported_names
         )
+    
+    def _import(self, node):
+        return cc.statements([
+            statement
+            for alias in node.names
+            for statement in self._transform_import_alias(alias)
+        ])
+    
+    def _transform_import_alias(self, alias):
+        if alias.asname is None:
+            statements = []
+            parts = alias.name_parts
+            
+            for index, part in enumerate(parts):
+                this_module_require = cc.module_ref(parts[:index + 1])
+                
+                if index == 0:
+                    this_module_ref = cc.ref(part)
+                else:
+                    this_module_ref = cc.attr(last_module_ref, part)
+                
+                statements.append(cc.assign(this_module_ref, this_module_require))
+                    
+                last_module_ref = this_module_ref
+            
+            return statements
+        else:
+            return [
+                cc.assign(
+                    cc.ref(alias.value_name),
+                    cc.module_ref(alias.name_parts)
+                )
+            ]
     
     def _try_statement(self, statement):
         return cc.try_(

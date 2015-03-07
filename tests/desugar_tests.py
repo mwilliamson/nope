@@ -42,6 +42,49 @@ class ModuleTests(object):
 
 
 @istest
+class ImportTests(object):
+    @istest
+    def test_import_of_module_assigns_module_to_name(self):
+        _assert_transform(
+            nodes.import_([nodes.import_alias("message", None)]),
+            cc.assign(cc.ref("message"), cc.module_ref(["message"]))
+        )
+        
+    @istest
+    def test_import_of_module_assigns_module_to_as_name_if_present(self):
+        _assert_transform(
+            nodes.import_([nodes.import_alias("message", "m")]),
+            cc.assign(cc.ref("m"), cc.module_ref(["message"]))
+        )
+        
+    @istest
+    def test_import_multiple_values_in_single_import_statement(self):
+        _assert_transform(
+            nodes.import_([
+                nodes.import_alias("os", None),
+                nodes.import_alias("sys", None)
+            ]),
+            cc.statements([
+                cc.assign(cc.ref("os"), cc.module_ref(["os"])),
+                cc.assign(cc.ref("sys"), cc.module_ref(["sys"])),
+            ])
+        )
+        
+    @istest
+    def test_import_of_module_in_package_assigns_values_for_both_package_and_module(self):
+        _assert_transform(
+            nodes.import_([
+                nodes.import_alias("os.path", None),
+            ]),
+            cc.statements([
+                cc.assign(cc.ref("os"), cc.module_ref(["os"])),
+                cc.assign(cc.attr(cc.ref("os"), "path"), cc.module_ref(["os", "path"])),
+            ])
+        )
+
+
+
+@istest
 class ClassDefinitionTests(object):
     @istest
     def test_assignments_in_body_are_transformed(self):

@@ -69,7 +69,7 @@ class Transformer(object):
         self._transformers = {
             cc.Module: self._transform_module,
             
-            cc.Import: lambda node: cs.statements([]),
+            cc.ModuleReference: lambda node: cs.null,
             
             cc.Statements: self._transform_statements,
             

@@ -14,7 +14,7 @@ class NodeTransformer(zuice.Base):
     def init(self):
         self._transformers = {
             cc.Module: self._module,
-            cc.Import: self._import,
+            cc.ModuleReference: self._module_reference,
             cc.ImportFrom: self._import_from,
             
             cc.ExpressionStatement:self. _expression_statement,
@@ -88,31 +88,8 @@ class NodeTransformer(zuice.Base):
         return js.statements(body_statements + export_statements)
 
 
-    def _import(self, import_node):
-        statements = []
-        
-        for alias in import_node.names:
-            if alias.asname is None:
-                parts = alias.name_parts
-                
-                for index, part in enumerate(parts):
-                    this_module_require = self._import_module_expr(parts[:index + 1])
-                    
-                    if index == 0:
-                        this_module_ref = js.ref(part)
-                        statements.append(js.assign_statement(part, this_module_require))
-                    else:
-                        this_module_ref = js.property_access(last_module_ref, part)
-                        statements.append(js.assign_statement(
-                            this_module_ref,
-                            this_module_require
-                        ))
-                        
-                    last_module_ref = this_module_ref
-            else:
-                statements.append(js.assign_statement(alias.value_name, self._import_module_expr(alias.name_parts)))
-        
-        return js.statements(statements)
+    def _module_reference(self, ref):
+        return self._import_module_expr(ref.names)
 
 
     def _import_from(self, import_from):

@@ -215,13 +215,19 @@ def module(body, is_executable=False, exported_names=None):
     return Module(body, is_executable, exported_names)
 
 Module = dodge.data_class("Module", ["body", "is_executable", "exported_names"])
+module_ref = ModuleReference = dodge.data_class("ModuleReference", ["names"])
 
 # TODO: create import nodes for couscous
-import_ = Import = nodes.Import
 import_from = ImportFrom = nodes.import_from
 import_alias = ImportAlias = nodes.import_alias
 
-statements = Statements = dodge.data_class("Statements", ["body"])
+def statements(body):
+    if len(body) == 1:
+        return body[0]
+    else:
+        return Statements(body)
+
+Statements = dodge.data_class("Statements", ["body"])
 
 def class_(name, *, methods, body, type_params=None):
     if type_params is None:
