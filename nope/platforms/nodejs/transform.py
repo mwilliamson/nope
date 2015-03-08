@@ -15,7 +15,6 @@ class NodeTransformer(zuice.Base):
         self._transformers = {
             cc.Module: self._module,
             cc.ModuleReference: self._module_reference,
-            cc.ImportFrom: self._import_from,
             
             cc.ExpressionStatement:self. _expression_statement,
             cc.VariableDeclaration: self._declare,
@@ -92,19 +91,8 @@ class NodeTransformer(zuice.Base):
         return self._import_module_expr(ref.names)
 
 
-    def _import_from(self, import_from):
-        statements = [
-        ]
-        
-        for alias in import_from.names:
-            import_value = self._import_module_expr(import_from.module, alias.name)
-            statements.append(js.assign_statement(alias.value_name, import_value))
-        
-        return js.statements(statements)
-    
-    
-    def _import_module_expr(self, module_name, value_name=None):
-        resolved_import = self._module_resolver.resolve_import_value(module_name, value_name)
+    def _import_module_expr(self, module_name):
+        resolved_import = self._module_resolver.resolve_import_value(module_name, None)
         
         module_path = "/".join(resolved_import.module_name)
         if module_path.endswith("."):
@@ -113,12 +101,7 @@ class NodeTransformer(zuice.Base):
         if isinstance(resolved_import.module, BuiltinModule):
             module_path = "__stdlib/{}".format(module_path)
         
-        module_expr = js.call(js.ref("$require"), [js.string(module_path)])
-        
-        if resolved_import.attr_name is None:
-            return module_expr
-        else:
-            return js.property_access(module_expr, resolved_import.attr_name)    
+        return js.call(js.ref("$require"), [js.string(module_path)])
 
 
     def _expression_statement(self, statement):

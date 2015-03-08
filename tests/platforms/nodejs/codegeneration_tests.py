@@ -52,81 +52,26 @@ def test_transform_reference_to_module_in_package():
 
 
 @istest
-def test_transform_import_from_current_package():
+def test_transform_reference_to_current_package():
     _assert_transform(
-        cc.import_from(["."], [cc.import_alias("x", None)]),
-        """
-            x = ($require("./")).x;
-        """
+        cc.module_ref(["."]),
+        js.call(js.ref("$require"), [js.string("./")]),
     )
 
 
 @istest
-def test_transform_import_from_parent_package():
+def test_transform_reference_to_parent_package():
     _assert_transform(
-        cc.import_from([".."], [cc.import_alias("x", None)]),
-        """
-            x = ($require("../")).x
-        """
+        cc.module_ref([".."]),
+        js.call(js.ref("$require"), [js.string("../")]),
     )
 
 
 @istest
-def test_transform_import_from_with_multiple_names():
+def test_transform_reference_to_module_in_same_package():
     _assert_transform(
-        cc.import_from(["."], [
-            cc.import_alias("x", None),
-            cc.import_alias("y", None),
-        ]),
-        """
-            x = ($require("./")).x;
-            y = ($require("./")).y;
-        """
-    )
-
-
-@istest
-def test_transform_import_from_with_alias():
-    _assert_transform(
-        cc.import_from(["."], [
-            cc.import_alias("x", "y"),
-        ]),
-        """
-            y = ($require("./")).x
-        """
-    )
-
-
-@istest
-def test_transform_import_from_child_package():
-    _assert_transform(
-        cc.import_from([".", "x"], [cc.import_alias("y", None)]),
-        """
-            y = ($require("./x")).y
-        """
-    )
-
-
-@istest
-def test_transform_import_module_from_absolute_package():
-    _assert_transform(
-        cc.import_from(["x"], [cc.import_alias("y", None)]),
-        """
-            y = ($require("x")).y;
-        """
-    )
-
-
-@istest
-def test_transform_import_value_from_absolute_package():
-    _assert_transform(
-        cc.import_from(["x"], [cc.import_alias("y", None)]),
-        """
-            y = $require("x/y");
-        """,
-        module_resolver=FakeModuleResolver({
-            (("x", ), "y"): ResolvedImport(["x", "y"], _stub_module, None)
-        })
+        cc.module_ref([".", "x"]),
+        js.call(js.ref("$require"), [js.string("./x")]),
     )
 
 

@@ -6,6 +6,7 @@ from nope import nodes, couscous as cc, types
 from nope.identity_dict import IdentityDict
 from nope.desugar import desugar
 from nope.name_declaration import DeclarationFinder
+from nope.module_resolution import ResolvedImport
 
 
 @istest
@@ -82,6 +83,69 @@ class ImportTests(object):
             ])
         )
 
+
+@istest
+class ImportFromTests(object):
+    @istest
+    def test_import_from_assigns_value_to_name_of_value_if_asname_is_not_set(self):
+        _assert_transform(
+            nodes.import_from(["os", "path"], [nodes.import_alias("join", None)]),
+            cc.assign(cc.ref("join"), cc.attr(cc.module_ref(["os", "path"]), "join")),
+        )
+        
+    @istest
+    def test_import_from_assigns_value_to_asname_if_asname_is_set(self):
+        _assert_transform(
+            nodes.import_from(["os", "path"], [nodes.import_alias("join", "j")]),
+            cc.assign(cc.ref("j"), cc.attr(cc.module_ref(["os", "path"]), "join")),
+        )
+        
+    @istest
+    def test_import_from_uses_two_dots_to_indicate_import_from_parent_package(self):
+        _assert_transform(
+            nodes.import_from([".."], [nodes.import_alias("x", None)]),
+            cc.assign(cc.ref("x"), cc.attr(cc.module_ref([".."]), "x")),
+        )
+    
+    @istest
+    def test_multiple_imported_names_in_one_statement_generates_multiple_assignments(self):
+        _assert_transform(
+            nodes.import_from(["."], [
+                nodes.import_alias("x", None),
+                nodes.import_alias("y", None),
+            ]),
+            cc.statements([
+                cc.assign(cc.ref("x"), cc.attr(cc.module_ref(["."]), "x")),
+                cc.assign(cc.ref("y"), cc.attr(cc.module_ref(["."]), "y")),
+            ]),
+        )
+        
+    @istest
+    def test_importing_module_from_package_references_module_directly(self):
+        module_resolver = FakeModuleResolver({
+            (("x", ), "y"): ResolvedImport(["x", "y"], _stub_module, None)
+        })
+        _assert_transform(
+            nodes.import_from(["x"], [nodes.import_alias("y", None)]),
+            cc.assign(cc.ref("y"), cc.module_ref(["x", "y"])),
+            module_resolver=module_resolver,
+        )
+    
+
+_stub_module = object()
+
+class FakeModuleResolver(object):
+    def __init__(self, imports=None):
+        if imports is None:
+            imports = {}
+        
+        self._imports = imports
+    
+    def resolve_import_value(self, names, value_name):
+        return self._imports.get(
+            (tuple(names), value_name),
+            ResolvedImport(names, _stub_module, value_name)
+        )
 
 
 @istest
@@ -713,12 +777,16 @@ class NoneLiteralTests(object):
         )
 
 
-def _assert_transform(nope, expected_result, type_lookup=None):
+def _assert_transform(nope, expected_result, type_lookup=None, module_resolver=None):
     if type_lookup is None:
         type_lookup = []
+    
+    if module_resolver is None:
+        module_resolver = FakeModuleResolver()
+    
     type_lookup = types.TypeLookup(IdentityDict(type_lookup))
     
-    result = desugar(nope, type_lookup=type_lookup, declarations=DeclarationFinder())
+    result = desugar(nope, type_lookup=type_lookup, declarations=DeclarationFinder(), module_resolver=module_resolver)
     if isinstance(expected_result, str):
         lines = list(filter(lambda line: line.strip(), expected_result.splitlines()))
         indentation = re.match("^ *", lines[0]).end()

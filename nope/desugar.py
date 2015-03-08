@@ -5,16 +5,18 @@ import zuice
 from . import nodes, couscous as cc, types, returns, name_declaration
 from .name_declaration import DeclarationFinder
 from .modules import LocalModule
+from .module_resolution import ModuleResolver
 
 
-def desugar(node, type_lookup, declarations):
-    desugarrer = Desugarrer(type_lookup, declarations)
+def desugar(node, type_lookup, declarations, module_resolver):
+    desugarrer = Desugarrer(type_lookup, declarations, module_resolver)
     return desugarrer.desugar(node)
 
 
 class Desugarrer(zuice.Base):
     _type_lookup = zuice.dependency(types.TypeLookup)
     _declarations = zuice.dependency(DeclarationFinder)
+    _module_resolver = zuice.dependency(ModuleResolver)
     
     @zuice.init
     def init(self):
@@ -25,8 +27,7 @@ class Desugarrer(zuice.Base):
             
             nodes.Module: self._module,
             nodes.Import: self._import,
-            nodes.ImportFrom: lambda node: node,
-            nodes.ImportAlias: lambda node: node,
+            nodes.ImportFrom: self._import_from,
             
             nodes.TypeDefinition: lambda node: cc.statements([]),
             nodes.ClassDefinition: self._class_definition,
@@ -121,6 +122,22 @@ class Desugarrer(zuice.Base):
                     cc.module_ref(alias.name_parts)
                 )
             ]
+    
+    def _import_from(self, node):
+        return cc.statements([
+            self._transform_import_from_alias(node, alias)
+            for alias in node.names
+        ])
+    
+    def _transform_import_from_alias(self, node, alias):
+        resolved_import = self._module_resolver.resolve_import_value(node.module, alias.name)
+        module_ref = cc.module_ref(resolved_import.module_name)
+        if resolved_import.attr_name is None:
+            value = module_ref
+        else:
+            value = cc.attr(module_ref, resolved_import.attr_name)
+            
+        return cc.assign(cc.ref(alias.value_name), value)
     
     def _try_statement(self, statement):
         return cc.try_(
