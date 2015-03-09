@@ -19,20 +19,7 @@ class CodeGenerator(zuice.Base):
             files.mkdir_p(os.path.join(destination_root, relative_path))
         
         def handle_file(path, relative_path):
-            transformer = Transformer()
-            module = self._source_tree.module(path)
-            dest_cs_filename = files.replace_extension(
-                os.path.join(destination_root, relative_path),
-                "cs"
-            )
-            dest_exe_filename = files.replace_extension(dest_cs_filename, "exe")
-            
-            with open(dest_cs_filename, "w") as dest_cs_file:
-                cs_module = transformer.transform(module.node)
-                
-                dest_cs_file.write("""
-internal class Program
-{
+            prelude = """
     private static System.Func<dynamic, dynamic> abs = __x_1 => __x_1.__abs__();
     private static System.Func<dynamic, dynamic, dynamic> divmod = (__x_1, __y_1) => __x_1.__divmod__(__y_1);
     private static System.Func<dynamic, dynamic, dynamic> range = (__x_1, __y_1) => __Nope.Builtins.range(__x_1, __y_1);
@@ -40,18 +27,19 @@ internal class Program
     private static dynamic Exception = __Nope.Builtins.Exception;
     private static dynamic AssertionError = __Nope.Builtins.AssertionError;
     private static dynamic str = __Nope.Builtins.str;
-    
-    internal static void Main()
-    {
-        """)
-        
+"""
+            transformer = Transformer(prelude=prelude)
+            module = self._source_tree.module(path)
+            dest_cs_filename = files.replace_extension(
+                os.path.join(destination_root, relative_path),
+                "cs"
+            )
+            dest_exe_filename = files.replace_extension(dest_cs_filename, "exe")
+            cs_module = transformer.transform(module.node)
+            
+            with open(dest_cs_filename, "w") as dest_cs_file:
                 cs.dump(cs_module, dest_cs_file)
-                dest_cs_file.write("""
-    }""")
-                cs.dump(transformer.aux(), dest_cs_file)
-                dest_cs_file.write("""
-}
-""")
+            
             subprocess.check_call(["mcs", "-nowarn:0162,0168,0219,0414", "-out:{}".format(dest_exe_filename), dest_cs_filename] + list(_runtime_paths()))
         
         walk_tree(source_path, handle_dir, handle_file)
@@ -65,7 +53,8 @@ def _runtime_paths():
 
 
 class Transformer(object):
-    def __init__(self):
+    def __init__(self, prelude):
+        self._prelude = prelude
         self._transformers = {
             cc.Module: self._transform_module,
             
@@ -127,7 +116,15 @@ class Transformer(object):
 
 
     def _transform_module(self, module):
-        return cs.statements(self._transform_all(module.body))
+        main = cs.method("Main", [], self._transform_all(module.body), static=True, returns=cs.void)
+        body = [
+            cs.raw(self._prelude),
+            main,
+            self.aux(),
+        ]
+        # TODO: resetting aux is ugly. Perhaps create a child transformer?
+        self._aux = []
+        return cs.class_("Program", body)
 
 
     def _transform_statements(self, node):
@@ -166,7 +163,7 @@ class Transformer(object):
         
         member_names = method_names + assigned_names
         
-        aux_class = cs.class_(aux_name, member_names)
+        aux_class = cs.class_(aux_name, list(map(cs.field, member_names)))
         self._aux.append(aux_class)
         
         new_obj = cs.new(cs.ref(aux_name), [], methods)

@@ -161,18 +161,29 @@ class ClassTests(object):
     def class_has_internal_visibility(self):
         node = cs.class_("A", [])
         expected = """internal class A {
-}"""
+}
+"""
         assert_equal(expected, cs.dumps(node))
     
     @istest
-    def class_members_are_written_out(self):
-        node = cs.class_("A", ["X", "Y"])
+    def class_body_is_written_out(self):
+        node = cs.class_("A", [cs.method("Main", [], [])])
         expected = """internal class A {
-    internal dynamic X;
-    internal dynamic Y;
-}"""
+    internal dynamic Main() {
+    }
+}
+"""
         assert_equal(expected, cs.dumps(node))
 
+
+@istest
+class FieldTests(object):
+    @istest
+    def field_is_internal_and_dynamic(self):
+        node = cs.field("X")
+        expected = """internal dynamic X;
+"""
+        assert_equal(expected, cs.dumps(node))
 
 @istest
 class MethodTests(object):
@@ -193,10 +204,26 @@ class MethodTests(object):
         assert_equal(expected, cs.dumps(node))
     
     @istest
+    def method_return_type_can_be_overridden(self):
+        node = cs.method("f", [], [], returns=cs.void)
+        expected = """internal void f() {
+}
+"""
+        assert_equal(expected, cs.dumps(node))
+    
+    @istest
     def method_has_body(self):
         node = cs.method("f", [], [cs.ret(cs.ref("x"))])
         expected = """internal dynamic f() {
     return x;
+}
+"""
+        assert_equal(expected, cs.dumps(node))
+    
+    @istest
+    def method_can_be_set_as_ststic(self):
+        node = cs.method("f", [], [], static=True)
+        expected = """internal static dynamic f() {
 }
 """
         assert_equal(expected, cs.dumps(node))

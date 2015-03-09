@@ -1,6 +1,6 @@
 import os
 
-from nose.tools import istest, assert_equal
+from nose.tools import istest, assert_equal, assert_in
 
 from nope import couscous as cc
 from nope.platforms.dotnet import cs
@@ -10,6 +10,29 @@ from ...testing import wip
 # TODO: put this hack somewhere neater
 import unittest
 unittest.TestCase.maxDiff = None
+
+
+@istest
+class ModuleTests(object):
+    @istest
+    def executable_module_is_converted_to_class_with_main_method(self):
+        node = cc.module([
+            cc.expression_statement(cc.call(cc.ref("f"), []))
+        ], is_executable=True)
+        
+        expected = """internal class Program {
+    internal static void Main() {
+        f();
+    }
+}
+"""
+        assert_equal(expected, cs.dumps(transform(node)))
+
+    @istest
+    def auxiliary_definitions_are_included_in_module(self):
+        node = cc.module([cc.class_("A", methods=[], body=[])], is_executable=True)
+        
+        assert_in("class __A", cs.dumps(transform(node)))
 
 @istest
 class FunctionDefinitionTests(object):
@@ -158,7 +181,8 @@ class ClassDefinitionTests(object):
         node = cc.class_("A", methods=[], body=[])
         
         expected_aux = """internal class __A {
-}"""
+}
+"""
         
         expected = """A = new
 {
@@ -170,7 +194,7 @@ class ClassDefinitionTests(object):
     })),
 };
 """
-        transformer = Transformer()
+        transformer = Transformer(prelude="")
         assert_equal(expected, cs.dumps(transformer.transform(node)))
         assert_equal(expected_aux, cs.dumps(transformer.aux()))
     
@@ -184,7 +208,8 @@ class ClassDefinitionTests(object):
         
         expected_aux = """internal class __A {
     internal dynamic f;
-}"""
+}
+"""
 
         expected = """A = new
 {
@@ -202,7 +227,7 @@ class ClassDefinitionTests(object):
     })),
 };
 """
-        transformer = Transformer()
+        transformer = Transformer(prelude="")
         assert_equal(expected, cs.dumps(transformer.transform(node)))
         assert_equal(expected_aux, cs.dumps(transformer.aux()))
     
@@ -215,7 +240,8 @@ class ClassDefinitionTests(object):
         ], body=[])
         expected_aux = """internal class __A {
     internal dynamic __init__;
-}"""
+}
+"""
 
         expected = """A = new
 {
@@ -234,12 +260,12 @@ class ClassDefinitionTests(object):
     })),
 };
 """
-        transformer = Transformer()
+        transformer = Transformer(prelude="")
         assert_equal(expected, cs.dumps(transformer.transform(node)))
         assert_equal(expected_aux, cs.dumps(transformer.aux()))
 
 
 def transform(node):
-    transformer = Transformer()
+    transformer = Transformer(prelude="")
     return transformer.transform(node)
     
