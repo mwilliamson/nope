@@ -411,13 +411,9 @@ class Desugarrer(zuice.Base):
     def _call(self, node):
         args = []
         
-        call_func_type = self._type_of(node.func)
-        call_ref = node.func
-        while not types.is_func_type(call_func_type) and not types.is_generic_func(call_func_type):
-            call_func_type = call_func_type.attrs.type_of("__call__")
-            call_ref = nodes.attr(call_ref, "__call__")
+        func, func_type = self._callable_to_func(self.desugar(node.func), self._type_of(node.func))
         
-        for index, formal_arg in enumerate(call_func_type.args):
+        for index, formal_arg in enumerate(func_type.args):
             if index < len(node.args):
                 actual_arg_node = node.args[index]
             elif formal_arg.name in node.kwargs:
@@ -427,7 +423,7 @@ class Desugarrer(zuice.Base):
                 
             args.append(self.desugar(actual_arg_node))
             
-        return cc.call(self.desugar(call_ref), args)
+        return cc.call(func, args)
     
     def _attr(self, node):
         return cc.attr(self.desugar(node.value), node.attr)
@@ -472,6 +468,13 @@ class Desugarrer(zuice.Base):
     def _get_magic_method(self, receiver, name):
         # TODO: get magic method through the same mechanism as self._call
         return cc.attr(receiver, "__{}__".format(name))
+    
+    def _callable_to_func(self, value, value_type):
+        while not types.is_func_type(value_type) and not types.is_generic_func(value_type):
+            value_type = value_type.attrs.type_of("__call__")
+            value = cc.attr(value, "__call__")
+        
+        return value, value_type
     
     def _call_builtin(self, name, args):
         return cc.call(self._builtin_ref(name), args)
