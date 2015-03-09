@@ -92,13 +92,12 @@ class NodeTransformer(zuice.Base):
 
 
     def _import_module_expr(self, module_name):
-        resolved_import = self._module_resolver.resolve_import_value(module_name, None)
-        
-        module_path = "/".join(resolved_import.module_name)
+        module_path = "/".join(module_name)
         if module_path.endswith("."):
             module_path += "/"
         
-        if isinstance(resolved_import.module, BuiltinModule):
+        module = self._module_resolver.resolve_import_path(module_name)
+        if isinstance(module, BuiltinModule):
             module_path = "__stdlib/{}".format(module_path)
         
         return js.call(js.ref("$require"), [js.string(module_path)])

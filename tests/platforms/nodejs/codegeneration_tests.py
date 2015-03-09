@@ -82,7 +82,7 @@ def test_transform_reference_to_builtin_module():
         cc.module_ref(["cgi"]),
         """$require("__stdlib/cgi");""",
         module_resolver=FakeModuleResolver({
-            (("cgi", ), None): ResolvedImport(["cgi"], module, None)
+            ("cgi", ): module
         })
     )
 
@@ -708,11 +708,8 @@ class FakeModuleResolver(object):
         
         self._imports = imports
     
-    def resolve_import_value(self, names, value_name):
-        return self._imports.get(
-            (tuple(names), value_name),
-            ResolvedImport(names, _stub_module, value_name)
-        )
+    def resolve_import_path(self, names):
+        return self._imports.get(tuple(names), _stub_module)
 
 
 _stub_module = object()
