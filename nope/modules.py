@@ -1,3 +1,5 @@
+import os
+
 import zuice
 
 from . import nodes, errors, name_declaration
@@ -25,6 +27,10 @@ class BuiltinModule(Module):
     def __init__(self, name, type_):
         self.name = name
         self.type = type_
+    
+    @property
+    def path(self):
+        return os.path.join(os.path.dirname(__file__), "../stdlib", self.name + ".py")
 
 
 class ModuleExports(zuice.Base):

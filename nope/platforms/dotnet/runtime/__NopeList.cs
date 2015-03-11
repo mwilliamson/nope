@@ -39,7 +39,7 @@ internal class __NopeList
             }
             else
             {
-                throw new __Nope.Builtins.StopIteration();
+                throw __Nope.Internals.CreateException(__Nope.Builtins.StopIteration.__call__());
             }
         }
     }

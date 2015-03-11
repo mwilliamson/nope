@@ -25,6 +25,17 @@ namespace __Nope
                 __str__ = (Func<dynamic>)(() => message)
             })
         };
+        
+        internal static readonly dynamic StopIteration = new
+        {
+            Name = "StopIteration",
+            __BaseClasses = new dynamic[] {Exception},
+            __call__ = (System.Func<dynamic>)(() => new
+            {
+                __Type = StopIteration,
+                __str__ = (Func<dynamic>)(() => "")
+            })
+        };
     
         internal static __NopeBoolean @bool(dynamic value)
         {
@@ -44,9 +55,16 @@ namespace __Nope
             {
                 return iterator.__next__();
             }
-            catch (StopIteration)
+            catch (__Nope.Internals.__NopeException exception)
             {
-                return stopValue;
+                if (isinstance(exception.__Value, StopIteration).__Value)
+                {
+                    return stopValue;
+                }
+                else
+                {
+                    throw;
+                }
             }
         }
         
@@ -70,10 +88,6 @@ namespace __Nope
         internal static dynamic type(dynamic obj)
         {
             return obj.__Type;
-        }
-        
-        internal class StopIteration : System.Exception
-        {
         }
         
         internal static RangeIterator range(__NopeInteger start, __NopeInteger end)
@@ -105,7 +119,7 @@ namespace __Nope
                 }
                 else
                 {
-                    throw new StopIteration();
+                    throw __Nope.Internals.CreateException(StopIteration.__call__());
                 }
             }
         }

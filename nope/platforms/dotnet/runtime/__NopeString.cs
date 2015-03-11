@@ -33,4 +33,9 @@ internal class __NopeString
     {
         return __NopeInteger.Value(_value.IndexOf(substring._value));
     }
+    
+    public __NopeString replace(__NopeString old, __NopeString @new)
+    {
+        return Value(_value.Replace(old._value, @new._value));
+    }
 }

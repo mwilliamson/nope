@@ -65,17 +65,17 @@ class ModuleReferenceTests(object):
         expected = """__Nope.Internals.@Import("os.path", Module__blah_py.Init)"""
         assert_equal(expected, cs.dumps(transform(node, module_resolver=module_resolver)))
     
+    
     @istest
-    def stdlib_reference_is_transformed_to_null(self):
-        # TODO: remove this temporary hack
+    def path_is_normalised_before_hashing(self):
         module_resolver = FakeModuleResolver({
-            ("os", "path"): BuiltinModule("blah.py", None),
+            ("os", "path"): LocalModule("x/../blah.py", None),
         })
         node = cc.module_ref(["os", "path"])
         
-        expected = """null"""
+        expected = """__Nope.Internals.@Import("os.path", Module__blah_py.Init)"""
         assert_equal(expected, cs.dumps(transform(node, module_resolver=module_resolver)))
-
+    
 
 @istest
 class FunctionDefinitionTests(object):

@@ -34,9 +34,9 @@ class CodeGenerator(zuice.Base):
                 )
 
                 subprocess.check_call([
-                    "mcs", "-nowarn:0162,0168,0219,0414",
+                    "mcs", "-nowarn:0162,0168,0219,0414,0649",
                     "-out:{}".format(dest_exe_filename)
-                ] + cs_filenames + list(_runtime_paths()))
+                ] + cs_filenames + stdlib_filenames + list(_runtime_paths()))
 
         walk_tree(source_path, handle_dir, handle_file)
 
@@ -99,6 +99,7 @@ class CodeGenerator(zuice.Base):
     private static System.Action<dynamic> print = (System.Action<dynamic>)(obj => System.Console.WriteLine(obj.__str__().__Value));
     private static dynamic Exception = __Nope.Builtins.Exception;
     private static dynamic AssertionError = __Nope.Builtins.AssertionError;
+    private static dynamic StopIteration = __Nope.Builtins.StopIteration;
     private static dynamic str = __Nope.Builtins.str;
 """
 
@@ -207,16 +208,12 @@ class Transformer(object):
 
     def _transform_module_reference(self, reference):
         module = self._module_resolver.resolve_import_path(reference.names)
-        if isinstance(module, BuiltinModule):
-            return cs.null
-        else:
-            init = cs.property_access(cs.ref(self._module_to_class_name(module)), "Init")
-            return cs.call(_internal_ref("Import"), [cs.string_literal(".".join(reference.names)), init])
+        init = cs.property_access(cs.ref(self._module_to_class_name(module)), "Init")
+        return cs.call(_internal_ref("Import"), [cs.string_literal(".".join(reference.names)), init])
     
     
     def _module_to_class_name(self, module):
-        # TODO: normalise path before passing in
-        return "__".join(["Module", self._path_hash(module.path)])
+        return "__".join(["Module", self._path_hash(os.path.normpath(module.path))])
 
 
     def _transform_statements(self, node):
