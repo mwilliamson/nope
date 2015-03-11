@@ -183,12 +183,7 @@ class Transformer(object):
         
         if module.node.is_executable:
             main = cs.method("Main", [], body, static=True, returns=cs.void)
-            body = [
-                cs.raw(self._prelude),
-                main,
-                child_transformer.aux(),
-            ]
-            return cs.class_("Program", body)
+            class_name = "Program"
         else:
             module_name = "__module"
             module_ref = cs.ref(module_name)
@@ -200,9 +195,14 @@ class Transformer(object):
                 ]),
                 cs.ret(module_ref),
             ]
-            init = cs.method("Init", [], body + return_module, static=True)
+            main = cs.method("Init", [], body + return_module, static=True)
             class_name = self._module_to_class_name(module)
-            return cs.class_(class_name, [init])
+        
+        return cs.class_(class_name, [
+            cs.raw(self._prelude),
+            main,
+            child_transformer.aux(),
+        ])
     
 
     def _transform_module_reference(self, reference):
