@@ -116,14 +116,14 @@ class Transformer(object):
 
 
     def _transform_module(self, module):
-        main = cs.method("Main", [], self._transform_all(module.body), static=True, returns=cs.void)
+        child_transformer = Transformer(self._prelude)
+        body = child_transformer._transform_all(module.body)
+        main = cs.method("Main", [], body, static=True, returns=cs.void)
         body = [
             cs.raw(self._prelude),
             main,
-            self.aux(),
+            child_transformer.aux(),
         ]
-        # TODO: resetting aux is ugly. Perhaps create a child transformer?
-        self._aux = []
         return cs.class_("Program", body)
 
 
