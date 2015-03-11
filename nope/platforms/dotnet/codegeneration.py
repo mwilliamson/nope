@@ -14,9 +14,31 @@ class CodeGenerator(zuice.Base):
     _source_tree = zuice.dependency(CouscousTree)
     
     def generate_files(self, source_path, destination_root):
+        cs_filenames = self._generate_cs_files(source_path, destination_root)
         
         def handle_dir(path, relative_path):
             files.mkdir_p(os.path.join(destination_root, relative_path))
+        
+        def handle_file(path, relative_path):
+            module = self._source_tree.module(path)
+            if module.node.is_executable:
+                dest_exe_filename = files.replace_extension(
+                    os.path.join(destination_root, relative_path),
+                    "exe"
+                )
+
+                subprocess.check_call([
+                    "mcs", "-nowarn:0162,0168,0219,0414",
+                    "-out:{}".format(dest_exe_filename)
+                ] + cs_filenames + list(_runtime_paths()))
+
+        walk_tree(source_path, handle_dir, handle_file)
+
+    def _generate_cs_files(self, source_path, destination_root):
+        def handle_dir(path, relative_path):
+            files.mkdir_p(os.path.join(destination_root, relative_path))
+        
+        cs_filenames = []
         
         def handle_file(path, relative_path):
             prelude = """
@@ -34,15 +56,14 @@ class CodeGenerator(zuice.Base):
                 os.path.join(destination_root, relative_path),
                 "cs"
             )
-            dest_exe_filename = files.replace_extension(dest_cs_filename, "exe")
             cs_module = transformer.transform(module.node)
             
             with open(dest_cs_filename, "w") as dest_cs_file:
                 cs.dump(cs_module, dest_cs_file)
+            cs_filenames.append(dest_cs_filename)
             
-            subprocess.check_call(["mcs", "-nowarn:0162,0168,0219,0414", "-out:{}".format(dest_exe_filename), dest_cs_filename] + list(_runtime_paths()))
-        
         walk_tree(source_path, handle_dir, handle_file)
+        return cs_filenames
 
 
 def _runtime_paths():
