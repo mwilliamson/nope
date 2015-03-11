@@ -5,6 +5,7 @@ from nose.tools import istest, assert_equal, assert_in
 from nope import couscous as cc
 from nope.platforms.dotnet import cs
 from nope.platforms.dotnet.codegeneration import Transformer
+from nope.modules import LocalModule, BuiltinModule
 from ...testing import wip
 
 # TODO: put this hack somewhere neater
@@ -19,6 +20,7 @@ class ModuleTests(object):
         node = cc.module([
             cc.expression_statement(cc.call(cc.ref("f"), []))
         ], is_executable=True)
+        module = LocalModule("blah.py", node)
         
         expected = """internal class Program {
     internal static void Main() {
@@ -26,13 +28,54 @@ class ModuleTests(object):
     }
 }
 """
-        assert_equal(expected, cs.dumps(transform(node)))
+        assert_equal(expected, cs.dumps(transform(module)))
 
     @istest
     def auxiliary_definitions_are_included_in_module(self):
         node = cc.module([cc.class_("A", methods=[], body=[])], is_executable=True)
+        module = LocalModule("blah.py", node)
         
-        assert_in("class __A", cs.dumps(transform(node)))
+        assert_in("class __A", cs.dumps(transform(module)))
+    
+    @istest
+    def non_executable_module_adds_value_to_modules_object(self):
+        node = cc.module([], is_executable=False, exported_names=["x"])
+        module = LocalModule("blah.py", node)
+        
+        expected = """internal class Module__blah_py {
+    internal static dynamic Init() {
+        dynamic __module = new System.Dynamic.ExpandoObject();
+        __module.x = x;
+        return __module;
+    }
+}
+"""
+        assert_equal(expected, cs.dumps(transform(module)))
+
+
+@istest
+class ModuleReferenceTests(object):
+    @istest
+    def absolute_module_reference_is_translated_to_get_module_with_reference_to_module_class(self):
+        module_resolver = FakeModuleResolver({
+            ("os", "path"): LocalModule("blah.py", None),
+        })
+        node = cc.module_ref(["os", "path"])
+        
+        expected = """__Nope.Internals.@Import("os.path", Module__blah_py.Init)"""
+        assert_equal(expected, cs.dumps(transform(node, module_resolver=module_resolver)))
+    
+    @istest
+    def stdlib_reference_is_transformed_to_null(self):
+        # TODO: remove this temporary hack
+        module_resolver = FakeModuleResolver({
+            ("os", "path"): BuiltinModule("blah.py", None),
+        })
+        node = cc.module_ref(["os", "path"])
+        
+        expected = """null"""
+        assert_equal(expected, cs.dumps(transform(node, module_resolver=module_resolver)))
+
 
 @istest
 class FunctionDefinitionTests(object):
@@ -194,7 +237,7 @@ class ClassDefinitionTests(object):
     })),
 };
 """
-        transformer = Transformer(prelude="")
+        transformer = _create_transformer()
         assert_equal(expected, cs.dumps(transformer.transform(node)))
         assert_equal(expected_aux, cs.dumps(transformer.aux()))
     
@@ -227,7 +270,7 @@ class ClassDefinitionTests(object):
     })),
 };
 """
-        transformer = Transformer(prelude="")
+        transformer = _create_transformer()
         assert_equal(expected, cs.dumps(transformer.transform(node)))
         assert_equal(expected_aux, cs.dumps(transformer.aux()))
     
@@ -260,12 +303,27 @@ class ClassDefinitionTests(object):
     })),
 };
 """
-        transformer = Transformer(prelude="")
+        transformer = _create_transformer()
         assert_equal(expected, cs.dumps(transformer.transform(node)))
         assert_equal(expected_aux, cs.dumps(transformer.aux()))
 
 
-def transform(node):
-    transformer = Transformer(prelude="")
-    return transformer.transform(node)
+def transform(node, module_resolver=None):
+    return _create_transformer(module_resolver).transform(node)
+
+def _create_transformer(module_resolver=None):
+    return Transformer(
+        module_resolver=module_resolver,
+        prelude="",
+        path_hash=lambda path: path.replace(".", "_")
+    )
     
+
+class FakeModuleResolver(object):
+    def __init__(self, imports):
+        self._imports = imports
+    
+    def resolve_import_path(self, names):
+        return self._imports[tuple(names)]
+
+

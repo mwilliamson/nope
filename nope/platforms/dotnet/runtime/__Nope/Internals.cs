@@ -1,9 +1,12 @@
 using System;
+using System.Dynamic;
 
 namespace __Nope
 {
     internal class Internals
     {
+        internal static readonly dynamic Modules = new ExpandoObject();
+        
         internal static readonly object loop_sentinel = new object();
     
         internal static __NopeBoolean op_is(object left, object right)
@@ -36,6 +39,12 @@ namespace __Nope
             }
             
             internal dynamic __Value { get { return _nopeException; } }
+        }
+        
+        internal static dynamic Import(string name, System.Func<dynamic> init)
+        {
+            // TODO: cache module
+            return init();
         }
     }
 }

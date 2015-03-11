@@ -1,5 +1,7 @@
 import os
 import subprocess
+import functools
+import hashlib
 
 import zuice
 
@@ -8,13 +10,17 @@ from ...walk import walk_tree
 from ...injection import CouscousTree
 from . import cs
 from ... import couscous as cc
+from ...modules import Module, LocalModule, BuiltinModule
+from ...module_resolution import ModuleResolver
 
 
 class CodeGenerator(zuice.Base):
     _source_tree = zuice.dependency(CouscousTree)
+    _module_resolver_factory = zuice.dependency(zuice.factory(ModuleResolver))
     
     def generate_files(self, source_path, destination_root):
         cs_filenames = self._generate_cs_files(source_path, destination_root)
+        stdlib_filenames = self._generate_stdlib_files(destination_root)
         
         def handle_dir(path, relative_path):
             files.mkdir_p(os.path.join(destination_root, relative_path))
@@ -34,6 +40,26 @@ class CodeGenerator(zuice.Base):
 
         walk_tree(source_path, handle_dir, handle_file)
 
+    def _generate_stdlib_files(self, destination_root):
+        stdlib_path = os.path.join(os.path.dirname(__file__), "../../../stdlib")
+        destination_stdlib_path = os.path.join(destination_root, "__stdlib")
+        
+        def handle_dir(path, relative_path):
+            files.mkdir_p(os.path.join(destination_stdlib_path, relative_path))
+        
+        cs_filenames = []
+        
+        def handle_file(path, relative_path):
+            dest_cs_filename = files.replace_extension(
+                os.path.join(destination_stdlib_path, relative_path),
+                "cs"
+            )
+            self._generate_cs_file(path, dest_cs_filename)
+            cs_filenames.append(dest_cs_filename)
+        
+        walk_tree(stdlib_path, handle_dir, handle_file)
+        return cs_filenames
+    
     def _generate_cs_files(self, source_path, destination_root):
         def handle_dir(path, relative_path):
             files.mkdir_p(os.path.join(destination_root, relative_path))
@@ -41,7 +67,32 @@ class CodeGenerator(zuice.Base):
         cs_filenames = []
         
         def handle_file(path, relative_path):
-            prelude = """
+            dest_cs_filename = files.replace_extension(
+                os.path.join(destination_root, relative_path),
+                "cs"
+            )
+            self._generate_cs_file(path, dest_cs_filename)
+            cs_filenames.append(dest_cs_filename)
+            
+        walk_tree(source_path, handle_dir, handle_file)
+        return cs_filenames
+    
+    def _generate_cs_file(self, path, dest_path):
+        module = self._source_tree.module(path)
+        transformer = Transformer(
+            module_resolver=self._module_resolver_factory({Module: module}),
+            prelude=self._prelude,
+            path_hash=self._sha1_hash,
+        )
+        cs_module = transformer.transform(module)
+        
+        with open(dest_path, "w") as dest_cs_file:
+            cs.dump(cs_module, dest_cs_file)
+    
+    def _sha1_hash(self, value):
+        return hashlib.sha1(value.encode("utf8")).hexdigest()
+    
+    _prelude = """
     private static System.Func<dynamic, dynamic> abs = __x_1 => __x_1.__abs__();
     private static System.Func<dynamic, dynamic, dynamic> divmod = (__x_1, __y_1) => __x_1.__divmod__(__y_1);
     private static System.Func<dynamic, dynamic, dynamic> range = (__x_1, __y_1) => __Nope.Builtins.range(__x_1, __y_1);
@@ -50,21 +101,6 @@ class CodeGenerator(zuice.Base):
     private static dynamic AssertionError = __Nope.Builtins.AssertionError;
     private static dynamic str = __Nope.Builtins.str;
 """
-            transformer = Transformer(prelude=prelude)
-            module = self._source_tree.module(path)
-            dest_cs_filename = files.replace_extension(
-                os.path.join(destination_root, relative_path),
-                "cs"
-            )
-            cs_module = transformer.transform(module.node)
-            
-            with open(dest_cs_filename, "w") as dest_cs_file:
-                cs.dump(cs_module, dest_cs_file)
-            cs_filenames.append(dest_cs_filename)
-            
-        walk_tree(source_path, handle_dir, handle_file)
-        return cs_filenames
-
 
 def _runtime_paths():
     path = os.path.join(os.path.dirname(__file__), "runtime")
@@ -74,12 +110,14 @@ def _runtime_paths():
 
 
 class Transformer(object):
-    def __init__(self, prelude):
+    def __init__(self, module_resolver, prelude, path_hash):
+        self._module_resolver = module_resolver
         self._prelude = prelude
+        self._path_hash = path_hash
         self._transformers = {
-            cc.Module: self._transform_module,
+            LocalModule: self._transform_module,
             
-            cc.ModuleReference: lambda node: cs.null,
+            cc.ModuleReference: self._transform_module_reference,
             
             cc.Statements: self._transform_statements,
             
@@ -137,15 +175,48 @@ class Transformer(object):
 
 
     def _transform_module(self, module):
-        child_transformer = Transformer(self._prelude)
-        body = child_transformer._transform_all(module.body)
-        main = cs.method("Main", [], body, static=True, returns=cs.void)
-        body = [
-            cs.raw(self._prelude),
-            main,
-            child_transformer.aux(),
-        ]
-        return cs.class_("Program", body)
+        child_transformer = Transformer(
+            module_resolver=self._module_resolver,
+            prelude=self._prelude,
+            path_hash=self._path_hash)
+        body = child_transformer._transform_all(module.node.body)
+        
+        if module.node.is_executable:
+            main = cs.method("Main", [], body, static=True, returns=cs.void)
+            body = [
+                cs.raw(self._prelude),
+                main,
+                child_transformer.aux(),
+            ]
+            return cs.class_("Program", body)
+        else:
+            module_name = "__module"
+            module_ref = cs.ref(module_name)
+            return_module = [
+                cs.declare(module_name, cs.new(cs.ref("System.Dynamic.ExpandoObject"), [])),
+                cs.statements([
+                    cs.assign_statement(cs.property_access(module_ref, exported_name), cs.ref(exported_name))
+                    for exported_name in module.node.exported_names
+                ]),
+                cs.ret(module_ref),
+            ]
+            init = cs.method("Init", [], body + return_module, static=True)
+            class_name = self._module_to_class_name(module)
+            return cs.class_(class_name, [init])
+    
+
+    def _transform_module_reference(self, reference):
+        module = self._module_resolver.resolve_import_path(reference.names)
+        if isinstance(module, BuiltinModule):
+            return cs.null
+        else:
+            init = cs.property_access(cs.ref(self._module_to_class_name(module)), "Init")
+            return cs.call(_internal_ref("Import"), [cs.string_literal(".".join(reference.names)), init])
+    
+    
+    def _module_to_class_name(self, module):
+        # TODO: normalise path before passing in
+        return "__".join(["Module", self._path_hash(module.path)])
 
 
     def _transform_statements(self, node):

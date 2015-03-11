@@ -4,7 +4,8 @@ from . import nodes, errors, name_declaration
 
 
 class Module(object):
-    pass
+    def __init__(self):
+        raise Exception("Module is abstract")
 
 
 class ModuleTypes(object):

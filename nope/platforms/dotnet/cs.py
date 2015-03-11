@@ -84,6 +84,9 @@ arg = Argument = dodge.data_class("Argument", ["name"])
 type_apply = TypeApplication = dodge.data_class("TypeApplication", ["func", "args"])
 cast = Cast = dodge.data_class("Cast", ["type", "value"])
 
+def assign_statement(*args, **kwargs):
+    return expression_statement(assign(*args, **kwargs))
+
 dynamic = ref("dynamic")
 null = ref("null")
 not_ = functools.partial(unary_operation, "!")
