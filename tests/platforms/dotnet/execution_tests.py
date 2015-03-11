@@ -13,10 +13,6 @@ def wip(*args):
 class DotNetExecutionTests(execution.ExecutionTests):
     platform = DotNet
     
-    can_import_local_package = wip(execution.ExecutionTests.can_import_local_package)
-    can_import_module_in_package = wip(execution.ExecutionTests.can_import_module_in_package)
-    can_import_module_in_package_using_import_from = wip(execution.ExecutionTests.can_import_module_in_package_using_import_from)
-    can_import_value_from_local_package = wip(execution.ExecutionTests.can_import_value_from_local_package)
     test_getitem_dict = wip(execution.ExecutionTests.test_getitem_dict)
     test_in_operator_list = wip(execution.ExecutionTests.test_in_operator_list)
     test_unnested_generator_expression = wip(execution.ExecutionTests.test_unnested_generator_expression)
