@@ -163,8 +163,14 @@ f()
         assert_equal(b"", result.stderr_output)
     
     @istest
-    def importing_same_module_with_two_different_names_returns_same_module(self):
+    def importing_same_module_with_two_different_as_names_returns_same_module(self):
         result = self._run_program(path=program_path("valid/import_same_module_twice"), program="main")
+        assert_equal(b"1\n1\n2\n2\n", result.output)
+        assert_equal(b"", result.stderr_output)
+    
+    @istest
+    def importing_same_module_with_absolute_and_relative_import_returns_same_module(self):
+        result = self._run_program(path=program_path("valid/import_relative"), program="main")
         assert_equal(b"1\n1\n2\n2\n", result.output)
         assert_equal(b"", result.stderr_output)
     
