@@ -6,8 +6,6 @@ namespace __Nope
 {
     internal class Internals
     {
-        internal static readonly dynamic Modules = new ExpandoObject();
-        
         internal static readonly object loop_sentinel = new object();
     
         internal static __NopeBoolean op_is(object left, object right)
