@@ -76,7 +76,7 @@ class PathResolutionTests(object):
             )
             assert False, "Expected error"
         except errors.ImportError as error:
-            assert_equal("Import is ambiguous: the module 'message.py' and the package 'message/__init__.py' both exist", str(error))
+            assert_equal("Import is ambiguous, possible module paths: 'root/message/__init__.py', 'root/message.py'", str(error))
 
 
     @istest
@@ -142,6 +142,20 @@ class PathResolutionTests(object):
         )
         
         assert_is(cgi_module, resolved_module)
+
+
+    @istest
+    def absolute_import_checks_search_paths(self):
+        message_module = _create_module("lib/hello.py")
+        
+        resolved_module = _resolve_import(
+            _create_module("root/main.py"),
+            ["hello"],
+            modules=[message_module],
+            search_paths=["lib"],
+        )
+        
+        assert_is(message_module, resolved_module)
 
 
 @istest
@@ -290,23 +304,26 @@ class ImportValueTests(object):
             assert_equal("Could not import name 'hello' from module 'message'", str(error))
 
 
-def _resolve_import(module, names, modules=None, builtin_modules=None):
-    module_resolver = _module_resolver(module, modules, builtin_modules)
+def _resolve_import(module, names, **kwargs):
+    module_resolver = _module_resolver(module, **kwargs)
     return module_resolver.resolve_import_path(names)
 
 
-def _module_resolver(module, modules=None, builtin_modules=None):
+def _module_resolver(module, modules=None, builtin_modules=None, search_paths=None):
     if modules is None:
         modules = []
     if builtin_modules is None:
         builtin_modules = {}
+    if search_paths is None:
+        search_paths = []
         
     source_tree = FakeSourceTree(modules)
     return module_resolution.ModuleResolver(
         source_tree,
         builtin_modules,
         ModuleExports(name_declaration.DeclarationFinder()),
-        module
+        module,
+        search_paths=search_paths,
     )
     
 

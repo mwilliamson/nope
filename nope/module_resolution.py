@@ -7,6 +7,9 @@ from . import errors, environment, modules
 from .source import SourceTree
 
 
+ModuleSearchPaths = zuice.key("ModuleSearchPaths")
+
+
 class ModuleResolverFactory(zuice.Base):
     _injector = zuice.dependency(zuice.Injector)
 
@@ -19,6 +22,7 @@ class ModuleResolver(zuice.Base):
     _builtin_modules = zuice.dependency(environment.BuiltinModules)
     _module_exports = zuice.dependency(modules.ModuleExports)
     _module = zuice.dependency(modules.Module)
+    _search_paths = zuice.dependency(ModuleSearchPaths)
     
     def resolve_import_value(self, names, value_name):
         imported_module = self.resolve_import_path(names)
@@ -55,23 +59,18 @@ class ModuleResolver(zuice.Base):
         if name in self._builtin_modules:
             return self._builtin_modules[name]
         
-        if names[0] not in [".", ".."] and not self._module.node.is_executable:
-            package_value, module_value = None, None
-        else:
-            package_path, module_path = self._possible_module_paths(self._module.path, names)
-            
-            package_value = self._source_tree.module(package_path)
-            module_value = self._source_tree.module(module_path)
+        module_paths = self._possible_module_paths(self._module.path, names)
+        modules = list(filter(None, map(self._source_tree.module, module_paths)))
         
-        if package_value is not None and module_value is not None:
+        if len(modules) > 1:
             raise errors.ImportError(None,
-                "Import is ambiguous: the module '{0}.py' and the package '{0}/__init__.py' both exist".format(
-                    names[-1])
+                "Import is ambiguous, possible module paths: " +
+                    ", ".join("'{}'".format(module.path) for module in modules)
             )
-        elif package_value is None and module_value is None:
+        elif len(modules) == 0:
             raise errors.ModuleNotFoundError(None, "Could not find module '{}'".format(name))
         else:
-            module = package_value or module_value
+            module, = modules
             if module.node.is_executable:
                 raise errors.ImportError(None, "Cannot import executable modules")
             else:
@@ -79,8 +78,14 @@ class ModuleResolver(zuice.Base):
 
 
     def _possible_module_paths(self, module_path, names):
-        import_path = os.path.normpath(os.path.join(os.path.dirname(module_path), *names))
+        if names[0] in [".", ".."] or self._module.node.is_executable:
+            yield from self._possible_module_paths_under_search_path(os.path.dirname(module_path), names)
         
+        for search_path in self._search_paths:
+            yield from self._possible_module_paths_under_search_path(search_path, names)
+    
+    def _possible_module_paths_under_search_path(self, search_path, names):
+        import_path = os.path.normpath(os.path.join(search_path, *names))
         return (
             os.path.join(import_path, "__init__.py"),
             import_path + ".py"

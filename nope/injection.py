@@ -6,6 +6,7 @@ from .source import SourceTree, CachedSourceTree, TransformingSourceTree, FileSy
 from . import environment, builtins, inference, types, transformers
 from .modules import Module
 from .desugar import Desugarrer
+from .module_resolution import ModuleSearchPaths
 
 
 def create_bindings():
@@ -27,6 +28,8 @@ def create_bindings():
         ModuleChecker(injector.get(SourceTree), injector.get(inference.TypeChecker))
     )
     bindings.bind(types.TypeLookup).to_provider(_type_lookup_provider)
+    bindings.bind(ModuleSearchPaths).to_instance([])
+    
     return bindings
 
 

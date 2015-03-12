@@ -33,7 +33,7 @@ namespace __Nope
             __call__ = (System.Func<dynamic>)(() => new
             {
                 __Type = StopIteration,
-                __str__ = (Func<dynamic>)(() => "")
+                __str__ = (Func<dynamic>)(() => __NopeString.Value(""))
             })
         };
     
