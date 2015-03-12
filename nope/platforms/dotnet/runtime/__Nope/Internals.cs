@@ -1,5 +1,6 @@
 using System;
 using System.Dynamic;
+using System.Collections.Generic;
 
 namespace __Nope
 {
@@ -41,10 +42,17 @@ namespace __Nope
             internal dynamic __Value { get { return _nopeException; } }
         }
         
+        private static readonly IDictionary<string, dynamic> _moduleCache =
+            new Dictionary<string, dynamic>();
+        
         internal static dynamic Import(string name, System.Func<dynamic> init)
         {
-            // TODO: cache module
-            return init();
+            lock(_moduleCache) {
+                if (!_moduleCache.ContainsKey(name)) {
+                    _moduleCache.Add(name, init());
+                }
+                return _moduleCache[name];
+            }
         }
     }
 }
