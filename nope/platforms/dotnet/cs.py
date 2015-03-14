@@ -68,7 +68,14 @@ catch = CatchStatement = dodge.data_class("CatchStatement", ["type", "name", "bo
 def throw(value=None):
     return Throw(value)
 
-declare = VariableDeclaration = dodge.data_class("VariableDeclaration", ["name", "value"])
+
+def declare(name, value, type=None):
+    if type is None:
+        type = dynamic
+    
+    return VariableDeclaration(name, value, type)
+
+VariableDeclaration = dodge.data_class("VariableDeclaration", ["name", "value", "type"])
 
 def new(constructor, args, members=None):
     if members is None:
@@ -79,7 +86,14 @@ def new(constructor, args, members=None):
 New = dodge.data_class("New", ["constructor", "args", "members"])
 obj = ObjectLiteral = dodge.data_class("ObjectLiteral", ["members"])
 lambda_ = LambdaExpression = dodge.data_class("LambdaExpression", ["args", "body"])
-arg = Argument = dodge.data_class("Argument", ["name"])
+
+def arg(name, type=None):
+    if type is None:
+        type = dynamic
+    
+    return Argument(name, type)
+
+Argument = dodge.data_class("Argument", ["name", "type"])
 
 type_apply = TypeApplication = dodge.data_class("TypeApplication", ["func", "args"])
 cast = Cast = dodge.data_class("Cast", ["type", "value"])
@@ -92,6 +106,7 @@ null = ref("null")
 not_ = functools.partial(unary_operation, "!")
 this = ref("this")
 void = ref("void")
+string = ref("string")
 
 
 # TODO: this is hack! Usages should be replaced.
@@ -167,7 +182,8 @@ def _serialize_catch(node, writer):
 
 
 def _serialize_variable_declaration(node, writer):
-    writer.write("dynamic ")
+    writer.dump(node.type)
+    writer.write(" ")
     writer.write(node.name)
     if node.value is not None:
         writer.write(" = ")
@@ -230,7 +246,8 @@ def _serialize_formal_args(args, writer):
     for index, arg in enumerate(args):
         if index > 0:
             writer.write(", ")
-        writer.write("dynamic ")
+        writer.dump(arg.type)
+        writer.write(" ")
         writer.write(arg.name)
     writer.write(")")
 
