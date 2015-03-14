@@ -1,3 +1,6 @@
+import collections
+
+
 class IdentityDict(object):
     @staticmethod
     def create(values):
@@ -10,7 +13,7 @@ class IdentityDict(object):
         if values is None:
             values = []
         
-        self._values = {}
+        self._values = collections.OrderedDict()
         
         for key, value in values:
             self[key] = value
