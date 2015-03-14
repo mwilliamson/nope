@@ -33,6 +33,9 @@ _builtin_types = {
         types.iterable(types.tuple_type(T1, T2))
     )),
     
+    # TODO: check T is sortable
+    "sorted": types.generic_func(["T"], lambda T: types.func([types.iterable(T)], types.iterable(T))),
+    
     "isinstance": types.func([types.object_type, types.any_meta_type], types.bool_type),
     "type": types.func([types.object_type], types.object_type),
 }
