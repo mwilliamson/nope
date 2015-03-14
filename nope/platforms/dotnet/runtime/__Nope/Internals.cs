@@ -40,16 +40,16 @@ namespace __Nope
             internal dynamic __Value { get { return _nopeException; } }
         }
         
-        private static readonly IDictionary<string, dynamic> _moduleCache =
-            new Dictionary<string, dynamic>();
+        private static readonly IDictionary<object, dynamic> _moduleCache =
+            new Dictionary<object, dynamic>();
         
-        internal static dynamic Import(string name, System.Func<dynamic> init)
+        internal static dynamic Import(System.Func<dynamic> init)
         {
             lock(_moduleCache) {
-                if (!_moduleCache.ContainsKey(name)) {
-                    _moduleCache.Add(name, init());
+                if (!_moduleCache.ContainsKey(init)) {
+                    _moduleCache.Add(init, init());
                 }
-                return _moduleCache[name];
+                return _moduleCache[init];
             }
         }
     }

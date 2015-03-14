@@ -209,7 +209,7 @@ class Transformer(object):
     def _transform_module_reference(self, reference):
         module = self._module_resolver.resolve_import_path(reference.names)
         init = cs.property_access(cs.ref(self._module_to_class_name(module)), "Init")
-        return cs.call(_internal_ref("Import"), [cs.string_literal(".".join(reference.names)), init])
+        return cs.call(_internal_ref("Import"), [init])
     
     
     def _module_to_class_name(self, module):

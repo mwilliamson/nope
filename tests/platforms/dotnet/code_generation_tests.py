@@ -62,7 +62,7 @@ class ModuleReferenceTests(object):
         })
         node = cc.module_ref(["os", "path"])
         
-        expected = """__Nope.Internals.@Import("os.path", Module__blah_py.Init)"""
+        expected = """__Nope.Internals.@Import(Module__blah_py.Init)"""
         assert_equal(expected, cs.dumps(transform(node, module_resolver=module_resolver)))
     
     
@@ -73,7 +73,7 @@ class ModuleReferenceTests(object):
         })
         node = cc.module_ref(["os", "path"])
         
-        expected = """__Nope.Internals.@Import("os.path", Module__blah_py.Init)"""
+        expected = """__Nope.Internals.@Import(Module__blah_py.Init)"""
         assert_equal(expected, cs.dumps(transform(node, module_resolver=module_resolver)))
     
 
