@@ -16,7 +16,14 @@ setup(
     author='Michael Williamson',
     author_email='mike@zwobble.org',
     url='http://github.com/mwilliamson/nope',
-    packages=['nope', 'nope.inference', 'nope.parser', 'nope.platforms', 'nope.platforms.nodejs', 'nope.platforms.dotnet'],
+    packages=[
+        'nope',
+        'nope.inference',
+        'nope.parser',
+        'nope.platforms',
+        'nope.platforms.nodejs',
+        'nope.platforms.dotnet'
+    ],
     scripts=['scripts/nope'],
     install_requires=[
         "funcparserlib==0.3.6",
