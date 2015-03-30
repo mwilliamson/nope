@@ -6,7 +6,7 @@ import zuice
 import spur
 
 from .. import testing
-from ..testing import program_path
+from ..testing import program_path, wip
 from nope import injection
 
 
@@ -711,6 +711,25 @@ class A:
 print(inc(A(42).x))
 """
         self._test_program_string(program, b"43\n")
+    
+    @wip
+    @istest
+    def test_class_is_sub_type_of_matching_structural_types(self):
+        program = """
+#:structural-type Message
+#:  description: str
+Message = None
+
+class Hello:
+    description = "Hello"
+
+#:: Message -> none
+def describe(message):
+    print(message.description)
+
+describe(Hello())
+"""
+        self._test_program_string(program, b"Hello\n")
     
     
     @istest
