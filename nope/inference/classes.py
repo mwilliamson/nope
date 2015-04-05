@@ -1,5 +1,4 @@
 from .. import nodes, types, errors, visit
-from ..types import generics
 from ..lists import filter_by_type
 
 
@@ -37,10 +36,8 @@ class ClassDefinitionTypeChecker(object):
                 for type_param_node in node.type_params
             ]
             
-            def instantiate(*actual_type_params):
-                # TODO: create suitable interface in types that prevents
-                # duplication of instantiated name generation
-                return types.class_type(generics._instantiated_type_name(node.name, actual_type_params))
+            def instantiate(name, *actual_type_params):
+                return types.class_type(name)
             
             def instantiate_attrs(inner_class_type, *actual_type_params):
                 # TODO: make context immutable.
@@ -61,7 +58,7 @@ class ClassDefinitionTypeChecker(object):
             for type_param_node, type_param in zip(node.type_params, formal_type_params):
                 context.update_type(type_param_node, types.meta_type(type_param))
                 
-            class_type = types.generic(formal_type_params, instantiate, complete_type=instantiate_attrs)
+            class_type = types.generic(node.name, formal_type_params, instantiate, complete_type=instantiate_attrs)
             meta_type = types.meta_type(class_type)
             context.update_type(node, meta_type)
             

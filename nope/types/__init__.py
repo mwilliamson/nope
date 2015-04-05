@@ -8,7 +8,7 @@ from .attributes import attrs_from_iterable, Attribute, EmptyAttributes
 from .classes import class_type, is_class_type
 from .structural import structural_type, is_structural_type
 from .generics import (
-    generic, generic_class, generic_structural_type, generic_func,
+    generic, unnamed_generic, generic_class, generic_structural_type, generic_func,
     invariant, covariant, contravariant, Variance as _Variance,
     is_formal_parameter, is_generic_type, is_instantiated_type, is_generic_func,
 )

@@ -13,7 +13,8 @@ class _GenericTypeAttributes(object):
 
 
 class _GenericType(object):
-    def __init__(self, params, create_type, complete_type):
+    def __init__(self, name, params, create_type, complete_type):
+        self._name = name
         self.params = params
         self._create_type = create_type
         self._complete_type = complete_type
@@ -32,7 +33,7 @@ class _GenericType(object):
         params = tuple(params)
         
         if params not in self._generic_cache:
-            new_type = self._create_type(*params)
+            new_type = self._create_type(_instantiated_type_name(self._name, params), *params)
             self._generic_cache[params] = _InstantiatedType(
                 self,
                 params,
@@ -86,14 +87,24 @@ def is_instantiated_type(type_):
     return isinstance(type_, _InstantiatedType)
 
 
-def generic(params, create_type, attrs=None, complete_type=None):
+def generic(name, params, create_type, attrs=None, complete_type=None):
     if complete_type is None:
         def complete_type(new_type, *params):
             if attrs is not None:
                 new_type.attrs = attrs_from_iterable(attrs(*params))
     
     formal_params = [_formal_param(param) for param in params]
-    return _GenericType(formal_params, create_type, complete_type)
+    return _GenericType(name, formal_params, create_type, complete_type)
+
+
+def unnamed_generic(params, create_type, attrs=None, complete_type=None):
+    return generic(
+        name=None,
+        params=params,
+        create_type=lambda name, *actual_params: create_type(*actual_params),
+        attrs=attrs,
+        complete_type=complete_type,
+    )
 
 
 class _GenericFunc(object):
@@ -139,13 +150,17 @@ def generic_class(name, formal_params, attrs=None):
         attrs = lambda *params: []
     
     return generic(
+        name,
         formal_params,
-        lambda *params: class_type(_instantiated_type_name(name, params)),
+        lambda name, *params: class_type(name),
         attrs=attrs,
     )
 
 def _instantiated_type_name(name, params):
-    return "{}[{}]".format(name, ", ".join(map(str, params)))
+    if name is None:
+        return None
+    else:
+        return "{}[{}]".format(name, ", ".join(map(str, params)))
 
 
 class Variance(object):
@@ -189,7 +204,8 @@ def contravariant(name):
 
 def generic_structural_type(name, formal_params, attrs=None):
     return generic(
+        name,
         formal_params,
-        lambda *params: structural_type(_instantiated_type_name(name, params)),
+        lambda name, *params: structural_type(name),
         attrs=attrs,
     )

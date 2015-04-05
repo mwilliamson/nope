@@ -193,8 +193,8 @@ class SubTypeTests(object):
         
     @istest
     def instantiated_union_type_is_subtype_of_other_instantiated_union_type_if_its_types_are_a_subset(self):
-        smaller_union_type = types.generic(["T"], lambda T: types.union(T, types.none_type))
-        larger_union_type = types.generic(["T"], lambda T: types.union(T, types.none_type, types.str_type))
+        smaller_union_type = types.unnamed_generic(["T"], lambda T: types.union(T, types.none_type))
+        larger_union_type = types.unnamed_generic(["T"], lambda T: types.union(T, types.none_type, types.str_type))
         
         assert types.is_sub_type(larger_union_type(types.int_type), smaller_union_type(types.int_type))
         assert not types.is_sub_type(smaller_union_type(types.int_type), larger_union_type(types.int_type))
