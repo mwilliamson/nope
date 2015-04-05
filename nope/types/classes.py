@@ -1,7 +1,7 @@
 from .attributes import attrs_from_iterable
 
 
-class _ScalarType(object):
+class _ClassType(object):
     def __init__(self, name, attrs, base_classes):
         self.name = name
         self.attrs = attrs
@@ -15,11 +15,11 @@ class _ScalarType(object):
 
 
 def is_class_type(type_):
-    return isinstance(type_, _ScalarType)
+    return isinstance(type_, _ClassType)
 
 
-def scalar_type(name, attrs=None, base_classes=None):
+def class_type(name, attrs=None, base_classes=None):
     if base_classes is None:
         base_classes = []
     
-    return _ScalarType(name, attrs_from_iterable(attrs), base_classes)
+    return _ClassType(name, attrs_from_iterable(attrs), base_classes)

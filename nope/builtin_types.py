@@ -1,18 +1,18 @@
 from .types import (
-    scalar_type, meta_type, union, structural_type, generic_structural_type,
+    class_type, meta_type, union, structural_type, generic_structural_type,
     generic_class, func, overloaded_func,
     attr,
     any_type, object_type,
     covariant,
 )
 
-none_type = scalar_type("NoneType")
+none_type = class_type("NoneType")
 
-bool_type = scalar_type("bool")
+bool_type = class_type("bool")
 
-int_type = scalar_type("int")
+int_type = class_type("int")
 
-float_type = scalar_type("float")
+float_type = class_type("float")
 
 int_type.attrs.add("__add__", func([int_type], int_type))
 int_type.attrs.add("__sub__", func([int_type], int_type))
@@ -41,7 +41,7 @@ int_type.attrs.add("__ge__", func([int_type], bool_type))
 
 _int_or_none = union(int_type, none_type)
 
-str_type = scalar_type("str")
+str_type = class_type("str")
 str_type.attrs.add("__eq__", func([str_type], bool_type))
 str_type.attrs.add("find", func([str_type], int_type))
 str_type.attrs.add("replace", func([str_type, str_type], str_type))
@@ -111,19 +111,19 @@ dict_type = generic_class("dict", ["K", "V"], lambda K, V: [
 
 dict_meta_type = meta_type(dict_type)
 
-exception_type = scalar_type("Exception")
+exception_type = class_type("Exception")
 exception_meta_type = meta_type(exception_type, [
     attr("__call__", func([str_type], exception_type)),
 ])
 
-traceback_type = scalar_type("traceback")
+traceback_type = class_type("traceback")
 
-assertion_error_type = scalar_type("AssertionError", base_classes=[exception_type])
+assertion_error_type = class_type("AssertionError", base_classes=[exception_type])
 assertion_error_meta_type = meta_type(assertion_error_type, [
     attr("__call__", func([str_type], assertion_error_type)),
 ])
 
-stop_iteration_type = scalar_type("StopIteration", base_classes=[exception_type])
+stop_iteration_type = class_type("StopIteration", base_classes=[exception_type])
 stop_iteration_meta_type = meta_type(stop_iteration_type, [
     attr("__call__", func([], stop_iteration_type)),
 ])

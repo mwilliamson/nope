@@ -31,7 +31,7 @@ def context_manager_of_with_statement_is_type_checked():
 
 @istest
 def context_manager_of_with_statement_must_have_enter_method():
-    cls = types.scalar_type("Manager", [types.attr("__exit__", exit_method())])
+    cls = types.class_type("Manager", [types.attr("__exit__", exit_method())])
     context_manager_node = nodes.ref("x")
     node = nodes.with_(context_manager_node, None, [])
     
@@ -44,7 +44,7 @@ def context_manager_of_with_statement_must_have_enter_method():
 
 @istest
 def context_manager_of_with_statement_must_have_exit_method():
-    cls = types.scalar_type("Manager", [types.attr("__enter__", enter_method())])
+    cls = types.class_type("Manager", [types.attr("__enter__", enter_method())])
     context_manager_node = nodes.ref("x")
     node = nodes.with_(context_manager_node, None, [])
     

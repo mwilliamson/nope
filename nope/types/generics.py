@@ -1,5 +1,5 @@
 from .attributes import EmptyAttributes, attrs_from_iterable
-from .classes import scalar_type
+from .classes import class_type
 from .structural import structural_type
 
 
@@ -140,7 +140,7 @@ def generic_class(name, formal_params, attrs=None):
     
     return generic(
         formal_params,
-        lambda *params: scalar_type(_instantiated_type_name(name, params)),
+        lambda *params: class_type(_instantiated_type_name(name, params)),
         attrs=attrs,
     )
 

@@ -13,7 +13,7 @@ def raise_value_can_be_instance_of_exception():
 
 @istest
 def raise_value_can_be_instance_of_subtype_of_exception():
-    cls = types.scalar_type("BlahError", {}, base_classes=[types.exception_type])
+    cls = types.class_type("BlahError", {}, base_classes=[types.exception_type])
     type_bindings = {"error": cls}
     assert_statement_type_checks(nodes.raise_(nodes.ref("error")), type_bindings=type_bindings)
 

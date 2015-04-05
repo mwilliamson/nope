@@ -24,7 +24,7 @@ def class_type_has_no_base_classes_if_object_is_explicit_base_class():
 
 @istest
 def error_if_base_class_is_not_object():
-    type_bindings = {"Person": types.meta_type(types.scalar_type("Person"))}
+    type_bindings = {"Person": types.meta_type(types.class_type("Person"))}
     node = nodes.class_("User", [], base_classes=[nodes.ref("Person")])
     try:
         _infer_class_type(node, [], type_bindings=type_bindings)

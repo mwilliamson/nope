@@ -5,7 +5,7 @@ import zuice
 from ..identity_dict import NodeDict
 from .. import caching
 from .attributes import attrs_from_iterable, Attribute, EmptyAttributes
-from .classes import scalar_type, is_class_type
+from .classes import class_type, is_class_type
 from .structural import structural_type, is_structural_type
 from .generics import (
     generic, generic_class, generic_structural_type, generic_func,
@@ -361,10 +361,10 @@ def is_meta_type(type_):
     return isinstance(type_, MetaType)
 
 
-any_type = object_type = scalar_type("object")
-any_meta_type = scalar_type("type")
+any_type = object_type = class_type("object")
+any_meta_type = class_type("type")
 
-bottom_type = scalar_type("bottom")
+bottom_type = class_type("bottom")
 
 def common_super_type(types):
     if len(types) == 0:

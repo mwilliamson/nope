@@ -212,7 +212,7 @@ def assert_subexpression_is_type_checked(create_node):
 
 
 def context_manager_class(enter_type=None, exit_type=None):
-    return types.scalar_type("Manager", [
+    return types.class_type("Manager", [
         types.attr("__enter__", enter_method(enter_type), read_only=True),
         types.attr("__exit__", exit_method(exit_type), read_only=True),
     ])

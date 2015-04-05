@@ -8,7 +8,7 @@ from .util import assert_statement_is_type_checked, update_context
 
 @istest
 def for_statement_accepts_iterable_with_iter_method():
-    cls = types.scalar_type("Blah")
+    cls = types.class_type("Blah")
     cls.attrs.add("__iter__", types.func([], types.iterator(types.str_type)))
     
     node = nodes.for_(nodes.ref("x"), nodes.ref("xs"), [])
@@ -24,7 +24,7 @@ def for_statement_accepts_iterable_with_iter_method():
 
 @istest
 def for_statement_accepts_iterable_with_getitem_method():
-    cls = types.scalar_type("Blah")
+    cls = types.class_type("Blah")
     cls.attrs.add("__getitem__", types.func([types.int_type], types.str_type))
     
     node = nodes.for_(nodes.ref("x"), nodes.ref("xs"), [])
@@ -40,7 +40,7 @@ def for_statement_accepts_iterable_with_getitem_method():
 
 @istest
 def for_statement_requires_iterable_getitem_method_to_accept_integers():
-    cls = types.scalar_type("Blah")
+    cls = types.class_type("Blah")
     cls.attrs.add("__getitem__", types.func([types.str_type], types.str_type))
     
     ref_node = nodes.ref("xs")
@@ -91,7 +91,7 @@ def for_statement_requires_iterable_to_have_iter_method():
 
 @istest
 def iter_method_must_take_no_arguments():
-    cls = types.scalar_type("Blah")
+    cls = types.class_type("Blah")
     cls.attrs.add("__iter__", types.func([types.str_type], types.iterable(types.str_type)))
     ref_node = nodes.ref("xs")
     node = nodes.for_(nodes.ref("x"), ref_node, [])
@@ -105,7 +105,7 @@ def iter_method_must_take_no_arguments():
 
 @istest
 def iter_method_must_return_iterator():
-    cls = types.scalar_type("Blah")
+    cls = types.class_type("Blah")
     cls.attrs.add("__iter__", types.func([], types.iterable(types.str_type)))
     ref_node = nodes.ref("xs")
     node = nodes.for_(nodes.ref("x"), ref_node, [])

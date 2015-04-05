@@ -40,7 +40,7 @@ class ClassDefinitionTypeChecker(object):
             def instantiate(*actual_type_params):
                 # TODO: create suitable interface in types that prevents
                 # duplication of instantiated name generation
-                return types.scalar_type(generics._instantiated_type_name(node.name, actual_type_params))
+                return types.class_type(generics._instantiated_type_name(node.name, actual_type_params))
             
             def instantiate_attrs(inner_class_type, *actual_type_params):
                 # TODO: make context immutable.
@@ -76,7 +76,7 @@ class ClassDefinitionTypeChecker(object):
             meta_type.attrs.add("__call__", constructor_type, read_only=True)
             return types.meta_type(class_type.instantiate(formal_type_params))
         else:
-            class_type = types.scalar_type(node.name)
+            class_type = types.class_type(node.name)
             meta_type = types.meta_type(class_type)
             
             context.update_type(node, meta_type)

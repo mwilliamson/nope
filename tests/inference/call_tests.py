@@ -49,7 +49,7 @@ def can_infer_type_of_call_with_optional_argument_specified():
 
 @istest
 def object_can_be_called_if_it_has_call_magic_method():
-    cls = types.scalar_type("Blah", [
+    cls = types.class_type("Blah", [
         types.attr("__call__", types.func([types.str_type], types.int_type)),
     ])
     type_bindings = {"f": cls}
@@ -58,10 +58,10 @@ def object_can_be_called_if_it_has_call_magic_method():
 
 @istest
 def object_can_be_called_if_it_has_call_magic_method_that_returns_callable():
-    second_cls = types.scalar_type("Second", [
+    second_cls = types.class_type("Second", [
         types.attr("__call__", types.func([types.str_type], types.int_type)),
     ])
-    first_cls = types.scalar_type("First", [
+    first_cls = types.class_type("First", [
         types.attr("__call__", second_cls),
     ])
     type_bindings = {"f": first_cls}
@@ -151,7 +151,7 @@ def error_if_generic_func_is_passed_wrong_arguments():
 
 @istest
 def callee_must_be_function_or_have_call_magic_method():
-    cls = types.scalar_type("Blah", {})
+    cls = types.class_type("Blah", {})
     type_bindings = {"f": cls}
     callee_node = nodes.ref("f")
     try:
@@ -165,7 +165,7 @@ def callee_must_be_function_or_have_call_magic_method():
 
 @istest
 def call_attribute_must_be_function():
-    cls = types.scalar_type("Blah", [types.attr("__call__", types.int_type)])
+    cls = types.class_type("Blah", [types.attr("__call__", types.int_type)])
     type_bindings = {"f": cls}
     callee_node = nodes.ref("f")
     try:

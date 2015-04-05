@@ -53,7 +53,7 @@ def right_hand_operand_must_be_sub_type_of_formal_argument():
 
 @istest
 def type_of_add_method_argument_allows_super_type():
-    cls = types.scalar_type("Addable", {})
+    cls = types.class_type("Addable", {})
     cls.attrs.add("__add__", types.func([types.object_type], cls))
     
     type_bindings = {"x": cls, "y": cls}
@@ -63,7 +63,7 @@ def type_of_add_method_argument_allows_super_type():
 
 @istest
 def add_method_should_only_accept_one_argument():
-    cls = types.scalar_type("NotAddable", {})
+    cls = types.class_type("NotAddable", {})
     cls.attrs.add("__add__", types.func([types.object_type, types.object_type], cls))
     
     type_bindings = {"x": cls, "y": cls}
@@ -77,7 +77,7 @@ def add_method_should_only_accept_one_argument():
 
 @istest
 def return_type_of_add_can_differ_from_original_type():
-    cls = types.scalar_type("Addable", {})
+    cls = types.class_type("Addable", {})
     cls.attrs.add("__add__", types.func([types.object_type], types.object_type))
     
     type_bindings = {"x": cls, "y": cls}
@@ -131,7 +131,7 @@ def can_infer_type_of_negation_operation():
 
 @istest
 def can_infer_type_of_subscript_using_getitem():
-    cls = types.scalar_type("Blah", [
+    cls = types.class_type("Blah", [
         types.attr("__getitem__", types.func([types.int_type], types.str_type)),
     ])
     type_bindings = {"x": cls}

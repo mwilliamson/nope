@@ -4,7 +4,7 @@ from nope import types
 
 
 _formal_param = types.invariant("T")
-_scalar_type = types.scalar_type("User")
+_class_type = types.class_type("User")
 int_type = types.int_type
 str_type = types.str_type
 none_type = types.none_type
@@ -13,50 +13,50 @@ none_type = types.none_type
 @istest
 class TypeEqualityTests(object):
     @istest
-    def scalar_type_is_equal_to_itself(self):
-        scalar_type = types.scalar_type("Blah")
-        assert_equal(scalar_type, scalar_type)
+    def class_type_is_equal_to_itself(self):
+        class_type = types.class_type("Blah")
+        assert_equal(class_type, class_type)
         
     @istest
-    def scalar_type_is_not_equal_to_another_scalar_type_with_same_attributes(self):
-        assert_not_equal(types.scalar_type("Blah"), types.scalar_type("Blah"))
+    def class_type_is_not_equal_to_another_class_type_with_same_attributes(self):
+        assert_not_equal(types.class_type("Blah"), types.class_type("Blah"))
         
     @istest
-    def instantiated_type_is_not_equal_to_scalar_type(self):
-        scalar_type = types.scalar_type("List")
+    def instantiated_type_is_not_equal_to_class_type(self):
+        class_type = types.class_type("List")
         generic_type = types.generic_class("List", "T")
-        instantiated_type = generic_type.instantiate([scalar_type])
-        assert_not_equal(scalar_type, instantiated_type)
+        instantiated_type = generic_type.instantiate([class_type])
+        assert_not_equal(class_type, instantiated_type)
         
     @istest
     def instantiated_types_are_equal_if_they_have_the_same_substitutions_and_generic_type(self):
-        scalar_type = types.scalar_type("Blah")
+        class_type = types.class_type("Blah")
         generic_type = types.generic_class("List", "T")
-        first_instantiated_type = generic_type.instantiate([scalar_type])
-        second_instantiated_type = generic_type.instantiate([scalar_type])
+        first_instantiated_type = generic_type.instantiate([class_type])
+        second_instantiated_type = generic_type.instantiate([class_type])
         assert_equal(first_instantiated_type, second_instantiated_type)
         
     @istest
     def instantiated_types_are_not_equal_if_they_have_the_same_substitutions_but_different_generic_type(self):
-        scalar_type = types.scalar_type("Blah")
+        class_type = types.class_type("Blah")
         
         first_generic_type = types.generic_class("List", ["T"])
         second_generic_type = types.generic_class("List", ["T"])
         
-        first_instantiated_type = first_generic_type.instantiate([scalar_type])
-        second_instantiated_type = second_generic_type.instantiate([scalar_type])
+        first_instantiated_type = first_generic_type.instantiate([class_type])
+        second_instantiated_type = second_generic_type.instantiate([class_type])
         
         assert_not_equal(first_instantiated_type, second_instantiated_type)
         
     @istest
     def instantiated_types_are_not_equal_if_they_have_the_same_generic_type_but_different_substitutions(self):
-        first_scalar_type = types.scalar_type("Blah")
-        second_scalar_type = types.scalar_type("Blah")
+        first_class_type = types.class_type("Blah")
+        second_class_type = types.class_type("Blah")
         
         generic_type = types.generic_class("List", ["T"])
         
-        first_instantiated_type = generic_type.instantiate([first_scalar_type])
-        second_instantiated_type = generic_type.instantiate([second_scalar_type])
+        first_instantiated_type = generic_type.instantiate([first_class_type])
+        second_instantiated_type = generic_type.instantiate([second_class_type])
         
         assert_not_equal(first_instantiated_type, second_instantiated_type)
 
@@ -64,34 +64,34 @@ class TypeEqualityTests(object):
 @istest
 class SubTypeTests(object):
     @istest
-    def scalar_type_is_subtype_of_itself(self):
-        cls = types.scalar_type("Blah")
+    def class_type_is_subtype_of_itself(self):
+        cls = types.class_type("Blah")
         assert types.is_sub_type(cls, cls)
         
     @istest
-    def scalar_type_is_subtype_of_object_type(self):
-        cls = types.scalar_type("Blah")
+    def class_type_is_subtype_of_object_type(self):
+        cls = types.class_type("Blah")
         assert types.is_sub_type(types.object_type, cls)
         
     @istest
-    def scalar_type_is_subtype_of_base_class(self):
-        super_type = types.scalar_type("Parent")
-        cls = types.scalar_type("Blah", base_classes=[super_type])
+    def class_type_is_subtype_of_base_class(self):
+        super_type = types.class_type("Parent")
+        cls = types.class_type("Blah", base_classes=[super_type])
         assert types.is_sub_type(super_type, cls)
         assert not types.is_sub_type(cls, super_type)
         
     @istest
-    def scalar_type_is_subtype_of_base_class_of_base_class(self):
-        super_super_type = types.scalar_type("GrandParent")
-        super_type = types.scalar_type("Parent", base_classes=[super_super_type])
-        cls = types.scalar_type("Blah", base_classes=[super_type])
+    def class_type_is_subtype_of_base_class_of_base_class(self):
+        super_super_type = types.class_type("GrandParent")
+        super_type = types.class_type("Parent", base_classes=[super_super_type])
+        cls = types.class_type("Blah", base_classes=[super_type])
         assert types.is_sub_type(super_super_type, cls)
         assert not types.is_sub_type(cls, super_super_type)
         
     @istest
-    def scalar_type_is_subtype_of_structural_type_if_it_has_subset_of_attrs(self):
+    def class_type_is_subtype_of_structural_type_if_it_has_subset_of_attrs(self):
         # TODO: how to handle sub-typing of mutable attrs
-        cls = types.scalar_type("Person", [
+        cls = types.class_type("Person", [
             types.attr("name", types.str_type),
             types.attr("number_of_hats", types.int_type),
         ])
@@ -103,8 +103,8 @@ class SubTypeTests(object):
         assert not types.is_sub_type(cls, structural_type)
         
     @istest
-    def scalar_type_is_not_subtype_of_structural_type_if_it_is_missing_attrs(self):
-        cls = types.scalar_type("Person")
+    def class_type_is_not_subtype_of_structural_type_if_it_is_missing_attrs(self):
+        cls = types.class_type("Person")
         structural_type = types.structural_type("HasName", [
             types.attr("name", types.str_type),
         ])
@@ -113,8 +113,8 @@ class SubTypeTests(object):
         assert not types.is_sub_type(cls, structural_type)
         
     @istest
-    def scalar_type_is_subtype_of_structural_type_if_attr_is_subtype_of_attr_on_structural_type(self):
-        cls = types.scalar_type("Person", [
+    def class_type_is_subtype_of_structural_type_if_attr_is_subtype_of_attr_on_structural_type(self):
+        cls = types.class_type("Person", [
             types.attr("name", types.str_type),
         ])
         structural_type = types.structural_type("HasName", [
@@ -125,8 +125,8 @@ class SubTypeTests(object):
         assert not types.is_sub_type(cls, structural_type)
         
     @istest
-    def scalar_type_is_not_subtype_of_structural_type_if_attr_is_strict_supertype_of_attr_on_structural_type(self):
-        cls = types.scalar_type("Person", [
+    def class_type_is_not_subtype_of_structural_type_if_attr_is_strict_supertype_of_attr_on_structural_type(self):
+        cls = types.class_type("Person", [
             types.attr("name", types.object_type),
         ])
         structural_type = types.structural_type("HasName", [
@@ -177,11 +177,11 @@ class SubTypeTests(object):
         
     @istest
     def type_is_subtype_of_union_type_if_it_appears_in_union_type(self):
-        scalar_type = types.scalar_type("User")
-        union_type = types.union(scalar_type, types.none_type)
+        class_type = types.class_type("User")
+        union_type = types.union(class_type, types.none_type)
         
-        assert types.is_sub_type(union_type, scalar_type)
-        assert not types.is_sub_type(scalar_type, union_type)
+        assert types.is_sub_type(union_type, class_type)
+        assert not types.is_sub_type(class_type, union_type)
         
     @istest
     def union_type_is_subtype_of_other_union_type_if_its_types_are_a_subset(self):
@@ -229,30 +229,30 @@ class SubTypeTests(object):
         assert types.is_sub_type(generic_class(types.int_type), generic_class(types.object_type))
     
     @istest
-    def scalar_type_is_not_sub_type_of_formal_type_parameter(self):
-        assert not types.is_sub_type(_formal_param, _scalar_type)
+    def class_type_is_not_sub_type_of_formal_type_parameter(self):
+        assert not types.is_sub_type(_formal_param, _class_type)
     
     @istest
-    def scalar_type_is_not_super_type_of_formal_type_parameter(self):
-        assert not types.is_sub_type(_scalar_type, _formal_param)
+    def class_type_is_not_super_type_of_formal_type_parameter(self):
+        assert not types.is_sub_type(_class_type, _formal_param)
     
     @istest
     def formal_type_can_be_super_type_of_formal_param_if_formal_param_can_be_unified(self):
-        assert types.is_sub_type(_formal_param, _scalar_type, unify=[_formal_param])
+        assert types.is_sub_type(_formal_param, _class_type, unify=[_formal_param])
     
     @istest
     def formal_type_can_be_sub_type_of_formal_param_if_formal_param_can_be_unified(self):
-        assert types.is_sub_type(_scalar_type, _formal_param, unify=[_formal_param])
+        assert types.is_sub_type(_class_type, _formal_param, unify=[_formal_param])
     
     @istest
     def type_map_is_returned_by_sub_type_unification(self):
-        type_map = types.is_sub_type(_formal_param, _scalar_type, unify=[_formal_param])
-        assert_equal(_scalar_type, type_map[_formal_param])
+        type_map = types.is_sub_type(_formal_param, _class_type, unify=[_formal_param])
+        assert_equal(_class_type, type_map[_formal_param])
     
     @istest
     def type_map_is_returned_by_super_type_unification(self):
-        type_map = types.is_sub_type(_scalar_type, _formal_param, unify=[_formal_param])
-        assert_equal(_scalar_type, type_map[_formal_param])
+        type_map = types.is_sub_type(_class_type, _formal_param, unify=[_formal_param])
+        assert_equal(_class_type, type_map[_formal_param])
         
     @istest
     def formal_type_parameter_is_mapped_to_itself_if_unified_with_itself(self):
@@ -268,42 +268,42 @@ class SubTypeTests(object):
     @istest
     def invariant_type_parameter_cannot_have_different_values_in_same_is_sub_type_relation(self):
         invariant_type_param = types.invariant("T")
-        first_scalar_type = types.scalar_type("User")
-        second_scalar_type = types.scalar_type("Role")
+        first_class_type = types.class_type("User")
+        second_class_type = types.class_type("Role")
         generic_class = types.generic_class("Pair", [invariant_type_param, invariant_type_param])
         assert not types.is_sub_type(
             # TODO: need a reliable way of getting the underlying type (but as an instantiated type)
             generic_class(invariant_type_param, invariant_type_param),
-            generic_class(first_scalar_type, second_scalar_type),
+            generic_class(first_class_type, second_class_type),
             unify=[invariant_type_param]
         )
     
     @istest
     def covariant_type_parameter_is_substituted_with_common_super_type_of_actual_type_params(self):
         covariant_type_param = types.covariant("T")
-        first_scalar_type = types.scalar_type("User")
-        second_scalar_type = types.scalar_type("Role")
+        first_class_type = types.class_type("User")
+        second_class_type = types.class_type("Role")
         generic_class = types.generic_class("Pair", [covariant_type_param, covariant_type_param])
         
         type_map = types.is_sub_type(
             # TODO: need a reliable way of getting the underlying type (but as an instantiated type)
             generic_class(covariant_type_param, covariant_type_param),
-            generic_class(first_scalar_type, second_scalar_type),
+            generic_class(first_class_type, second_class_type),
             unify=[covariant_type_param]
         )
-        assert_equal(types.union(first_scalar_type, second_scalar_type), type_map[covariant_type_param])
+        assert_equal(types.union(first_class_type, second_class_type), type_map[covariant_type_param])
     
     @istest
     def contravariant_type_parameter_is_substituted_with_common_sub_type_of_actual_type_params(self):
         contravariant_type_param = types.contravariant("T")
-        first_scalar_type = types.scalar_type("User")
-        second_scalar_type = types.scalar_type("Role")
+        first_class_type = types.class_type("User")
+        second_class_type = types.class_type("Role")
         generic_class = types.generic_class("Pair", [contravariant_type_param, contravariant_type_param])
         
         type_map = types.is_sub_type(
             # TODO: need a reliable way of getting the underlying type (but as an instantiated type)
             generic_class(contravariant_type_param, contravariant_type_param),
-            generic_class(first_scalar_type, second_scalar_type),
+            generic_class(first_class_type, second_class_type),
             unify=[contravariant_type_param]
         )
         assert_equal(types.bottom_type, type_map[contravariant_type_param])
@@ -384,9 +384,9 @@ class ConstraintsTests(object):
         constraints = types.Constraints()
         constraints.constrain_type_param_to_super_type(_formal_param, types.bottom_type)
         constraints.constrain_type_param_to_sub_type(_formal_param, types.any_type)
-        constraints.constrain_type_param_to_super_type(_formal_param, _scalar_type)
+        constraints.constrain_type_param_to_super_type(_formal_param, _class_type)
         
-        assert_equal(_scalar_type, constraints.resolve()[_formal_param])
+        assert_equal(_class_type, constraints.resolve()[_formal_param])
 
 
 @istest
@@ -430,16 +430,16 @@ class IsFuncTypeTests(object):
         assert types.is_func_type(func_type)
 
     @istest
-    def scalar_type_is_not_func_type(self):
-        scalar_type = types.scalar_type("A")
-        assert not types.is_func_type(scalar_type)
+    def class_type_is_not_func_type(self):
+        class_type = types.class_type("A")
+        assert not types.is_func_type(class_type)
 
     @istest
-    def scalar_type_with_call_magic_method_is_not_func_type(self):
-        scalar_type = types.scalar_type("A", [
+    def class_type_with_call_magic_method_is_not_func_type(self):
+        class_type = types.class_type("A", [
             types.attr("__call__", types.func([], types.none_type)),
         ])
-        assert not types.is_func_type(scalar_type)
+        assert not types.is_func_type(class_type)
         
 @istest
 class GenericTypeTests(object):
@@ -461,21 +461,21 @@ class GenericTypeTests(object):
         generic_type = types.generic_structural_type("box", ["T"], lambda T: [
             types.attr("value", T)
         ])
-        scalar_type = types.scalar_type("boxed_int", [types.attr("value", "int")])
+        class_type = types.class_type("boxed_int", [types.attr("value", "int")])
         
         assert generic_type.is_instantiated_type(generic_type(types.int_type))
-        assert not generic_type.is_instantiated_type(scalar_type)
+        assert not generic_type.is_instantiated_type(class_type)
     
     @istest
     def type_is_subtype_instance_of_generic_type_when_type_is_not_direct_instantiation(self):
         generic_type = types.generic_structural_type("box", ["T"], lambda T: [
             types.attr("value", T)
         ])
-        scalar_type = types.scalar_type("boxed_int", [types.attr("value", "int")])
+        class_type = types.class_type("boxed_int", [types.attr("value", "int")])
         
-        assert types.is_instantiated_sub_type(generic_type, scalar_type)
+        assert types.is_instantiated_sub_type(generic_type, class_type)
         assert types.is_instantiated_sub_type(generic_type, generic_type(types.int_type))
-        assert not types.is_instantiated_sub_type(generic_type, types.scalar_type("empty"))
+        assert not types.is_instantiated_sub_type(generic_type, types.class_type("empty"))
     
     @istest
     def instantiating_type_replaces_type_in_attributes(self):
