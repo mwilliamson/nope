@@ -1,5 +1,5 @@
 from nope import nodes, errors, visit
-from nope.identity_dict import IdentityDict
+from nope.identity_dict import NodeDict
 
 
 def _declare(node, declarations):
@@ -137,7 +137,7 @@ ImportDeclarationNode = _create_declaration_node("ImportDeclarationNode", "impor
 
 class DeclarationFinder(object):
     def __init__(self):
-        self._node_to_declarations = IdentityDict()
+        self._node_to_declarations = NodeDict()
 
     def declarations_in_function(self, node):
         return self._declarations(node, _declarations_in_function)

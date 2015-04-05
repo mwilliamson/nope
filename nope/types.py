@@ -2,7 +2,7 @@ import collections
 
 import zuice
 
-from .identity_dict import IdentityDict
+from .identity_dict import NodeDict
 from . import caching
 
 
@@ -695,7 +695,7 @@ def module(name, attrs):
 
 class TypeLookup(object):
     def __init__(self, types):
-        assert isinstance(types, IdentityDict)
+        assert isinstance(types, NodeDict)
         
         self._types = types
     

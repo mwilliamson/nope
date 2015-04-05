@@ -1,7 +1,7 @@
 import zuice
 
 from nope import nodes, errors, name_declaration, visit, environment
-from nope.identity_dict import IdentityDict
+from nope.identity_dict import NodeDict
 
 
 class NameResolver(zuice.Base):
@@ -9,7 +9,7 @@ class NameResolver(zuice.Base):
     _initial_declarations = zuice.dependency(environment.InitialDeclarations)
     
     def resolve(self, node):
-        references = IdentityDict()
+        references = NodeDict()
         context = _Context(self._declaration_finder, self._initial_declarations, references)
         _resolve(node, context)
         return References(references)
@@ -17,7 +17,7 @@ class NameResolver(zuice.Base):
 
 class References(object):
     def __init__(self, references):
-        self._references = IdentityDict.create(references)
+        self._references = NodeDict.create(references)
     
     def referenced_declaration(self, reference):
         return self._references[reference]
@@ -116,7 +116,7 @@ def _resolve_module(visitor, node, context):
 
 class _Context(object):
     def __init__(self, declaration_finder, declarations, references, declarations_for_functions=None):
-        assert isinstance(references, IdentityDict)
+        assert isinstance(references, NodeDict)
         
         if declarations_for_functions is None:
             declarations_for_functions = declarations

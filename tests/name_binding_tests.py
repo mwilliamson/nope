@@ -2,7 +2,7 @@ from nose.tools import istest, assert_equal, assert_is
 
 from nope import nodes, errors, name_declaration, types
 from nope.name_binding import check_bindings
-from nope.identity_dict import IdentityDict
+from nope.identity_dict import NodeDict
 from nope.types import TypeLookup
 from .inference.util import context_manager_class, SingleScopeReferences
 from nope.name_resolution import References
@@ -385,7 +385,7 @@ def with_statement_target_is_definitely_bound_in_body():
     _updated_bindings(
         statement,
         is_definitely_bound={"manager": True},
-        type_lookup=TypeLookup(IdentityDict([(manager_ref, context_manager_class(exit_type=types.none_type))]))
+        type_lookup=TypeLookup(NodeDict([(manager_ref, context_manager_class(exit_type=types.none_type))]))
     )
 
 
@@ -629,7 +629,7 @@ _standard_unbound_ref = nodes.ref("unbound_ref")
 
 def _test_context(create_node):
     is_definitely_bound = {}
-    type_lookup = IdentityDict()
+    type_lookup = NodeDict()
     
     class NodeGenerator(object):
         def target(self):

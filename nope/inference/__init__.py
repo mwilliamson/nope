@@ -3,7 +3,7 @@ import zuice
 from .. import types, name_declaration, name_resolution, name_binding, builtins, module_resolution, modules
 from .expressions import ExpressionTypeInferer
 from .statements import StatementTypeChecker
-from ..identity_dict import IdentityDict
+from ..identity_dict import NodeDict
 from .context import Context
 
 
@@ -28,7 +28,7 @@ class _TypeCheckerForModule(zuice.Base):
     
     @zuice.init
     def init(self):
-        self._type_lookup = IdentityDict()
+        self._type_lookup = NodeDict()
         self._expression_type_inferer = ExpressionTypeInferer(self._type_lookup)
         self._statement_type_checker = StatementTypeChecker(
             self._declaration_finder,
@@ -81,4 +81,4 @@ class _TypeCheckerForModule(zuice.Base):
         
 
 def module_context(references):
-    return Context(references, builtins.builtin_declaration_types, IdentityDict()).enter_module()
+    return Context(references, builtins.builtin_declaration_types, NodeDict()).enter_module()

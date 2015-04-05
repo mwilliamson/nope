@@ -3,7 +3,7 @@ import re
 from nose.tools import istest, assert_equal
 
 from nope import nodes, couscous as cc, types
-from nope.identity_dict import IdentityDict
+from nope.identity_dict import NodeDict
 from nope.desugar import desugar
 from nope.name_declaration import DeclarationFinder
 from nope.module_resolution import ResolvedImport
@@ -784,7 +784,7 @@ def _assert_transform(nope, expected_result, type_lookup=None, module_resolver=N
     if module_resolver is None:
         module_resolver = FakeModuleResolver()
     
-    type_lookup = types.TypeLookup(IdentityDict(type_lookup))
+    type_lookup = types.TypeLookup(NodeDict(type_lookup))
     
     result = desugar(nope, type_lookup=type_lookup, declarations=DeclarationFinder(), module_resolver=module_resolver)
     if isinstance(expected_result, str):

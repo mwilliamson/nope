@@ -1,7 +1,7 @@
 from nose.tools import istest, assert_equal
 
 from nope import types, nodes, errors
-from nope.identity_dict import IdentityDict
+from nope.identity_dict import NodeDict
 
 from .util import update_context
 from ..testing import wip
@@ -416,7 +416,7 @@ def _infer_meta_type(class_node, names, names_in_nodes=None, type_bindings=None)
     type_bindings["str"] = types.meta_type(types.str_type)
     context = update_context(
         class_node,
-        declared_names_in_node=IdentityDict(names_in_nodes + [(class_node, names + ["Self"])]),
+        declared_names_in_node=NodeDict(names_in_nodes + [(class_node, names + ["Self"])]),
         type_bindings=type_bindings,
     )
     meta_type = context.lookup(class_node)

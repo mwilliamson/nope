@@ -1,7 +1,7 @@
 from nose.tools import istest, assert_equal
 
 from nope import types, nodes, errors
-from nope.identity_dict import IdentityDict
+from nope.identity_dict import NodeDict
 
 from .util import update_context
 
@@ -62,7 +62,7 @@ def attributes_assigned_in_init_can_be_used_outside_of_class():
         nodes.assign([nodes.ref("x")], nodes.attr(nodes.call(nodes.ref("User"), []), "message")),
     ]
     
-    context = _update_context(node, declared_names_in_node=IdentityDict([
+    context = _update_context(node, declared_names_in_node=NodeDict([
         (class_node, ["Self", "__init__"]),
         (init_func, ["self_init"]),
     ]))

@@ -4,7 +4,7 @@ from nope import types, errors, nodes, inference, name_declaration, modules
 from nope.inference.context import Context
 from nope.modules import LocalModule
 from nope.module_resolution import ResolvedImport
-from nope.identity_dict import IdentityDict
+from nope.identity_dict import NodeDict
 
 
 def update_context(statement, *, type_bindings=None, module_resolver=None, module_types=None, module_path=None, is_executable=False, declared_names_in_node=None, update_deferred=True):
@@ -117,7 +117,7 @@ def _create_context(types=None, declared_names_in_node=None):
 
 class SingleScopeContext(object):
     def __init__(self, references):
-        self._context = Context(references, {}, IdentityDict())
+        self._context = Context(references, {}, NodeDict())
     
     def __getattr__(self, key):
         return getattr(self._context, key)
