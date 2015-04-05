@@ -4,68 +4,10 @@ import zuice
 
 from ..identity_dict import NodeDict
 from .. import caching
+from .attributes import attrs_from_iterable, Attribute, EmptyAttributes
 
 
-class _Attribute(object):
-    def __init__(self, name, type_, read_only=True):
-        self.name = name
-        self.type = type_
-        self.read_only = read_only
-    
-    def __repr__(self):
-        return "_Attribute({}, {}, {})".format(self.name, self.type, self.read_only)
-
-
-attr = _Attribute
-
-
-class _Attributes(object):
-    def __init__(self, attrs):
-        self._attrs = attrs
-    
-    def add(self, name, type_, read_only=True):
-        self._attrs[name] = _Attribute(name, type_, read_only=read_only)
-    
-    def get(self, name):
-        return self._attrs.get(name)
-    
-    def type_of(self, name):
-        if name in self._attrs:
-            return self._attrs[name].type
-        else:
-            return None
-    
-    def __contains__(self, name):
-        return name in self._attrs
-    
-    def __iter__(self):
-        return iter(self._attrs.values())
-    
-    def copy(self):
-        return _Attributes(self._attrs.copy())
-    
-    def names(self):
-        return self._attrs.keys()
-
-
-class _EmptyAttributes(object):
-    def get(self, name):
-        return None
-    
-    def type_of(self, name):
-        return None
-    
-    def __contains__(self, name):
-        return False
-    
-    def __iter__(self):
-        return iter([])
-    
-    def copy(self):
-        return self
-    
-    def names(self):
-        return []
+attr = Attribute
 
 
 class _GenericTypeAttributes(object):
@@ -79,8 +21,6 @@ class _GenericTypeAttributes(object):
 
 class _ScalarType(object):
     def __init__(self, name, attrs, base_classes):
-        assert isinstance(attrs, _Attributes)
-        
         self.name = name
         self.attrs = attrs
         self.base_classes = base_classes
@@ -96,11 +36,7 @@ def scalar_type(name, attrs=None, base_classes=None):
     if base_classes is None:
         base_classes = []
     
-    return _ScalarType(name, _generate_attrs(attrs), base_classes)
-
-
-def _generate_attrs(attrs):
-    return _Attributes(dict((attr.name, attr) for attr in (attrs or [])))
+    return _ScalarType(name, attrs_from_iterable(attrs), base_classes)
 
 
 class _GenericType(object):
@@ -180,7 +116,7 @@ def generic(params, create_type, attrs=None, complete_type=None):
     if complete_type is None:
         def complete_type(new_type, *params):
             if attrs is not None:
-                new_type.attrs = _generate_attrs(attrs(*params))
+                new_type.attrs = attrs_from_iterable(attrs(*params))
     
     formal_params = [_formal_param(param) for param in params]
     return _GenericType(formal_params, create_type, complete_type)
@@ -191,7 +127,7 @@ class _GenericFunc(object):
         self.formal_type_params = formal_type_params
         self._create_func = create_func
         self._generic_signature = create_func(*formal_type_params)
-        self.attrs = _EmptyAttributes()
+        self.attrs = EmptyAttributes()
     
     @property
     def args(self):
@@ -275,8 +211,6 @@ def contravariant(name):
 
 class _StructuralType(object):
     def __init__(self, name, attrs):
-        assert isinstance(attrs, _Attributes)
-        
         self.name = name
         self.attrs = attrs
     
@@ -285,7 +219,7 @@ class _StructuralType(object):
     
 
 def structural_type(name, attrs=None):
-    return _StructuralType(name, _generate_attrs(attrs))
+    return _StructuralType(name, attrs_from_iterable(attrs))
 
 def generic_structural_type(name, formal_params, attrs=None):
     return generic(
@@ -302,7 +236,7 @@ class _FunctionType(object):
     def __init__(self, args, return_type):
         self.args = tuple(args)
         self.return_type = return_type
-        self.attrs = _EmptyAttributes()
+        self.attrs = EmptyAttributes()
     
     def __eq__(self, other):
         if not isinstance(other, _FunctionType):
@@ -381,7 +315,7 @@ def is_generic_func_type(type_):
 class _UnionTypeBase(object):
     def __init__(self, types):
         self._types = tuple(types)
-        self.attrs = _EmptyAttributes()
+        self.attrs = EmptyAttributes()
     
     def __str__(self):
         return " | ".join(map(str, self._types))
@@ -628,7 +562,7 @@ class TypeMap(object):
 
 
 def meta_type(type_, attrs=None):
-    return MetaType(type_, _generate_attrs(attrs))
+    return MetaType(type_, attrs_from_iterable(attrs))
 
 
 def is_meta_type(type_):
@@ -690,7 +624,7 @@ class _Module(object):
 
 
 def module(name, attrs):
-    return _Module(name, _generate_attrs(attrs))
+    return _Module(name, attrs_from_iterable(attrs))
 
 
 class TypeLookup(object):
