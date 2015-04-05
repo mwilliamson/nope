@@ -22,7 +22,8 @@ setup(
         'nope.parser',
         'nope.platforms',
         'nope.platforms.nodejs',
-        'nope.platforms.dotnet'
+        'nope.platforms.dotnet',
+        'nope.types',
     ],
     scripts=['scripts/nope'],
     install_requires=[

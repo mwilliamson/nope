@@ -2,8 +2,8 @@ import collections
 
 import zuice
 
-from .identity_dict import NodeDict
-from . import caching
+from ..identity_dict import NodeDict
+from .. import caching
 
 
 class _Attribute(object):
@@ -706,7 +706,7 @@ class TypeLookup(object):
 TypeLookupFactory = zuice.key("TypeLookupFactory")
 
 
-from .builtin_types import (
+from ..builtin_types import (
     none_type,
     int_type,
     bool_type, bool_meta_type,
