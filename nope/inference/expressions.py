@@ -365,7 +365,7 @@ class ExpressionTypeInferer(object):
         iterable_type = self.infer(node, context)
         if "__iter__" in iterable_type.attrs:
             iterator_type = self.infer_magic_method_call(node, "iter", node, [], context)
-            if not types.iterator.is_instantiated_sub_type(iterator_type):
+            if not types.is_instantiated_sub_type(types.iterator, iterator_type):
                 raise errors.BadSignatureError(node, "__iter__ should return an iterator")
             
             element_type, = iterator_type.type_params

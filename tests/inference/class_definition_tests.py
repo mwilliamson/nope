@@ -421,7 +421,7 @@ def _infer_meta_type(class_node, names, names_in_nodes=None, type_bindings=None)
     )
     meta_type = context.lookup(class_node)
     assert isinstance(meta_type, types.MetaType)
-    assert isinstance(meta_type.type, types._ScalarType) or isinstance(meta_type.type, types._GenericType)
+    assert types.is_class_type(meta_type.type) or types.is_generic_type(meta_type.type)
     return meta_type
 
 

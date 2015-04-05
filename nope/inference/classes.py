@@ -1,4 +1,5 @@
 from .. import nodes, types, errors, visit
+from ..types import generics
 from ..lists import filter_by_type
 
 
@@ -39,7 +40,7 @@ class ClassDefinitionTypeChecker(object):
             def instantiate(*actual_type_params):
                 # TODO: create suitable interface in types that prevents
                 # duplication of instantiated name generation
-                return types.scalar_type(types._instantiated_type_name(node.name, actual_type_params))
+                return types.scalar_type(generics._instantiated_type_name(node.name, actual_type_params))
             
             def instantiate_attrs(inner_class_type, *actual_type_params):
                 # TODO: make context immutable.

@@ -473,9 +473,9 @@ class GenericTypeTests(object):
         ])
         scalar_type = types.scalar_type("boxed_int", [types.attr("value", "int")])
         
-        assert generic_type.is_instantiated_sub_type(scalar_type)
-        assert generic_type.is_instantiated_sub_type(generic_type(types.int_type))
-        assert not generic_type.is_instantiated_sub_type(types.scalar_type("empty"))
+        assert types.is_instantiated_sub_type(generic_type, scalar_type)
+        assert types.is_instantiated_sub_type(generic_type, generic_type(types.int_type))
+        assert not types.is_instantiated_sub_type(generic_type, types.scalar_type("empty"))
     
     @istest
     def instantiating_type_replaces_type_in_attributes(self):

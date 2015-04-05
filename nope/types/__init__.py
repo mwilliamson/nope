@@ -5,228 +5,16 @@ import zuice
 from ..identity_dict import NodeDict
 from .. import caching
 from .attributes import attrs_from_iterable, Attribute, EmptyAttributes
+from .classes import scalar_type, is_class_type
+from .structural import structural_type, is_structural_type
+from .generics import (
+    generic, generic_class, generic_structural_type, generic_func,
+    invariant, covariant, contravariant, Variance as _Variance,
+    is_formal_parameter, is_generic_type, is_instantiated_type, is_generic_func,
+)
 
 
 attr = Attribute
-
-
-class _GenericTypeAttributes(object):
-    def __init__(self, params, attrs):
-        self._params = params
-        self._attrs = attrs
-    
-    def add(self, name, type_, read_only=True):
-        self._attrs.add(name, type_(*self._params), read_only=read_only)
-
-
-class _ScalarType(object):
-    def __init__(self, name, attrs, base_classes):
-        self.name = name
-        self.attrs = attrs
-        self.base_classes = base_classes
-    
-    def __str__(self):
-        return self.name
-    
-    def __repr__(self):
-        return str(self)
-    
-
-def scalar_type(name, attrs=None, base_classes=None):
-    if base_classes is None:
-        base_classes = []
-    
-    return _ScalarType(name, attrs_from_iterable(attrs), base_classes)
-
-
-class _GenericType(object):
-    def __init__(self, params, create_type, complete_type):
-        self.params = params
-        self._create_type = create_type
-        self._complete_type = complete_type
-        # TODO: the cache lives too long -- for instance,
-        # builtin types such as int will never evict anything from the cache,
-        # and will never be deleted, meaning it will grow on each compilation
-        self._generic_cache = {}
-    
-    def __call__(self, *args):
-        return self.instantiate(args)
-    
-    def instantiate(self, params):
-        if len(params) != len(self.params):
-            raise Exception("generic type requires exactly {} type parameter(s)".format(len(self.params)))
-        
-        params = tuple(params)
-        
-        if params not in self._generic_cache:
-            new_type = self._create_type(*params)
-            self._generic_cache[params] = _InstantiatedType(
-                self,
-                params,
-                new_type,
-                lambda: self._complete_type(new_type, *params),
-            )
-        
-        return self._generic_cache[params]
-    
-    def is_instantiated_type(self, other):
-        return (
-            isinstance(other, _InstantiatedType) and
-            other.generic_type == self
-        )
-    
-    def is_instantiated_sub_type(self, other):
-        return is_sub_type(self.instantiate(self.params), other, unify=self.params)
-
-
-class _InstantiatedType(object):
-    def __init__(self, generic_type, type_params, underlying_type, complete_type):
-        self.generic_type = generic_type
-        self.type_params = type_params
-        self._underlying_type = underlying_type
-        self._is_complete = False
-        self._complete_type = complete_type
-    
-    def _ensure_complete(self):
-        if not self._is_complete:
-            self._complete_type()
-    
-    @property
-    def name(self):
-        return self._underlying_type.name
-    
-    @property
-    def attrs(self):
-        self._ensure_complete()
-        return self._underlying_type.attrs
-    
-    def reify(self):
-        self._ensure_complete()
-        return self._underlying_type
-        
-    def __str__(self):
-        return str(self._underlying_type)
-
-
-def is_generic_type(type_):
-    return isinstance(type_, _GenericType)
-
-
-def generic(params, create_type, attrs=None, complete_type=None):
-    if complete_type is None:
-        def complete_type(new_type, *params):
-            if attrs is not None:
-                new_type.attrs = attrs_from_iterable(attrs(*params))
-    
-    formal_params = [_formal_param(param) for param in params]
-    return _GenericType(formal_params, create_type, complete_type)
-
-
-class _GenericFunc(object):
-    def __init__(self, formal_type_params, create_func):
-        self.formal_type_params = formal_type_params
-        self._create_func = create_func
-        self._generic_signature = create_func(*formal_type_params)
-        self.attrs = EmptyAttributes()
-    
-    @property
-    def args(self):
-        return self._generic_signature.args
-    
-    @property
-    def return_type(self):
-        return self._generic_signature.return_type
-    
-    def instantiate(self, params):
-        return self._create_func(*params)
-    
-    def instantiate_with_type_map(self, type_map):
-        params = [
-            type_map[formal_type_param]
-            for formal_type_param in self.formal_type_params
-        ]
-        return self.instantiate(params)
-    
-    def __str__(self):
-        return "{} => {}".format(", ".join(map(str, self.formal_type_params)), self._generic_signature)
-    
-
-def generic_func(formal_type_params, create_func):
-    formal_type_params = [_formal_param(param) for param in formal_type_params]
-    return _GenericFunc(formal_type_params, create_func)
-
-
-def is_generic_func(value):
-    return isinstance(value, _GenericFunc)
-
-
-def generic_class(name, formal_params, attrs=None):
-    if attrs is None:
-        attrs = lambda *params: []
-    
-    return generic(
-        formal_params,
-        lambda *params: scalar_type(_instantiated_type_name(name, params)),
-        attrs=attrs,
-    )
-
-def _instantiated_type_name(name, params):
-    return "{}[{}]".format(name, ", ".join(map(str, params)))
-
-
-class _Variance(object):
-    Invariant, Covariant, Contravariant = range(3)
-
-
-class _FormalParameter(object):
-    def __init__(self, name, variance):
-        self._name = name
-        self.variance = variance
-    
-    def __str__(self):
-        return self._name
-    
-    def __repr__(self):
-        return "_FormalParameter({}, {})".format(self._name, self.variance)
-
-
-def _formal_param(param):
-    if isinstance(param, _FormalParameter):
-        return param
-    else:
-        return _FormalParameter(param, _Variance.Invariant)
-
-
-def invariant(name):
-    return _FormalParameter(name, _Variance.Invariant)
-
-
-def covariant(name):
-    return _FormalParameter(name, _Variance.Covariant)
-
-
-def contravariant(name):
-    return _FormalParameter(name, _Variance.Contravariant)
-
-
-class _StructuralType(object):
-    def __init__(self, name, attrs):
-        self.name = name
-        self.attrs = attrs
-    
-    def __str__(self):
-        return self.name
-    
-
-def structural_type(name, attrs=None):
-    return _StructuralType(name, attrs_from_iterable(attrs))
-
-def generic_structural_type(name, formal_params, attrs=None):
-    return generic(
-        formal_params,
-        lambda *params: structural_type(_instantiated_type_name(name, params)),
-        attrs=attrs,
-    )
 
     
 MetaType = collections.namedtuple("MetaType", ["type", "attrs"])
@@ -411,11 +199,11 @@ def is_sub_type(super_type, sub_type, unify=None):
         assert sub_type is not None
         
             
-        if isinstance(super_type, _FormalParameter) and super_type in unify:
+        if is_formal_parameter(super_type) and super_type in unify:
             constraints.constrain_type_param_to_super_type(super_type, sub_type)
             return True
         
-        if isinstance(sub_type, _FormalParameter) and sub_type in unify:
+        if is_formal_parameter(sub_type) and sub_type in unify:
             constraints.constrain_type_param_to_sub_type(sub_type, super_type)
             return True
             
@@ -434,10 +222,10 @@ def is_sub_type(super_type, sub_type, unify=None):
         if _instance_of_same_generic_type(super_type, sub_type):
             return all(map(is_matching_type, super_type.generic_type.params, super_type.type_params, sub_type.type_params))
         
-        if isinstance(super_type, _InstantiatedType):
+        if is_instantiated_type(super_type):
             return is_sub_type(super_type.reify(), sub_type)
             
-        if isinstance(sub_type, _InstantiatedType):
+        if is_instantiated_type(sub_type):
             return is_sub_type(super_type, sub_type.reify())
         
         if isinstance(sub_type, _UnionType):
@@ -452,12 +240,12 @@ def is_sub_type(super_type, sub_type, unify=None):
                 for possible_super_type in super_type._types
             )
         
-        if (isinstance(sub_type, _ScalarType) and
+        if (is_class_type(sub_type) and
                 any(is_sub_type(super_type, base_class)
                 for base_class in sub_type.base_classes)):
             return True
         
-        if isinstance(super_type, _StructuralType):
+        if is_structural_type(super_type):
             return all(
                 attr.name in sub_type.attrs and is_sub_type(attr.type, sub_type.attrs.type_of(attr.name))
                 for attr in super_type.attrs
@@ -485,10 +273,10 @@ def is_sub_type(super_type, sub_type, unify=None):
 
 
 def _instance_of_same_generic_type(first, second):
-    if not isinstance(first, _InstantiatedType):
+    if not is_instantiated_type(first):
         return False
         
-    if not isinstance(second, _InstantiatedType):
+    if not is_instantiated_type(second):
         return False
     
     return first.generic_type == second.generic_type
@@ -548,6 +336,10 @@ class Constraints(object):
             self._constraints[type_param] = []
         
         self._constraints[type_param].append(constraint)
+
+
+def is_instantiated_sub_type(generic_type, other):
+    return is_sub_type(generic_type.instantiate(generic_type.params), other, unify=generic_type.params)
 
 
 class TypeMap(object):
