@@ -76,6 +76,7 @@ builtin_modules = {
     "random": BuiltinModule("random", types.module("random", [
         types.attr("randint", types.func([types.int_type, types.int_type], types.int_type)),
     ])),
+    "re": BuiltinModule("re", types.module("re", [])),
     "sys": BuiltinModule("sys", types.module("sys", [
     ])),
     
