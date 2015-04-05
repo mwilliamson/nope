@@ -76,6 +76,19 @@ TODO
   
 * Find a way to speed up the C# tests. Record/replay?
 
+* Explicitly unique ID to each node rather than relying on builtin id.
+
+* Split out stages:
+
+  * Generate module DAG (based on imports)
+  
+  * Generate type identifiers, as distinct from type info generated later to
+    remove circularity
+
+* Change ``collections.namedtuple()` transformer to require a distinct type
+  annotation e.g. ``:field str`` so that ``::str`` is unambiguously typing
+  the following expression.
+
 Status
 ------
 
