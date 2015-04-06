@@ -135,14 +135,10 @@ class DeclarationFinder(object):
         
 def _declarations_in_class(node):
     declarations = Declarations({})
-    
-    for type_param in node.type_params:
-        _declare(type_param, declarations)
-    
     declarations.declare("Self", node, target_type=SelfTypeDeclarationNode)
     
-    for statement in node.body:
-        _declare(statement, declarations)
+    for child in structure.children(node):
+        _declare(child, declarations)
         
     return declarations
 
