@@ -29,13 +29,33 @@ class References(object):
 def _resolve(node, context):
     if node is None:
         return
-    
-    resolver = _resolvers.get(type(node))
-    if resolver is not None:
-        resolver(node, context)
+    elif structure.is_scope(node):
+        scope_context = context.enter_scope(node)
+        _resolve(node.body, scope_context)
     else:
-        for child in structure.children(node):
-            _resolve(child, context)
+        declared_name = _declared_name(node)
+        if declared_name is not None:
+            context.add_reference(node, declared_name)
+        
+        resolver = _resolvers.get(type(node))
+        if resolver is not None:
+            resolver(node, context)
+        else:
+            for child in structure.scoped_children(node):
+                _resolve(child, context)
+
+
+_name_declarations = {
+    nodes.VariableReference: lambda node: node.name,
+    nodes.FunctionDef: lambda node: node.name,
+    nodes.ClassDefinition: lambda node: node.name,
+    nodes.TypeDefinition: lambda node: node.name,
+    nodes.FormalTypeParameter: lambda node: node.name,
+    nodes.ImportAlias: lambda node: node.value_name,
+}
+
+def _declared_name(node):
+    return _name_declarations.get(type(node), lambda node: None)(node)
 
 
 def _resolve_named_node(node, context):
@@ -65,50 +85,9 @@ def _resolve_function_def(node, context):
         _resolve(statement, body_context)
 
 
-def _resolve_class_definition(node, context):
-    for base_class in node.base_classes:
-        _resolve(base_class, context)
-    
-    context.add_reference(node, node.name)
-    
-    body_context = context.enter_class(node)
-    
-    for type_param in node.type_params:
-        _resolve(type_param, body_context)
-    
-    for statement in node.body:
-        _resolve(statement, body_context)
-
-
-def _resolve_import(node, context):
-    for alias in node.names:
-        context.add_reference(alias, alias.value_name)
-
-
-def _resolve_module(node, context):
-    module_context = context.enter_module(node)
-    
-    for statement in node.body:
-        _resolve(statement, module_context)
-
-
-def _resolve_type_definition(node, context):
-    _resolve_named_node(node, context)
-    
-    for child in structure.children(node):
-        _resolve(child, context)
-
-
 _resolvers = {
-    nodes.VariableReference: _resolve_named_node,
     nodes.ListComprehension: _resolve_comprehension,
     nodes.FunctionDef: _resolve_function_def,
-    nodes.TypeDefinition: _resolve_type_definition,
-    nodes.FormalTypeParameter: _resolve_named_node,
-    nodes.ClassDefinition: _resolve_class_definition,
-    nodes.Import: _resolve_import,
-    nodes.ImportFrom: _resolve_import,
-    nodes.Module: _resolve_module,
 }
 
 
@@ -142,15 +121,24 @@ class _Context(object):
                 declarations._declarations[declaration.name] = declaration
         return _Context(self._declaration_finder, declarations, self._references)
     
-    def enter_class(self, node):
-        class_declarations = self._declaration_finder.declarations_in(node)
-        declarations = self._declarations.enter(class_declarations)
-        return _Context(self._declaration_finder, declarations, self._references, declarations_for_functions=self._declarations)
+    def enter_scope(self, scope):
+        declarations_in_scope = self._declaration_finder.declarations_in(scope.parent)
+        declarations_for_scope = self._declarations.enter(declarations_in_scope)
+        
+        return _Context(
+            declaration_finder=self._declaration_finder,
+            declarations=declarations_for_scope,
+            references=self._references,
+            declarations_for_functions=self._declarations_for_functions_in_scope(scope, declarations_for_scope),
+        )
     
-    def enter_module(self, node):
-        module_declarations = self._declaration_finder.declarations_in(node)
-        declarations = self._declarations.enter(module_declarations)
-        return _Context(self._declaration_finder, declarations, self._references)
+    def _declarations_for_functions_in_scope(self, scope, declarations_for_scope):
+        if isinstance(scope.parent, nodes.Module):
+            return declarations_for_scope
+        elif isinstance(scope.parent, nodes.ClassDefinition):
+            return self._declarations
+        else:
+            raise Exception("Unhandled case")
     
     def enter_comprehension(self, node):
         comprehension_declarations = self._declaration_finder.declarations_in(node)

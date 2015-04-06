@@ -1,7 +1,24 @@
 from . import nodes
 
 
+class Scope(object):
+    def __init__(self, parent, body):
+        self.parent = parent
+        self.body = body
+
+
+def is_scope(node):
+    return isinstance(node, Scope)
+
+
 def children(node):
+    return (
+        child.body if is_scope(child) else child
+        for child in scoped_children(node)
+    )
+
+
+def scoped_children(node):
     return filter(None, _children[type(node)](node))
 
 
@@ -48,7 +65,7 @@ _children = {
     nodes.FunctionSignature: lambda node: [node.type_params, node.args, node.returns],
     nodes.SignatureArgument: lambda node: [node.type],
     nodes.Argument: lambda node: [],
-    nodes.ClassDefinition: lambda node: [node.base_classes, node.body, node.type_params],
+    nodes.ClassDefinition: lambda node: [node.base_classes, Scope(node, [node.type_params, node.body])],
     nodes.TypeDefinition: lambda node: [node.value],
     nodes.FormalTypeParameter: lambda node: [],
     
@@ -56,7 +73,7 @@ _children = {
     nodes.ImportFrom: lambda node: node.names,
     nodes.ImportAlias: lambda node: [],
     
-    nodes.Module: lambda node: [node.body],
+    nodes.Module: lambda node: [Scope(node, node.body)],
     
     nodes.FieldDefinition: lambda node: [node.name, node.type],
 }
