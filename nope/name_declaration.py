@@ -124,7 +124,7 @@ class DeclarationFinder(object):
         return self._declarations(node, _declarations_in_children)
     
     def declarations_in_comprehension(self, node):
-        return self._declarations(node, _declarations_in_comprehension)
+        return self._declarations(node, _declarations_in_children)
     
     def _declarations(self, node, generator):
         if node not in self._node_to_declarations:
@@ -156,18 +156,12 @@ def _declarations_in_children(node):
     return declarations
 
 
-def _declarations_in_comprehension(node):
-    declarations = Declarations({})
-    targets = _left_value_to_targets(node.target)
-    _declare_targets(targets, VariableDeclarationNode, declarations)
-    return declarations
-
-
 _targets_of = {
     nodes.Assignment: (lambda node: _left_value_to_targets(node.targets), VariableDeclarationNode),
     nodes.ForLoop: (lambda node: _left_value_to_targets(node.target), VariableDeclarationNode),
     nodes.ExceptHandler: (lambda node: _left_value_to_targets(node.target), ExceptionHandlerTargetNode),
     nodes.WithStatement: (lambda node: _left_value_to_targets(node.target), VariableDeclarationNode),
+    nodes.ComprehensionFor: (lambda node: _left_value_to_targets(node.target), VariableDeclarationNode),
         
     nodes.FunctionDef: (lambda node: [(node, node.name)], FunctionDeclarationNode),
     nodes.ClassDefinition: (lambda node: [(node, node.name)], ClassDeclarationNode),

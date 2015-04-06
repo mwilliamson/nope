@@ -233,13 +233,13 @@ def assert_statement_has_child_names_resolved():
 @istest
 def list_comprehension_has_child_names_resolved():
     _assert_children_resolved(
-        lambda ref: nodes.list_comprehension(ref, nodes.comprehension(nodes.none(), nodes.none())),
+        lambda ref: nodes.list_comprehension(ref, nodes.comprehension_for(nodes.none(), nodes.none())),
     )
     _assert_children_resolved(
-        lambda ref: nodes.list_comprehension(nodes.none(), nodes.comprehension(nodes.attr(ref, "name"), nodes.none())),
+        lambda ref: nodes.list_comprehension(nodes.none(), nodes.comprehension_for(nodes.attr(ref, "name"), nodes.none())),
     )
     _assert_children_resolved(
-        lambda ref: nodes.list_comprehension(nodes.none(), nodes.comprehension(nodes.none(), ref)),
+        lambda ref: nodes.list_comprehension(nodes.none(), nodes.comprehension_for(nodes.none(), ref)),
     )
     
 
@@ -249,7 +249,7 @@ def list_comprehension_adds_target_names_to_body_context():
     ref = nodes.ref("target")
     node = nodes.list_comprehension(
         target,
-        nodes.comprehension(ref, nodes.none())
+        nodes.comprehension_for(ref, nodes.none())
     )
     
     declarations = _create_declarations([])
@@ -265,7 +265,7 @@ def list_comprehension_generator_is_not_in_same_scope_as_element():
     iterable = nodes.ref("target")
     node = nodes.list_comprehension(
         target,
-        nodes.comprehension(ref, iterable)
+        nodes.comprehension_for(ref, iterable)
     )
     
     declarations = _create_declarations(["target"])

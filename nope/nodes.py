@@ -73,7 +73,7 @@ slice = Slice = _create_node("Slice", ["start", "stop", "step"])
 
 list_comprehension = ListComprehension = _create_node("ListComprehension", ["element", "generator"])
 generator_expression = GeneratorExpression = _create_node("GeneratorExpression", ["element", "generator"])
-comprehension = Comprehension = _create_node("Comprehension", ["target", "iterable"])
+comprehension_for = ComprehensionFor = _create_node("ComprehensionFor", ["target", "iterable"])
 
 ReturnStatement = _create_node("ReturnStatement", ["value"])
 ExpressionStatement = _create_node("ExpressionStatement", ["value"])

@@ -57,15 +57,11 @@ def _resolve_variable_reference(visitor, node, context):
 
 
 def _resolve_comprehension(visitor, node, context):
-    body_context = _resolve_comprehension_generator(visitor, node.generator, context)
-    visitor.visit(node.element, body_context)
-
-
-def _resolve_comprehension_generator(visitor, node, context):
+    visitor.visit(node.generator.iterable, context)
+    
     body_context = context.enter_comprehension(node)
-    visitor.visit(node.iterable, context)
-    visitor.visit(node.target, body_context)
-    return body_context
+    visitor.visit(node.generator.target, body_context)
+    visitor.visit(node.element, body_context)
 
 
 def _resolve_function_def(visitor, node, context):

@@ -9,7 +9,7 @@ def can_infer_type_of_list_comprehension_over_list():
     type_bindings = {"xs": types.list_type(types.str_type)}
     node = nodes.list_comprehension(
         nodes.int_literal(1),
-        nodes.comprehension(nodes.ref("x"), nodes.ref("xs")),
+        nodes.comprehension_for(nodes.ref("x"), nodes.ref("xs")),
     )
     assert_equal(
         types.list_type(types.int_type),
@@ -22,7 +22,7 @@ def can_infer_type_of_generator_expression_over_list():
     type_bindings = {"xs": types.list_type(types.str_type)}
     node = nodes.generator_expression(
         nodes.int_literal(1),
-        nodes.comprehension(nodes.ref("x"), nodes.ref("xs")),
+        nodes.comprehension_for(nodes.ref("x"), nodes.ref("xs")),
     )
     assert_equal(
         types.iterator(types.int_type),
@@ -35,7 +35,7 @@ def target_of_comprehension_is_available_in_element():
     type_bindings = {"xs": types.list_type(types.str_type)}
     node = nodes.list_comprehension(
         nodes.ref("x"),
-        nodes.comprehension(nodes.ref("x"), nodes.ref("xs")),
+        nodes.comprehension_for(nodes.ref("x"), nodes.ref("xs")),
     )
     assert_equal(
         types.list_type(types.str_type),

@@ -13,7 +13,7 @@ def children_of_list_comprehension_are_checked():
     _assert_child_expression_is_checked(lambda generate:
         nodes.list_comprehension(
             generate.unbound_ref(),
-            nodes.comprehension(
+            nodes.comprehension_for(
                 generate.bound_ref("x", types.int_type),
                 nodes.list_literal([]),
             ),
@@ -22,7 +22,7 @@ def children_of_list_comprehension_are_checked():
     _assert_child_expression_is_checked(lambda generate:
         nodes.list_comprehension(
             nodes.none(),
-            nodes.comprehension(
+            nodes.comprehension_for(
                 nodes.attr(generate.unbound_ref(), "x"),
                 nodes.list_literal([]),
             ),
@@ -31,7 +31,7 @@ def children_of_list_comprehension_are_checked():
     _assert_child_expression_is_checked(lambda generate:
         nodes.list_comprehension(
             nodes.none(),
-            nodes.comprehension(
+            nodes.comprehension_for(
                 generate.bound_ref("x", types.int_type),
                 generate.unbound_ref(),
             ),
@@ -43,7 +43,7 @@ def children_of_list_comprehension_are_checked():
 def list_comprehension_target_is_definitely_bound():
     node = nodes.list_comprehension(
         nodes.ref("x"),
-        nodes.comprehension(
+        nodes.comprehension_for(
             nodes.ref("x"),
             nodes.list_literal([]),
         ),

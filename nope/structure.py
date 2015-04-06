@@ -28,7 +28,7 @@ _children = {
     nodes.Slice: lambda node: [node.start, node.stop, node.step],
     nodes.ListComprehension: lambda node: [node.generator, node.element],
     nodes.GeneratorExpression: lambda node: [node.generator, node.element],
-    nodes.Comprehension: lambda node: [node.iterable, node.target],
+    nodes.ComprehensionFor: lambda node: [node.iterable, node.target],
 
     nodes.ReturnStatement: lambda node: [node.value],
     nodes.ExpressionStatement: lambda node: [node.value],

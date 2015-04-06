@@ -259,10 +259,13 @@ def declarations_in_class_include_formal_type_parameters():
 
 
 @istest
-def declarations_in_class_are_variable_reference_targets():
-    node = nodes.comprehension(
-        nodes.tuple_literal([nodes.ref("target"), nodes.attr(nodes.ref("other"), "name")]),
-        nodes.ref("iterable")
+def declarations_in_list_comprehension_are_variable_reference_targets():
+    node = nodes.list_comprehension(
+        nodes.none(),
+        nodes.comprehension_for(
+            nodes.tuple_literal([nodes.ref("target"), nodes.attr(nodes.ref("other"), "name")]),
+            nodes.ref("iterable")
+        )
     )
     
     declarations = declarations_in_comprehension(node)

@@ -499,7 +499,7 @@ class Converter(object):
     def _comprehension(self, node):
         # TODO: support ifs
         assert not node.ifs
-        return self._nodes.comprehension(self.convert(node.target), self.convert(node.iter))
+        return self._nodes.comprehension_for(self.convert(node.target), self.convert(node.iter))
 
 
     def _explicit_type_of(self, node):
