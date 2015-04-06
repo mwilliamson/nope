@@ -7,7 +7,7 @@ from funcparserlib.parser import (some, many, maybe, finished, forward_decl, ski
 from .. import nodes
 
 
-class TypeComments(object):
+class Notes(object):
     def __init__(self, explicit_types, type_definitions, generics, fields):
         self.explicit_types = explicit_types
         self.type_definitions = type_definitions
@@ -15,14 +15,14 @@ class TypeComments(object):
         self.fields = fields
 
 
-def parse_type_comments(source):
+def parse_notes(source):
     explicit_types = {}
     type_definitions = {}
     generics = {}
     # TODO: open up the parser for extension
     fields = {}
     
-    for attached_node_position, (position, prefix, type_comment) in _type_comments(source):
+    for attached_node_position, (position, prefix, note) in _notes(source):
         if prefix == "type":
             store = type_definitions
         elif prefix == "generic":
@@ -34,34 +34,34 @@ def parse_type_comments(source):
         else:
             raise Exception("Unhandled case")
         
-        store[attached_node_position] = position, type_comment
+        store[attached_node_position] = position, note
     
-    return TypeComments(explicit_types, type_definitions, generics, fields)
+    return Notes(explicit_types, type_definitions, generics, fields)
     
 
 
-def _type_comments(source):
+def _notes(source):
     tokens = tokenize.generate_tokens(source.readline)
     lines = []
-    comment_position = None
+    note_position = None
     
     for token_type, token_str, position, _, _ in tokens:
-        line = _extract_semantic_comment_line(token_type, token_str)
+        line = _extract_note_line(token_type, token_str)
         if line is not None:
             lines.append(line)
-            if comment_position is None:
-                comment_position = position
+            if note_position is None:
+                note_position = position
         elif lines and _is_part_of_node(token_type):
-            type_comment = " ".join(lines).strip()
-            for prefix, rule in _type_comment_parsers.items():
-                if type_comment.startswith(prefix):
-                    yield position, (comment_position, prefix, _parse(type_comment[len(prefix):], rule))
+            note = " ".join(lines).strip()
+            for prefix, rule in _note_parsers.items():
+                if note.startswith(prefix):
+                    yield position, (note_position, prefix, _parse(note[len(prefix):], rule))
                     
             lines = []
-            comment_position = None
+            note_position = None
 
 
-def _extract_semantic_comment_line(token_type, token_str):
+def _extract_note_line(token_type, token_str):
     if token_type == tokenize.COMMENT and token_str.startswith("#:"):
         return token_str[2:]
 
@@ -206,7 +206,7 @@ def _tokenize_type_string(sig_str):
     return [token for token in tokenizer(sig_str) if token.type not in ignore]
 
 
-_type_comment_parsers = {
+_note_parsers = {
     "type": _type_definition,
     "generic": _generic,
     ":": _explicit_type,

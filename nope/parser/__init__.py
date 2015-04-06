@@ -2,7 +2,7 @@ import ast
 import io
 
 from . import transform
-from .typing import parse_type_comments
+from .typing import parse_notes
 from .. import nodes
 
 
@@ -10,15 +10,15 @@ def parse(source, filename=None):
     if source.startswith("#:nope treat-as-empty"):
         return nodes.module([])
     try:
-        type_comments = parse_type_comments(io.StringIO(source))
-        comment_seeker = CommentSeeker(type_comments)
+        notes = parse_notes(io.StringIO(source))
+        note_seeker = NoteSeeker(notes)
         
         python_ast = ast.parse(source)
         is_executable = source.startswith("#!/")
-        nope_node = transform.python_to_nope(python_ast, comment_seeker, is_executable=is_executable, filename=filename)
-        if type_comments.explicit_types:
+        nope_node = transform.python_to_nope(python_ast, note_seeker, is_executable=is_executable, filename=filename)
+        if notes.explicit_types:
             error = SyntaxError("explicit type is not valid here")
-            (error.lineno, error.offset), _ = next(iter(type_comments.explicit_types.values()))
+            (error.lineno, error.offset), _ = next(iter(notes.explicit_types.values()))
             raise error
         return nope_node
     except SyntaxError as error:
@@ -26,12 +26,12 @@ def parse(source, filename=None):
         raise error
 
 
-class CommentSeeker(object):
-    def __init__(self, type_comments):
-        self._explicit_types = type_comments.explicit_types
-        self._type_definitions = type_comments.type_definitions
-        self._generics = type_comments.generics
-        self._fields = type_comments.fields
+class NoteSeeker(object):
+    def __init__(self, notes):
+        self._explicit_types = notes.explicit_types
+        self._type_definitions = notes.type_definitions
+        self._generics = notes.generics
+        self._fields = notes.fields
     
     def consume_explicit_type(self, lineno, col_offset):
         return self._consume(self._explicit_types, lineno, col_offset)

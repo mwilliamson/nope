@@ -1,7 +1,6 @@
 import zuice
 
 from . import builtins, name_resolution, visit, nodes
-from .parser.typing import TypeComments
 
 
 ModuleName = zuice.key("ModuleName")

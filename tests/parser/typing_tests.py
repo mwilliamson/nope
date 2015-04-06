@@ -3,7 +3,7 @@ import io
 from nose.tools import istest, assert_equal
 
 from nope import nodes
-from nope.parser.typing import parse_explicit_type, parse_type_comments
+from nope.parser.typing import parse_explicit_type, parse_notes
 
 
 @istest
@@ -124,10 +124,10 @@ x = 1
         nodes.type_union([nodes.ref("int"), nodes.ref("str")])
     )
     
-    type_comments = parse_type_comments(io.StringIO(source))
+    notes = parse_notes(io.StringIO(source))
     assert_equal(
         {(3, 0): ((2, 0), expected_node)},
-        type_comments.type_definitions
+        notes.type_definitions
     )
 
 
@@ -144,10 +144,10 @@ x = 1
         nodes.type_union([nodes.ref("int"), nodes.ref("str")])
     )
     
-    type_comments = parse_type_comments(io.StringIO(source))
+    notes = parse_notes(io.StringIO(source))
     assert_equal(
         {(5, 0): ((2, 0), expected_node)},
-        type_comments.type_definitions
+        notes.type_definitions
     )
 
 
@@ -158,10 +158,10 @@ def generic_specifiers_use_generic_keyword():
 class A:
     pass
 """
-    type_comments = parse_type_comments(io.StringIO(source))
+    notes = parse_notes(io.StringIO(source))
     assert_equal(
         {(3, 0): ((2, 0), [nodes.formal_type_parameter("T")])},
-        type_comments.generics
+        notes.generics
     )
 
 
@@ -172,7 +172,7 @@ def generic_specifiers_can_define_multiple_formal_type_parameters():
 class A:
     pass
 """
-    type_comments = parse_type_comments(io.StringIO(source))
+    notes = parse_notes(io.StringIO(source))
     expected = [
         nodes.formal_type_parameter("T1"),
         nodes.formal_type_parameter("T2"),
@@ -180,5 +180,5 @@ class A:
     ]
     assert_equal(
         {(3, 0): ((2, 0), expected)},
-        type_comments.generics
+        notes.generics
     )
