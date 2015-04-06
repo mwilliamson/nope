@@ -7,7 +7,7 @@ from .util import assert_type_mismatch, update_context
 
 @istest
 def can_infer_type_of_function_with_no_args_and_no_return():
-    node = nodes.func("f", args=nodes.Arguments([]), body=[])
+    node = nodes.func("f", args=nodes.Arguments([]), body=[], explicit_type=None)
     assert_equal(types.func([], types.none_type), _infer_func_type(node))
 
 
@@ -15,14 +15,14 @@ def can_infer_type_of_function_with_no_args_and_no_return():
 def can_infer_type_of_function_with_explicit_signature():
     signature = nodes.signature(args=[], returns=nodes.ref("none"))
     args = nodes.arguments([])
-    node = nodes.typed(signature, nodes.func("f", args=args, body=[]))
+    node = nodes.func("f", args=args, body=[], explicit_type=signature)
     assert_equal(types.func([], types.none_type), _infer_func_type(node))
 
 
 @istest
 def can_infer_type_of_function_with_explicit_signature_of_aliased_function_type():
     args = nodes.arguments([])
-    node = nodes.typed(nodes.ref("Action"), nodes.func("f", args=args, body=[]))
+    node = nodes.func("f", args=args, body=[], explicit_type=nodes.ref("Action"))
     type_bindings = {
         "Action": types.meta_type(types.func([], types.none_type))
     }
@@ -42,21 +42,19 @@ def can_infer_type_of_function_with_args_and_no_return():
         nodes.argument("x"),
         nodes.argument("y"),
     ])
-    node = nodes.typed(signature, nodes.func("f", args=args, body=[]))
+    node = nodes.func("f", args=args, body=[], explicit_type=signature)
     assert_equal(types.func([types.int_type, types.str_type], types.none_type), _infer_func_type(node))
 
 
 @istest
 def can_infer_type_of_function_with_no_args_and_return_annotation():
-    node = nodes.typed(
-        nodes.signature(returns=nodes.ref("int")),
-        nodes.func(
-            "f",
-            args=nodes.arguments([]),
-            body=[
-                nodes.ret(nodes.int_literal(4))
-            ]
-        )
+    node = nodes.func(
+        "f",
+        args=nodes.arguments([]),
+        body=[
+            nodes.ret(nodes.int_literal(4))
+        ],
+        explicit_type=nodes.signature(returns=nodes.ref("int")),
     )
     assert_equal(types.func([], types.int_type), _infer_func_type(node))
 
@@ -72,7 +70,7 @@ def can_infer_type_of_function_with_named_arg():
     args = nodes.arguments([
         nodes.argument("message"),
     ])
-    node = nodes.typed(signature, nodes.func("f", args=args, body=[]))
+    node = nodes.func("f", args=args, body=[], explicit_type=signature)
     assert_equal(
         types.func([types.func_arg("message", types.int_type)], types.none_type),
         _infer_func_type(node)
@@ -90,7 +88,7 @@ def can_infer_type_of_function_with_optional_arg():
     args = nodes.arguments([
         nodes.argument("x", optional=True),
     ])
-    node = nodes.typed(signature, nodes.func("f", args=args, body=[]))
+    node = nodes.func("f", args=args, body=[], explicit_type=signature)
     assert_equal(
         types.func([types.func_arg(None, types.int_type, optional=True)], types.none_type),
         _infer_func_type(node)
@@ -100,26 +98,22 @@ def can_infer_type_of_function_with_optional_arg():
 @istest
 def type_mismatch_if_return_type_is_incorrect():
     return_node = nodes.ret(nodes.str_literal("!"))
-    node = nodes.typed(
-        nodes.signature(returns=nodes.ref("int")),
-        nodes.func(
-            "f",
-            args=nodes.arguments([]),
-            body=[return_node],
-        )
+    node = nodes.func(
+        "f",
+        args=nodes.arguments([]),
+        body=[return_node],
+        explicit_type=nodes.signature(returns=nodes.ref("int")),
     )
     assert_type_mismatch(lambda: _infer_func_type(node), expected=types.int_type, actual=types.str_type, node=return_node)
 
 
 @istest
 def type_error_if_return_is_missing():
-    node = nodes.typed(
-        nodes.signature(returns=nodes.ref("int")),
-        nodes.func(
-            "f",
-            args=nodes.arguments([]),
-            body=[],
-        )
+    node = nodes.func(
+        "f",
+        args=nodes.arguments([]),
+        body=[],
+        explicit_type=nodes.signature(returns=nodes.ref("int")),
     )
     try:
         _infer_func_type(node)
@@ -137,7 +131,7 @@ def function_adds_arguments_to_context():
     )
     args = nodes.arguments([nodes.argument("x")])
     body = [nodes.ret(nodes.ref("x"))]
-    node = nodes.typed(signature, nodes.func("f", args, body))
+    node = nodes.func("f", args, body, explicit_type=signature)
     assert_equal(types.func([types.int_type], types.int_type), _infer_func_type(node))
 
 
@@ -149,7 +143,7 @@ def argument_type_in_signature_is_unioned_with_none_if_argument_is_optional():
     )
     args = nodes.arguments([nodes.argument("x", optional=True)])
     body = [nodes.ret(nodes.ref("x"))]
-    node = nodes.typed(signature, nodes.func("f", args, body))
+    node = nodes.func("f", args, body, explicit_type=signature)
     try:
         _infer_func_type(node)
         assert False, "Expected error"
@@ -170,7 +164,7 @@ def can_type_check_generic_function_with_type_parameters():
     args = nodes.arguments([
         nodes.argument("value"),
     ])
-    node = nodes.typed(signature, nodes.func("f", args=args, body=[nodes.ret(nodes.ref("value"))]))
+    node = nodes.func("f", args=args, body=[nodes.ret(nodes.ref("value"))], explicit_type=signature)
     assert_equal(types.func([types.int_type], types.int_type), _infer_func_type(node).instantiate([types.int_type]))
 
 
@@ -186,10 +180,10 @@ def can_type_check_generic_function_with_type_parameters_referenced_in_body():
     args = nodes.arguments([
         nodes.argument("value_1"),
     ])
-    node = nodes.typed(signature, nodes.func("f", args=args, body=[
-        nodes.typed(nodes.ref("T"), nodes.assign([nodes.ref("value_2")], nodes.ref("value_1"))),
+    node = nodes.func("f", explicit_type=signature, args=args, body=[
+        nodes.assign([nodes.ref("value_2")], nodes.ref("value_1"), explicit_type=nodes.ref("T")),
         nodes.ret(nodes.ref("value_2")),
-    ]))
+    ])
     assert_equal(types.func([types.int_type], types.int_type), _infer_func_type(node).instantiate([types.int_type]))
 
 
@@ -201,7 +195,7 @@ def error_if_name_of_argument_does_not_match_name_in_signature():
     )
     args = nodes.arguments([nodes.argument("x")])
     body = [nodes.ret(nodes.ref("x"))]
-    node = nodes.typed(signature, nodes.func("f", args, body))
+    node = nodes.func("f", args, body, explicit_type=signature)
     try:
         _infer_func_type(node)
         assert False, "Expected error"
@@ -218,7 +212,7 @@ def error_if_type_signature_has_different_number_of_args_from_def():
     )
     args = nodes.arguments([nodes.argument("x")])
     body = [nodes.ret(nodes.ref("x"))]
-    node = nodes.typed(signature, nodes.func("f", args, body))
+    node = nodes.func("f", args, body, explicit_type=signature)
     try:
         _infer_func_type(node)
         assert False, "Expected error"
@@ -230,7 +224,7 @@ def error_if_type_signature_has_different_number_of_args_from_def():
 def error_if_type_signature_is_missing_from_function_with_args():
     args = nodes.arguments([nodes.argument("x")])
     body = [nodes.ret(nodes.ref("x"))]
-    node = nodes.func("f", args, body)
+    node = nodes.func("f", args, body, explicit_type=None)
     try:
         _infer_func_type(node)
         assert False, "Expected error"
@@ -246,7 +240,7 @@ def error_if_type_signature_argument_is_optional_but_def_argument_is_not_optiona
     )
     args = nodes.arguments([nodes.argument("x")])
     body = [nodes.ret(nodes.ref("x"))]
-    node = nodes.typed(signature, nodes.func("f", args, body))
+    node = nodes.func("f", args, body, explicit_type=signature)
     try:
         _infer_func_type(node)
         assert False, "Expected error"

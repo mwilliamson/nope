@@ -102,14 +102,10 @@ class Converter(object):
         self._nodes = _NodeBuilder(_Location(filename, lineno, col_offset))
         self._node_builders.append(self._nodes)
         try:
-            signature = self._comment_seeker.consume_explicit_type(lineno, col_offset)
             type_definition = self._comment_seeker.consume_type_definition(lineno, col_offset)
             field_definition = self._comment_seeker.consume_field(lineno, col_offset)
             
             nope_node = self._converters[type(node)](node)
-            
-            if signature is not None:
-                nope_node = self._nodes.typed(signature, nope_node)
             
             if type_definition is not None:
                 assert nope_node == self._nodes.assign([self._nodes.ref(type_definition.name)], self._nodes.none())
@@ -200,10 +196,14 @@ class Converter(object):
             name = getattr(node.args.kwarg, "arg", node.args.kwarg)
             raise SyntaxError("arguments in the form '**{}' are not supported".format(name))
         
+        
+        signature = self._comment_seeker.consume_explicit_type(*(self._node_location(node)))
+        
         return self._nodes.func(
             name=node.name,
             args=self.convert(node.args),
             body=self._statements(node.body),
+            explicit_type=signature,
         )
     
     def _arguments(self, node):
@@ -229,9 +229,11 @@ class Converter(object):
     
     
     def _assign(self, node):
+        signature = self._comment_seeker.consume_explicit_type(*(self._node_location(node)))
+        
         targets = [self.convert(target) for target in node.targets]
         
-        return self._nodes.assign(targets, self.convert(node.value))
+        return self._nodes.assign(targets, self.convert(node.value), explicit_type=signature)
     
     
     def _if(self, node):

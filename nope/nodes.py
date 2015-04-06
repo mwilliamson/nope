@@ -4,9 +4,6 @@ import dodge
 
 
 def _create_node(name, fields):
-    fields = fields[:]
-    fields.append(dodge.field("explicit_type", default=None, show_default=False))
-    
     return dodge.data_class(name, fields)
 
 
@@ -80,7 +77,7 @@ comprehension = Comprehension = _create_node("Comprehension", ["target", "iterab
 
 ReturnStatement = _create_node("ReturnStatement", ["value"])
 ExpressionStatement = _create_node("ExpressionStatement", ["value"])
-Assignment = _create_node("Assignment", ["targets", "value"])
+Assignment = _create_node("Assignment", ["targets", "value", "explicit_type"])
 IfElse = _create_node("IfElse", ["condition", "true_body", "false_body"])
 WhileLoop = _create_node("WhileLoop", ["condition", "body", "else_body"])
 ForLoop = _create_node("ForLoop", ["target", "iterable", "body", "else_body"])
@@ -92,7 +89,7 @@ RaiseStatement = _create_node("RaiseStatement", ["value"])
 AssertStatement = _create_node("AssertStatement", ["condition", "message"])
 WithStatement = _create_node("WithStatement", ["value", "target", "body"])
 
-FunctionDef = _create_node("FunctionDef", ["name", "args", "body"])
+FunctionDef = _create_node("FunctionDef", ["name", "args", "body", "explicit_type"])
 FunctionSignature = _create_node("FunctionSignature", ["type_params", "args", "returns"])
 SignatureArgument = _create_node("SignatureArgument", ["name", "type", "optional"])
 Arguments = _create_node("Arguments", ["args"])
@@ -194,19 +191,8 @@ def assert_(condition, message=None):
 with_ = WithStatement
 
 
-def typed(type_, node):
-    return dodge.copy(node, explicit_type=type_)
-
-
-def explicit_type_of(node):
-    if node is None:
-        return None
-    else:
-        return node.explicit_type
-
-
-def func(name, args, body):
-    return FunctionDef(name, args, body)
+def func(name, args, body, explicit_type):
+    return FunctionDef(name, args, body, explicit_type=explicit_type)
 
 
 def class_(name, body, *, base_classes=None, type_params=None):

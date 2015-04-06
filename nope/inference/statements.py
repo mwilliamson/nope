@@ -54,7 +54,7 @@ class StatementTypeChecker(object):
             return None
     
     def infer_function_def(self, node, context):
-        signature_node = nodes.explicit_type_of(node)
+        signature_node = node.explicit_type
         signature = self._read_signature(node, signature_node, context)
         self._check_signature(signature, node)
         return signature
@@ -99,7 +99,7 @@ class StatementTypeChecker(object):
         body_context = context.enter_func(return_type)
         
         if types.is_generic_func(func_type):
-            signature = nodes.explicit_type_of(node)
+            signature = node.explicit_type
             for formal_type_param_node, formal_type_param in zip(signature.type_params, func_type.formal_type_params):
                 body_context.update_type(formal_type_param_node, types.meta_type(formal_type_param))
         

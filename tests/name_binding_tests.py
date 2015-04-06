@@ -415,7 +415,7 @@ def assigned_variables_in_with_statement_body_are_unbound_after_exit_if_exit_met
 
 @istest
 def function_name_is_definitely_bound_after_function_definition():
-    node = nodes.func("f", nodes.arguments([]), [])
+    node = nodes.func("f", nodes.arguments([]), [], explicit_type=None)
     
     bindings = _updated_bindings(node)
     assert_equal(True, bindings.is_definitely_bound(node))
@@ -423,13 +423,13 @@ def function_name_is_definitely_bound_after_function_definition():
 
 @istest
 def function_can_be_referenced_immediately_after_definition():
-    f = nodes.func("f", args=nodes.Arguments([]), body=[])
+    f = nodes.func("f", explicit_type=None, args=nodes.Arguments([]), body=[])
     _updated_bindings(nodes.module([f, nodes.expression_statement(nodes.ref("f"))]))
 
 
 @istest
 def function_cannot_be_referenced_before_definition():
-    f = nodes.func("f", args=nodes.Arguments([]), body=[])
+    f = nodes.func("f", explicit_type=None, args=nodes.Arguments([]), body=[])
     ref_node = nodes.ref("f")
     
     try:
@@ -445,10 +445,10 @@ def function_cannot_be_referenced_before_definition():
 @istest
 def function_cannot_be_referenced_before_definition_of_dependencies():
     g_ref = nodes.ref("g")
-    f = nodes.func("f", args=nodes.Arguments([]), body=[
+    f = nodes.func("f", explicit_type=None, args=nodes.Arguments([]), body=[
         nodes.ret(nodes.call(g_ref, []))
     ])
-    g = nodes.func("g", args=nodes.Arguments([]), body=[])
+    g = nodes.func("g", explicit_type=None, args=nodes.Arguments([]), body=[])
     
     try:
         _updated_bindings(nodes.module([
@@ -463,20 +463,20 @@ def function_cannot_be_referenced_before_definition_of_dependencies():
 
 @istest
 def function_definitions_in_statement_lists_can_be_defined_out_of_order():
-    f = nodes.func("f", args=nodes.Arguments([]), body=[
+    f = nodes.func("f", explicit_type=None, args=nodes.Arguments([]), body=[
         nodes.ret(nodes.call(nodes.ref("g"), []))
     ])
-    g = nodes.func("g", args=nodes.Arguments([]), body=[])
+    g = nodes.func("g", explicit_type=None, args=nodes.Arguments([]), body=[])
     
     _updated_bindings(nodes.module([f, g]))
 
 
 @istest
 def function_definitions_can_be_mutually_recursive():
-    f = nodes.func("f", args=nodes.Arguments([]), body=[
+    f = nodes.func("f", explicit_type=None, args=nodes.Arguments([]), body=[
         nodes.ret(nodes.call(nodes.ref("g"), []))
     ])
-    g = nodes.func("g", args=nodes.Arguments([]), body=[
+    g = nodes.func("g", explicit_type=None, args=nodes.Arguments([]), body=[
         nodes.ret(nodes.call(nodes.ref("f"), []))
     ])
     
@@ -486,14 +486,14 @@ def function_definitions_can_be_mutually_recursive():
 @istest
 def body_of_function_is_checked():
     _assert_child_statement_is_checked(lambda generate:
-        generate.func("f", nodes.arguments([]), [generate.unbound_ref_statement()])
+        generate.func("f", nodes.arguments([]), [generate.unbound_ref_statement()], explicit_type=None)
     )
 
 
 @istest
 def variables_from_outer_scope_remain_bound():
     ref = nodes.ref("x")
-    func_node = nodes.func("f", nodes.arguments([]), [nodes.expression_statement(ref)])
+    func_node = nodes.func("f", nodes.arguments([]), [nodes.expression_statement(ref)], explicit_type=None)
     
     _updated_bindings(func_node, is_definitely_bound={"x": True})
 
@@ -502,7 +502,7 @@ def variables_from_outer_scope_remain_bound():
 def arguments_of_function_are_definitely_bound():
     arg = nodes.arg("x")
     arg_ref = nodes.ref("x")
-    func_node = nodes.func("f", nodes.arguments([arg]), [nodes.expression_statement(arg_ref)])
+    func_node = nodes.func("f", nodes.arguments([arg]), [nodes.expression_statement(arg_ref)], explicit_type=None)
     
     _updated_bindings(func_node)
 
@@ -512,10 +512,8 @@ def type_parameters_of_function_are_definitely_bound():
     param = nodes.formal_type_parameter("T")
     arg_ref = nodes.ref("T")
     returns_ref = nodes.ref("T")
-    func_node = nodes.typed(
-        nodes.signature(type_params=[param], args=[nodes.signature_arg(arg_ref)], returns=returns_ref),
-        nodes.func("f", nodes.arguments([]), []),
-    )
+    explicit_type = nodes.signature(type_params=[param], args=[nodes.signature_arg(arg_ref)], returns=returns_ref)
+    func_node = nodes.func("f", nodes.arguments([]), [], explicit_type=explicit_type)
     
     _updated_bindings(func_node)
 
@@ -525,7 +523,7 @@ def exception_handler_targets_cannot_be_accessed_from_nested_function():
     target_node = nodes.ref("error")
     ref_node = nodes.ref("error")
     body = [nodes.ret(ref_node)]
-    func_node = nodes.func("f", nodes.arguments([]), body)
+    func_node = nodes.func("f", nodes.arguments([]), body, explicit_type=None)
     try_node = nodes.try_(
         [],
         handlers=[
@@ -558,10 +556,10 @@ def class_name_is_definitely_bound_after_class_definition():
 @istest
 def method_can_reference_later_function_if_class_is_not_used_in_the_interim():
     g_ref = nodes.ref("g")
-    f = nodes.func("f", args=nodes.Arguments([]), body=[
+    f = nodes.func("f", explicit_type=None, args=nodes.Arguments([]), body=[
         nodes.ret(nodes.call(g_ref, []))
     ])
-    g = nodes.func("g", args=nodes.Arguments([]), body=[])
+    g = nodes.func("g", explicit_type=None, args=nodes.Arguments([]), body=[])
     
     _updated_bindings(nodes.module([
         nodes.class_("a", [f]),
@@ -572,10 +570,10 @@ def method_can_reference_later_function_if_class_is_not_used_in_the_interim():
 @istest
 def class_cannot_be_referenced_if_method_dependencies_are_not_bound():
     g_ref = nodes.ref("g")
-    f = nodes.func("f", args=nodes.Arguments([]), body=[
+    f = nodes.func("f", explicit_type=None, args=nodes.Arguments([]), body=[
         nodes.ret(nodes.call(g_ref, []))
     ])
-    g = nodes.func("g", args=nodes.Arguments([]), body=[])
+    g = nodes.func("g", explicit_type=None, args=nodes.Arguments([]), body=[])
     
     try:
         _updated_bindings(nodes.module([

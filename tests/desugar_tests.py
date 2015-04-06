@@ -167,7 +167,7 @@ class ClassDefinitionTests(object):
     @istest
     def test_function_definitions_in_body_are_stored_as_methods(self):
         _assert_transform(
-            nodes.class_("Blah", [nodes.func("f", nodes.args([]), [])]),
+            nodes.class_("Blah", [nodes.func("f", nodes.args([]), [], explicit_type=None)]),
             cc.class_(
                 "Blah",
                 methods=[cc.func("f", [], [cc.ret(cc.none)])],
@@ -181,7 +181,7 @@ class FunctionDefinitionTests(object):
     @istest
     def test_statements_in_body_are_transformed(self):
         _assert_transform(
-            nodes.func("f", nodes.args([]), [nodes.ret(nodes.ref("value"))]),
+            nodes.func("f", nodes.args([]), [nodes.ret(nodes.ref("value"))], explicit_type=None),
             cc.func("f", [], [cc.ret(cc.ref("value"))]),
         )
         
@@ -191,7 +191,7 @@ class FunctionDefinitionTests(object):
             nodes.func("f", nodes.args([]), [
                 nodes.assign([nodes.ref("x")], nodes.ref("y")),
                 nodes.ret(nodes.ref("value")),
-            ]),
+            ], explicit_type=None),
             cc.func("f", [], [
                 cc.declare("x"),
                 cc.assign(cc.ref("x"), cc.ref("y")),
@@ -202,7 +202,7 @@ class FunctionDefinitionTests(object):
     @istest
     def test_arguments_are_transformed(self):
         _assert_transform(
-            nodes.func("f", nodes.args([nodes.arg("value")]), [nodes.ret(nodes.ref("value"))]),
+            nodes.func("f", nodes.args([nodes.arg("value")]), [nodes.ret(nodes.ref("value"))], explicit_type=None),
             cc.func("f", [cc.arg("value")], [cc.ret(cc.ref("value"))]),
         )
 
@@ -216,6 +216,7 @@ class FunctionDefinitionTests(object):
                     nodes.assign(["x"], nodes.ref("y")),
                     nodes.ret(nodes.ref("value")),
                 ],
+                explicit_type=None,
             ),
             cc.func("f", [cc.arg("x")], [
                 cc.assign(cc.ref("x"), cc.ref("y")),
@@ -226,16 +227,14 @@ class FunctionDefinitionTests(object):
     @istest
     def test_does_not_redeclare_variables_with_same_name_as_type_parameter(self):
         _assert_transform(
-            nodes.typed(
-                nodes.signature(
+            nodes.func(
+                name="f",
+                args=nodes.args([]),
+                body=[],
+                explicit_type=nodes.signature(
                     type_params=[nodes.formal_type_parameter("T")],
                     args=[],
                     returns=nodes.ref("T"),
-                ),
-                nodes.func(
-                    name="f",
-                    args=nodes.args([]),
-                    body=[],
                 ),
             ),
             cc.func("f", [], [
@@ -257,6 +256,7 @@ class FunctionDefinitionTests(object):
                         []
                     ),
                 ],
+                explicit_type=None
             ),
             cc.func("f", [], [
                 cc.if_(

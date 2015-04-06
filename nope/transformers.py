@@ -62,24 +62,22 @@ class ClassBuilderTransform(zuice.Base):
         
         attributes = list(map(_read_attribute, attribute_list.elements))
         
-        init = nodes.typed(
-            nodes.signature(
+        init = nodes.func(
+            "__init__",
+            args=nodes.arguments(
+                [nodes.argument("self")] +
+                    [nodes.argument(name) for name, _ in attributes]
+            ),
+            body=[
+                nodes.assign([nodes.attr(nodes.ref("self"), name)], nodes.ref(name))
+                for name, _ in attributes
+            ],
+            explicit_type=nodes.signature(
                 args=[nodes.signature_arg(nodes.ref("Self"))] +
                     [nodes.signature_arg(attr_type) for _, attr_type in attributes],
                 # TODO: have a way to always reference the builtin none
                 returns=nodes.ref("none")
             ),
-            nodes.func(
-                "__init__",
-                nodes.arguments(
-                    [nodes.argument("self")] +
-                        [nodes.argument(name) for name, _ in attributes]
-                ),
-                [
-                    nodes.assign([nodes.attr(nodes.ref("self"), name)], nodes.ref(name))
-                    for name, _ in attributes
-                ],
-            )
         )
         
         return nodes.class_(

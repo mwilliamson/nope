@@ -85,19 +85,10 @@ class Visitor(object):
         if node_type in self._before:
             self._before[node_type](self, node, *args)
         
-        explicit_type = nodes.explicit_type_of(node)
-        if explicit_type is None:
-            explicit_type_result = None
-        else:
-            explicit_type_result = self.visit_explicit_type(node, explicit_type, *args)
-            
         result = self._visitors[node_type](node, *args)
         
         if result is not None and getattr(result, "location", None) is None and hasattr(node, "location"):
             result.location = node.location
-        
-        if explicit_type_result is not None and result is not None:
-            result = nodes.typed(explicit_type_result, result)
         
         if node_type in self._after:
             self._after[node_type](self, node, *args)
@@ -254,6 +245,7 @@ class Visitor(object):
             node.name,
             self.visit(node.args, *args),
             self._visit_statements(node.body, *args),
+            explicit_type=self.visit_explicit_type(node, node.explicit_type, *args),
         )
     
     def _visit_arguments(self, node, *args):

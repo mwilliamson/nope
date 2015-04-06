@@ -8,19 +8,19 @@ from .util import update_context
 
 @istest
 def function_definitions_in_statement_lists_can_be_defined_out_of_order():
-    f = nodes.func("f", args=nodes.Arguments([]), body=[
+    f = nodes.func("f", explicit_type=None, args=nodes.Arguments([]), body=[
         nodes.ret(nodes.call(nodes.ref("g"), []))
     ])
-    g = nodes.func("g", args=nodes.Arguments([]), body=[])
+    g = nodes.func("g", explicit_type=None, args=nodes.Arguments([]), body=[])
     _update_context([f, g, nodes.expression_statement(nodes.ref("f"))])
 
 
 @istest
 def function_definitions_in_statement_lists_can_be_mutually_recursive():
-    f = nodes.func("f", args=nodes.Arguments([]), body=[
+    f = nodes.func("f", explicit_type=None, args=nodes.Arguments([]), body=[
         nodes.ret(nodes.call(nodes.ref("g"), []))
     ])
-    g = nodes.func("g", args=nodes.Arguments([]), body=[
+    g = nodes.func("g", explicit_type=None, args=nodes.Arguments([]), body=[
         nodes.ret(nodes.call(nodes.ref("f"), []))
     ])
     _update_context([f, g])
@@ -28,7 +28,7 @@ def function_definitions_in_statement_lists_can_be_mutually_recursive():
 
 @istest
 def function_definitions_in_statement_lists_are_type_checked_even_if_not_invoked():
-    node = nodes.func("f", args=nodes.Arguments([]), body=[nodes.ret(nodes.int_literal(42))])
+    node = nodes.func("f", explicit_type=None, args=nodes.Arguments([]), body=[nodes.ret(nodes.int_literal(42))])
     try:
         _update_context([node])
         assert False, "Expected error"
@@ -39,20 +39,18 @@ def function_definitions_in_statement_lists_are_type_checked_even_if_not_invoked
 
 @istest
 def attributes_assigned_in_init_can_be_used_outside_of_class():
-    init_func = nodes.typed(
-        nodes.signature(
+    init_func = nodes.func(
+        name="__init__",
+        args=nodes.args([nodes.arg("self_init")]),
+        body=[
+            nodes.assign(
+                [nodes.attr(nodes.ref("self_init"), "message")],
+                nodes.str_literal("Hello")
+            )
+        ],
+        explicit_type=nodes.signature(
             args=[nodes.signature_arg(nodes.ref("Self"))],
             returns=nodes.ref("none")
-        ),
-        nodes.func(
-            name="__init__",
-            args=nodes.args([nodes.arg("self_init")]),
-            body=[
-                nodes.assign(
-                    [nodes.attr(nodes.ref("self_init"), "message")],
-                    nodes.str_literal("Hello")
-                )
-            ],
         )
     )
     class_node = nodes.class_("User", [init_func])

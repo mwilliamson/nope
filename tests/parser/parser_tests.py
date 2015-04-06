@@ -150,7 +150,7 @@ def f():
 """
     
     module_node = parser.parse(source)
-    expected = nodes.func("f", nodes.args([]), [])
+    expected = nodes.func("f", nodes.args([]), [], explicit_type=None)
     assert_equal(expected, module_node.body[0])
 
 
@@ -166,7 +166,7 @@ def f():
     
     module_node = parser.parse(source)
     signature = nodes.signature(returns=nodes.ref("int"))
-    expected = nodes.typed(signature, nodes.func("g", nodes.args([]), []))
+    expected = nodes.func("g", nodes.args([]), [], explicit_type=signature)
     assert_equal(expected, module_node.body[0].body[0])
 
 
@@ -184,7 +184,7 @@ def g():
     
     module_node = parser.parse(source)
     signature = nodes.signature(returns=nodes.ref("int"))
-    expected = nodes.typed(signature, nodes.func("g", nodes.args([]), []))
+    expected = nodes.func("g", nodes.args([]), [], explicit_type=signature)
     assert_equal(expected, module_node.body[1])
 
 
@@ -493,6 +493,15 @@ def test_parse_single_assignment():
 def test_parse_multiple_assignments():
     expected = nodes.assign(["x", "y"], nodes.ref("z"))
     _assert_statement_parse(expected, "x = y = z")
+
+
+@istest
+def test_assignment_can_have_explicit_type():
+    expected = nodes.assign(
+        ["x"], nodes.list_literal([]),
+        explicit_type=nodes.type_apply(nodes.ref("list"), [nodes.ref("str")])
+    )
+    _assert_statement_parse(expected, "#:: list[str]\nx = []")
 
 
 @istest
