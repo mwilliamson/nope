@@ -1,6 +1,6 @@
 import zuice
 
-from nope import nodes, errors, name_declaration, visit, environment
+from nope import nodes, errors, name_declaration, structure, environment
 from nope.identity_dict import NodeDict
 
 
@@ -27,87 +27,89 @@ class References(object):
 
 
 def _resolve(node, context):
-    visitor = visit.Visitor()
+    if node is None:
+        return
     
-    visitor.replace_visit_explicit_type(_resolve_explicit_type)
-    visitor.replace(nodes.VariableReference, _resolve_variable_reference)
-    visitor.replace(nodes.ListComprehension, _resolve_comprehension)
-    visitor.replace(nodes.GeneratorExpression, _resolve_comprehension)
-    visitor.replace(nodes.FunctionDef, _resolve_function_def)
-    visitor.replace(nodes.ClassDefinition, _resolve_class_definition)
-    visitor.after(nodes.TypeDefinition, _resolve_named_node)
-    visitor.after(nodes.FormalTypeParameter, _resolve_named_node)
-    visitor.replace(nodes.Import, _resolve_import)
-    visitor.replace(nodes.ImportFrom, _resolve_import)
-    visitor.replace(nodes.Module, _resolve_module)
-    
-    return visitor.visit(node, context)
+    resolver = _resolvers.get(type(node))
+    if resolver is not None:
+        resolver(node, context)
+    else:
+        for child in structure.children(node):
+            _resolve(child, context)
 
 
-def _resolve_explicit_type(visitor, node, explicit_type, context):
-    if not isinstance(node, nodes.FunctionDef):
-        return visitor.visit(explicit_type, context)
-
-
-def _resolve_variable_reference(visitor, node, context):
-    if not context.is_declared(node.name):
-        raise errors.UndefinedNameError(node, node.name)
-    
+def _resolve_named_node(node, context):
     context.add_reference(node, node.name)
 
 
-def _resolve_comprehension(visitor, node, context):
-    visitor.visit(node.generator.iterable, context)
+def _resolve_comprehension(node, context):
+    _resolve(node.generator.iterable, context)
     
     body_context = context.enter_comprehension(node)
-    visitor.visit(node.generator.target, body_context)
-    visitor.visit(node.element, body_context)
+    _resolve(node.generator.target, body_context)
+    _resolve(node.element, body_context)
 
 
-def _resolve_function_def(visitor, node, context):
+def _resolve_function_def(node, context):
     context.add_reference(node, node.name)
     
     body_context = context.enter_function(node)
     
-    visitor.visit(node.type, body_context)
+    _resolve(node.type, body_context)
     
     for arg in node.args.args:
-        visitor.visit(arg, body_context)
+        _resolve(arg, body_context)
         body_context.add_reference(arg, arg.name)
     
     for statement in node.body:
-        visitor.visit(statement, body_context)
+        _resolve(statement, body_context)
 
 
-def _resolve_class_definition(visitor, node, context):
+def _resolve_class_definition(node, context):
     for base_class in node.base_classes:
-        visitor.visit(base_class, context)
+        _resolve(base_class, context)
     
     context.add_reference(node, node.name)
     
     body_context = context.enter_class(node)
     
     for type_param in node.type_params:
-        visitor.visit(type_param, body_context)
+        _resolve(type_param, body_context)
     
     for statement in node.body:
-        visitor.visit(statement, body_context)
+        _resolve(statement, body_context)
 
 
-def _resolve_named_node(visitor, node, context):
-    context.add_reference(node, node.name)
-
-
-def _resolve_import(visitor, node, context):
+def _resolve_import(node, context):
     for alias in node.names:
         context.add_reference(alias, alias.value_name)
 
 
-def _resolve_module(visitor, node, context):
+def _resolve_module(node, context):
     module_context = context.enter_module(node)
     
     for statement in node.body:
-        visitor.visit(statement, module_context)
+        _resolve(statement, module_context)
+
+
+def _resolve_type_definition(node, context):
+    _resolve_named_node(node, context)
+    
+    for child in structure.children(node):
+        _resolve(child, context)
+
+
+_resolvers = {
+    nodes.VariableReference: _resolve_named_node,
+    nodes.ListComprehension: _resolve_comprehension,
+    nodes.FunctionDef: _resolve_function_def,
+    nodes.TypeDefinition: _resolve_type_definition,
+    nodes.FormalTypeParameter: _resolve_named_node,
+    nodes.ClassDefinition: _resolve_class_definition,
+    nodes.Import: _resolve_import,
+    nodes.ImportFrom: _resolve_import,
+    nodes.Module: _resolve_module,
+}
 
 
 class _Context(object):
@@ -126,6 +128,9 @@ class _Context(object):
         return self._declarations.is_declared(name)
     
     def add_reference(self, reference, name):
+        if not self.is_declared(name):
+            raise errors.UndefinedNameError(reference, name)
+            
         self._references[reference] = self._declarations.declaration(name)
     
     def enter_function(self, node):
@@ -151,4 +156,3 @@ class _Context(object):
         comprehension_declarations = self._declaration_finder.declarations_in(node)
         declarations = self._declarations.enter(comprehension_declarations)
         return _Context(self._declaration_finder, declarations, self._references, declarations_for_functions=self._declarations_for_functions)
-        
