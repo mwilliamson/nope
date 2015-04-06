@@ -29,22 +29,19 @@ def _targets(node):
     return find_targets(node), target_type
 
 
+def _left_values_to_targets(nodes):
+    for node in nodes:
+        yield from _left_value_to_targets(node)
+
 def _left_value_to_targets(root):
-    targets = []
-    
-    def acc(left_value):
-        if isinstance(left_value, nodes.VariableReference):
-            targets.append((left_value, left_value.name))
-        elif isinstance(left_value, nodes.TupleLiteral):
-            for child in left_value.elements:
-                acc(child)
-    
-    if isinstance(root, list):
-        for element in root:
-            acc(element)
-    else:
-        acc(root)
-    return targets
+    def generate(node):
+        if isinstance(node, nodes.VariableReference):
+            yield node
+        elif isinstance(node, nodes.TupleLiteral):
+            for element in node.elements:
+                yield from generate(element)
+        
+    return ((node, node.name) for node in generate(root))
 
 
 class Declarations(object):
@@ -134,7 +131,7 @@ class DeclarationFinder(object):
 
 
 _targets_of = {
-    nodes.Assignment: (lambda node: _left_value_to_targets(node.targets), VariableDeclarationNode),
+    nodes.Assignment: (lambda node: _left_values_to_targets(node.targets), VariableDeclarationNode),
     nodes.ForLoop: (lambda node: _left_value_to_targets(node.target), VariableDeclarationNode),
     nodes.ExceptHandler: (lambda node: _left_value_to_targets(node.target), ExceptionHandlerTargetNode),
     nodes.WithStatement: (lambda node: _left_value_to_targets(node.target), VariableDeclarationNode),
