@@ -25,8 +25,7 @@ class ExpressionTypeInferer(object):
             nodes.UnaryOperation: self._infer_unary_operation,
             nodes.Subscript: self._infer_subscript,
             nodes.Slice: self._infer_slice,
-            nodes.ListComprehension: self._infer_list_comprehension,
-            nodes.GeneratorExpression: self._infer_generator_expression,
+            nodes.Comprehension: self._infer_comprehension,
             ephemeral.FormalArgumentConstraint: lambda node, context, hint: node.type,
         }
     
@@ -318,19 +317,18 @@ class ExpressionTypeInferer(object):
             self.infer(node.step, context),
         )
     
-    def _infer_list_comprehension(self, node, context, hint):
-        element_type = self._infer_comprehension(node.body, context)
-        return types.list_type(element_type)
-    
-    def _infer_generator_expression(self, node, context, hint):
-        element_type = self._infer_comprehension(node.body, context)
-        return types.iterator(element_type)
-    
-    def _infer_comprehension(self, node, context):
-        element_type = self.infer_iterable_element_type(node.iterable, context)
+    def _infer_comprehension(self, node, context, hint):
+        iterable_element_type = self.infer_iterable_element_type(node.iterable, context)
         assignment = Assignment(self)
-        assignment.assign(node, node.target, element_type, context)
-        return self.infer(node.element, context)
+        assignment.assign(node, node.target, iterable_element_type, context)
+        comprehension_element_type = self.infer(node.element, context)
+        return self._generate_comprehension_type(node.comprehension_type, comprehension_element_type)
+    
+    def _generate_comprehension_type(self, comprehension_type, element_type):
+        return {
+            "list_comprehension": types.list_type,
+            "generator_expression": types.iterator,
+        }[comprehension_type](element_type)
     
     def infer_magic_method_call(self, node, short_name, receiver, actual_args, context):
         method_name = "__{}__".format(short_name)

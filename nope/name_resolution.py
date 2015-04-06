@@ -128,7 +128,7 @@ class _Context(object):
             return declarations_for_scope
         elif isinstance(scope.parent, nodes.ClassDefinition):
             return self._declarations
-        elif isinstance(scope.parent, (nodes.ListComprehension, nodes.GeneratorExpression)):
+        elif isinstance(scope.parent, nodes.Comprehension):
             return self._declarations_for_functions
         else:
             raise Exception("Unhandled case")

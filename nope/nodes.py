@@ -71,15 +71,13 @@ _create_binary_operators()
 subscript = Subscript = _create_node("Subscript", ["value", "slice"])
 slice = Slice = _create_node("Slice", ["start", "stop", "step"])
 
-ListComprehension = _create_node("ListComprehension", ["body"])
-GeneratorExpression = _create_node("GeneratorExpression", ["body"])
-comprehension_body = ComprehensionBody = _create_node("ComprehensionBody", ["element", "target", "iterable"])
+Comprehension = _create_node("Comprehension", ["comprehension_type", "element", "target", "iterable"])
 
 def list_comprehension(element, target, iterable):
-    return ListComprehension(comprehension_body(element, target, iterable))
+    return Comprehension("list_comprehension", element, target, iterable)
 
 def generator_expression(element, target, iterable):
-    return GeneratorExpression(comprehension_body(element, target, iterable))
+    return Comprehension("generator_expression", element, target, iterable)
 
 
 ReturnStatement = _create_node("ReturnStatement", ["value"])
