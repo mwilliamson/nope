@@ -864,9 +864,9 @@ print(cgi.escape("<nope>"))
 import collections
 
 User = collections.namedtuple("User", [
-    #:: int
+    #:field int
     "id",
-    #:: str
+    #:field str
     "username",
 ])
 

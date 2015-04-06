@@ -8,22 +8,27 @@ from .. import nodes
 
 
 class TypeComments(object):
-    def __init__(self, explicit_types, type_definitions, generics):
+    def __init__(self, explicit_types, type_definitions, generics, fields):
         self.explicit_types = explicit_types
         self.type_definitions = type_definitions
         self.generics = generics
+        self.fields = fields
 
 
 def parse_type_comments(source):
     explicit_types = {}
     type_definitions = {}
     generics = {}
+    # TODO: open up the parser for extension
+    fields = {}
     
     for attached_node_position, (position, prefix, type_comment) in _type_comments(source):
         if prefix == "type":
             store = type_definitions
         elif prefix == "generic":
             store = generics
+        elif prefix == "field":
+            store = fields
         elif prefix == ":":
             store = explicit_types
         else:
@@ -31,7 +36,7 @@ def parse_type_comments(source):
         
         store[attached_node_position] = position, type_comment
     
-    return TypeComments(explicit_types, type_definitions, generics)
+    return TypeComments(explicit_types, type_definitions, generics, fields)
     
 
 
@@ -205,4 +210,5 @@ _type_comment_parsers = {
     "type": _type_definition,
     "generic": _generic,
     ":": _explicit_type,
+    "field": _explicit_type,
 }

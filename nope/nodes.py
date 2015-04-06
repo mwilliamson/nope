@@ -258,3 +258,7 @@ import_alias = ImportAlias
 
 def module(body, is_executable=False):
     return Module(body, is_executable)
+
+
+# TODO: move into extension
+field_definition = FieldDefinition = _create_node("FieldDefinition", ["name", "type"])

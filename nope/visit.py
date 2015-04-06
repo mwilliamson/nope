@@ -55,6 +55,8 @@ class Visitor(object):
             
             nodes.Statements: self._visit_statements_node,
             
+            nodes.FieldDefinition: self._visit_field_definition,
+            
             type(None): lambda *args: None
         }
         self._visitors = self._default_visitors.copy()
@@ -286,5 +288,11 @@ class Visitor(object):
         return nodes.module(
             self._visit_statements(node.body, *args),
             is_executable=node.is_executable,
+        )
+    
+    def _visit_field_definition(self, node, *args):
+        return nodes.field_definition(
+            self.visit(node.name, *args),
+            self.visit(node.type, *args),
         )
         

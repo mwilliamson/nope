@@ -104,6 +104,7 @@ class Converter(object):
         try:
             signature = self._comment_seeker.consume_explicit_type(lineno, col_offset)
             type_definition = self._comment_seeker.consume_type_definition(lineno, col_offset)
+            field_definition = self._comment_seeker.consume_field(lineno, col_offset)
             
             nope_node = self._converters[type(node)](node)
             
@@ -113,6 +114,10 @@ class Converter(object):
             if type_definition is not None:
                 assert nope_node == self._nodes.assign([self._nodes.ref(type_definition.name)], self._nodes.none())
                 nope_node = type_definition
+            
+            if field_definition is not None:
+                # TODO: unwrap string node here
+                nope_node = self._nodes.field_definition(nope_node, field_definition)
             
             if allowed is not None and not isinstance(nope_node, allowed):
                 raise SyntaxError("{} node is not supported in current context".format(type(nope_node).__name__))

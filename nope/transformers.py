@@ -1,6 +1,7 @@
 import zuice
 
 from . import builtins, name_resolution, visit, nodes
+from .parser.typing import TypeComments
 
 
 ModuleName = zuice.key("ModuleName")
@@ -52,11 +53,12 @@ class ClassBuilderTransform(zuice.Base):
         assert isinstance(attribute_list, nodes.ListLiteral)
         
         def _read_attribute(attribute_node):
-            assert isinstance(attribute_node, nodes.StringLiteral)
-            explicit_type = nodes.explicit_type_of(attribute_node)
-            if explicit_type is None:
-                raise Exception("fields of {}.{} must have explicit type".format(self._module_name, self._func_name))
-            return attribute_node.value, explicit_type
+            if not isinstance(attribute_node, nodes.FieldDefinition):
+                raise Exception("fields of {}.{} must be declared as a field using :field".format(self._module_name, self._func_name))
+            
+            name_node = attribute_node.name
+            assert isinstance(name_node, nodes.StringLiteral)
+            return name_node.value, attribute_node.type
         
         attributes = list(map(_read_attribute, attribute_list.elements))
         
