@@ -101,7 +101,7 @@ def _create_declaration_node(node_type_name, node_type_description):
     return Node
     
 
-VariableDeclarationNode = _create_declaration_node("VariableDeclaratioNode", "variable assignment")
+VariableDeclarationNode = _create_declaration_node("VariableDeclarationNode", "variable assignment")
 ExceptionHandlerTargetNode = _create_declaration_node("ExceptionHandlerTargetNode", "exception handler target")
 FunctionDeclarationNode = _create_declaration_node("FunctionDeclarationNode", "function declaration")
 ClassDeclarationNode = _create_declaration_node("ClassDeclarationNode", "class declaration")
