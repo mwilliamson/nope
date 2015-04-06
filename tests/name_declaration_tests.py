@@ -68,7 +68,7 @@ def with_statement_target_can_be_none():
 
 @istest
 def function_definition_is_declared():
-    node = nodes.func("f", nodes.arguments([]), [], explicit_type=None)
+    node = nodes.func("f", nodes.arguments([]), [], type=None)
     
     declarations = _new_declarations()
     declare(node, declarations)
@@ -80,7 +80,7 @@ def function_definition_is_declared():
 def names_in_function_are_not_declared():
     node = nodes.func("f", nodes.arguments([]), [
         nodes.assign([nodes.ref("x")], nodes.none())
-    ], explicit_type=None)
+    ], type=None)
     
     declarations = _new_declarations()
     declare(node, declarations)
@@ -94,7 +94,7 @@ def names_in_function_signature_are_not_declared():
         args=[],
         returns=nodes.ref("T"),
     )
-    node = nodes.func("f", nodes.arguments([]), [], explicit_type=explicit_type)
+    node = nodes.func("f", nodes.arguments([]), [], type=explicit_type)
     
     declarations = _new_declarations()
     declare(node, declarations)
@@ -186,7 +186,7 @@ def cannot_declare_name_with_two_different_declaration_types():
     declarations = _new_declarations()
     node = nodes.assign([nodes.ref("f")], nodes.none())
     declare(node, declarations)
-    node = nodes.func("f", nodes.arguments([]), [], explicit_type=None)
+    node = nodes.func("f", nodes.arguments([]), [], type=None)
     try:
         declare(node, declarations)
         assert False, "Expected error"
@@ -198,7 +198,7 @@ def cannot_declare_name_with_two_different_declaration_types():
 def declarations_in_function_include_declarations_in_body():
     node = nodes.func("f", nodes.arguments([]), [
         nodes.assign([nodes.ref("x")], nodes.none())
-    ], explicit_type=None)
+    ], type=None)
     
     declarations = declarations_in_function(node)
     assert isinstance(declarations.declaration("x"), name_declaration.VariableDeclarationNode)
@@ -208,7 +208,7 @@ def declarations_in_function_include_declarations_in_body():
 @istest
 def declarations_in_function_include_type_parameter_declarations():
     explicit_type = nodes.signature(type_params=[nodes.formal_type_parameter("T")], args=[], returns=nodes.ref("none"))
-    node = nodes.func("f", nodes.arguments([]), [], explicit_type=explicit_type)
+    node = nodes.func("f", nodes.arguments([]), [], type=explicit_type)
     
     declarations = declarations_in_function(node)
     assert isinstance(declarations.declaration("T"), name_declaration.TypeDeclarationNode)
@@ -216,13 +216,13 @@ def declarations_in_function_include_type_parameter_declarations():
 
 @istest
 def no_error_if_explicit_type_for_function_is_not_signature():
-    node = nodes.func("f", nodes.arguments([]), [], explicit_type=nodes.ref("T"))
+    node = nodes.func("f", nodes.arguments([]), [], type=nodes.ref("T"))
     declarations_in_function(node)
 
 
 @istest
 def declarations_in_function_include_argument_declarations():
-    node = nodes.func("f", nodes.arguments([nodes.arg("x")]), [], explicit_type=None)
+    node = nodes.func("f", nodes.arguments([nodes.arg("x")]), [], type=None)
     
     declarations = declarations_in_function(node)
     assert isinstance(declarations.declaration("x"), name_declaration.VariableDeclarationNode)

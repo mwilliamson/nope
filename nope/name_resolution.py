@@ -73,7 +73,7 @@ def _resolve_function_def(visitor, node, context):
     
     body_context = context.enter_function(node)
     
-    visitor.visit(node.explicit_type, body_context)
+    visitor.visit(node.type, body_context)
     
     for arg in node.args.args:
         visitor.visit(arg, body_context)

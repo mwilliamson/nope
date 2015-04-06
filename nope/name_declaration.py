@@ -161,9 +161,8 @@ class DeclarationFinder(object):
 def _declarations_in_function(node):
     declarations = Declarations({})
     
-    signature = node.explicit_type
-    if isinstance(signature, nodes.FunctionSignature):
-        for param in signature.type_params:
+    if isinstance(node.type, nodes.FunctionSignature):
+        for param in node.type.type_params:
             _declare(param, declarations)
     
     for arg in node.args.args:

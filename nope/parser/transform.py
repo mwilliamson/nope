@@ -203,7 +203,7 @@ class Converter(object):
             name=node.name,
             args=self.convert(node.args),
             body=self._statements(node.body),
-            explicit_type=signature,
+            type=signature,
         )
     
     def _arguments(self, node):
@@ -233,7 +233,7 @@ class Converter(object):
         
         targets = [self.convert(target) for target in node.targets]
         
-        return self._nodes.assign(targets, self.convert(node.value), explicit_type=signature)
+        return self._nodes.assign(targets, self.convert(node.value), type=signature)
     
     
     def _if(self, node):

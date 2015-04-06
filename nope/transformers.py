@@ -72,7 +72,7 @@ class ClassBuilderTransform(zuice.Base):
                 nodes.assign([nodes.attr(nodes.ref("self"), name)], nodes.ref(name))
                 for name, _ in attributes
             ],
-            explicit_type=nodes.signature(
+            type=nodes.signature(
                 args=[nodes.signature_arg(nodes.ref("Self"))] +
                     [nodes.signature_arg(attr_type) for _, attr_type in attributes],
                 # TODO: have a way to always reference the builtin none

@@ -76,7 +76,7 @@ def first_argument_in_method_signature_can_be_strict_supertype_of_class():
             name="is_person",
             args=nodes.args([nodes.arg("self")]),
             body=[nodes.ret(nodes.bool_literal(True))],
-            explicit_type=nodes.signature(
+            type=nodes.signature(
                 args=[nodes.signature_arg(nodes.ref("object"))],
                 returns=nodes.ref("bool")
             ),
@@ -93,7 +93,7 @@ def attributes_with_function_type_defined_in_class_definition_body_are_bound_to_
             name="is_person",
             args=nodes.args([nodes.arg("self")]),
             body=[nodes.ret(nodes.bool_literal(True))],
-            explicit_type=nodes.signature(
+            type=nodes.signature(
                 args=[nodes.signature_arg(nodes.ref("Self"))],
                 returns=nodes.ref("bool")
             ),
@@ -110,7 +110,7 @@ def self_argument_in_method_signature_can_be_explicit_name_of_class():
             name="is_person",
             args=nodes.args([nodes.arg("self")]),
             body=[nodes.ret(nodes.bool_literal(True))],
-            explicit_type=nodes.signature(
+            type=nodes.signature(
                 args=[nodes.signature_arg(nodes.ref("User"))],
                 returns=nodes.ref("bool")
             )
@@ -126,7 +126,7 @@ def self_argument_in_method_signature_cannot_be_unrelated_type():
         name="is_person",
         args=nodes.args([nodes.arg("self")]),
         body=[nodes.ret(nodes.bool_literal(True))],
-        explicit_type=nodes.signature(
+        type=nodes.signature(
             args=[nodes.signature_arg(nodes.ref("bool"))],
             returns=nodes.ref("bool")
         ),
@@ -147,7 +147,7 @@ def methods_must_have_at_least_one_argument():
         name="is_person",
         args=nodes.args([]),
         body=[nodes.ret(nodes.bool_literal(True))],
-        explicit_type=nodes.signature(
+        type=nodes.signature(
             args=[],
             returns=nodes.ref("bool")
         )
@@ -243,7 +243,7 @@ def method_can_call_method_on_same_instance_defined_later_in_body():
             body=[
                 nodes.ret(nodes.call(nodes.attr(nodes.ref("self_f"), "g"), []))
             ],
-            explicit_type=nodes.signature(
+            type=nodes.signature(
                 args=[nodes.signature_arg(nodes.ref("Self"))],
                 returns=nodes.ref("none")
             ),
@@ -254,7 +254,7 @@ def method_can_call_method_on_same_instance_defined_later_in_body():
             body=[
                 nodes.ret(nodes.call(nodes.attr(nodes.ref("self_g"), "f"), []))
             ],
-            explicit_type=nodes.signature(
+            type=nodes.signature(
                 args=[nodes.signature_arg(nodes.ref("Self"))],
                 returns=nodes.ref("none")
             ),
@@ -272,7 +272,7 @@ def init_method_cannot_call_other_methods():
             body=[
                 nodes.assign([nodes.ref("x")], nodes.call(nodes.attr(nodes.ref("self_init"), "g"), []))
             ],
-            explicit_type=nodes.signature(
+            type=nodes.signature(
                 args=[nodes.signature_arg(nodes.ref("Self"))],
                 returns=nodes.ref("none")
             ),
@@ -281,7 +281,7 @@ def init_method_cannot_call_other_methods():
             name="g",
             args=nodes.args([nodes.arg("self_g")]),
             body=[],
-            explicit_type=nodes.signature(
+            type=nodes.signature(
                 args=[nodes.signature_arg(nodes.ref("Self"))],
                 returns=nodes.ref("none")
             ),
@@ -305,7 +305,7 @@ def attributes_assigned_in_init_can_be_used_in_methods():
                 nodes.str_literal("Hello")
             )
         ],
-        explicit_type=nodes.signature(
+        type=nodes.signature(
             args=[nodes.signature_arg(nodes.ref("Self"))],
             returns=nodes.ref("none")
         ),
@@ -316,7 +316,7 @@ def attributes_assigned_in_init_can_be_used_in_methods():
             name="g",
             args=nodes.args([nodes.arg("self_g")]),
             body=[nodes.ret(nodes.attr(nodes.ref("self_g"), "message"))],
-            explicit_type=nodes.signature(
+            type=nodes.signature(
                 args=[nodes.signature_arg(nodes.ref("Self"))],
                 returns=nodes.ref("str")
             ),
@@ -336,7 +336,7 @@ def attributes_assigned_in_init_can_be_used_in_methods_when_init_method_is_defin
                 nodes.str_literal("Hello")
             )
         ],
-        explicit_type=nodes.signature(
+        type=nodes.signature(
             args=[nodes.signature_arg(nodes.ref("Self"))],
             returns=nodes.ref("none")
         ),
@@ -346,7 +346,7 @@ def attributes_assigned_in_init_can_be_used_in_methods_when_init_method_is_defin
             name="g",
             args=nodes.args([nodes.arg("self_g")]),
             body=[nodes.ret(nodes.attr(nodes.ref("self_g"), "message"))],
-            explicit_type=nodes.signature(
+            type=nodes.signature(
                 args=[nodes.signature_arg(nodes.ref("Self"))],
                 returns=nodes.ref("str")
             ),
@@ -368,7 +368,7 @@ def _create_class_with_init(signature, args, body):
             name="__init__",
             args=args,
             body=body,
-            explicit_type=signature
+            type=signature
         )
     ])
     

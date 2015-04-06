@@ -245,7 +245,7 @@ class Visitor(object):
             node.name,
             self.visit(node.args, *args),
             self._visit_statements(node.body, *args),
-            explicit_type=self.visit_explicit_type(node, node.explicit_type, *args),
+            type=self.visit_explicit_type(node, node.type, *args),
         )
     
     def _visit_arguments(self, node, *args):

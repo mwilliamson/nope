@@ -54,8 +54,7 @@ class StatementTypeChecker(object):
             return None
     
     def infer_function_def(self, node, context):
-        signature_node = node.explicit_type
-        signature = self._read_signature(node, signature_node, context)
+        signature = self._read_signature(node, node.type, context)
         self._check_signature(signature, node)
         return signature
     
@@ -99,8 +98,7 @@ class StatementTypeChecker(object):
         body_context = context.enter_func(return_type)
         
         if types.is_generic_func(func_type):
-            signature = node.explicit_type
-            for formal_type_param_node, formal_type_param in zip(signature.type_params, func_type.formal_type_params):
+            for formal_type_param_node, formal_type_param in zip(node.type.type_params, func_type.formal_type_params):
                 body_context.update_type(formal_type_param_node, types.meta_type(formal_type_param))
         
         body_arg_types = [
@@ -142,8 +140,8 @@ class StatementTypeChecker(object):
 
 
     def _check_assignment(self, node, context):
-        if node.explicit_type is not None:
-            required_type = self._infer_type_value(node.explicit_type, context)
+        if node.type is not None:
+            required_type = self._infer_type_value(node.type, context)
             hint = None
         elif len(node.targets) == 1 and isinstance(node.targets[0], nodes.VariableReference):
             required_type = None

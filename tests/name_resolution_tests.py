@@ -282,7 +282,7 @@ def function_definition_signature_has_names_resolved():
         args=[nodes.signature_arg(int_ref)],
         returns=str_ref,
     )
-    node = nodes.func("f", nodes.arguments([]), [], explicit_type=signature)
+    node = nodes.func("f", nodes.arguments([]), [], type=signature)
     
     declarations = _create_declarations(["f", "int", "str"])
     references = resolve(node, declarations)
@@ -301,7 +301,7 @@ def generic_function_definition_signature_has_names_resolved():
         args=[nodes.signature_arg(arg_ref)],
         returns=return_ref,
     )
-    node = nodes.func("f", nodes.arguments([]), [], explicit_type=signature)
+    node = nodes.func("f", nodes.arguments([]), [], type=signature)
     
     declarations = _create_declarations(["f"])
     references = resolve(node, declarations)
@@ -312,7 +312,7 @@ def generic_function_definition_signature_has_names_resolved():
 
 @istest
 def function_definitions_adds_function_name_to_context():
-    node = nodes.func("f", nodes.arguments([]), [], explicit_type=None)
+    node = nodes.func("f", nodes.arguments([]), [], type=None)
     
     declarations = _create_declarations(["f"])
     references = resolve(node, declarations)
@@ -325,7 +325,7 @@ def function_definitions_adds_argument_names_to_body_context():
     args = nodes.arguments([arg])
     ref = nodes.ref("x")
     body = [nodes.ret(ref)]
-    node = nodes.func("f", args, body, explicit_type=None)
+    node = nodes.func("f", args, body, type=None)
     
     declarations = _create_declarations(["f"])
     references = resolve(node, declarations)
@@ -338,7 +338,7 @@ def function_definitions_bodies_can_access_variables_from_outer_scope():
     args = nodes.arguments([])
     ref = nodes.ref("x")
     body = [nodes.ret(ref)]
-    node = nodes.func("f", args, body, explicit_type=None)
+    node = nodes.func("f", args, body, type=None)
     
     declarations = _create_declarations(["x", "f"])
     
@@ -352,7 +352,7 @@ def function_definitions_arguments_shadow_variables_of_same_name_in_outer_scope(
     args = nodes.arguments([arg])
     ref = nodes.ref("x")
     body = [nodes.ret(ref)]
-    node = nodes.func("f", args, body, explicit_type=None)
+    node = nodes.func("f", args, body, type=None)
     
     declarations = _create_declarations(["x", "f"])
     
@@ -366,7 +366,7 @@ def function_definitions_assignments_shadow_variables_of_same_name_in_outer_scop
     args = nodes.arguments([])
     ref = nodes.ref("x")
     body = [nodes.assign([ref], nodes.none())]
-    node = nodes.func("f", args, body, explicit_type=None)
+    node = nodes.func("f", args, body, type=None)
     
     declarations = _create_declarations(["x", "f"])
     
@@ -421,7 +421,7 @@ def class_definition_functions_ignore_class_scope_when_resolving_references():
     ref = nodes.ref("x")
     node = nodes.class_("User", [
         nodes.assign([nodes.ref("x")], nodes.none()),
-        nodes.func("f", nodes.args([]), [nodes.ret(ref)], explicit_type=None),
+        nodes.func("f", nodes.args([]), [nodes.ret(ref)], type=None),
     ])
     
     declarations = _create_declarations(["x", "User"])
