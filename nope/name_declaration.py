@@ -1,5 +1,5 @@
 from . import nodes, errors, structure
-from .identity_dict import NodeDict
+from .identity_dict import ComputedNodeDict
 
 
 def _declare(node, declarations):
@@ -109,12 +109,9 @@ ImportDeclarationNode = _create_declaration_node("ImportDeclarationNode", "impor
 
 class DeclarationFinder(object):
     def __init__(self):
-        self._node_to_declarations = NodeDict()
+        self._node_to_declarations = ComputedNodeDict(self._generate_declarations)
 
     def declarations_in(self, node):
-        if node not in self._node_to_declarations:
-            self._node_to_declarations[node] = self._generate_declarations(node)
-        
         return self._node_to_declarations[node]
         
 

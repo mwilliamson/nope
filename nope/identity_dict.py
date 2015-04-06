@@ -50,3 +50,15 @@ class NodeDict(_IdentityDict):
         if values is None:
             values = []
         super().__init__(key_identity=lambda node: id(node), values=values)
+
+
+class ComputedNodeDict(object):
+    def __init__(self, generate_value):
+        self._values = NodeDict()
+        self._generate_value = generate_value
+    
+    def __getitem__(self, key):
+        if key not in self._values:
+            self._values[key] = self._generate_value(key)
+        
+        return self._values[key]
