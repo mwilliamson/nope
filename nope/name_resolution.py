@@ -113,8 +113,7 @@ class _Context(object):
         return _Context(self._declaration_finder, declarations, self._references)
     
     def enter_scope(self, scope):
-        declarations_in_scope = self._declaration_finder.declarations_in(scope.parent)
-        declarations_for_scope = self._declarations.enter(declarations_in_scope)
+        declarations_for_scope = self._declarations_for_scope(scope)
         
         return _Context(
             declaration_finder=self._declaration_finder,
@@ -122,6 +121,11 @@ class _Context(object):
             references=self._references,
             declarations_for_functions=self._declarations_for_functions_in_scope(scope, declarations_for_scope),
         )
+    
+    def _declarations_for_scope(self, scope):
+        declarations_in_scope = self._declaration_finder.declarations_in(scope.parent)
+        return self._declarations.enter(declarations_in_scope)
+        
     
     def _declarations_for_functions_in_scope(self, scope, declarations_for_scope):
         if isinstance(scope.parent, nodes.Module):
