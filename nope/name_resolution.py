@@ -90,7 +90,8 @@ class _Context(object):
         declarations_in_scope = self._declaration_finder.declarations_in(scope.parent)
         if isinstance(scope.parent, nodes.FunctionDef):
             declarations = self._declarations_for_functions.enter(declarations_in_scope)
-            # TODO: tidy up this hack.
+            # TODO: tidy up this hack. This allows type parameters (on generic classes)
+            # and the Self type to be accessed in methods
             for declaration in self._declarations:
                 if isinstance(declaration, (name_declaration.TypeDeclarationNode, name_declaration.SelfTypeDeclarationNode)):
                     declarations._declarations[declaration.name] = declaration
