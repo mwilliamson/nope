@@ -4,9 +4,7 @@ from .identity_dict import ComputedNodeDict
 
 def _declare(node, declarations):
     _declare_targets(node, declarations)
-    
-    if not _creates_new_scope(node):
-        _declare_children(node, declarations)
+    _declare_children(node, declarations)
 
 
 def _declare_targets(node, declarations):
@@ -15,13 +13,10 @@ def _declare_targets(node, declarations):
         declarations.declare(target_name, target_node, target_type=target_type)
 
 
-def _creates_new_scope(node):
-    return isinstance(node, (nodes.FunctionDef, nodes.ClassDefinition))
-
-
 def _declare_children(node, declarations):
-    for child in structure.children(node):
-        _declare(child, declarations)
+    for child in structure.scoped_children(node):
+        if not structure.is_scope(child):
+            _declare(child, declarations)
 
 
 def _targets(node):

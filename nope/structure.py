@@ -58,7 +58,7 @@ _children = {
     nodes.RaiseStatement: lambda node: [node.value],
     nodes.AssertStatement: lambda node: [node.condition, node.message],
     nodes.WithStatement: lambda node: [node.value, node.target, node.body],
-    nodes.FunctionDef: lambda node: [node.type, node.args, node.body],
+    nodes.FunctionDef: lambda node: [Scope(node, [node.type, node.args, node.body])],
     nodes.Arguments: lambda node: [node.args],
     nodes.FunctionSignature: lambda node: [node.type_params, node.args, node.returns],
     nodes.SignatureArgument: lambda node: [node.type],
