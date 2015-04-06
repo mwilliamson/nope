@@ -319,19 +319,18 @@ class ExpressionTypeInferer(object):
         )
     
     def _infer_list_comprehension(self, node, context, hint):
-        self._infer_comprehension(node.generator, context)
-        element_type = self.infer(node.element, context)
+        element_type = self._infer_comprehension(node.body, context)
         return types.list_type(element_type)
     
     def _infer_generator_expression(self, node, context, hint):
-        self._infer_comprehension(node.generator, context)
-        element_type = self.infer(node.element, context)
+        element_type = self._infer_comprehension(node.body, context)
         return types.iterator(element_type)
     
     def _infer_comprehension(self, node, context):
         element_type = self.infer_iterable_element_type(node.iterable, context)
         assignment = Assignment(self)
         assignment.assign(node, node.target, element_type, context)
+        return self.infer(node.element, context)
     
     def infer_magic_method_call(self, node, short_name, receiver, actual_args, context):
         method_name = "__{}__".format(short_name)

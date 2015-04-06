@@ -132,7 +132,7 @@ _targets_of = {
     nodes.ForLoop: (lambda node: _left_value_to_targets(node.target), VariableDeclarationNode),
     nodes.ExceptHandler: (lambda node: _left_value_to_targets(node.target), ExceptionHandlerTargetNode),
     nodes.WithStatement: (lambda node: _left_value_to_targets(node.target), VariableDeclarationNode),
-    nodes.ComprehensionFor: (lambda node: _left_value_to_targets(node.target), VariableDeclarationNode),
+    nodes.ComprehensionBody: (lambda node: _left_value_to_targets(node.target), VariableDeclarationNode),
         
     nodes.FunctionDef: (lambda node: [(node, node.name)], FunctionDeclarationNode),
     nodes.ClassDefinition: (lambda node: [(node, node.name)], ClassDeclarationNode),

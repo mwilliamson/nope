@@ -77,7 +77,6 @@ class Converter(object):
             ast.BoolOp: self._bool_op,
             ast.ListComp: self._list_comprehension,
             ast.GeneratorExp: self._generator_expression,
-            ast.comprehension: self._comprehension,
         }
         
         # Python >= 3.3:
@@ -488,18 +487,18 @@ class Converter(object):
         return node
     
     def _list_comprehension(self, node):
-        generator, = node.generators
-        return self._nodes.list_comprehension(self.convert(node.elt), self.convert(generator))
+        return self._comprehension(self._nodes.list_comprehension, node)
     
     def _generator_expression(self, node):
+        return self._comprehension(self._nodes.generator_expression, node)
+    
+    def _comprehension(self, create, node):
         # TODO: support nested fors
         generator, = node.generators
-        return self._nodes.generator_expression(self.convert(node.elt), self.convert(generator))
-    
-    def _comprehension(self, node):
         # TODO: support ifs
-        assert not node.ifs
-        return self._nodes.comprehension_for(self.convert(node.target), self.convert(node.iter))
+        assert not generator.ifs
+        
+        return create(self.convert(node.elt), self.convert(generator.target), self.convert(generator.iter))
 
 
     def _explicit_type_of(self, node):

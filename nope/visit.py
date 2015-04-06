@@ -24,7 +24,7 @@ class Visitor(object):
             nodes.Slice: self._visit_slice,
             nodes.ListComprehension: self._visit_comprehension,
             nodes.GeneratorExpression: self._visit_comprehension,
-            nodes.ComprehensionFor: self._visit_comprehension_generator,
+            nodes.ComprehensionBody: self._visit_comprehension_generator,
             
             nodes.ReturnStatement: self._visit_return,
             nodes.ExpressionStatement: self._visit_expression_statement,
@@ -166,14 +166,13 @@ class Visitor(object):
         )
 
     def _visit_comprehension(self, node, *args):
-        generator = self.visit(node.generator, *args)
-        element = self.visit(node.element, *args)
-        return type(node)(element, generator)
+        return type(node)(self.visit(node.body, *args))
     
     def _visit_comprehension_generator(self, node, *args):
         iterable = self.visit(node.iterable, *args)
         target = self.visit(node.target, *args)
-        return nodes.comprehension_for(target, iterable)
+        element = self.visit(node.element, *args)
+        return nodes.comprehension_body(element, target, iterable)
 
     def _visit_return(self, node, *args):
         return nodes.ret(self.visit(node.value, *args))

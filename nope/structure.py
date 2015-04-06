@@ -26,9 +26,9 @@ _children = {
     nodes.BinaryOperation: lambda node: [node.left, node.right],
     nodes.Subscript: lambda node: [node.value, node.slice],
     nodes.Slice: lambda node: [node.start, node.stop, node.step],
-    nodes.ListComprehension: lambda node: [node.generator, node.element],
-    nodes.GeneratorExpression: lambda node: [node.generator, node.element],
-    nodes.ComprehensionFor: lambda node: [node.iterable, node.target],
+    nodes.ListComprehension: lambda node: [node.body],
+    nodes.GeneratorExpression: lambda node: [node.body],
+    nodes.ComprehensionBody: lambda node: [node.iterable, node.target, node.element],
 
     nodes.ReturnStatement: lambda node: [node.value],
     nodes.ExpressionStatement: lambda node: [node.value],

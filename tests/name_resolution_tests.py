@@ -233,13 +233,13 @@ def assert_statement_has_child_names_resolved():
 @istest
 def list_comprehension_has_child_names_resolved():
     _assert_children_resolved(
-        lambda ref: nodes.list_comprehension(ref, nodes.comprehension_for(nodes.none(), nodes.none())),
+        lambda ref: nodes.list_comprehension(ref, nodes.none(), nodes.none()),
     )
     _assert_children_resolved(
-        lambda ref: nodes.list_comprehension(nodes.none(), nodes.comprehension_for(nodes.attr(ref, "name"), nodes.none())),
+        lambda ref: nodes.list_comprehension(nodes.none(), nodes.attr(ref, "name"), nodes.none()),
     )
     _assert_children_resolved(
-        lambda ref: nodes.list_comprehension(nodes.none(), nodes.comprehension_for(nodes.none(), ref)),
+        lambda ref: nodes.list_comprehension(nodes.none(), nodes.none(), ref),
     )
     
 
@@ -247,10 +247,7 @@ def list_comprehension_has_child_names_resolved():
 def list_comprehension_adds_target_names_to_body_context():
     target = nodes.ref("target")
     ref = nodes.ref("target")
-    node = nodes.list_comprehension(
-        target,
-        nodes.comprehension_for(ref, nodes.none())
-    )
+    node = nodes.list_comprehension(target, ref, nodes.none())
     
     declarations = _create_declarations([])
     references = resolve(node, declarations)
@@ -263,10 +260,7 @@ def list_comprehension_generator_is_not_in_same_scope_as_element():
     target = nodes.ref("target")
     ref = nodes.ref("target")
     iterable = nodes.ref("target")
-    node = nodes.list_comprehension(
-        target,
-        nodes.comprehension_for(ref, iterable)
-    )
+    node = nodes.list_comprehension(target, ref, iterable)
     
     declarations = _create_declarations(["target"])
     references = resolve(node, declarations)

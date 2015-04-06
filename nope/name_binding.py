@@ -52,10 +52,10 @@ class _BindingChecker(object):
     
     
     def _update_comprehension(self, visitor, node, context):
-        self._update_comprehension_generator(visitor, node.generator, context)
+        self._update_comprehension_body(visitor, node.body, context)
     
     
-    def _update_comprehension_generator(self, visitor, node, context):
+    def _update_comprehension_body(self, visitor, node, context):
         self._update_target(visitor, node.target, context)
 
 

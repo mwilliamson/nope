@@ -43,11 +43,11 @@ def _resolve_named_node(node, context):
 
 
 def _resolve_comprehension(node, context):
-    _resolve(node.generator.iterable, context)
+    _resolve(node.body.iterable, context)
     
     body_context = context.enter_comprehension(node)
-    _resolve(node.generator.target, body_context)
-    _resolve(node.element, body_context)
+    _resolve(node.body.target, body_context)
+    _resolve(node.body.element, body_context)
 
 
 def _resolve_function_def(node, context):
