@@ -195,66 +195,66 @@ def cannot_declare_name_with_two_different_declaration_types():
 
 
 @istest
-def declarations_in_function_include_declarations_in_body():
+def _declarations_in_include_declarations_in_body():
     node = nodes.func("f", nodes.arguments([]), [
         nodes.assign([nodes.ref("x")], nodes.none())
     ], type=None)
     
-    declarations = declarations_in_function(node)
+    declarations = _declarations_in(node)
     assert isinstance(declarations.declaration("x"), name_declaration.VariableDeclarationNode)
     assert not declarations.is_declared("f")
 
 
 @istest
-def declarations_in_function_include_type_parameter_declarations():
+def _declarations_in_include_type_parameter_declarations():
     explicit_type = nodes.signature(type_params=[nodes.formal_type_parameter("T")], args=[], returns=nodes.ref("none"))
     node = nodes.func("f", nodes.arguments([]), [], type=explicit_type)
     
-    declarations = declarations_in_function(node)
+    declarations = _declarations_in(node)
     assert isinstance(declarations.declaration("T"), name_declaration.TypeDeclarationNode)
 
 
 @istest
 def no_error_if_explicit_type_for_function_is_not_signature():
     node = nodes.func("f", nodes.arguments([]), [], type=nodes.ref("T"))
-    declarations_in_function(node)
+    _declarations_in(node)
 
 
 @istest
-def declarations_in_function_include_argument_declarations():
+def _declarations_in_include_argument_declarations():
     node = nodes.func("f", nodes.arguments([nodes.arg("x")]), [], type=None)
     
-    declarations = declarations_in_function(node)
+    declarations = _declarations_in(node)
     assert isinstance(declarations.declaration("x"), name_declaration.VariableDeclarationNode)
     assert not declarations.is_declared("f")
 
 
 @istest
-def declarations_in_class_include_declarations_in_body():
+def _declarations_in_include_declarations_in_body():
     node = nodes.class_("User", [
         nodes.assign([nodes.ref("x")], nodes.none())
     ])
     
-    declarations = declarations_in_class(node)
+    declarations = _declarations_in(node)
     assert isinstance(declarations.declaration("x"), name_declaration.VariableDeclarationNode)
     assert not declarations.is_declared("User")
 
 
 @istest
-def declarations_in_class_include_self_class():
+def _declarations_in_include_self_class():
     node = nodes.class_("User", [
         nodes.assign([nodes.ref("x")], nodes.none())
     ])
     
-    declarations = declarations_in_class(node)
+    declarations = _declarations_in(node)
     assert isinstance(declarations.declaration("Self"), name_declaration.SelfTypeDeclarationNode)
 
 
 @istest
-def declarations_in_class_include_formal_type_parameters():
+def _declarations_in_include_formal_type_parameters():
     node = nodes.class_("Option", [], type_params=[nodes.formal_type_parameter("T")])
     
-    declarations = declarations_in_class(node)
+    declarations = _declarations_in(node)
     assert isinstance(declarations.declaration("T"), name_declaration.TypeDeclarationNode)
 
 
@@ -268,7 +268,7 @@ def declarations_in_list_comprehension_are_variable_reference_targets():
         )
     )
     
-    declarations = declarations_in_comprehension(node)
+    declarations = _declarations_in(node)
     assert isinstance(declarations.declaration("target"), name_declaration.VariableDeclarationNode)
     assert not declarations.is_declared("other")
     assert not declarations.is_declared("iterable")
@@ -279,15 +279,6 @@ def _new_declarations():
     return Declarations({})
 
 
-def declarations_in_function(*args, **kwargs):
+def _declarations_in(*args, **kwargs):
     finder = DeclarationFinder()
-    return finder.declarations_in_function(*args, **kwargs)
-
-def declarations_in_class(*args, **kwargs):
-    finder = DeclarationFinder()
-    return finder.declarations_in_class(*args, **kwargs)
-
-
-def declarations_in_comprehension(*args, **kwargs):
-    finder = DeclarationFinder()
-    return finder.declarations_in_comprehension(*args, **kwargs)
+    return finder.declarations_in(*args, **kwargs)

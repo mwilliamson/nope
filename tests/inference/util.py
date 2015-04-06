@@ -90,13 +90,7 @@ class FakeDeclarationFinder(object):
         self._references = references
         self._declared_names_in_node = declared_names_in_node
     
-    def declarations_in_class(self, node):
-        return self._declarations(node)
-    
-    def declarations_in_function(self, node):
-        return self._declarations(node)
-    
-    def _declarations(self, node):
+    def declarations_in(self, node):
         names = self._declared_names_in_node.get(node, [])
         return self._references.with_names(names)
 

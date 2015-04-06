@@ -129,7 +129,7 @@ class _Context(object):
         self._references[reference] = self._declarations.declaration(name)
     
     def enter_function(self, node):
-        function_declarations = self._declaration_finder.declarations_in_function(node)
+        function_declarations = self._declaration_finder.declarations_in(node)
         declarations = self._declarations_for_functions.enter(function_declarations)
         # TODO: tidy up this hack.
         for declaration in self._declarations:
@@ -138,17 +138,17 @@ class _Context(object):
         return _Context(self._declaration_finder, declarations, self._references)
     
     def enter_class(self, node):
-        class_declarations = self._declaration_finder.declarations_in_class(node)
+        class_declarations = self._declaration_finder.declarations_in(node)
         declarations = self._declarations.enter(class_declarations)
         return _Context(self._declaration_finder, declarations, self._references, declarations_for_functions=self._declarations)
     
     def enter_module(self, node):
-        module_declarations = self._declaration_finder.declarations_in_module(node)
+        module_declarations = self._declaration_finder.declarations_in(node)
         declarations = self._declarations.enter(module_declarations)
         return _Context(self._declaration_finder, declarations, self._references)
     
     def enter_comprehension(self, node):
-        comprehension_declarations = self._declaration_finder.declarations_in_comprehension(node)
+        comprehension_declarations = self._declaration_finder.declarations_in(node)
         declarations = self._declarations.enter(comprehension_declarations)
         return _Context(self._declaration_finder, declarations, self._references, declarations_for_functions=self._declarations_for_functions)
         

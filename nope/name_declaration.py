@@ -114,42 +114,23 @@ class DeclarationFinder(object):
     def __init__(self):
         self._node_to_declarations = NodeDict()
 
-    def declarations_in_function(self, node):
-        return self._declarations(node, _declarations_in_children)
-
-    def declarations_in_class(self, node):
-        return self._declarations(node, _declarations_in_class)
-        
-    def declarations_in_module(self, node):
-        return self._declarations(node, _declarations_in_children)
-    
-    def declarations_in_comprehension(self, node):
-        return self._declarations(node, _declarations_in_children)
-    
-    def _declarations(self, node, generator):
+    def declarations_in(self, node):
         if node not in self._node_to_declarations:
-            self._node_to_declarations[node] = generator(node)
+            self._node_to_declarations[node] = self._generate_declarations(node)
         
         return self._node_to_declarations[node]
         
-        
-def _declarations_in_class(node):
-    declarations = Declarations({})
-    declarations.declare("Self", node, target_type=SelfTypeDeclarationNode)
-    
-    for child in structure.children(node):
-        _declare(child, declarations)
-        
-    return declarations
 
-
-def _declarations_in_children(node):
-    declarations = Declarations({})
-    
-    for child in structure.children(node):
-        _declare(child, declarations)
+    def _generate_declarations(self, node):
+        declarations = Declarations({})
         
-    return declarations
+        if isinstance(node, nodes.ClassDefinition):
+            declarations.declare("Self", node, target_type=SelfTypeDeclarationNode)
+        
+        for child in structure.children(node):
+            _declare(child, declarations)
+            
+        return declarations
 
 
 _targets_of = {

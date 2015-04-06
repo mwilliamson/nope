@@ -44,7 +44,7 @@ class ModuleExports(zuice.Base):
     
     def declarations(self, module_node):
         export_declarations = self._export_declarations(module_node.body)
-        module_declarations = self._declaration_finder.declarations_in_module(module_node)
+        module_declarations = self._declaration_finder.declarations_in(module_node)
         
         if len(export_declarations) == 0:
             return [

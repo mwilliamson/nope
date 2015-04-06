@@ -161,7 +161,7 @@ class ClassDefinitionTypeChecker(object):
     
     def _enter_class_body_context(self, node, context, meta_type):
         body_context = context.enter_class()
-        class_declarations = self._declaration_finder.declarations_in_class(node)
+        class_declarations = self._declaration_finder.declarations_in(node)
         body_context.update_declaration_type(
             class_declarations.declaration("Self"),
             meta_type
@@ -171,7 +171,7 @@ class ClassDefinitionTypeChecker(object):
     
     
     def _check_init_statement(self, node, statement, context, class_type):
-        declarations_in_function = self._declaration_finder.declarations_in_function(node)
+        declarations_in_function = self._declaration_finder.declarations_in(node)
         self_arg_name = node.args.args[0].name
         self_declaration = declarations_in_function.declaration(self_arg_name)
         
