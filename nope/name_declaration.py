@@ -115,13 +115,13 @@ class DeclarationFinder(object):
         self._node_to_declarations = NodeDict()
 
     def declarations_in_function(self, node):
-        return self._declarations(node, _declarations_in_function)
+        return self._declarations(node, _declarations_in_children)
 
     def declarations_in_class(self, node):
         return self._declarations(node, _declarations_in_class)
         
     def declarations_in_module(self, node):
-        return self._declarations(node, _declarations_in_module)
+        return self._declarations(node, _declarations_in_children)
     
     def declarations_in_comprehension(self, node):
         return self._declarations(node, _declarations_in_comprehension)
@@ -131,22 +131,6 @@ class DeclarationFinder(object):
             self._node_to_declarations[node] = generator(node)
         
         return self._node_to_declarations[node]
-        
-        
-def _declarations_in_function(node):
-    declarations = Declarations({})
-    
-    if isinstance(node.type, nodes.FunctionSignature):
-        for param in node.type.type_params:
-            _declare(param, declarations)
-    
-    for arg in node.args.args:
-        _declare(arg, declarations)
-    
-    for statement in node.body:
-        _declare(statement, declarations)
-        
-    return declarations
         
         
 def _declarations_in_class(node):
@@ -163,11 +147,11 @@ def _declarations_in_class(node):
     return declarations
 
 
-def _declarations_in_module(node):
+def _declarations_in_children(node):
     declarations = Declarations({})
     
-    for statement in node.body:
-        _declare(statement, declarations)
+    for child in structure.children(node):
+        _declare(child, declarations)
         
     return declarations
 
