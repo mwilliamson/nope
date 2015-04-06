@@ -197,7 +197,7 @@ class Converter(object):
             raise SyntaxError("arguments in the form '**{}' are not supported".format(name))
         
         
-        signature = self._comment_seeker.consume_explicit_type(*(self._node_location(node)))
+        signature = self._explicit_type_of(node)
         
         return self._nodes.func(
             name=node.name,
@@ -229,7 +229,7 @@ class Converter(object):
     
     
     def _assign(self, node):
-        signature = self._comment_seeker.consume_explicit_type(*(self._node_location(node)))
+        signature = self._explicit_type_of(node)
         
         targets = [self.convert(target) for target in node.targets]
         
@@ -500,6 +500,10 @@ class Converter(object):
         # TODO: support ifs
         assert not node.ifs
         return self._nodes.comprehension(self.convert(node.target), self.convert(node.iter))
+
+
+    def _explicit_type_of(self, node):
+        return self._comment_seeker.consume_explicit_type(*(self._node_location(node)))
 
     def _mapped(self, nodes, allowed=None):
         return list(filter(None, (
