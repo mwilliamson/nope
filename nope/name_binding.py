@@ -16,7 +16,7 @@ class _BindingChecker(object):
     def update_bindings(self, node, context):
         visitor = visit.Visitor(visit_explicit_types=False)
         visitor.before(nodes.VariableReference, self._check_variable_reference)
-        visitor.before(nodes.Comprehension, self._update_comprehension)
+        visitor.before(nodes.ComprehensionTarget, self._update_comprehension_target)
         visitor.replace(nodes.Assignment, self._update_assignment_binding)
         visitor.replace(nodes.IfElse, self._update_if_else)
         visitor.replace(nodes.WhileLoop, self._update_while_loop)
@@ -50,8 +50,8 @@ class _BindingChecker(object):
             visitor.visit(target, context)
     
     
-    def _update_comprehension(self, visitor, node, context):
-        self._update_target(visitor, node.target, context)
+    def _update_comprehension_target(self, visitor, node, context):
+        self._update_target(visitor, node.value, context)
 
 
     def _update_assignment_binding(self, visitor, node, context):

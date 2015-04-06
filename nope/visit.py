@@ -23,6 +23,7 @@ class Visitor(object):
             nodes.Subscript: self._visit_subscript,
             nodes.Slice: self._visit_slice,
             nodes.Comprehension: self._visit_comprehension,
+            nodes.ComprehensionTarget: self._visit_comprehension_target,
             
             nodes.ReturnStatement: self._visit_return,
             nodes.ExpressionStatement: self._visit_expression_statement,
@@ -168,6 +169,9 @@ class Visitor(object):
         target = self.visit(node.target, *args)
         element = self.visit(node.element, *args)
         return nodes.Comprehension(node.comprehension_type, element, target, iterable)
+    
+    def _visit_comprehension_target(self, node, *args):
+        return nodes.ComprehensionTarget(self.visit(node.value, *args))
 
     def _visit_return(self, node, *args):
         return nodes.ret(self.visit(node.value, *args))
