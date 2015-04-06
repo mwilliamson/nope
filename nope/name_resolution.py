@@ -37,17 +37,14 @@ def _resolve(node, context):
         if declared_name is not None:
             context.add_reference(node, declared_name)
         
-        resolver = _resolvers.get(type(node))
-        if resolver is not None:
-            resolver(node, context)
-        else:
-            for child in structure.scoped_children(node):
-                _resolve(child, context)
+        for child in structure.scoped_children(node):
+            _resolve(child, context)
 
 
 _name_declarations = {
     nodes.VariableReference: lambda node: node.name,
     nodes.FunctionDef: lambda node: node.name,
+    nodes.Argument: lambda node: node.name,
     nodes.ClassDefinition: lambda node: node.name,
     nodes.TypeDefinition: lambda node: node.name,
     nodes.FormalTypeParameter: lambda node: node.name,
@@ -56,30 +53,6 @@ _name_declarations = {
 
 def _declared_name(node):
     return _name_declarations.get(type(node), lambda node: None)(node)
-
-
-def _resolve_named_node(node, context):
-    context.add_reference(node, node.name)
-
-
-def _resolve_function_def(node, context):
-    context.add_reference(node, node.name)
-    
-    body_context = context.enter_function(node)
-    
-    _resolve(node.type, body_context)
-    
-    for arg in node.args.args:
-        _resolve(arg, body_context)
-        body_context.add_reference(arg, arg.name)
-    
-    for statement in node.body:
-        _resolve(statement, body_context)
-
-
-_resolvers = {
-    nodes.FunctionDef: _resolve_function_def,
-}
 
 
 class _Context(object):
@@ -103,15 +76,6 @@ class _Context(object):
             
         self._references[reference] = self._declarations.declaration(name)
     
-    def enter_function(self, node):
-        function_declarations = self._declaration_finder.declarations_in(node)
-        declarations = self._declarations_for_functions.enter(function_declarations)
-        # TODO: tidy up this hack.
-        for declaration in self._declarations:
-            if isinstance(declaration, (name_declaration.TypeDeclarationNode, name_declaration.SelfTypeDeclarationNode)):
-                declarations._declarations[declaration.name] = declaration
-        return _Context(self._declaration_finder, declarations, self._references)
-    
     def enter_scope(self, scope):
         declarations_for_scope = self._declarations_for_scope(scope)
         
@@ -124,8 +88,15 @@ class _Context(object):
     
     def _declarations_for_scope(self, scope):
         declarations_in_scope = self._declaration_finder.declarations_in(scope.parent)
-        return self._declarations.enter(declarations_in_scope)
-        
+        if isinstance(scope.parent, nodes.FunctionDef):
+            declarations = self._declarations_for_functions.enter(declarations_in_scope)
+            # TODO: tidy up this hack.
+            for declaration in self._declarations:
+                if isinstance(declaration, (name_declaration.TypeDeclarationNode, name_declaration.SelfTypeDeclarationNode)):
+                    declarations._declarations[declaration.name] = declaration
+            return declarations
+        else:
+            return self._declarations.enter(declarations_in_scope)
     
     def _declarations_for_functions_in_scope(self, scope, declarations_for_scope):
         if isinstance(scope.parent, nodes.Module):
@@ -134,5 +105,7 @@ class _Context(object):
             return self._declarations
         elif isinstance(scope.parent, nodes.Comprehension):
             return self._declarations_for_functions
+        elif isinstance(scope.parent, nodes.FunctionDef):
+            return None
         else:
             raise Exception("Unhandled case")
