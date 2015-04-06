@@ -62,14 +62,6 @@ def _resolve_named_node(node, context):
     context.add_reference(node, node.name)
 
 
-def _resolve_comprehension(node, context):
-    _resolve(node.body.iterable, context)
-    
-    body_context = context.enter_comprehension(node)
-    _resolve(node.body.target, body_context)
-    _resolve(node.body.element, body_context)
-
-
 def _resolve_function_def(node, context):
     context.add_reference(node, node.name)
     
@@ -86,7 +78,6 @@ def _resolve_function_def(node, context):
 
 
 _resolvers = {
-    nodes.ListComprehension: _resolve_comprehension,
     nodes.FunctionDef: _resolve_function_def,
 }
 
@@ -137,10 +128,7 @@ class _Context(object):
             return declarations_for_scope
         elif isinstance(scope.parent, nodes.ClassDefinition):
             return self._declarations
+        elif isinstance(scope.parent, (nodes.ListComprehension, nodes.GeneratorExpression)):
+            return self._declarations_for_functions
         else:
             raise Exception("Unhandled case")
-    
-    def enter_comprehension(self, node):
-        comprehension_declarations = self._declaration_finder.declarations_in(node)
-        declarations = self._declarations.enter(comprehension_declarations)
-        return _Context(self._declaration_finder, declarations, self._references, declarations_for_functions=self._declarations_for_functions)

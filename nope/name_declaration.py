@@ -3,14 +3,14 @@ from .identity_dict import ComputedNodeDict
 
 
 def _declare(node, declarations):
-    targets, target_type = _targets(node)
-    _declare_targets(targets, target_type, declarations)
+    _declare_targets(node, declarations)
     
     if not _creates_new_scope(node):
         _declare_children(node, declarations)
 
 
-def _declare_targets(targets, target_type, declarations):
+def _declare_targets(node, declarations):
+    targets, target_type = _targets(node)
     for target_node, target_name in targets:
         declarations.declare(target_name, target_node, target_type=target_type)
 
@@ -120,6 +120,8 @@ class DeclarationFinder(object):
         
         if isinstance(node, nodes.ClassDefinition):
             declarations.declare("Self", node, target_type=SelfTypeDeclarationNode)
+        elif isinstance(node, (nodes.ListComprehension, nodes.GeneratorExpression)):
+            _declare_targets(node, declarations)
         
         for child in structure.children(node):
             _declare(child, declarations)
@@ -132,7 +134,8 @@ _targets_of = {
     nodes.ForLoop: (lambda node: _left_value_to_targets(node.target), VariableDeclarationNode),
     nodes.ExceptHandler: (lambda node: _left_value_to_targets(node.target), ExceptionHandlerTargetNode),
     nodes.WithStatement: (lambda node: _left_value_to_targets(node.target), VariableDeclarationNode),
-    nodes.ComprehensionBody: (lambda node: _left_value_to_targets(node.target), VariableDeclarationNode),
+    nodes.ListComprehension: (lambda node: _left_value_to_targets(node.body.target), VariableDeclarationNode),
+    nodes.GeneratorExpression: (lambda node: _left_value_to_targets(node.body.target), VariableDeclarationNode),
         
     nodes.FunctionDef: (lambda node: [(node, node.name)], FunctionDeclarationNode),
     nodes.ClassDefinition: (lambda node: [(node, node.name)], ClassDeclarationNode),

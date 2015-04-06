@@ -43,9 +43,8 @@ _children = {
     nodes.BinaryOperation: lambda node: [node.left, node.right],
     nodes.Subscript: lambda node: [node.value, node.slice],
     nodes.Slice: lambda node: [node.start, node.stop, node.step],
-    nodes.ListComprehension: lambda node: [node.body],
-    nodes.GeneratorExpression: lambda node: [node.body],
-    nodes.ComprehensionBody: lambda node: [node.iterable, node.target, node.element],
+    nodes.ListComprehension: lambda node: [node.body.iterable, Scope(node, [node.body.target, node.body.element])],
+    nodes.GeneratorExpression: lambda node: [node.body.iterable, Scope(node, [node.body.target, node.body.element])],
 
     nodes.ReturnStatement: lambda node: [node.value],
     nodes.ExpressionStatement: lambda node: [node.value],
