@@ -37,3 +37,11 @@ def wip(func):
             raise SkipTest("WIP test failed: " + str(e))
         assert False, "test passed but marked as work in progress"
     return attr('wip')(run_test)
+
+
+def assert_raises(error_type, func):
+    try:
+        func()
+        assert False, "Expected '{}' to be raised".format(error_type.__name__)
+    except error_type as error:
+        return error
