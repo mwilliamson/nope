@@ -4,6 +4,7 @@ import zuice
 
 from ..identity_dict import NodeDict
 from .. import caching
+from ..iterables import find
 from .attributes import attrs_from_iterable, Attribute, EmptyAttributes
 from .classes import class_type, is_class_type
 from .structural import structural_type, is_structural_type
@@ -370,7 +371,7 @@ def common_super_type(types):
     if len(types) == 0:
         return bottom_type
     
-    super_type = _find(
+    super_type = find(
         lambda possible_super_type: all(
             is_sub_type(possible_super_type, type_)
             for type_ in types
@@ -382,12 +383,6 @@ def common_super_type(types):
         return union(*types)
     else:
         return super_type
-
-
-def _find(predicate, iterable):
-    for value in iterable:
-        if predicate(value):
-            return value
 
 
 def common_sub_type(types):
