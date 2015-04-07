@@ -242,10 +242,7 @@ def declarations_in_class_include_declarations_in_body():
 
 @istest
 def declarations_in_class_include_self_class():
-    node = nodes.class_("User", [
-        nodes.assign([nodes.ref("x")], nodes.none())
-    ])
-    
+    node = nodes.class_("User", [])
     declarations = _declarations_in(node)
     assert isinstance(declarations.declaration("Self"), name_declaration.SelfTypeDeclarationNode)
 
