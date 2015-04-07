@@ -77,7 +77,7 @@ def function_definition_is_declared():
 
 
 @istest
-def names_in_function_are_not_declared():
+def names_in_function_are_not_declared_in_outer_scope():
     node = nodes.func("f", nodes.arguments([]), [
         nodes.assign([nodes.ref("x")], nodes.none())
     ], type=None)
@@ -88,7 +88,7 @@ def names_in_function_are_not_declared():
 
 
 @istest
-def names_in_function_signature_are_not_declared():
+def names_in_function_signature_are_not_declared_in_outer_scope():
     explicit_type = nodes.signature(
         type_params=[nodes.formal_type_parameter("T")],
         args=[],
@@ -112,7 +112,7 @@ def class_definition_is_declared():
 
 
 @istest
-def names_in_class_are_not_declared():
+def names_in_class_are_not_declared_in_outer_scope():
     node = nodes.class_("User", [
         nodes.assign([nodes.ref("x")], nodes.none())
     ])
@@ -195,7 +195,7 @@ def cannot_declare_name_with_two_different_declaration_types():
 
 
 @istest
-def _declarations_in_include_declarations_in_body():
+def declarations_in_function_include_declarations_in_body():
     node = nodes.func("f", nodes.arguments([]), [
         nodes.assign([nodes.ref("x")], nodes.none())
     ], type=None)
@@ -206,7 +206,7 @@ def _declarations_in_include_declarations_in_body():
 
 
 @istest
-def _declarations_in_include_type_parameter_declarations():
+def declarations_in_function_include_type_parameter_declarations():
     explicit_type = nodes.signature(type_params=[nodes.formal_type_parameter("T")], args=[], returns=nodes.ref("none"))
     node = nodes.func("f", nodes.arguments([]), [], type=explicit_type)
     
@@ -221,7 +221,7 @@ def no_error_if_explicit_type_for_function_is_not_signature():
 
 
 @istest
-def _declarations_in_include_argument_declarations():
+def declarations_in_function_include_argument_declarations():
     node = nodes.func("f", nodes.arguments([nodes.arg("x")]), [], type=None)
     
     declarations = _declarations_in(node)
@@ -230,7 +230,7 @@ def _declarations_in_include_argument_declarations():
 
 
 @istest
-def _declarations_in_include_declarations_in_body():
+def declarations_in_class_include_declarations_in_body():
     node = nodes.class_("User", [
         nodes.assign([nodes.ref("x")], nodes.none())
     ])
@@ -241,7 +241,7 @@ def _declarations_in_include_declarations_in_body():
 
 
 @istest
-def _declarations_in_include_self_class():
+def declarations_in_class_include_self_class():
     node = nodes.class_("User", [
         nodes.assign([nodes.ref("x")], nodes.none())
     ])
@@ -251,7 +251,7 @@ def _declarations_in_include_self_class():
 
 
 @istest
-def _declarations_in_include_formal_type_parameters():
+def declarations_in_class_include_formal_type_parameters():
     node = nodes.class_("Option", [], type_params=[nodes.formal_type_parameter("T")])
     
     declarations = _declarations_in(node)
