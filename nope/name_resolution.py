@@ -2,6 +2,7 @@ import zuice
 
 from nope import nodes, errors, name_declaration, structure, environment
 from nope.identity_dict import NodeDict
+from .dispatch import TypeDispatch
 
 
 class NameResolver(zuice.Base):
@@ -41,7 +42,7 @@ def _resolve(node, context):
             _resolve(child, context)
 
 
-_name_declarations = {
+_declared_name = TypeDispatch({
     nodes.VariableReference: lambda node: node.name,
     nodes.FunctionDef: lambda node: node.name,
     nodes.Argument: lambda node: node.name,
@@ -49,10 +50,7 @@ _name_declarations = {
     nodes.TypeDefinition: lambda node: node.name,
     nodes.FormalTypeParameter: lambda node: node.name,
     nodes.ImportAlias: lambda node: node.value_name,
-}
-
-def _declared_name(node):
-    return _name_declarations.get(type(node), lambda node: None)(node)
+}, default=lambda node: None)
 
 
 class _Context(object):
