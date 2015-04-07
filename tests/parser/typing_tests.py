@@ -1,4 +1,5 @@
 import io
+import functools
 
 from nose.tools import istest, assert_equal
 
@@ -124,11 +125,8 @@ x = 1
         nodes.type_union([nodes.ref("int"), nodes.ref("str")])
     )
     
-    notes = parse_notes(io.StringIO(source))
-    assert_equal(
-        {(3, 0): ((2, 0), expected_node)},
-        notes.type_definitions
-    )
+    note = _parse_type_definition_note(source)
+    assert_equal(expected_node, note)
 
 
 @istest
@@ -144,11 +142,8 @@ x = 1
         nodes.type_union([nodes.ref("int"), nodes.ref("str")])
     )
     
-    notes = parse_notes(io.StringIO(source))
-    assert_equal(
-        {(5, 0): ((2, 0), expected_node)},
-        notes.type_definitions
-    )
+    note = _parse_type_definition_note(source)
+    assert_equal(expected_node, note)
 
 
 @istest
@@ -178,6 +173,9 @@ class A:
     assert_equal(expected, note)
 
 
-def _parse_generic_note(source):
-    note, = parse_notes(io.StringIO(source)).generics.values()
+def _parse_note_of_type(note_type, source):
+    note, = getattr(parse_notes(io.StringIO(source)), note_type).values()
     return note[1]
+
+_parse_type_definition_note = functools.partial(_parse_note_of_type, "type_definitions")
+_parse_generic_note = functools.partial(_parse_note_of_type, "generics")
