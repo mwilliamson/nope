@@ -158,11 +158,8 @@ def generic_specifiers_use_generic_keyword():
 class A:
     pass
 """
-    notes = parse_notes(io.StringIO(source))
-    assert_equal(
-        {(3, 0): ((2, 0), [nodes.formal_type_parameter("T")])},
-        notes.generics
-    )
+    note = _parse_generic_note(source)
+    assert_equal([nodes.formal_type_parameter("T")], note)
 
 
 @istest
@@ -172,13 +169,15 @@ def generic_specifiers_can_define_multiple_formal_type_parameters():
 class A:
     pass
 """
-    notes = parse_notes(io.StringIO(source))
+    note = _parse_generic_note(source)
     expected = [
         nodes.formal_type_parameter("T1"),
         nodes.formal_type_parameter("T2"),
         nodes.formal_type_parameter("R"),
     ]
-    assert_equal(
-        {(3, 0): ((2, 0), expected)},
-        notes.generics
-    )
+    assert_equal(expected, note)
+
+
+def _parse_generic_note(source):
+    note, = parse_notes(io.StringIO(source)).generics.values()
+    return note[1]
