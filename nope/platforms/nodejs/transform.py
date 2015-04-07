@@ -3,6 +3,7 @@ import zuice
 from ... import nodes, types, couscous as cc
 from ...modules import BuiltinModule
 from ...module_resolution import ModuleResolver
+from ...iterables import find
 from . import js, operations
 from .internals import call_internal
 
@@ -133,7 +134,7 @@ class NodeTransformer(zuice.Base):
             if isinstance(node, cc.VariableDeclaration)
         )
         if "__init__" in renamed_methods:
-            init_method = next(method for method in class_definition.methods if method.name == "__init__")
+            init_method = find(lambda method: method.name == "__init__", class_definition.methods)
             # The type checker should guarantee that init_type exists and
             # is a function type (a stronger constraint than simply callable)
             constructor_arg_names = [

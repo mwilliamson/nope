@@ -12,6 +12,7 @@ from . import cs
 from ... import couscous as cc
 from ...modules import Module, LocalModule, BuiltinModule
 from ...module_resolution import ModuleResolver
+from ...iterables import find
 
 
 class CodeGenerator(zuice.Base):
@@ -230,7 +231,7 @@ class Transformer(object):
         method_names = [method.name for method in node.methods]
         
         if "__init__" in method_names:
-            init_method = next(method for method in node.methods if method.name == "__init__")
+            init_method = find(lambda method: method.name == "__init__", node.methods)
             init_arg_names = ["__" + arg.name for arg in init_method.args[1:]]
             
             # TODO: this doesn't account for if statements and whatnot.
