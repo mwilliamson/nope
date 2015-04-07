@@ -30,16 +30,16 @@ def _check_statements(visitor, statements, in_loop, in_finally):
 
 
 def _check_break(visitor, node, in_loop, in_finally):
-    _check_loop_control(node, in_loop, in_finally, "break")
+    _assert_in_loop(node, in_loop, "break")
 
 
 def _check_continue(visitor, node, in_loop, in_finally):
     if in_finally:
         raise errors.InvalidStatementError(node, "'continue' not supported inside 'finally' clause")
-    _check_loop_control(node, in_loop, in_finally, "continue")
+    _assert_in_loop(node, in_loop, "continue")
 
 
-def _check_loop_control(node, in_loop, in_finally, name):
+def _assert_in_loop(node, in_loop, name):
     if not in_loop:
         raise errors.InvalidStatementError(node, "'{}' outside loop".format(name))
 
