@@ -1,39 +1,36 @@
-from . import visit, nodes, errors
+from . import structure, nodes, errors
+from .dispatch import TypeDispatch
 
 
 def check_loop_control(node, in_loop, in_finally=False):
-    visitor = visit.Visitor()
-    visitor.replace(nodes.WhileLoop, _check_loop)
-    visitor.replace(nodes.ForLoop, _check_loop)
-    visitor.before(nodes.BreakStatement, _check_break)
-    visitor.before(nodes.ContinueStatement, _check_continue)
-    visitor.replace(nodes.TryStatement, _check_try)
-    visitor.replace(nodes.FunctionDef, _check_function_definition)
-    visitor.replace(nodes.ClassDefinition, _check_class_definition)
-    
-    visitor.visit(node, in_loop, in_finally)
+    return _check_loop_control(node, in_loop, in_finally)
 
 
-def _check_loop(visitor, node, in_loop, in_finally):
-    _check_loop_body(visitor, node.body)
-    _check_statements(visitor, node.else_body, in_loop, in_finally)
+def _check_children(node, in_loop, in_finally):
+    for child in structure.children(node):
+        _check_loop_control(child, in_loop, in_finally)
 
 
-def _check_loop_body(visitor, statements):
+def _check_loop(node, in_loop, in_finally):
+    _check_loop_body(node.body)
+    _check_statements(node.else_body, in_loop, in_finally)
+
+
+def _check_loop_body(statements):
     for statement in statements:
-        visitor.visit(statement, True, False)
+        _check_loop_control(statement, True, False)
 
 
-def _check_statements(visitor, statements, in_loop, in_finally):
+def _check_statements(statements, in_loop, in_finally):
     for statement in statements:
-        visitor.visit(statement, in_loop, in_finally)
+        _check_loop_control(statement, in_loop, in_finally)
 
 
-def _check_break(visitor, node, in_loop, in_finally):
+def _check_break(node, in_loop, in_finally):
     _assert_in_loop(node, in_loop, "break")
 
 
-def _check_continue(visitor, node, in_loop, in_finally):
+def _check_continue(node, in_loop, in_finally):
     if in_finally:
         raise errors.InvalidStatementError(node, "'continue' not supported inside 'finally' clause")
     _assert_in_loop(node, in_loop, "continue")
@@ -44,16 +41,27 @@ def _assert_in_loop(node, in_loop, name):
         raise errors.InvalidStatementError(node, "'{}' outside loop".format(name))
 
 
-def _check_try(visitor, node, in_loop, in_finally):
-    _check_statements(visitor, node.body, in_loop, in_finally)
+def _check_try(node, in_loop, in_finally):
+    _check_statements(node.body, in_loop, in_finally)
     for handler in node.handlers:
-        _check_statements(visitor, handler.body, in_loop, in_finally)
-    _check_statements(visitor, node.finally_body, in_loop, True)
+        _check_statements(handler.body, in_loop, in_finally)
+    _check_statements(node.finally_body, in_loop, True)
 
 
-def _check_function_definition(visitor, node, in_loop, in_finally):
-    _check_statements(visitor, node.body, False, False)
+def _check_function_definition(node, in_loop, in_finally):
+    _check_statements(node.body, False, False)
 
 
-def _check_class_definition(visitor, node, in_loop, in_finally):
-    _check_statements(visitor, node.body, False, False)
+def _check_class_definition(node, in_loop, in_finally):
+    _check_statements(node.body, False, False)
+
+
+_check_loop_control = TypeDispatch({
+    nodes.WhileLoop: _check_loop,
+    nodes.ForLoop: _check_loop,
+    nodes.BreakStatement: _check_break,
+    nodes.ContinueStatement: _check_continue,
+    nodes.TryStatement: _check_try,
+    nodes.FunctionDef: _check_function_definition,
+    nodes.ClassDefinition: _check_class_definition,
+}, default=_check_children)
