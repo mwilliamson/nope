@@ -1,4 +1,4 @@
-from . import nodes, errors, structure, name_declaration, types, branches
+from . import nodes, errors, structure, name_declaration, types
 from .lists import filter_by_type
 from .dispatch import TypeDispatch
 
@@ -89,19 +89,20 @@ class _BindingChecker(object):
     def _update_with(self, node, context):
         self.process_bindings(node.value, context)
         
-        def update_with_target(branch_context):
-            if node.target is not None:
-                self._update_target(node.target, branch_context)
-        
         exit_type = self._type_of(node.value).attrs.type_of("__exit__")
         # TODO: this is duplicated in codegeneration
         while not types.is_func_type(exit_type):
             exit_type = exit_type.attrs.type_of("__call__")
         
-        self._update_branches(
-            branches.with_statement(node, update_with_target, exit_type.return_type),
-            context,
-        )
+        if node.target is None:
+            body_nodes = node.body
+        else:
+            body_nodes = [nodes.Target(node.target), node.body]
+        
+        if exit_type.return_type == types.none_type:
+            self.process_bindings(body_nodes, context)
+        else:
+            self._update_branched_nodes(body_nodes, context)
 
 
     def _update_function_definition(self, node, context):
@@ -127,27 +128,6 @@ class _BindingChecker(object):
             context.is_definitely_bound(method)
     
     
-    def _update_branches(self, branches, context):
-        branch_contexts = [
-            self._update_branch(branch, context)
-            for branch in branches.branches
-        ]
-        if not branches.conditional:
-            context.unify(branch_contexts)
-
-    def _update_branch(self, branch, context):
-        branch_context = context.enter_branch()
-        
-        if branch.before is not None:
-            branch.before(branch_context)
-        
-        self._update_statements(branch.statements, branch_context)
-        
-        if branch.after is not None:
-            branch.after(branch_context)
-        
-        return branch_context
-
     def _update_statements(self, statements, context):
         for statement in statements:
             self.process_bindings(statement, context)

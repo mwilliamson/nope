@@ -89,7 +89,7 @@ _children = {
     
     nodes.RaiseStatement: lambda node: [node.value],
     nodes.AssertStatement: lambda node: [node.condition, node.message],
-    nodes.WithStatement: lambda node: [node.value, nodes.Target(node.target), node.body],
+    nodes.WithStatement: lambda node: [node.value, Branch([None if node.target is None else nodes.Target(node.target), node.body])],
     nodes.FunctionDef: lambda node: [Scope(node, [node.type, node.args, node.body])],
     nodes.Arguments: lambda node: [node.args],
     nodes.FunctionSignature: lambda node: [node.type_params, node.args, node.returns],
