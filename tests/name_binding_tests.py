@@ -282,6 +282,36 @@ def declarations_in_body_and_handler_body_and_finally_body_of_try_statement_are_
         nodes.try_(
             [generate.assignment()],
             handlers=[
+                nodes.except_(None, None, [])
+            ],
+            finally_body=[],
+        )
+    )
+    
+    _assert_name_is_not_definitely_bound(lambda generate:
+        nodes.try_(
+            [],
+            handlers=[
+                nodes.except_(None, None, [generate.assignment()])
+            ],
+            finally_body=[],
+        )
+    )
+    
+    _assert_name_is_not_definitely_bound(lambda generate:
+        nodes.try_(
+            [],
+            handlers=[
+                nodes.except_(None, None, [])
+            ],
+            finally_body=[generate.assignment()],
+        )
+    )
+    
+    _assert_name_is_not_definitely_bound(lambda generate:
+        nodes.try_(
+            [generate.assignment()],
+            handlers=[
                 nodes.except_(None, None, [generate.assignment()])
             ],
             finally_body=[generate.assignment()],
@@ -315,29 +345,17 @@ def except_handler_targets_in_same_try_statement_can_share_their_name():
 
 
 @istest
-def except_handler_targets_cannot_share_their_name_when_nested():
-    first_target_node = nodes.ref("error")
-    second_target_node = nodes.ref("error")
+def target_of_exception_handler_is_removed_from_scope_after_exception_handler():
+    target_node = nodes.ref("error")
     node = nodes.try_(
         [],
         handlers=[
-            nodes.except_(nodes.none(), first_target_node, [
-                nodes.try_(
-                    [],
-                    handlers=[
-                        nodes.except_(nodes.none(), second_target_node, [])
-                    ],
-                )
-            ])
+            nodes.except_(nodes.none(), target_node, [])
         ],
     )
     
-    try:
-        _updated_bindings(node)
-        assert False, "Expected error"
-    except errors.InvalidReassignmentError as error:
-        assert_equal(second_target_node, error.node)
-        assert_equal("cannot reuse the same name for nested exception handler targets", str(error))
+    bindings = _updated_bindings(node, is_definitely_bound={"error": True})
+    assert not bindings.is_definitely_bound(target_node)
 
 
 @istest

@@ -4,7 +4,7 @@ from .dispatch import TypeDispatch
 
 
 def check_bindings(node, references, type_lookup, is_definitely_bound):
-    context = _Context(references, is_definitely_bound, set(), {})
+    context = _Context(references, is_definitely_bound, {})
     checker = _BindingChecker(type_lookup)
     checker.process_bindings(node, context)
     context.update_deferred()
@@ -23,8 +23,8 @@ class _BindingChecker(object):
         self._update_bindings = TypeDispatch({
             structure.Branch: self._update_branch_node,
             structure.ExhaustiveBranches: self._update_exhaustive_branches,
+            structure.Delete: self._update_delete,
             nodes.Target: self._update_target_node,
-            nodes.TryStatement: self._update_try,
             nodes.WithStatement: self._update_with,
             nodes.FunctionDef: self._update_function_definition,
             nodes.ClassDefinition: self._update_class_definition,
@@ -51,7 +51,8 @@ class _BindingChecker(object):
     
     
     def _update_branch_node(self, node, context):
-        self._update_branched_nodes(node.body, context)
+        branch_context = self._update_branched_nodes(node.body, context)
+        context.after_branch(branch_context)
         
     
     def _update_branched_nodes(self, nodes, context):
@@ -66,6 +67,11 @@ class _BindingChecker(object):
         ]
         context.unify(branch_contexts)
 
+    def _update_delete(self, node, context):
+        assert isinstance(node.target, nodes.VariableReference)
+        
+        context.delete(node.target)
+
     def _update_target(self, target, context):
         if isinstance(target, nodes.TupleLiteral):
             for element in target.elements:
@@ -78,26 +84,6 @@ class _BindingChecker(object):
     
     def _update_target_node(self, node, context):
         self._update_target(node.value, context)
-
-
-    def _update_try(self, node, context):
-        for handler in node.handlers:
-            if handler.type is not None:
-                self.process_bindings(handler.type, context)
-        
-        def update_handler_target(handler, branch_context):
-            if handler.target is not None:
-                self._update_target(handler.target, branch_context)
-                branch_context.add_exception_handler_target(handler.target)
-        
-        def delete_handler_target(handler, branch_context):
-            if handler.target is not None:
-                context.delete_exception_handler_target(handler.target)
-                    
-        self._update_branches(
-            branches.try_statement(node, update_handler_target, delete_handler_target),
-            context,
-        )
 
 
     def _update_with(self, node, context):
@@ -172,10 +158,9 @@ class _BindingChecker(object):
 
 
 class _Context(object):
-    def __init__(self, references, is_definitely_bound, exception_handler_target_names, deferred):
+    def __init__(self, references, is_definitely_bound, deferred):
         self._references = references
         self._is_definitely_bound = is_definitely_bound
-        self._exception_handler_target_names = exception_handler_target_names
         self._deferred = deferred
     
     def is_definitely_bound(self, node):
@@ -192,24 +177,20 @@ class _Context(object):
         declaration = self._references.referenced_declaration(node)
         self._is_definitely_bound[declaration] = True
     
-    def add_exception_handler_target(self, node):
-        if node.name in self._exception_handler_target_names:
-            raise errors.InvalidReassignmentError(node, "cannot reuse the same name for nested exception handler targets")
-            
-        self._exception_handler_target_names.add(node.name)
     
-    def delete_exception_handler_target(self, node):
-        self._exception_handler_target_names.remove(node.name)
+    def delete(self, node):
+        declaration = self._references.referenced_declaration(node)
+        self._is_definitely_bound[declaration] = False
     
     def enter_branch(self):
-        return _Context(self._references, DiffingDict(self._is_definitely_bound), self._exception_handler_target_names, self._deferred)
+        return _Context(self._references, DiffingDict(self._is_definitely_bound), self._deferred)
     
     def enter_new_namespace(self):
         is_definitely_bound = DiffingDict(self._is_definitely_bound)
         for declaration in is_definitely_bound:
             if isinstance(declaration, name_declaration.ExceptionHandlerTargetNode):
                 is_definitely_bound[declaration] = False
-        return _Context(self._references, is_definitely_bound, set(), self._deferred)
+        return _Context(self._references, is_definitely_bound, self._deferred)
     
     def unify(self, contexts):
         is_definitely_bound_mappings = [
@@ -226,6 +207,12 @@ class _Context(object):
                     mapping.get(declaration, False)
                     for mapping in is_definitely_bound_mappings
                 )
+    
+    
+    def after_branch(self, branch_context):
+        for declaration, is_bound in branch_context._is_definitely_bound._new.items():
+            if not is_bound:
+                self._is_definitely_bound[declaration] = False
     
     def add_deferred(self, node, update):
         declaration = self._references.referenced_declaration(node)

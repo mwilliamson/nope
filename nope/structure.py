@@ -21,6 +21,11 @@ class ExhaustiveBranches(object):
         self.branches = branches
 
 
+class Delete(object):
+    def __init__(self, target):
+        self.target = target
+
+
 def children(node):
     return (
         child.body if is_scope(child) else child
@@ -38,6 +43,7 @@ _children = {
     type({}.values()): lambda node: node,
     Branch: lambda node: node.body,
     ExhaustiveBranches: lambda node: node.branches,
+    Delete: lambda node: [node.target],
     
     nodes.NoneLiteral: lambda node: [],
     nodes.BooleanLiteral: lambda node: [],
@@ -74,8 +80,13 @@ _children = {
     
     nodes.BreakStatement: lambda node: [],
     nodes.ContinueStatement: lambda node: [],
-    nodes.TryStatement: lambda node: [node.body, node.handlers, node.finally_body],
-    nodes.ExceptHandler: lambda node: [node.type, node.target, node.body],
+    nodes.TryStatement: lambda node: [Branch(node.body), node.handlers, Branch(node.finally_body)],
+    
+    nodes.ExceptHandler: lambda node: [
+        node.type,
+        Branch(node.body if node.target is None else [nodes.Target(node.target), node.body, Delete(node.target)]),
+    ],
+    
     nodes.RaiseStatement: lambda node: [node.value],
     nodes.AssertStatement: lambda node: [node.condition, node.message],
     nodes.WithStatement: lambda node: [node.value, node.target, node.body],
