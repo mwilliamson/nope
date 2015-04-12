@@ -6,6 +6,7 @@ from nope.identity_dict import NodeDict
 from nope.types import TypeLookup
 from .inference.util import context_manager_class, SingleScopeReferences
 from nope.name_resolution import References
+from .testing import wip
 
 
 @istest
@@ -528,6 +529,7 @@ def type_parameters_of_function_are_definitely_bound():
     _updated_bindings(func_node)
 
 
+@wip
 @istest
 def exception_handler_targets_cannot_be_accessed_from_nested_function():
     target_node = nodes.ref("error")

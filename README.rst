@@ -69,6 +69,9 @@ TODO
   We need to make sure that the type is consistent if that variable is captured
   in a function definition.
 
+* If a variable is deleted (including the implicit delete at the end of an
+  exception handler), we should prevent it from being captured in functions.
+
 * Prevent re-definition of types and functions.
 
 * Check type of loops twice, in case assignments in the body of the loop change the type of variables.

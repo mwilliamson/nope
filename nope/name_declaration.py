@@ -94,7 +94,6 @@ def _create_declaration_node(node_type_name, node_type_description):
     
 
 VariableDeclarationNode = _create_declaration_node("VariableDeclarationNode", "variable assignment")
-ExceptionHandlerTargetNode = _create_declaration_node("ExceptionHandlerTargetNode", "exception handler target")
 FunctionDeclarationNode = _create_declaration_node("FunctionDeclarationNode", "function declaration")
 ClassDeclarationNode = _create_declaration_node("ClassDeclarationNode", "class declaration")
 TypeDeclarationNode = _create_declaration_node("TypeDeclarationNode", "type declaration")
@@ -123,9 +122,6 @@ class DeclarationFinder(object):
 
 
 _targets_of = {
-    nodes.Assignment: (lambda node: _left_values_to_targets(node.targets), VariableDeclarationNode),
-    nodes.ForLoop: (lambda node: _left_value_to_targets(node.target), VariableDeclarationNode),
-    nodes.ExceptHandler: (lambda node: _left_value_to_targets(node.target), ExceptionHandlerTargetNode),
     nodes.WithStatement: (lambda node: _left_value_to_targets(node.target), VariableDeclarationNode),
     nodes.Target: (lambda node: _left_value_to_targets(node.value), VariableDeclarationNode),
         

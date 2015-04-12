@@ -47,7 +47,7 @@ def except_handler_target_is_declared():
     )
     declare(node, declarations)
     assert_equal("error", declarations.declaration("error").name)
-    assert isinstance(declarations.declaration("error"), name_declaration.ExceptionHandlerTargetNode)
+    assert isinstance(declarations.declaration("error"), name_declaration.VariableDeclarationNode)
 
 
 @istest

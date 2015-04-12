@@ -187,9 +187,6 @@ class _Context(object):
     
     def enter_new_namespace(self):
         is_definitely_bound = DiffingDict(self._is_definitely_bound)
-        for declaration in is_definitely_bound:
-            if isinstance(declaration, name_declaration.ExceptionHandlerTargetNode):
-                is_definitely_bound[declaration] = False
         return _Context(self._references, is_definitely_bound, self._deferred)
     
     def unify(self, contexts):
