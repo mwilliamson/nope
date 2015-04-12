@@ -44,7 +44,7 @@ _children = {
     nodes.Subscript: lambda node: [node.value, node.slice],
     nodes.Slice: lambda node: [node.start, node.stop, node.step],
     nodes.Comprehension: lambda node: [node.iterable, Scope(node, [node.target, node.element])],
-    nodes.ComprehensionTarget: lambda node: [node.value],
+    nodes.Target: lambda node: [node.value],
 
     nodes.ReturnStatement: lambda node: [node.value],
     nodes.ExpressionStatement: lambda node: [node.value],

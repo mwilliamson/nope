@@ -18,7 +18,7 @@ class _BindingChecker(object):
     def __init__(self, type_lookup):
         self._type_lookup = type_lookup
         self._update_bindings = TypeDispatch({
-            nodes.ComprehensionTarget: self._update_comprehension_target,
+            nodes.Target: self._update_target_node,
             nodes.Assignment: self._update_assignment_binding,
             nodes.IfElse: self._update_if_else,
             nodes.WhileLoop: self._update_while_loop,
@@ -59,7 +59,7 @@ class _BindingChecker(object):
             self.process_bindings(target, context)
     
     
-    def _update_comprehension_target(self, node, context):
+    def _update_target_node(self, node, context):
         self._update_target(node.value, context)
 
 

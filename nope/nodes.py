@@ -72,13 +72,13 @@ subscript = Subscript = _create_node("Subscript", ["value", "slice"])
 slice = Slice = _create_node("Slice", ["start", "stop", "step"])
 
 Comprehension = _create_node("Comprehension", ["comprehension_type", "element", "target", "iterable"])
-ComprehensionTarget = _create_node("ComprehensionTarget", ["value"])
+Target = _create_node("Target", ["value"])
 
 def list_comprehension(element, target, iterable):
-    return Comprehension("list_comprehension", element, ComprehensionTarget(target), iterable)
+    return Comprehension("list_comprehension", element, Target(target), iterable)
 
 def generator_expression(element, target, iterable):
-    return Comprehension("generator_expression", element, ComprehensionTarget(target), iterable)
+    return Comprehension("generator_expression", element, Target(target), iterable)
 
 
 ReturnStatement = _create_node("ReturnStatement", ["value"])
