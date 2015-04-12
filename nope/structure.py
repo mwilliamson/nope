@@ -11,6 +11,16 @@ def is_scope(node):
     return isinstance(node, Scope)
 
 
+class Branch(object):
+    def __init__(self, body):
+        self.body = body
+
+
+class ExhaustiveBranches(object):
+    def __init__(self, branches):
+        self.branches = branches
+
+
 def children(node):
     return (
         child.body if is_scope(child) else child
@@ -26,6 +36,8 @@ _children = {
     list: lambda node: node,
     tuple: lambda node: node,
     type({}.values()): lambda node: node,
+    Branch: lambda node: node.body,
+    ExhaustiveBranches: lambda node: node.branches,
     
     nodes.NoneLiteral: lambda node: [],
     nodes.BooleanLiteral: lambda node: [],
@@ -48,10 +60,18 @@ _children = {
 
     nodes.ReturnStatement: lambda node: [node.value],
     nodes.ExpressionStatement: lambda node: [node.value],
-    nodes.Assignment: lambda node: [node.value, node.targets],
-    nodes.IfElse: lambda node: [node.condition, node.true_body, node.false_body],
-    nodes.WhileLoop: lambda node: [node.condition, node.body, node.else_body],
-    nodes.ForLoop: lambda node: [node.iterable, node.target, node.body, node.else_body],
+    nodes.Assignment: lambda node: [node.value, list(map(nodes.Target, node.targets))],
+    
+    nodes.IfElse: lambda node: [node.condition, ExhaustiveBranches([node.true_body, node.false_body])],
+    
+    nodes.WhileLoop: lambda node: [node.condition, Branch(node.body), Branch(node.else_body)],
+    
+    nodes.ForLoop: lambda node: [
+        node.iterable,
+        Branch([nodes.Target(node.target), node.body]),
+        Branch(node.else_body),
+    ],
+    
     nodes.BreakStatement: lambda node: [],
     nodes.ContinueStatement: lambda node: [],
     nodes.TryStatement: lambda node: [node.body, node.handlers, node.finally_body],

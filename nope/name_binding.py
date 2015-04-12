@@ -11,43 +11,60 @@ def check_bindings(node, references, type_lookup, is_definitely_bound):
     return Bindings(references, context._is_definitely_bound)
 
 
-_DONT_PROCESS_CHILDREN = "dont-process-children"
-
-
 class _BindingChecker(object):
+    _binding_nodes = set([
+        nodes.Argument,
+        nodes.ImportAlias,
+        nodes.TypeDefinition,
+    ])
+    
     def __init__(self, type_lookup):
         self._type_lookup = type_lookup
         self._update_bindings = TypeDispatch({
+            structure.Branch: self._update_branch_node,
+            structure.ExhaustiveBranches: self._update_exhaustive_branches,
             nodes.Target: self._update_target_node,
-            nodes.Assignment: self._update_assignment_binding,
-            nodes.IfElse: self._update_if_else,
-            nodes.WhileLoop: self._update_while_loop,
-            nodes.ForLoop: self._update_for_loop,
             nodes.TryStatement: self._update_try,
             nodes.WithStatement: self._update_with,
             nodes.FunctionDef: self._update_function_definition,
-            nodes.Argument: self._update_argument,
             nodes.ClassDefinition: self._update_class_definition,
-            nodes.TypeDefinition: self._update_type_definition,
-            nodes.Import: self._update_import,
-            nodes.ImportFrom: self._update_import,
-        }, default=lambda node, context: True)
+        }, default=self._update_children)
     
     def process_bindings(self, node, context):
         if isinstance(node, nodes.VariableReference):
             self._check_variable_reference(node, context)
         
-        result = self._update_bindings(node, context)
+        self._update_bindings(node, context)
         
-        if result is not _DONT_PROCESS_CHILDREN:
-            for child in structure.children(node):
-                self.process_bindings(child, context)
+        if type(node) in self._binding_nodes:
+            context.bind(node)
+
+
+    def _update_children(self, node, context):
+        for child in structure.children(node):
+            self.process_bindings(child, context)
 
 
     def _check_variable_reference(self, node, context):
         if not context.is_definitely_bound(node):
             raise errors.UnboundLocalError(node, node.name)
+    
+    
+    def _update_branch_node(self, node, context):
+        self._update_branched_nodes(node.body, context)
+        
+    
+    def _update_branched_nodes(self, nodes, context):
+        branch_context = context.enter_branch()
+        self._update_statements(nodes, branch_context)
+        return branch_context
 
+    def _update_exhaustive_branches(self, node, context):
+        branch_contexts = [
+            self._update_branched_nodes(branch, context)
+            for branch in node.branches
+        ]
+        context.unify(branch_contexts)
 
     def _update_target(self, target, context):
         if isinstance(target, nodes.TupleLiteral):
@@ -61,38 +78,6 @@ class _BindingChecker(object):
     
     def _update_target_node(self, node, context):
         self._update_target(node.value, context)
-
-
-    def _update_assignment_binding(self, node, context):
-        self.process_bindings(node.value, context)
-        
-        for target in node.targets:
-            self._update_target(target, context)
-
-
-    def _update_if_else(self, node, context):
-        self.process_bindings(node.condition, context)
-        self._update_branches(branches.if_else(node), context)
-        return _DONT_PROCESS_CHILDREN
-
-
-    def _update_while_loop(self, node, context):
-        self.process_bindings(node.condition, context)
-        self._update_branches(branches.while_loop(node), context)
-        return _DONT_PROCESS_CHILDREN
-
-
-    def _update_for_loop(self, node, context):
-        self.process_bindings(node.iterable, context)
-        
-        def update_for_loop_target(branch_context):
-            self._update_target(node.target, branch_context)
-        
-        self._update_branches(
-            branches.for_loop(node, update_for_loop_target),
-            context,
-        )
-        return _DONT_PROCESS_CHILDREN
 
 
     def _update_try(self, node, context):
@@ -113,8 +98,6 @@ class _BindingChecker(object):
             branches.try_statement(node, update_handler_target, delete_handler_target),
             context,
         )
-        
-        return _DONT_PROCESS_CHILDREN
 
 
     def _update_with(self, node, context):
@@ -133,28 +116,19 @@ class _BindingChecker(object):
             branches.with_statement(node, update_with_target, exit_type.return_type),
             context,
         )
-        
-        return _DONT_PROCESS_CHILDREN
 
 
     def _update_function_definition(self, node, context):
         context.bind(node)
         context.add_deferred(node, lambda: self._update_function_definition_body(node, context))
-        return _DONT_PROCESS_CHILDREN
         
     
     def _update_function_definition_body(self, node, context):
         body_context = context.enter_new_namespace()
-        for arg in node.args.args:
-            self.process_bindings(arg, body_context)
-        
+        self.process_bindings(node.args, body_context)
         self._update_statements(node.body, body_context)
 
 
-    def _update_argument(self, node, context):
-        context.bind(node)
-
-    
     def _update_class_definition(self, node, context):
         body_context = context.enter_new_namespace()
         self._update_statements(node.body, body_context)
@@ -167,15 +141,6 @@ class _BindingChecker(object):
             context.is_definitely_bound(method)
     
     
-    def _update_type_definition(self, node, context):
-        context.bind(node)
-    
-    
-    def _update_import(self, node, context):
-        for alias in node.names:
-            context.bind(alias)
-        
-
     def _update_branches(self, branches, context):
         branch_contexts = [
             self._update_branch(branch, context)
