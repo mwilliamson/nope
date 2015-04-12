@@ -320,7 +320,7 @@ class ExpressionTypeInferer(object):
     def _infer_comprehension(self, node, context, hint):
         iterable_element_type = self.infer_iterable_element_type(node.iterable, context)
         assignment = Assignment(self)
-        assignment.assign(node, node.target.value, iterable_element_type, context)
+        assignment.assign(node, node.target, iterable_element_type, context)
         comprehension_element_type = self.infer(node.element, context)
         return self._generate_comprehension_type(node.comprehension_type, comprehension_element_type)
     

@@ -43,7 +43,7 @@ _children = {
     nodes.BinaryOperation: lambda node: [node.left, node.right],
     nodes.Subscript: lambda node: [node.value, node.slice],
     nodes.Slice: lambda node: [node.start, node.stop, node.step],
-    nodes.Comprehension: lambda node: [node.iterable, Scope(node, [node.target, node.element])],
+    nodes.Comprehension: lambda node: [node.iterable, Scope(node, [nodes.Target(node.target), node.element])],
     nodes.Target: lambda node: [node.value],
 
     nodes.ReturnStatement: lambda node: [node.value],

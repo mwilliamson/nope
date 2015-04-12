@@ -75,10 +75,10 @@ Comprehension = _create_node("Comprehension", ["comprehension_type", "element", 
 Target = _create_node("Target", ["value"])
 
 def list_comprehension(element, target, iterable):
-    return Comprehension("list_comprehension", element, Target(target), iterable)
+    return Comprehension("list_comprehension", element, target, iterable)
 
 def generator_expression(element, target, iterable):
-    return Comprehension("generator_expression", element, Target(target), iterable)
+    return Comprehension("generator_expression", element, target, iterable)
 
 
 ReturnStatement = _create_node("ReturnStatement", ["value"])
