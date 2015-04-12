@@ -33,6 +33,12 @@ def children(node):
     )
 
 
+def descendants(node):
+    for child in children(node):
+        yield child
+        yield from descendants(child)
+
+
 def scoped_children(node):
     return filter(None, _children[type(node)](node))
 

@@ -1,4 +1,4 @@
-from .. import nodes, types, errors, visit
+from .. import nodes, types, errors, structure
 from ..lists import filter_by_type
 
 
@@ -191,14 +191,10 @@ class ClassDefinitionTypeChecker(object):
                     self_targets.append(target.value)
         
         
-        def check_self_reference_is_assignment_target(visitor, node):
-            if is_self(node) and node not in self_targets:
-                raise errors.InitMethodCannotGetSelfAttributes(node)
-        
-        visitor = visit.Visitor()
-        visitor.before(nodes.VariableReference, check_self_reference_is_assignment_target)
-        visitor.visit(statement)
-                
+        for descendant in structure.descendants(node):
+            if isinstance(descendant, nodes.VariableReference) and is_self(descendant) and descendant not in self_targets:
+                raise errors.InitMethodCannotGetSelfAttributes(descendant)
+
     
     def _function_type_to_method_type(self, func_type):
         return types.func(func_type.args[1:], func_type.return_type)
