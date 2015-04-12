@@ -122,7 +122,6 @@ class DeclarationFinder(object):
 
 
 _targets_of = {
-    nodes.WithStatement: (lambda node: _left_value_to_targets(node.target), VariableDeclarationNode),
     nodes.Target: (lambda node: _left_value_to_targets(node.value), VariableDeclarationNode),
         
     nodes.FunctionDef: (lambda node: [(node, node.name)], FunctionDeclarationNode),
