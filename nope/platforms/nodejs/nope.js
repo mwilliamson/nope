@@ -288,6 +288,16 @@ function issubclass(cls, clsinfo) {
     return false;
 }
 
+function list(iterator) {
+    var sentinel = new Object();
+    var result = [];
+    var element;
+    while ((element = next(iterator, sentinel)) !== sentinel) {
+        result.push(element);
+    }
+    return result;
+}
+
 var builtins = {
     str: str,
     getattr: getattr,
@@ -302,7 +312,8 @@ var builtins = {
     StopIteration: StopIteration,
     type: type,
     isinstance: isinstance,
-    slice: slice
+    slice: slice,
+    list: list
 };
 
 function instanceAttribute(self, attr) {

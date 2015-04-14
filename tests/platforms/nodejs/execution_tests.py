@@ -25,5 +25,4 @@ class NodeJsExecutionTests(execution.ExecutionTests):
         return SingleProcessRunner.start()
     
     test_getitem_dict = wip(execution.ExecutionTests.test_getitem_dict)
-    test_unnested_list_comprehension = wip(execution.ExecutionTests.test_unnested_list_comprehension)
 
