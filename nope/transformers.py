@@ -1,6 +1,7 @@
 import zuice
+import dodge
 
-from . import builtins, name_resolution, visit, nodes
+from . import builtins, name_resolution, nodes
 
 
 ModuleName = zuice.key("ModuleName")
@@ -14,32 +15,43 @@ class ClassBuilderTransform(zuice.Base):
     def __call__(self, module_node):
         references = self._name_resolver.resolve(module_node)
         
-        visitor = visit.Visitor(visit_explicit_types=True)
-        visitor.replace(nodes.Assignment, self._assignment)
-        return visitor.visit(module_node, references)
-
-
-    def _assignment(self, visitor, node, references):
-        # TODO: handle cases that are currently asserted not to be true
+        return self._transform(module_node, references)
+    
+    def _transform(self, node, references):
+        if self._is_class_builder_assignment(node, references):
+            return self._transform_assignment(node, references)
+        else:
+            return self._map_nodes(node, references)
+    
+    def _is_class_builder_assignment(self, node, references):
+        if not isinstance(node, nodes.Assignment):
+            return False
         
         if not isinstance(node.value, nodes.Call):
-            return node
+            return False
         
         call = node.value
         callee = call.func
         
         if not isinstance(callee, nodes.AttributeAccess):
-            return node
+            return False
         
         if not isinstance(callee.value, nodes.VariableReference):
-            return node
+            return False
         
         if not references.referenced_declaration(callee.value) != builtins.builtin_modules[self._module_name]:
-            return node
+            return False
         
         if callee.attr != self._func_name:
-            return node
+            return False
         
+        return True
+
+    def _transform_assignment(self, node, references):
+        call = node.value
+        callee = call.func
+        
+        # TODO: handle cases that are currently asserted not to be true
         assert len(node.targets) == 1
         target, = node.targets
         assert isinstance(target, nodes.VariableReference)
@@ -86,3 +98,27 @@ class ClassBuilderTransform(zuice.Base):
             ]
         )
         
+    def _map_nodes(self, node, references):
+        # TODO: add dodge.field_names()
+        field_names = [field.name for field in dodge.data._fields(node)]
+        fields = [
+            self._transform_field(getattr(node, field_name), references)
+            for field_name in field_names
+        ]
+        # TODO: preserve location
+        return type(node)(*fields)
+    
+    def _transform_field(self, field, references):
+        if isinstance(field, tuple):
+            return tuple(self._transform_field(element, references) for element in field)
+        if isinstance(field, list):
+            return [self._transform_field(element, references) for element in field]
+        elif isinstance(field, dict):
+            return dict(
+                (key, self._transform_field(value, references))
+                for key, value in field.items()
+            )
+        elif isinstance(field, (type(None), bool, int, str)):
+            return field
+        else:
+            return self._transform(field, references)
