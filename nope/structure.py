@@ -13,7 +13,7 @@ def is_scope(node):
 
 class Branch(object):
     def __init__(self, body):
-        self.body = body
+        self.body = filter(None, body)
 
 
 class ExhaustiveBranches(object):
