@@ -385,7 +385,8 @@ class Desugarrer(zuice.Base):
     
     def _comprehension(self, node):
         assert isinstance(node.target, nodes.VariableReference)
-        return cc.call(
+        
+        element_generator = cc.call(
             cc.internal("generator_expression"),
             [
                 cc.function_expression(
@@ -395,6 +396,13 @@ class Desugarrer(zuice.Base):
                 self.desugar(node.iterable)
             ]
         )
+        
+        if node.comprehension_type == "list_comprehension":
+            return cc.call(cc.builtin("list"), [element_generator])
+        elif node.comprehension_type == "generator_expression":
+            return element_generator
+        else:
+            raise Exception("Unhandled case")
     
     def _binary_operation(self, node):
         left = self.desugar(node.left)

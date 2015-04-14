@@ -575,6 +575,28 @@ class ComprehensionTests(object):
                 ]
             )
         )
+        
+    @istest
+    def test_list_comprehension_is_transformed_as_with_generator_expression_but_wrapped_in_list_call(self):
+        _assert_transform(
+            nodes.list_comprehension(
+                nodes.ref("y"),
+                nodes.ref("x"),
+                nodes.ref("xs")
+            ),
+            cc.call(
+                cc.builtin("list"),
+                [
+                    cc.call(
+                        cc.internal("generator_expression"),
+                        [
+                            cc.function_expression([cc.arg("x")], [cc.ret(cc.ref("y"))]),
+                            cc.ref("xs")
+                        ]
+                    )
+                ]
+            )
+        )
 
 @istest
 class OperationTests(object):
