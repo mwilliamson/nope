@@ -50,6 +50,7 @@ class Desugarrer(zuice.Base):
             nodes.Assignment: self._assignment,
             nodes.ExpressionStatement: self._expression_statement,
             
+            nodes.Comprehension: self._comprehension,
             nodes.BinaryOperation: self._binary_operation,
             nodes.UnaryOperation: self._unary_operation,
             nodes.Subscript: self._subscript,
@@ -381,6 +382,19 @@ class Desugarrer(zuice.Base):
     
     def _expression_statement(self, node):
         return cc.expression_statement(self.desugar(node.value))
+    
+    def _comprehension(self, node):
+        assert isinstance(node.target, nodes.VariableReference)
+        return cc.call(
+            cc.internal("generator_expression"),
+            [
+                cc.function_expression(
+                    [cc.arg(node.target.name)],
+                    [cc.ret(self.desugar(node.element))]
+                ),
+                self.desugar(node.iterable)
+            ]
+        )
     
     def _binary_operation(self, node):
         left = self.desugar(node.left)

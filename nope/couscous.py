@@ -279,6 +279,8 @@ RaiseStatement = dodge.data_class("RaiseStatement", ["value"])
 def raise_(value=None):
     return RaiseStatement(value)
 
+function_expression = FunctionExpression = dodge.data_class("FunctionExpression", ["args", "body"])
+
 call = Call = dodge.data_class("Call", ["func", "args"])
 attr = AttributeAccess = dodge.data_class("AttributeAccess", ["obj", "attr"])
 

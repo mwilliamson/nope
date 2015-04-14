@@ -558,14 +558,23 @@ class AssignmentTests(object):
         
 
 @istest
-class ExpressionStatementTests(object):
+class ComprehensionTests(object):
     @istest
-    def test_transform_value(self):
+    def test_generator_is_transformed_to_function_call_with_anonymous_function(self):
         _assert_transform(
-            nodes.expression_statement(nodes.ref("value")),
-            cc.expression_statement(cc.ref("value"))
+            nodes.generator_expression(
+                nodes.ref("y"),
+                nodes.ref("x"),
+                nodes.ref("xs")
+            ),
+            cc.call(
+                cc.internal("generator_expression"),
+                [
+                    cc.function_expression([cc.arg("x")], [cc.ret(cc.ref("y"))]),
+                    cc.ref("xs")
+                ]
+            )
         )
-
 
 @istest
 class OperationTests(object):
