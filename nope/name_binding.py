@@ -25,7 +25,6 @@ class _BindingChecker(object):
             structure.ExhaustiveBranches: self._update_exhaustive_branches,
             structure.Delete: self._update_delete,
             nodes.Target: self._update_target_node,
-            nodes.WithStatement: self._update_with,
             nodes.FunctionDef: self._update_function_definition,
             nodes.ClassDefinition: self._update_class_definition,
         }, default=self._update_children)
@@ -41,7 +40,7 @@ class _BindingChecker(object):
 
 
     def _update_children(self, node, context):
-        for child in structure.children(node):
+        for child in structure.children(node, self._type_lookup):
             self.process_bindings(child, context)
 
 
@@ -86,25 +85,6 @@ class _BindingChecker(object):
         self._update_target(node.value, context)
 
 
-    def _update_with(self, node, context):
-        self.process_bindings(node.value, context)
-        
-        exit_type = self._type_of(node.value).attrs.type_of("__exit__")
-        # TODO: this is duplicated in codegeneration
-        while not types.is_func_type(exit_type):
-            exit_type = exit_type.attrs.type_of("__call__")
-        
-        if node.target is None:
-            body_nodes = node.body
-        else:
-            body_nodes = [nodes.Target(node.target), node.body]
-        
-        if exit_type.return_type == types.none_type:
-            self.process_bindings(body_nodes, context)
-        else:
-            self._update_branched_nodes(body_nodes, context)
-
-
     def _update_function_definition(self, node, context):
         context.bind(node)
         context.add_deferred(node, lambda: self._update_function_definition_body(node, context))
@@ -131,9 +111,6 @@ class _BindingChecker(object):
     def _update_statements(self, statements, context):
         for statement in statements:
             self.process_bindings(statement, context)
-    
-    def _type_of(self, node):
-        return self._type_lookup.type_of(node)
 
 
 

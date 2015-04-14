@@ -1,4 +1,4 @@
-from . import nodes
+from . import nodes, types
 
 
 class Scope(object):
@@ -26,10 +26,10 @@ class Delete(object):
         self.target = target
 
 
-def children(node):
+def children(node, type_lookup=None):
     return (
         child.body if is_scope(child) else child
-        for child in scoped_children(node)
+        for child in scoped_children(node, type_lookup)
     )
 
 
@@ -39,8 +39,11 @@ def descendants(node):
         yield from descendants(child)
 
 
-def scoped_children(node):
-    return filter(None, _children[type(node)](node))
+def scoped_children(node, type_lookup=None):
+    if isinstance(node, nodes.WithStatement):
+        return _with_statement(node, type_lookup)
+    else:
+        return filter(None, _children[type(node)](node))
 
 
 _children = {
@@ -95,7 +98,6 @@ _children = {
     
     nodes.RaiseStatement: lambda node: [node.value],
     nodes.AssertStatement: lambda node: [node.condition, node.message],
-    nodes.WithStatement: lambda node: [node.value, Branch([None if node.target is None else nodes.Target(node.target), node.body])],
     nodes.FunctionDef: lambda node: [Scope(node, [node.type, node.args, node.body])],
     nodes.Arguments: lambda node: [node.args],
     nodes.FunctionSignature: lambda node: [node.type_params, node.args, node.returns],
@@ -113,3 +115,31 @@ _children = {
     
     nodes.FieldDefinition: lambda node: [node.name, node.type],
 }
+
+def _with_statement(node, type_lookup):
+    if node.target is None:
+        body_nodes = node.body
+    else:
+        body_nodes = [nodes.Target(node.target), node.body]
+
+    if _exit_type_is_none(node, type_lookup):
+        body = ExhaustiveBranches([body_nodes])
+    else:
+        body = Branch(body_nodes)
+    
+    return [node.value, body]
+
+def _exit_type_is_none(node, type_lookup):
+    if type_lookup is None:
+        return False
+    
+    value_type = type_lookup.type_of(node.value)
+    if value_type is None:
+        return False
+    
+    exit_type = value_type.attrs.type_of("__exit__")
+    # TODO: this is duplicated in codegeneration
+    while not types.is_func_type(exit_type):
+        exit_type = exit_type.attrs.type_of("__call__")
+    
+    return exit_type.return_type == types.none_type
