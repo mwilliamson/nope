@@ -31,6 +31,7 @@ class NodeTransformer(zuice.Base):
             cc.RaiseStatement: self._raise_statement,
             cc.Statements: self._statements,
             
+            cc.FunctionExpression: self._function_expression,
             cc.Call: self._call,
             cc.AttributeAccess: self._attr,
             cc.BinaryOperation: self._binary_operation,
@@ -344,6 +345,12 @@ class NodeTransformer(zuice.Base):
     def _statements(self, statements):
         return js.statements([self.transform(statement) for statement in statements.body])
     
+    
+    def _function_expression(self, function):
+        return js.function_expression(
+            [arg.name for arg in function.args],
+            self._transform_all(function.body)
+        )
     
     def _call(self, call):
         args = [self.transform(arg) for arg in call.args]

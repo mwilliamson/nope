@@ -499,6 +499,22 @@ def test_transform_raise_with_exception_value():
 
 
 @istest
+def test_transform_function_expression_with_body():
+    _assert_transform(
+        cc.function_expression([], [cc.ret(cc.ref("x"))]),
+        js.function_expression([], [js.ret(js.ref("x"))]),
+    )
+
+
+@istest
+def test_transform_function_expression_with_arguments():
+    _assert_transform(
+        cc.function_expression([cc.arg("x"), cc.arg("y")], []),
+        js.function_expression(["x", "y"], []),
+    )
+
+
+@istest
 def test_transform_call_with_positional_arguments():
     _assert_transform(
         cc.call(cc.ref("f"), [cc.ref("x"), cc.ref("y")]),

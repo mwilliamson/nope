@@ -26,5 +26,4 @@ class NodeJsExecutionTests(execution.ExecutionTests):
     
     test_getitem_dict = wip(execution.ExecutionTests.test_getitem_dict)
     test_unnested_list_comprehension = wip(execution.ExecutionTests.test_unnested_list_comprehension)
-    test_unnested_generator_expression = wip(execution.ExecutionTests.test_unnested_generator_expression)
 

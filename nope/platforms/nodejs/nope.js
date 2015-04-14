@@ -118,11 +118,11 @@ var arrayMethods = {
     },
     __iter__: function() {
         var self = this;
-        var index = 0
+        var index = 0;
         var end = this.length;
         var iterator = {
             __iter__: function() {
-                return self;
+                return iterator;
             },
             __next__: function() {
                 if (index < end) {
@@ -323,6 +323,19 @@ function numberDivMod(left, right) {
 
 var numberPow = Math.pow;
 
+var generatorExpression = function(func, iterable) {
+    var iterator = iter(iterable);
+    var self = {
+        __iter__: function() {
+            return self;
+        },
+        __next__: function() {
+            return func(iterator.__next__());
+        }
+    };
+    return self;
+};
+
 var $nope = module.exports = {
     exports: exports,
     operators: operators,
@@ -338,7 +351,9 @@ var $nope = module.exports = {
     Error: Error,
     undefined: undefined,
     
-    jsArrayToTuple: tuple
+    jsArrayToTuple: tuple,
+    
+    generator_expression: generatorExpression
 };
 
 var __builtinsModule = require("./__stdlib/builtins");
