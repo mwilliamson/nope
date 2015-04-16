@@ -138,7 +138,10 @@ class Transformer(object):
             cc.VariableDeclaration: self._transform_variable_declaration,
             cc.ReturnStatement: self._transform_return_statement,
             
+            cc.FormalArgument: self._transform_argument,
+            
             cc.Assignment: self._transform_assignment,
+            cc.FunctionExpression: self._transform_function_expression,
             cc.ListLiteral: self._transform_list_literal,
             cc.TupleLiteral: self._transform_tuple_literal,
             cc.BinaryOperation: self._transform_operation,
@@ -287,7 +290,7 @@ class Transformer(object):
 
     def _transform_function_definition(self, function):
         func_type = self._func_type(len(function.args))
-        args = [cs.arg(arg.name) for arg in function.args]
+        args = self._transform_all(function.args)
         body = self._transform_all(function.body)
         lambda_expression = cs.lambda_(args, body)
         assignment = cs.assign(cs.ref(function.name), cs.cast(func_type, lambda_expression))
@@ -377,6 +380,13 @@ class Transformer(object):
             value = self.transform(declaration.value)
         return cs.declare(declaration.name, value)
 
+    def _transform_argument(self, argument):
+        return cs.arg(argument.name)
+
+    def _transform_function_expression(self, function):
+        args = self._transform_all(function.args)
+        body = self._transform_all(function.body)
+        return cs.lambda_(args, body)
 
     def _transform_operation(self, operation):
         if operation.operator in ["is", "is_not"]:

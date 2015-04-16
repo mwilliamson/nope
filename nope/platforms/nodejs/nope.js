@@ -288,16 +288,6 @@ function issubclass(cls, clsinfo) {
     return false;
 }
 
-function list(iterator) {
-    var sentinel = new Object();
-    var result = [];
-    var element;
-    while ((element = next(iterator, sentinel)) !== sentinel) {
-        result.push(element);
-    }
-    return result;
-}
-
 var builtins = {
     str: str,
     getattr: getattr,
@@ -312,8 +302,7 @@ var builtins = {
     StopIteration: StopIteration,
     type: type,
     isinstance: isinstance,
-    slice: slice,
-    list: list
+    slice: slice
 };
 
 function instanceAttribute(self, attr) {
@@ -347,6 +336,16 @@ var generatorExpression = function(func, iterable) {
     return self;
 };
 
+function iteratorToList(iterator) {
+    var sentinel = new Object();
+    var result = [];
+    var element;
+    while ((element = next(iterator, sentinel)) !== sentinel) {
+        result.push(element);
+    }
+    return result;
+}
+
 var $nope = module.exports = {
     exports: exports,
     operators: operators,
@@ -364,7 +363,8 @@ var $nope = module.exports = {
     
     jsArrayToTuple: tuple,
     
-    generator_expression: generatorExpression
+    generator_expression: generatorExpression,
+    iterator_to_list: iteratorToList
 };
 
 var __builtinsModule = require("./__stdlib/builtins");

@@ -52,5 +52,29 @@ namespace __Nope
                 return _moduleCache[init];
             }
         }
+        
+        internal static dynamic generator_expression(Func<dynamic, dynamic> func, dynamic iterable)
+        {
+            var iterator = Builtins.iter(iterable);
+            dynamic self = null;
+            self = new
+            {
+                __iter__ = (Func<dynamic>)(() => self),
+                __next__ = (Func<dynamic>)(() => func(iterator.__next__()))
+            };
+            return self;
+        }
+        
+        internal static __NopeList iterator_to_list(dynamic iterator)
+        {
+            var sentinel = new object();
+            var result = new __NopeList();
+            dynamic element;
+            while ((element = Builtins.next(iterator, sentinel)) != sentinel)
+            {
+                result.append(element);
+            }
+            return result;
+        }
     }
 }

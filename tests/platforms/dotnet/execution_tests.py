@@ -15,5 +15,3 @@ class DotNetExecutionTests(execution.ExecutionTests):
     
     test_getitem_dict = wip(execution.ExecutionTests.test_getitem_dict)
     test_in_operator_list = wip(execution.ExecutionTests.test_in_operator_list)
-    test_unnested_generator_expression = wip(execution.ExecutionTests.test_unnested_generator_expression)
-    test_unnested_list_comprehension = wip(execution.ExecutionTests.test_unnested_list_comprehension)

@@ -585,7 +585,7 @@ class ComprehensionTests(object):
                 nodes.ref("xs")
             ),
             cc.call(
-                cc.builtin("list"),
+                cc.internal("iterator_to_list"),
                 [
                     cc.call(
                         cc.internal("generator_expression"),

@@ -398,7 +398,7 @@ class Desugarrer(zuice.Base):
         )
         
         if node.comprehension_type == "list_comprehension":
-            return cc.call(cc.builtin("list"), [element_generator])
+            return cc.call(cc.internal("iterator_to_list"), [element_generator])
         elif node.comprehension_type == "generator_expression":
             return element_generator
         else:
