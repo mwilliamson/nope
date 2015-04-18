@@ -104,7 +104,7 @@ Argument = _create_node("Argument", ["name", "optional"])
 ClassDefinition = _create_node("ClassDefinition", ["name", "body", "base_classes", "type_params"])
 FormalTypeParameter = _create_node("FormalTypeParameter", ["name"])
 TypeDefinition = _create_node("TypeDefinition", ["name", "value"])
-structural_type = StructuralType = _create_node("StructuralType", ["attrs"])
+structural_type = StructuralTypeDefinition = _create_node("StructuralTypeDefinition", ["name", "attrs"])
 
 Import = _create_node("Import", ["names"])
 ImportFrom = _create_node("ImportFrom", ["module", "names"])

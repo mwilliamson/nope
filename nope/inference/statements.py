@@ -36,6 +36,7 @@ class StatementTypeChecker(object):
             nodes.FunctionDef: self._check_function_def,
             nodes.ClassDefinition: class_definition_type_checker.check_class_definition,
             nodes.TypeDefinition: self._check_type_definition,
+            nodes.StructuralTypeDefinition: self._check_structural_type_definition,
             nodes.Import: self._check_import,
             nodes.ImportFrom: self._check_import_from,
             nodes.Statements: self._check_statements,
@@ -122,10 +123,16 @@ class StatementTypeChecker(object):
             return formal_arg.type
     
     
-    
-    
     def _check_type_definition(self, node, context):
         context.update_type(node, self._infer(node.value, context))
+    
+    
+    def _check_structural_type_definition(self, node, context):
+        structural_type = types.structural_type(node.name, [
+            types.attr(name, self._infer_type_value(type_expression, context))
+            for name, type_expression in node.attrs
+        ])
+        context.update_type(node, types.meta_type(structural_type))
     
 
     def _check_expression_statement(self, node, context):

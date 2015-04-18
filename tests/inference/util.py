@@ -61,6 +61,7 @@ class SingleScopeReferences(object):
             nodes.FunctionDef,
             nodes.ClassDefinition,
             nodes.TypeDefinition,
+            nodes.StructuralTypeDefinition,
             nodes.FormalTypeParameter,
         )
         if isinstance(node, named_nodes):

@@ -712,16 +712,23 @@ print(inc(A(42).x))
 """
         self._test_program_string(program, b"43\n")
     
-    @wip
     @istest
     def test_class_is_sub_type_of_matching_structural_types(self):
+        # TODO: add test that:
+        #
+        # class Hello:
+        #     description = "Hello"
+        #
+        # also works (fails on .NET backend at time of writing)
         program = """
 #:structural-type Message:
 #:  description: str
 Message = None
 
 class Hello:
-    description = "Hello"
+    #:: Self -> none
+    def __init__(self):
+        self.description = "Hello"
 
 #:: Message -> none
 def describe(message):

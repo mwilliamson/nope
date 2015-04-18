@@ -105,6 +105,7 @@ _children = {
     nodes.Argument: lambda node: [],
     nodes.ClassDefinition: lambda node: [node.base_classes, Scope(node, [node.type_params, node.body])],
     nodes.TypeDefinition: lambda node: [node.value],
+    nodes.StructuralTypeDefinition: lambda node: [attr[1] for attr in node.attrs],
     nodes.FormalTypeParameter: lambda node: [],
     
     nodes.Import: lambda node: node.names,

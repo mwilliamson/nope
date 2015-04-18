@@ -40,6 +40,9 @@ class _Attributes(object):
     
     def names(self):
         return self._attrs.keys()
+    
+    def __repr__(self):
+        return "Attributes({})".format(self._attrs)
 
 
 class EmptyAttributes(object):

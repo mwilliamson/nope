@@ -165,7 +165,7 @@ def structural_type_definitions_have_attributes():
 Message = None
 """
     note = _parse_type_definition_note(source)
-    assert_equal([("description", nodes.ref("str"))], note.value.attrs)
+    assert_equal([("description", nodes.ref("str"))], note.attrs)
 
 
 @istest

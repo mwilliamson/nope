@@ -176,6 +176,10 @@ def is_unknown(type_):
     return type_ is unknown_type
 
 
+def is_equivalent_type(first_type, second_type):
+    return is_sub_type(first_type, second_type) and is_sub_type(second_type, first_type)
+
+
 def is_sub_type(super_type, sub_type, unify=None):
     if unify is None:
         unify = set()

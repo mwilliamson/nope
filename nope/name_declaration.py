@@ -127,6 +127,7 @@ _targets_of = {
     nodes.FunctionDef: (lambda node: [(node, node.name)], FunctionDeclarationNode),
     nodes.ClassDefinition: (lambda node: [(node, node.name)], ClassDeclarationNode),
     nodes.TypeDefinition: (lambda node: [(node, node.name)], TypeDeclarationNode),
+    nodes.StructuralTypeDefinition: (lambda node: [(node, node.name)], TypeDeclarationNode),
     nodes.FormalTypeParameter: (lambda node: [(node, node.name)], TypeDeclarationNode),
     nodes.Argument: (lambda node: [(node, node.name)], VariableDeclarationNode),
     nodes.ImportAlias: (lambda node: [(node, node.value_name)], ImportDeclarationNode),

@@ -2,6 +2,7 @@ import os
 
 import tempman
 from nose.tools import istest
+from nose.plugins.attrib import attr
 
 from nope.platforms.dotnet import DotNet
 from .. import execution
@@ -9,6 +10,7 @@ from .. import execution
 def wip(*args):
     return None
 
+@attr("slow")
 @istest
 class DotNetExecutionTests(execution.ExecutionTests):
     platform = DotNet

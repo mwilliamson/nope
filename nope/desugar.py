@@ -30,6 +30,7 @@ class Desugarrer(zuice.Base):
             nodes.ImportFrom: self._import_from,
             
             nodes.TypeDefinition: lambda node: cc.statements([]),
+            nodes.StructuralTypeDefinition: lambda node: cc.statements([]),
             nodes.ClassDefinition: self._class_definition,
             nodes.FunctionDef: self._function_definition,
             nodes.Arguments: self._arguments,

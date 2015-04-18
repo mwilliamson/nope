@@ -48,6 +48,7 @@ _declared_name = TypeDispatch({
     nodes.Argument: lambda node: node.name,
     nodes.ClassDefinition: lambda node: node.name,
     nodes.TypeDefinition: lambda node: node.name,
+    nodes.StructuralTypeDefinition: lambda node: node.name,
     nodes.FormalTypeParameter: lambda node: node.name,
     nodes.ImportAlias: lambda node: node.value_name,
 }, default=lambda node: None)
