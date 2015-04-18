@@ -190,8 +190,7 @@ class ClassDefinitionTypeChecker(object):
                     class_type.attrs.add(target.attr, types.unknown_type, read_only=False)
                     self_targets.append(target.value)
         
-        
-        for descendant in structure.descendants(node):
+        for descendant in structure.descendants(statement):
             if isinstance(descendant, nodes.VariableReference) and is_self(descendant) and descendant not in self_targets:
                 raise errors.InitMethodCannotGetSelfAttributes(descendant)
 
