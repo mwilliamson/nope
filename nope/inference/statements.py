@@ -390,7 +390,7 @@ class StatementTypeChecker(object):
         
     def _check_import_alias(self, node, alias, context):
         if alias.asname is None:
-            parts = alias.name_parts
+            parts = alias.original_name_parts
             
             for index, part in enumerate(parts):
                 this_module = self._find_module(node, parts[:index + 1])
@@ -404,13 +404,13 @@ class StatementTypeChecker(object):
                 last_module = this_module
             
         else:
-            module = self._find_module(node, alias.name_parts)
+            module = self._find_module(node, alias.original_name_parts)
             context.update_type(alias, module)
 
 
     def _check_import_from(self, node, context):
         for alias in node.names:
-            module_type = self._find_module(node, node.module, alias.name)
+            module_type = self._find_module(node, node.module, alias.original_name)
             context.update_type(alias, module_type)
     
     

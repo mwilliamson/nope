@@ -102,7 +102,7 @@ class Desugarrer(zuice.Base):
     def _transform_import_alias(self, alias):
         if alias.asname is None:
             statements = []
-            parts = alias.name_parts
+            parts = alias.original_name_parts
             
             for index, part in enumerate(parts):
                 this_module_require = cc.module_ref(parts[:index + 1])
@@ -121,7 +121,7 @@ class Desugarrer(zuice.Base):
             return [
                 cc.assign(
                     cc.ref(alias.value_name),
-                    cc.module_ref(alias.name_parts)
+                    cc.module_ref(alias.original_name_parts)
                 )
             ]
     
@@ -132,7 +132,7 @@ class Desugarrer(zuice.Base):
         ])
     
     def _transform_import_from_alias(self, node, alias):
-        resolved_import = self._module_resolver.resolve_import_value(node.module, alias.name)
+        resolved_import = self._module_resolver.resolve_import_value(node.module, alias.original_name)
         module_ref = cc.module_ref(resolved_import.module_name)
         if resolved_import.attr_name is None:
             value = module_ref
