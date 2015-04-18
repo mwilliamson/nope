@@ -120,7 +120,7 @@ class Desugarrer(zuice.Base):
         else:
             return [
                 cc.assign(
-                    cc.ref(alias.value_name),
+                    cc.ref(alias.name),
                     cc.module_ref(alias.original_name_parts)
                 )
             ]
@@ -139,7 +139,7 @@ class Desugarrer(zuice.Base):
         else:
             value = cc.attr(module_ref, resolved_import.attr_name)
             
-        return cc.assign(cc.ref(alias.value_name), value)
+        return cc.assign(cc.ref(alias.name), value)
     
     def _try_statement(self, statement):
         return cc.try_(

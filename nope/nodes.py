@@ -110,7 +110,7 @@ Import = _create_node("Import", ["names"])
 ImportFrom = _create_node("ImportFrom", ["module", "names"])
 class ImportAlias(_create_node("ImportAlias", ["original_name", "asname"])):
     @property
-    def value_name(self):
+    def name(self):
         if self.asname is None:
             return self.original_name_parts[0]
         else:

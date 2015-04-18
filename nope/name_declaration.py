@@ -20,6 +20,12 @@ def _declare_children(node, declarations):
 
 
 def _targets(node):
+    if isinstance(node, nodes.Target):
+        return _left_value_to_targets(node.value), VariableDeclarationNode
+    elif type(node) in _declaration_nodes:
+        return [(node, node.name)], _declaration_nodes[type(node)]
+    else:
+        return [], None
     find_targets, target_type = _targets_of.get(type(node), (lambda node: [], None))
     return find_targets(node), target_type
 
@@ -121,14 +127,15 @@ class DeclarationFinder(object):
         return declarations
 
 
-_targets_of = {
-    nodes.Target: (lambda node: _left_value_to_targets(node.value), VariableDeclarationNode),
-        
-    nodes.FunctionDef: (lambda node: [(node, node.name)], FunctionDeclarationNode),
-    nodes.ClassDefinition: (lambda node: [(node, node.name)], ClassDeclarationNode),
-    nodes.TypeDefinition: (lambda node: [(node, node.name)], TypeDeclarationNode),
-    nodes.StructuralTypeDefinition: (lambda node: [(node, node.name)], TypeDeclarationNode),
-    nodes.FormalTypeParameter: (lambda node: [(node, node.name)], TypeDeclarationNode),
-    nodes.Argument: (lambda node: [(node, node.name)], VariableDeclarationNode),
-    nodes.ImportAlias: (lambda node: [(node, node.value_name)], ImportDeclarationNode),
+_declaration_nodes = {
+    nodes.FunctionDef: FunctionDeclarationNode,
+    nodes.ClassDefinition: ClassDeclarationNode,
+    nodes.TypeDefinition: TypeDeclarationNode,
+    nodes.StructuralTypeDefinition: TypeDeclarationNode,
+    nodes.FormalTypeParameter: TypeDeclarationNode,
+    nodes.Argument: VariableDeclarationNode,
+    nodes.ImportAlias: ImportDeclarationNode,
 }
+
+def declaration_type(node):
+    return _declaration_nodes.get(type(node))

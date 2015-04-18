@@ -34,24 +34,11 @@ def _resolve(node, context):
         scope_context = context.enter_scope(node)
         _resolve(node.body, scope_context)
     else:
-        declared_name = _declared_name(node)
-        if declared_name is not None:
-            context.add_reference(node, declared_name)
+        if name_declaration.declaration_type(node) is not None or isinstance(node, nodes.VariableReference):
+            context.add_reference(node, node.name)
         
         for child in structure.scoped_children(node):
             _resolve(child, context)
-
-
-_declared_name = TypeDispatch({
-    nodes.VariableReference: lambda node: node.name,
-    nodes.FunctionDef: lambda node: node.name,
-    nodes.Argument: lambda node: node.name,
-    nodes.ClassDefinition: lambda node: node.name,
-    nodes.TypeDefinition: lambda node: node.name,
-    nodes.StructuralTypeDefinition: lambda node: node.name,
-    nodes.FormalTypeParameter: lambda node: node.name,
-    nodes.ImportAlias: lambda node: node.value_name,
-}, default=lambda node: None)
 
 
 class _Context(object):

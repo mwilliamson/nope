@@ -55,23 +55,7 @@ class SingleScopeReferences(object):
         self._references = references
     
     def referenced_declaration(self, node):
-        named_nodes = (
-            nodes.VariableReference,
-            nodes.Argument,
-            nodes.FunctionDef,
-            nodes.ClassDefinition,
-            nodes.TypeDefinition,
-            nodes.StructuralTypeDefinition,
-            nodes.FormalTypeParameter,
-        )
-        if isinstance(node, named_nodes):
-            name = node.name
-        elif isinstance(node, nodes.ImportAlias):
-            name = node.value_name
-        else:
-            raise Exception("Name not implemented for {}".format(type(node)))
-        
-        return self.declaration(name)
+        return self.declaration(node.name)
     
     def declaration(self, name):
         if name not in self._references:
