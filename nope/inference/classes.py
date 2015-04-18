@@ -169,17 +169,20 @@ class ClassDefinitionTypeChecker(object):
         
     
     def _check_init_statements(self, node, context, class_type):
-        for statement in node.body:
-            self._check_init_statement(node, statement, context, class_type)
-    
-    def _check_init_statement(self, node, statement, context, class_type):
         declarations_in_function = self._declaration_finder.declarations_in(node)
         self_arg_name = node.args.args[0].name
         self_declaration = declarations_in_function.declaration(self_arg_name)
         
         def is_self(ref):
             return context.referenced_declaration(ref) == self_declaration
-        
+            
+        for statement in node.body:
+            self._check_init_statement(
+                statement=statement,
+                class_type=class_type,
+                is_self=is_self)
+    
+    def _check_init_statement(self, statement, class_type, is_self):
         self_targets = []
         
         if isinstance(statement, nodes.Assignment):
