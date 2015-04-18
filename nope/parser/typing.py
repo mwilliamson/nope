@@ -23,7 +23,7 @@ def parse_notes(source):
     fields = {}
     
     for attached_node_position, (position, prefix, note) in _notes(source):
-        if prefix == "type":
+        if prefix in ["type", "structural-type"]:
             store = type_definitions
         elif prefix == "generic":
             store = generics
@@ -124,7 +124,11 @@ def _make_union_type(result):
 
 
 def _make_type_definition(result):
-    return nodes.TypeDefinition(result[0], result[1])
+    return nodes.type_definition(result[0], result[1])
+
+
+def _make_structural_type_definition(result):
+    return nodes.type_definition(result[0], nodes.structural_type(result[1]))
 
 
 def _make_generic(result):
@@ -138,7 +142,7 @@ def _create_type_rules():
     bar = _token_type("bar")
     equals = _token_type("equals")
     
-    type_name = arg_name = _token_type("name") >> _make_name
+    attr_name = type_name = arg_name = _token_type("name") >> _make_name
 
     primary_type = forward_decl()
     union_type = _one_or_more_with_separator(primary_type, bar) >> _make_union_type
@@ -164,9 +168,14 @@ def _create_type_rules():
     
     type_definition = (type_name + skip(equals) + type_ + skip(finished))  >> _make_type_definition
     
+    structural_type_attr = attr_name + skip(colon) + type_
+    structural_type_attrs = many(structural_type_attr)
+    
+    structural_type_definition = (type_name + skip(colon) + structural_type_attrs + skip(finished)) >> _make_structural_type_definition
+    
     generic = (_one_or_more_with_separator(type_name, comma) + skip(finished)) >> _make_generic
     
-    return explicit_type, type_definition, generic
+    return explicit_type, type_definition, structural_type_definition, generic
 
 
 def _one_or_more_with_separator(repeated, separator):
@@ -182,7 +191,7 @@ def _make_separated(result):
         return [result[0]]
 
 
-_explicit_type, _type_definition, _generic  = _create_type_rules()
+_explicit_type, _type_definition, _structural_type_definition, _generic  = _create_type_rules()
     
     
 def _tokenize_type_string(sig_str):
@@ -208,6 +217,7 @@ def _tokenize_type_string(sig_str):
 
 _note_parsers = {
     "type": _type_definition,
+    "structural-type": _structural_type_definition,
     "generic": _generic,
     ":": _explicit_type,
     "field": _explicit_type,

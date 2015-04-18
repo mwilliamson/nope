@@ -716,7 +716,7 @@ print(inc(A(42).x))
     @istest
     def test_class_is_sub_type_of_matching_structural_types(self):
         program = """
-#:structural-type Message
+#:structural-type Message:
 #:  description: str
 Message = None
 

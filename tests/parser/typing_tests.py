@@ -147,6 +147,28 @@ x = 1
 
 
 @istest
+def structural_type_definitions_have_name():
+    source = """
+#:structural-type Message:
+#:  description: str
+Message = None
+"""
+    note = _parse_type_definition_note(source)
+    assert_equal("Message", note.name)
+
+
+@istest
+def structural_type_definitions_have_attributes():
+    source = """
+#:structural-type Message:
+#:  description: str
+Message = None
+"""
+    note = _parse_type_definition_note(source)
+    assert_equal([("description", nodes.ref("str"))], note.value.attrs)
+
+
+@istest
 def generic_specifiers_use_generic_keyword():
     source = """
 #:generic T
