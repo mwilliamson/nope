@@ -16,6 +16,7 @@ class _BindingChecker(object):
         nodes.Argument,
         nodes.ImportAlias,
         nodes.TypeDefinition,
+        nodes.StructuralTypeDefinition,
     ])
     
     def __init__(self, type_lookup):
