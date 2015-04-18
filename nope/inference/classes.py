@@ -99,8 +99,7 @@ class ClassDefinitionTypeChecker(object):
         
         if init is not None:
             init_node, init_func_type = init
-            for statement in init_node.body:
-                self._check_init_statement(init_node, statement, body_context, inner_class_type)
+            self._check_init_statements(init_node, body_context, inner_class_type)
             
             self._update_context(init_node, body_context, immediate=True)
     
@@ -169,6 +168,9 @@ class ClassDefinitionTypeChecker(object):
         return body_context
         
     
+    def _check_init_statements(self, node, context, class_type):
+        for statement in node.body:
+            self._check_init_statement(node, statement, context, class_type)
     
     def _check_init_statement(self, node, statement, context, class_type):
         declarations_in_function = self._declaration_finder.declarations_in(node)
