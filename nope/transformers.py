@@ -105,8 +105,14 @@ class ClassBuilderTransform(zuice.Base):
             self._transform_field(getattr(node, field_name), references)
             for field_name in field_names
         ]
-        # TODO: preserve location
-        return type(node)(*fields)
+        
+        new_node = type(node)(*fields)
+        # TODO: test location preservation
+        location = getattr(node, "location", None)
+        if location is not None:
+            new_node.location = location
+        
+        return new_node
     
     def _transform_field(self, field, references):
         if isinstance(field, tuple):
