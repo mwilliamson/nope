@@ -75,7 +75,7 @@ _children = {
 
     nodes.ReturnStatement: lambda node: [node.value],
     nodes.ExpressionStatement: lambda node: [node.value],
-    nodes.Assignment: lambda node: [node.value, list(map(nodes.Target, node.targets))],
+    nodes.Assignment: lambda node: [node.type, node.value, list(map(nodes.Target, node.targets))],
     
     nodes.IfElse: lambda node: [node.condition, ExhaustiveBranches([node.true_body, node.false_body])],
     

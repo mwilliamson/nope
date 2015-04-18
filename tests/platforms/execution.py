@@ -853,6 +853,16 @@ f(42)
 f("blah")
 """
         self._test_program_string(program, b"42\nblah\n")
+        
+    @istest
+    def assignment_can_have_type_hint(self):
+        program = """
+#:: list[str]
+values = []
+values.append("Hello")
+print(values[0])
+"""
+        self._test_program_string(program, b"Hello\n")
     
     
     @istest
