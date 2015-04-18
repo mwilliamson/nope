@@ -787,6 +787,12 @@ Identifier = None
     assert_equal(1, len(module_node.body))
 
 
+@istest
+def test_syntax_error_if_trying_to_parse_unsupported_node():
+    source = """lambda: None"""
+    _assert_syntax_error("syntax node not supported: Lambda", source)
+
+
 def _assert_expression_parse(expected, source):
     assert_equal(expected, _parse_expression(source))
 

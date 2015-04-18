@@ -104,6 +104,10 @@ class Converter(object):
             type_definition = self._comment_seeker.consume_type_definition(lineno, col_offset)
             field_definition = self._comment_seeker.consume_field(lineno, col_offset)
             
+            converter = self._converters.get(type(node))
+            if converter is None:
+                raise SyntaxError("syntax node not supported: {0}".format(type(node).__name__))
+                
             nope_node = self._converters[type(node)](node)
             
             if type_definition is not None:
