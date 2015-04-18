@@ -168,7 +168,7 @@ def _create_type_rules():
     
     type_definition = (type_name + skip(equals) + type_ + skip(finished))  >> _make_type_definition
     
-    structural_type_attr = (attr_name + skip(colon) + type_) >> tuple
+    structural_type_attr = (attr_name + skip(colon) + explicit_type) >> tuple
     structural_type_attrs = many(structural_type_attr)
     
     structural_type_definition = (type_name + skip(colon) + structural_type_attrs + skip(finished)) >> _make_structural_type_definition
