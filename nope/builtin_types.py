@@ -1,6 +1,6 @@
 from .types import (
     class_type, meta_type, union, structural_type, generic_structural_type,
-    generic_class, func, overloaded_func,
+    generic_class, func, overloaded_func, generic_func,
     attr,
     any_type, object_type,
     covariant,
@@ -94,10 +94,12 @@ list_type = generic_class("list", ["T"], lambda T: [
         func([slice_type(_int_or_none, _int_or_none, _int_or_none)], list_type(T)),
     )),
     attr("__add__", func([list_type(T)], list_type(T))),
-    attr("pop", func([], T))
+    attr("pop", func([], T)),
 ])
 
-list_meta_type = meta_type(list_type)
+list_meta_type = meta_type(list_type, [
+    attr("__call__", generic_func(["T"], lambda T: func([iterable(T)], list_type(T)))),
+])
 
 dict_type = generic_class("dict", ["K", "V"], lambda K, V: [
     attr("__eq__", func([object_type], bool_type)),
