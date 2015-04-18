@@ -107,6 +107,7 @@ dict_type = generic_class("dict", ["K", "V"], lambda K, V: [
     attr("__setitem__", func([K, V], none_type)),
     attr("__iter__", func([], iterator(K))),
     attr("get", func([K, V], V)),
+    attr("keys", func([], iterator(K))),
     attr("items", func([], iterator(tuple_type(K, V)))),
     attr("copy", func([], dict_type(K, V))),
 ])
