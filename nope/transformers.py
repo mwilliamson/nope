@@ -99,11 +99,9 @@ class ClassBuilderTransform(zuice.Base):
         )
         
     def _map_nodes(self, node, references):
-        # TODO: add dodge.field_names()
-        field_names = [field.name for field in dodge.data._fields(node)]
         fields = [
-            self._transform_field(getattr(node, field_name), references)
-            for field_name in field_names
+            self._transform_field(getattr(node, field.name), references)
+            for field in dodge.fields(node)
         ]
         
         new_node = type(node)(*fields)
