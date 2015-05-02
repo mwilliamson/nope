@@ -28,7 +28,7 @@ setup(
     scripts=['scripts/nope'],
     install_requires=[
         "funcparserlib==0.3.6",
-        "dodge>=0.1.8,<0.2",
+        "dodge>=0.1.9,<0.2",
         "zuice>=0.3.0,<0.4",
     ],
     keywords="nope static type",

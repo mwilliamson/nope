@@ -1,10 +1,19 @@
 import sys
+import itertools
 
 import dodge
 
 
+_node_id_counter = itertools.count()
+
+
+class Node(object):
+    def __init__(self):
+        self.node_id = next(_node_id_counter)
+
+
 def _create_node(name, fields):
-    return dodge.data_class(name, fields)
+    return dodge.data_class(name, fields, bases=(Node, ))
 
 
 NoneLiteral = _create_node("NoneLiteral", [])

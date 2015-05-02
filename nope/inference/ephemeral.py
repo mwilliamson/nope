@@ -38,8 +38,9 @@ def formal_arg_constraint(formal_arg_node, type_=None):
     return FormalArgumentConstraint(formal_arg_node, type_)
 
 
-class FormalArgumentConstraint(object):
+class FormalArgumentConstraint(nodes.Node):
     def __init__(self, formal_arg_node, type_):
+        super().__init__()
         self.formal_arg_node = formal_arg_node
         self.type = type_
 

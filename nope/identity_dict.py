@@ -49,7 +49,7 @@ class NodeDict(_IdentityDict):
     def __init__(self, values=None):
         if values is None:
             values = []
-        super().__init__(key_identity=lambda node: id(node), values=values)
+        super().__init__(key_identity=lambda node: node.node_id, values=values)
 
 
 class ComputedNodeDict(object):
