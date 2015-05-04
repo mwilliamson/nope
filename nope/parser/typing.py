@@ -164,7 +164,7 @@ def _create_type_rules():
     sub_signature = (_token_type("paren-open") + signature + _token_type("paren-close")) >> (lambda result: result[1])
     
     primary_type.define(sub_signature | applied_type | type_ref)
-    explicit_type = (signature | type_) + finished >> (lambda result: result[0])
+    explicit_type = signature | type_
     
     type_definition = (type_name + skip(equals) + type_ + skip(finished))  >> _make_type_definition
     
@@ -175,7 +175,7 @@ def _create_type_rules():
     
     generic = (_one_or_more_with_separator(type_name, comma) + skip(finished)) >> _make_generic
     
-    return explicit_type, type_definition, structural_type_definition, generic
+    return explicit_type + skip(finished), type_definition, structural_type_definition, generic
 
 
 def _one_or_more_with_separator(repeated, separator):
