@@ -16,7 +16,7 @@ def create_bindings():
     
     bindings = zuice.Bindings()
     bindings.bind(DeclarationFinder).to_instance(declaration_finder)
-    bindings.bind(SourceTree).to_provider(_source_tree_provider)
+    bindings.bind(SourceTree).to_provider(_source_tree_provider).singleton()
     bindings.bind(environment.Builtins).to_instance(builtins)
     bindings.bind(environment.InitialDeclarations).to_provider(lambda injector:
         injector.get(environment.Builtins).declarations()
