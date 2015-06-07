@@ -26,8 +26,6 @@ def _targets(node):
         return [(node, node.name)], _declaration_nodes[type(node)]
     else:
         return [], None
-    find_targets, target_type = _targets_of.get(type(node), (lambda node: [], None))
-    return find_targets(node), target_type
 
 
 def _left_values_to_targets(nodes):
