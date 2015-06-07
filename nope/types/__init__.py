@@ -97,10 +97,6 @@ def is_func_type(type_):
     return isinstance(type_, _FunctionType)
 
 
-def is_generic_func_type(type_):
-    return isinstance(type_, _GenericType) and isinstance(type_.underlying_type, _FunctionType)
-
-
 class _UnionTypeBase(object):
     def __init__(self, types):
         self._types = tuple(types)

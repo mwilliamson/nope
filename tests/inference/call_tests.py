@@ -48,6 +48,21 @@ def can_infer_type_of_call_with_optional_argument_specified():
 
 
 @istest
+def can_infer_type_of_call_with_specified_optional_argument_after_unspecified_optional_argument():
+    type_bindings = {
+        "f": types.func(
+            args=[
+                types.func_arg("x", types.str_type, optional=True),
+                types.func_arg("y", types.int_type, optional=True),
+            ],
+            return_type=types.bool_type,
+        )
+    }
+    node = nodes.call(nodes.ref("f"), [], {"y": nodes.int_literal(42)})
+    assert_equal(types.bool_type, infer(node, type_bindings=type_bindings))
+
+
+@istest
 def object_can_be_called_if_it_has_call_magic_method():
     cls = types.class_type("Blah", [
         types.attr("__call__", types.func([types.str_type], types.int_type)),
