@@ -109,7 +109,7 @@ class ExpressionTypeInferer(object):
                     
         actual_args = self._generate_actual_args(node, call_function_type.args)
         actual_arg_types = [
-            self.infer(actual_arg, context, hint=formal_arg_type)
+            None if actual_arg is None else self.infer(actual_arg, context, hint=formal_arg_type)
             for actual_arg, formal_arg_type in zip(actual_args, formal_arg_types)
         ]
         
@@ -211,6 +211,8 @@ class ExpressionTypeInferer(object):
                 else:
                     message = "missing argument '{}'".format(formal_arg_name)
                 raise errors.ArgumentsError(node, message)
+            else:
+                actual_args.append(None)
         
         if kwarg_nodes:
             first_key = next(iter(kwarg_nodes.keys()))
@@ -343,7 +345,7 @@ class ExpressionTypeInferer(object):
     def _type_check_args(self, node, actual_args, type_params, formal_arg_types, context):
         for (actual_arg, actual_arg_type), formal_arg_type in zip(actual_args, formal_arg_types):
             # TODO: need to ensure unified type params are consistent
-            if not types.is_sub_type(formal_arg_type, actual_arg_type, unify=type_params):
+            if actual_arg_type is not None and not types.is_sub_type(formal_arg_type, actual_arg_type, unify=type_params):
                 if isinstance(actual_arg, ephemeral.FormalArgumentConstraint):
                     raise errors.UnexpectedTargetTypeError(
                         actual_arg.formal_arg_node,

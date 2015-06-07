@@ -60,6 +60,7 @@ class Desugarrer(zuice.Base):
             
             nodes.ListLiteral: self._list_literal,
             nodes.TupleLiteral: self._tuple_literal,
+            nodes.DictLiteral: lambda node: cc.none,
             nodes.Slice: self._slice,
             
             nodes.VariableReference: self._ref,
@@ -436,15 +437,19 @@ class Desugarrer(zuice.Base):
         
         func, func_type = self._callable_to_func(self.desugar(node.func), self._type_of(node.func))
         
-        for index, formal_arg in enumerate(func_type.args):
-            if index < len(node.args):
-                actual_arg_node = node.args[index]
-            elif formal_arg.name in node.kwargs:
-                actual_arg_node = node.kwargs[formal_arg.name]
-            else:
-                actual_arg_node = nodes.none()
-                
-            args.append(self.desugar(actual_arg_node))
+        if types.is_overloaded_func_type(func_type):
+            args = [self.desugar(arg) for arg in node.args]
+            assert not node.kwargs
+        else:
+            for index, formal_arg in enumerate(func_type.args):
+                if index < len(node.args):
+                    actual_arg_node = node.args[index]
+                elif formal_arg.name in node.kwargs:
+                    actual_arg_node = node.kwargs[formal_arg.name]
+                else:
+                    actual_arg_node = nodes.none()
+                    
+                args.append(self.desugar(actual_arg_node))
             
         return cc.call(func, args)
     
@@ -493,7 +498,7 @@ class Desugarrer(zuice.Base):
         return cc.attr(receiver, "__{}__".format(name))
     
     def _callable_to_func(self, value, value_type):
-        while not types.is_func_type(value_type) and not types.is_generic_func(value_type):
+        while not types.is_func_type(value_type) and not types.is_generic_func(value_type) and not types.is_overloaded_func_type(value_type):
             value_type = value_type.attrs.type_of("__call__")
             value = cc.attr(value, "__call__")
         

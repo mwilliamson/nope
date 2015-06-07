@@ -97,10 +97,6 @@ def is_func_type(type_):
     return isinstance(type_, _FunctionType)
 
 
-def is_generic_func_type(type_):
-    return isinstance(type_, _GenericType) and isinstance(type_.underlying_type, _FunctionType)
-
-
 class _UnionTypeBase(object):
     def __init__(self, types):
         self._types = tuple(types)
@@ -256,7 +252,7 @@ def is_sub_type(super_type, sub_type, unify=None):
                 for attr in super_type.attrs
             )
         
-        if isinstance(super_type, _FunctionType) and (sub_type, _FunctionType):
+        if (is_func_type(super_type) or is_generic_func(super_type)) and (is_func_type(sub_type) or is_generic_func(sub_type)):
             if len(super_type.args) != len(sub_type.args):
                 return False
             

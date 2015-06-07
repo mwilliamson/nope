@@ -39,7 +39,7 @@ class CompileCommand(object):
     
     @staticmethod
     def create_parser(parser):
-        parser.add_argument("path")
+        parser.add_argument("path", nargs="+")
         parser.add_argument("--backend", required=True, choices=platforms.names())
         parser.add_argument("--output-dir", required=True)
     

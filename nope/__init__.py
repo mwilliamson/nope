@@ -27,5 +27,6 @@ class Compiler(zuice.Base):
         if isinstance(platform, str):
             platform_class = platforms.find_platform_by_name(platform)
             platform = self._injector.get(platform_class)
-            
-        platform.generate_code(source_path, destination_dir)
+        
+        for path in source_path:
+            platform.generate_code(path, destination_dir)

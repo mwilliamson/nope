@@ -42,7 +42,9 @@ int_type.attrs.add("__ge__", func([int_type], bool_type))
 _int_or_none = union(int_type, none_type)
 
 str_type = class_type("str")
-str_type.attrs.add("__eq__", func([str_type], bool_type))
+str_type.attrs.add("__eq__", func([object_type], bool_type))
+str_type.attrs.add("__ne__", func([object_type], bool_type))
+str_type.attrs.add("__add__", func([str_type], str_type))
 str_type.attrs.add("find", func([str_type], int_type))
 str_type.attrs.add("replace", func([str_type, str_type], str_type))
 str_type.attrs.add("format", overloaded_func(
@@ -101,36 +103,6 @@ list_meta_type = meta_type(list_type, [
     attr("__call__", generic_func(["T"], lambda T: func([iterable(T)], list_type(T)))),
 ])
 
-dict_type = generic_class("dict", ["K", "V"], lambda K, V: [
-    attr("__eq__", func([object_type], bool_type)),
-    attr("__getitem__", func([K], V)),
-    attr("__setitem__", func([K, V], none_type)),
-    attr("__iter__", func([], iterator(K))),
-    attr("get", func([K, V], V)),
-    attr("keys", func([], iterator(K))),
-    attr("items", func([], iterator(tuple_type(K, V)))),
-    attr("copy", func([], dict_type(K, V))),
-])
-
-dict_meta_type = meta_type(dict_type)
-
-exception_type = class_type("Exception")
-exception_meta_type = meta_type(exception_type, [
-    attr("__call__", func([str_type], exception_type)),
-])
-
-traceback_type = class_type("traceback")
-
-assertion_error_type = class_type("AssertionError", base_classes=[exception_type])
-assertion_error_meta_type = meta_type(assertion_error_type, [
-    attr("__call__", func([str_type], assertion_error_type)),
-])
-
-stop_iteration_type = class_type("StopIteration", base_classes=[exception_type])
-stop_iteration_meta_type = meta_type(stop_iteration_type, [
-    attr("__call__", func([], stop_iteration_type)),
-])
-
 def _create_tuple_class(length):
     return generic_class(
         "tuple{}".format(length),
@@ -148,3 +120,36 @@ def is_tuple(type_):
         tuple_type.is_instantiated_type(type_)
         for tuple_type in _tuple_types
     )
+
+dict_type = generic_class("dict", ["K", "V"], lambda K, V: [
+    attr("__eq__", func([object_type], bool_type)),
+    attr("__getitem__", func([K], V)),
+    attr("__setitem__", func([K, V], none_type)),
+    attr("__iter__", func([], iterator(K))),
+    attr("__contains__", func([K], bool_type)),
+    attr("get", func([K, V], V)),
+    attr("keys", func([], iterator(K))),
+    attr("items", func([], iterator(tuple_type(K, V)))),
+    attr("copy", func([], dict_type(K, V))),
+])
+
+dict_meta_type = meta_type(dict_type, [
+    attr("__call__", generic_func(["K", "V"], lambda K, V: func([iterator(tuple_type(K, V))], dict_type(K, V)))),
+])
+
+exception_type = class_type("Exception")
+exception_meta_type = meta_type(exception_type, [
+    attr("__call__", func([str_type], exception_type)),
+])
+
+traceback_type = class_type("traceback")
+
+assertion_error_type = class_type("AssertionError", base_classes=[exception_type])
+assertion_error_meta_type = meta_type(assertion_error_type, [
+    attr("__call__", func([str_type], assertion_error_type)),
+])
+
+stop_iteration_type = class_type("StopIteration", base_classes=[exception_type])
+stop_iteration_meta_type = meta_type(stop_iteration_type, [
+    attr("__call__", func([], stop_iteration_type)),
+])
