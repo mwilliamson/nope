@@ -43,12 +43,9 @@ def _left_value_to_targets(root):
     return ((node, node.name) for node in generate(root))
 
 
-class Declarations(object):
-    def __init__(self, declarations):
-        self._declarations = declarations
-    
-    def names(self):
-        return self._declarations.keys()
+class DeclarationsBuilder(object):
+    def __init__(self):
+        self._declarations = {}
     
     def declare(self, name, target_node, target_type):
         if name in self._declarations:
@@ -63,6 +60,17 @@ class Declarations(object):
             declaration_node = self._declarations[name] = target_type(name)
         
         return declaration_node
+    
+    def build(self):
+        return Declarations(self._declarations)
+
+
+class Declarations(object):
+    def __init__(self, declarations):
+        self._declarations = declarations
+    
+    def names(self):
+        return self._declarations.keys()
     
     def declaration(self, name):
         return self._declarations[name]
@@ -114,7 +122,7 @@ class DeclarationFinder(object):
         
 
     def _generate_declarations(self, node):
-        declarations = Declarations({})
+        declarations = DeclarationsBuilder()
         
         if isinstance(node, nodes.ClassDefinition):
             declarations.declare("Self", node, target_type=SelfTypeDeclarationNode)
@@ -122,7 +130,13 @@ class DeclarationFinder(object):
         for child in structure.children(node):
             _declare(child, declarations)
             
-        return declarations
+        return declarations.build()
+
+
+def find_declarations(node):
+    declarations = DeclarationsBuilder()
+    _declare(node, declarations)
+    return declarations.build()
 
 
 _declaration_nodes = {
