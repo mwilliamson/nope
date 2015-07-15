@@ -81,6 +81,9 @@ class _InstantiatedType(object):
         
     def __str__(self):
         return str(self._underlying_type)
+    
+    def replace_types(self, type_map):
+        return self.reify().replace_types(type_map)
 
 
 def is_instantiated_type(type_):
@@ -108,37 +111,36 @@ def unnamed_generic(params, create_type, attrs=None, complete_type=None):
 
 
 class _GenericFunc(object):
-    def __init__(self, formal_type_params, create_func):
+    def __init__(self, formal_type_params, inner_func):
         self.formal_type_params = formal_type_params
-        self._create_func = create_func
-        self._generic_signature = create_func(*formal_type_params)
+        self._inner_func = inner_func
         self.attrs = EmptyAttributes()
     
     @property
     def args(self):
-        return self._generic_signature.args
+        return self._inner_func.args
     
     @property
     def return_type(self):
-        return self._generic_signature.return_type
+        return self._inner_func.return_type
     
     def instantiate(self, params):
-        return self._create_func(*params)
+        return self.instantiate_with_type_map(dict(zip(self.formal_type_params, params)))
     
     def instantiate_with_type_map(self, type_map):
-        params = [
-            type_map[formal_type_param]
-            for formal_type_param in self.formal_type_params
-        ]
-        return self.instantiate(params)
+        return self._inner_func.replace_types(type_map)
     
     def __str__(self):
-        return "{} => {}".format(", ".join(map(str, self.formal_type_params)), self._generic_signature)
+        return "{} => {}".format(", ".join(map(str, self.formal_type_params)), self._inner_func)
     
 
-def generic_func(formal_type_params, create_func):
-    formal_type_params = [_formal_param(param) for param in formal_type_params]
-    return _GenericFunc(formal_type_params, create_func)
+def generic_func(formal_type_params, inner_func):
+    return _GenericFunc(formal_type_params, inner_func)
+
+
+def generic_func_builder(formal_type_param_names, create_inner_func):
+    formal_type_params = [_formal_param(param) for param in formal_type_param_names]
+    return generic_func(formal_type_params, create_inner_func(*formal_type_params))
 
 
 def is_generic_func(value):
@@ -177,6 +179,9 @@ class _FormalParameter(object):
     
     def __repr__(self):
         return "_FormalParameter({}, {})".format(self._name, self.variance)
+    
+    def replace_types(self, type_map):
+        return type_map.get(self, self)
 
 
 def is_formal_parameter(nope_type):

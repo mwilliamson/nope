@@ -62,13 +62,9 @@ class ClassDefinitionTypeChecker(object):
             meta_type = types.meta_type(class_type)
             context.update_type(node, meta_type)
             
-            def inner_constructor_type(*actual_type_params):
-                inner_class_type = class_type(*actual_type_params)
-                return self._constructor_type(inner_class_type)
-                
             constructor_type = types.generic_func(
                 formal_type_params,
-                inner_constructor_type
+                self._constructor_type(class_type(*formal_type_params))
             )
             meta_type.attrs.add("__call__", constructor_type, read_only=True)
             return types.meta_type(class_type.instantiate(formal_type_params))

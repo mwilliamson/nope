@@ -131,7 +131,7 @@ def error_in_inferring_actual_argument_to_overloaded_function_is_not_failure_to_
 
 @istest
 def callee_can_be_generic_func():
-    type_bindings = {"f": types.generic_func(["T"], lambda T:
+    type_bindings = {"f": types.generic_func_builder(["T"], lambda T:
         types.func([T], types.int_type),
     )}
     node = nodes.call(nodes.ref("f"), [nodes.str_literal("")])
@@ -140,7 +140,7 @@ def callee_can_be_generic_func():
 
 @istest
 def generic_type_arguments_are_covariant():
-    type_bindings = {"f": types.generic_func(["T"], lambda T:
+    type_bindings = {"f": types.generic_func_builder(["T"], lambda T:
         types.func([T, T], T),
     )}
     node = nodes.call(nodes.ref("f"), [nodes.str_literal(""), nodes.none()])
@@ -152,7 +152,7 @@ def generic_type_arguments_are_covariant():
 
 @istest
 def error_if_generic_func_is_passed_wrong_arguments():
-    type_bindings = {"f": types.generic_func(["T"], lambda T:
+    type_bindings = {"f": types.generic_func_builder(["T"], lambda T:
         types.func([T, types.int_type], T),
     )}
     node = nodes.call(nodes.ref("f"), [nodes.str_literal(""), nodes.none()])

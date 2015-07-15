@@ -12,6 +12,9 @@ class _ClassType(object):
     
     def __repr__(self):
         return str(self)
+    
+    def replace_types(self, type_map):
+        return self
 
 
 def is_class_type(type_):

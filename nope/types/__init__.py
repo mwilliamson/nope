@@ -9,7 +9,7 @@ from .attributes import attrs_from_iterable, Attribute, EmptyAttributes
 from .classes import class_type, is_class_type
 from .structural import structural_type, is_structural_type
 from .generics import (
-    generic, unnamed_generic, generic_class, generic_structural_type, generic_func,
+    generic, unnamed_generic, generic_class, generic_structural_type, generic_func, generic_func_builder,
     invariant, covariant, contravariant, Variance as _Variance,
     is_formal_parameter, is_generic_type, is_instantiated_type, is_generic_func,
 )
@@ -45,6 +45,12 @@ class _FunctionType(object):
     
     def __repr__(self):
         return str(self)
+    
+    def replace_types(self, type_map):
+        return _FunctionType(
+            [arg.replace_types(type_map) for arg in self.args],
+            self.return_type.replace_types(type_map)
+        )
 
 
 class _FunctionTypeArgument(object):
@@ -75,6 +81,13 @@ class _FunctionTypeArgument(object):
             return "?" + with_name
         else:
             return with_name
+    
+    def replace_types(self, type_map):
+        return _FunctionTypeArgument(
+            name=self.name,
+            type_=self.type.replace_types(type_map),
+            optional=self.optional,
+        )
 
 
 def func(args, return_type):
