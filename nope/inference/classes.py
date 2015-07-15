@@ -41,18 +41,16 @@ class ClassDefinitionTypeChecker(object):
             
             def instantiate_attrs(inner_class_type, *actual_type_params):
                 # TODO: make context immutable.
-                # Variables can change type over time (which we should probably
-                # disallow entirely if they're captured by a function/class, or do something clever with SSA).
                 # Also, we explicitly change the type of the type parameters each time we instantiate.
                 # This should be fine since we don't interleave instantiations, but it feels messy (read: bug-prone).
-                # TODO: rename enter_statement (or create alias) -- we're really just exploiting
-                # the fact that this has a separate set of bindings from declaration to type
-                inner_context = context.enter_statement()
-                for type_param_node, type_param in zip(node.type_params, actual_type_params):
-                    inner_context.update_type(type_param_node, types.meta_type(type_param))
                 
                 inner_meta_type = types.meta_type(inner_class_type)
-                body_context = self._enter_class_body_context(node, inner_context, inner_meta_type)
+                
+                extra_types = list(zip(
+                    map(context.referenced_declaration, node.type_params),
+                    map(types.meta_type, actual_type_params)))
+                extra_types.append((self._self_declaration(node), inner_meta_type))
+                body_context = context.enter_class().instantiate_types(extra_types)
                 self._add_attrs_to_inner_type(node, body_context, inner_meta_type)
             
             for type_param_node, type_param in zip(node.type_params, formal_type_params):
@@ -99,9 +97,7 @@ class ClassDefinitionTypeChecker(object):
         
         if init is not None:
             init_node, init_func_type = init
-            self._check_init_statements(init_node, body_context, inner_class_type)
-            
-            self._update_context(init_node, body_context, immediate=True)
+            self._check_init_statements(init_node, init_func_type, body_context, inner_class_type)
     
     def _unbound_attribute_types(self, node, body_context):
         attrs = self._unbound_assigned_attribute_types(node, body_context)
@@ -162,9 +158,12 @@ class ClassDefinitionTypeChecker(object):
         body_context = context.enter_class()
         body_context.update_type(node.self_type, meta_type)
         return body_context
-        
     
-    def _check_init_statements(self, node, context, class_type):
+    def _self_declaration(self, node):
+        class_declarations = self._declaration_finder.declarations_in(node)
+        return class_declarations.declaration("Self")
+    
+    def _check_init_statements(self, node, func_type, context, class_type):
         declarations_in_function = self._declaration_finder.declarations_in(node)
         self_arg_name = node.args.args[0].name
         self_declaration = declarations_in_function.declaration(self_arg_name)
@@ -172,13 +171,29 @@ class ClassDefinitionTypeChecker(object):
         def is_self(ref):
             return context.referenced_declaration(ref) == self_declaration
             
+        # TODO: Remove duplication with function body typing
+        body_arg_types = dict(
+            (context.referenced_declaration(arg), self._infer_function_def_arg_type(arg, formal_arg))
+            for arg, formal_arg in zip(node.args.args, func_type.args)
+        )
+            
         for statement in node.body:
             self._check_init_statement(
                 statement=statement,
+                context=context,
+                body_arg_types=body_arg_types,
                 class_type=class_type,
                 is_self=is_self)
+        
     
-    def _check_init_statement(self, statement, class_type, is_self):
+    def _infer_function_def_arg_type(self, arg, formal_arg):
+        # TODO: Remove duplication with function body typing
+        if arg.optional:
+            return types.union(formal_arg.type, types.none_type)
+        else:
+            return formal_arg.type
+    
+    def _check_init_statement(self, statement, context, body_arg_types, class_type, is_self):
         self_targets = []
         
         if isinstance(statement, nodes.Assignment):
@@ -187,8 +202,15 @@ class ClassDefinitionTypeChecker(object):
                     isinstance(target, nodes.AttributeAccess) and
                     is_self(target.value)
                 )
+                
                 if is_self_attr_assignment:
-                    class_type.attrs.add(target.attr, types.unknown_type, read_only=False)
+                    # TODO: raise exception if cannot infer type
+                    # TODO: infer type if it's a literal
+                    # TODO: test reference to an explicitly-typed argument (and remove the duplication and general horridness)
+                    if statement.type is not None:
+                        class_type.attrs.add(target.attr, self._infer_type_value(statement.type, context), read_only=False)
+                    elif isinstance(statement.value, nodes.VariableReference) and context.referenced_declaration(statement.value) in body_arg_types:
+                        class_type.attrs.add(target.attr, body_arg_types[context.referenced_declaration(statement.value)], read_only=False)
                     self_targets.append(target.value)
         
         for descendant in structure.descendants(statement):

@@ -65,10 +65,6 @@ TODO
 
 * Ensure that all signatures are used in typing rules
 
-* The type of a variable can change as it is assigned to in a function.
-  We need to make sure that the type is consistent if that variable is captured
-  in a function definition.
-
 * If a variable is deleted (including the implicit delete at the end of an
   exception handler), we should prevent it from being captured in functions.
 

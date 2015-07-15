@@ -32,9 +32,7 @@ class Assignment(object):
         target_type = self._infer(target, context)
         obj_type = self._infer(target.value, context)
         
-        if types.is_unknown(target_type):
-            obj_type.attrs.get(target.attr).type = value_type
-        elif not types.is_sub_type(target_type, value_type):
+        if not types.is_sub_type(target_type, value_type):
             raise errors.UnexpectedTargetTypeError(target, value_type=value_type, target_type=target_type)
         
         if obj_type.attrs.get(target.attr).read_only:

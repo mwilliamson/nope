@@ -132,11 +132,28 @@ def cannot_reassign_read_only_attribute():
 
 
 @istest
-def variables_can_change_type():
-    node = nodes.assign(["x"], nodes.int_literal(1))
+def assignment_to_variable_with_incompatible_type_raises_error():
+    target_node = nodes.ref("x")
+    node = nodes.assign([target_node], nodes.int_literal(1))
     type_bindings = {"x": types.none_type}
+    
+    try:
+        update_context(node, type_bindings=type_bindings)
+        assert False, "Expected error"
+    except errors.UnexpectedTargetTypeError as error:
+        assert_equal(target_node, error.node)
+        assert_equal(types.int_type, error.value_type)
+        assert_equal(types.none_type, error.target_type)
+
+
+@istest
+def can_assign_value_of_subtype_to_variable():
+    target_node = nodes.ref("x")
+    node = nodes.assign([target_node], nodes.int_literal(1))
+    type_bindings = {"x": types.object_type}
+    
     context = update_context(node, type_bindings=type_bindings)
-    assert_equal(types.int_type, context.lookup_name("x"))
+    assert_equal(types.object_type, context.lookup_name("x"))
 
 
 @istest

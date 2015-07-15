@@ -295,14 +295,15 @@ def init_method_cannot_call_other_methods():
 
 
 @istest
-def attributes_assigned_in_init_can_be_used_in_methods():
+def attributes_assigned_with_explicit_type_in_init_can_be_used_in_methods():
     init_func = nodes.func(
         name="__init__",
         args=nodes.args([nodes.arg("self_init")]),
         body=[
             nodes.assign(
                 [nodes.attr(nodes.ref("self_init"), "message")],
-                nodes.str_literal("Hello")
+                nodes.str_literal("Hello"),
+                type=nodes.ref("str"),
             )
         ],
         type=nodes.signature(
@@ -333,7 +334,8 @@ def attributes_assigned_in_init_can_be_used_in_methods_when_init_method_is_defin
         body=[
             nodes.assign(
                 [nodes.attr(nodes.ref("self_init"), "message")],
-                nodes.str_literal("Hello")
+                nodes.str_literal("Hello"),
+                type=nodes.ref("str"),
             )
         ],
         type=nodes.signature(

@@ -253,12 +253,10 @@ class ExpressionTypeInferer(object):
         if formal_type_params:
             def inner_func_type(*actual_type_params):
                 # TODO: remove duplication with generic classes
-                inner_context = context.enter_statement()
-                for type_param_node, type_param in zip(node.type_params, actual_type_params):
-                    inner_context.update_type(type_param_node, types.meta_type(type_param))
-                
+                inner_context = context.instantiate_types(zip(
+                    map(context.referenced_declaration, node.type_params),
+                    map(types.meta_type, actual_type_params)))
                 return self._infer_inner_function_signature(node, inner_context)
-                
             
             func_type = types.generic_func(formal_type_params, inner_func_type)
         else:

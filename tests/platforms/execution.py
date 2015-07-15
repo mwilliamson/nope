@@ -66,6 +66,7 @@ f(42)
         self._test_program_string(program, b"42\nNone\n")
         
     @istest
+    @wip
     def function_definition_with_if_none_assignment(self):
         program = """
 #:: int | none -> int
@@ -75,22 +76,6 @@ def f(x):
     return x
 
 print(f(42))
-"""
-        self._test_program_string(program, b"42\n")
-        
-    @istest
-    def function_definition_with_if_not_none_branch(self):
-        program = """
-#:: int -> none
-def g(x):
-    print(x)
-
-#:: int | none -> none
-def f(x):
-    if x is not None:
-        g(x)
-
-f(42)
 """
         self._test_program_string(program, b"42\n")
         
@@ -639,9 +624,9 @@ except AssertionError as error:
         program = """
 try:
     raise AssertionError("error")
-except AssertionError as error:
+except AssertionError:
     print("handling AssertionError")
-except Exception as error:
+except Exception:
     print("handling Exception")
         """
         result = self._run_program_string(program)
@@ -706,6 +691,7 @@ def inc(value):
 class A:
     #:: Self, T -> none
     def __init__(self, x):
+        #:: T
         self.x = x
 
 print(inc(A(42).x))
@@ -728,6 +714,7 @@ Message = None
 class Hello:
     #:: Self -> none
     def __init__(self):
+        #:: str
         self.description = "Hello"
 
 #:: Message -> none

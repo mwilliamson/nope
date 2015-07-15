@@ -14,7 +14,14 @@ class Context(object):
     
     def update_type(self, node, type_):
         declaration = self._references.referenced_declaration(node)
-        self._declaration_types[declaration] = type_
+        self._update_declaration_type(node, declaration, type_)
+    
+    def _update_declaration_type(self, node, declaration, type_):
+        existing_type = self._declaration_types.get(declaration)
+        if existing_type is None:
+            self._declaration_types[declaration] = type_
+        elif not types.is_sub_type(existing_type, type_):
+            raise errors.UnexpectedTargetTypeError(node, value_type=type_, target_type=existing_type)
     
     def lookup(self, node, allow_unbound=False):
         declaration = self._references.referenced_declaration(node)
@@ -66,20 +73,14 @@ class Context(object):
             is_module_scope=self.is_module_scope,
         )
     
-    def update_declaration_types(self, other_contexts):
-        updated_declarations = set(
-            key
-            for other_context in other_contexts
-            for key in other_context._declaration_types.updated_keys()
+    def instantiate_types(self, types):
+        return Context(
+            self._references,
+            _OverrideDict(self._declaration_types, dict(types)),
+            self._deferred,
+            return_type=self.return_type,
+            is_module_scope=self.is_module_scope,
         )
-        for declaration in updated_declarations:
-            # TODO: set type to nothing if declaration is not in one of the contexts
-            # (which possibly makes the name_binding module redundant)
-            self._declaration_types[declaration] = types.common_super_type([
-                context.lookup_declaration(declaration)
-                for context in other_contexts
-                if declaration in context._declaration_types
-            ])
     
     def add_deferred(self, node, type_check):
         if node not in self._deferred:
@@ -119,3 +120,27 @@ class DiffDict(object):
     
     def updated_keys(self):
         return self._updates.keys()
+
+
+class _OverrideDict(object):
+    def __init__(self, values, overrides):
+        self._values = values
+        self._overrides = overrides.copy()
+    
+    def __contains__(self, key):
+        return key in self._values or key in self._overrides
+    
+    def get(self, key):
+        return self._overrides.get(key, self._values.get(key))
+    
+    def __getitem__(self, key):
+        if key in self._overrides:
+            return self._overrides[key]
+        return self._values[key]
+    
+    def __setitem__(self, key, value):
+        # TODO: this class is only used for particular instantiations of generic
+        # functions/classes, so this method should ideally never be called.
+        # (The current approach to instantiation is probably flawed: it'd be
+        # be better to perform type replacement directly on the types)
+        self._overrides[key] = value
