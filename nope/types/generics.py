@@ -60,11 +60,16 @@ class _InstantiatedType(object):
         self.type_params = type_params
         self._underlying_type = underlying_type
         self._is_complete = False
+        self._in_progress = False
         self._complete_type = complete_type
     
     def _ensure_complete(self):
-        if not self._is_complete:
+        # TODO: fix this hack (use of _in_progress)
+        # Should probably just perform proper type substitution
+        if not self._is_complete and not self._in_progress:
+            self._in_progress = True
             self._complete_type()
+            self._in_progress = False
     
     @property
     def name(self):

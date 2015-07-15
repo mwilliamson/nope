@@ -41,18 +41,16 @@ class ClassDefinitionTypeChecker(object):
             
             def instantiate_attrs(inner_class_type, *actual_type_params):
                 # TODO: make context immutable.
-                # Variables can change type over time (which we should probably
-                # disallow entirely if they're captured by a function/class, or do something clever with SSA).
                 # Also, we explicitly change the type of the type parameters each time we instantiate.
                 # This should be fine since we don't interleave instantiations, but it feels messy (read: bug-prone).
-                # TODO: rename enter_statement (or create alias) -- we're really just exploiting
-                # the fact that this has a separate set of bindings from declaration to type
-                inner_context = context.enter_statement()
-                for type_param_node, type_param in zip(node.type_params, actual_type_params):
-                    inner_context.update_type(type_param_node, types.meta_type(type_param))
                 
                 inner_meta_type = types.meta_type(inner_class_type)
-                body_context = self._enter_class_body_context(node, inner_context, inner_meta_type)
+                
+                extra_types = list(zip(
+                    map(context.referenced_declaration, node.type_params),
+                    map(types.meta_type, actual_type_params)))
+                extra_types.append((self._self_declaration(node), inner_meta_type))
+                body_context = context.enter_class().instantiate_types(extra_types)
                 self._add_attrs_to_inner_type(node, body_context, inner_meta_type)
             
             for type_param_node, type_param in zip(node.type_params, formal_type_params):
@@ -162,7 +160,10 @@ class ClassDefinitionTypeChecker(object):
         body_context = context.enter_class()
         body_context.update_type(node.self_type, meta_type)
         return body_context
-        
+    
+    def _self_declaration(self, node):
+        class_declarations = self._declaration_finder.declarations_in(node)
+        return class_declarations.declaration("Self")
     
     def _check_init_statements(self, node, context, class_type):
         declarations_in_function = self._declaration_finder.declarations_in(node)

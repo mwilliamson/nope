@@ -1,7 +1,7 @@
 import argparse
 
 import nope
-from nope import textseek, platforms
+from nope import textseek, platforms, errors
 from nope.inference import ephemeral
 
 
@@ -45,7 +45,11 @@ class CompileCommand(object):
     
     @staticmethod
     def execute(args):
-        nope.compile(args.path, args.output_dir, args.backend)
+        try:
+            nope.compile(args.path, args.output_dir, args.backend)
+        except errors.TypeCheckError as error:
+            _print_error(error)
+            return 1
 
 
 _commands = [

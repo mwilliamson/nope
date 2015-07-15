@@ -1,7 +1,7 @@
 import os
 import functools
 
-from .. import nodes, types, returns, errors, branches, builtins
+from .. import nodes, types, returns, errors, builtins
 from . import ephemeral
 from .assignment import Assignment
 from .classes import ClassDefinitionTypeChecker
@@ -179,17 +179,6 @@ class StatementTypeChecker(object):
             if value_type is not submodule:
                 raise errors.ImportedValueRedeclaration(target, target.name)
     
-    def _check_branches(self, branches, context):
-        branch_contexts = []
-        
-        for branch in branches.branches:
-            branch_contexts.append(self._check_branch(branch, context))
-        
-        if branches.conditional:
-            branch_contexts.append(context)
-        
-        context.update_declaration_types(branch_contexts)
-    
     
     def _check_branch(self, branch, context):
         branch_context = context.enter_statement()
@@ -203,104 +192,19 @@ class StatementTypeChecker(object):
     
     def _check_if_else(self, node, context):
         self._infer(node.condition, context)
-        
-        variable_node, true_type, false_type = self._extract_variable_type_in_branches(node.condition, context)
-        
-        def before_true(true_context):
-            if variable_node is not None:
-                true_context.update_type(variable_node, true_type)
-            
-        def before_false(false_context):
-            if variable_node is not None:
-                false_context.update_type(variable_node, false_type)
-        
-        self._check_branches(
-            branches.if_else(node,
-                before_true=before_true,
-                before_false=before_false,
-            ),
-            context,
-        )
-    
-    def _extract_variable_type_in_branches(self, condition, context):
-        if self._is_boolean_negation(condition):
-            ref, false_type, true_type = self._extract_variable_type_in_branches(condition.operand, context)
-            return ref, true_type, false_type
-        
-        if self._is_is_not_operation(condition):
-            ref, false_type, true_type = self._extract_variable_type_in_branches(nodes.is_(condition.left, condition.right), context)
-            return ref, true_type, false_type
-            
-        ref, true_branch_type = self._extract_type_condition(condition, context)
-        if ref is None:
-            return None, None, None
-        
-        current_type = context.lookup(ref)
-        return ref, true_branch_type, types.remove(current_type, true_branch_type)
-    
-    
-    def _is_boolean_negation(self, expression):
-        return isinstance(expression, nodes.UnaryOperation) and expression.operator == "bool_not"
-    
-    def _is_is_not_operation(self, expression):
-        return isinstance(expression, nodes.BinaryOperation) and expression.operator == "is_not"
-    
-    def _extract_type_condition(self, condition, context):
-        ref = self._extract_variable_name_from_is_none_condition(condition)
-        if ref is not None:
-            return ref, types.none_type
-        
-        return self._extract_isinstance_type_condition(condition, context)
-    
-    
-    def _extract_variable_name_from_is_none_condition(self, condition):
-        if not self._is_is_none_expression(condition):
-            return None
-            
-        if not isinstance(condition.left, nodes.VariableReference):
-            return None
-        
-        return condition.left
-    
-    def _is_is_none_expression(self, expression):
-        return (
-            isinstance(expression, nodes.BinaryOperation) and
-            expression.operator == "is" and
-            isinstance(expression.right, nodes.NoneLiteral)
-        )
-
-
-    def _extract_isinstance_type_condition(self, condition, context):
-        if self._is_isinstance_call(condition, context):
-            return condition.args[0], context.lookup(condition.args[1]).type
-        else:
-            return None, None
-
-    def _is_isinstance_call(self, condition, context):
-        if not isinstance(condition, nodes.Call):
-            return False
-        
-        isinstance_declaration = builtins.declarations().declaration("isinstance")
-        return context.referenced_declaration(condition.func) == isinstance_declaration
+        self._check_list(node.true_body, context)
+        self._check_list(node.false_body, context)
 
     def _check_while_loop(self, node, context):
         self._infer(node.condition, context)
-        
-        self._check_branches(
-            branches.while_loop(node),
-            context,
-        )
+        self._check_list(node.body, context)
+        self._check_list(node.else_body, context)
     
     def _check_for_loop(self, node, context):
         element_type = self._infer_for_loop_element_type(node, context)
-        
-        def update_target(branch_context):
-            return self._assign(node, node.target, element_type, branch_context)
-        
-        self._check_branches(
-            branches.for_loop(node, update_target),
-            context,
-        )
+        self._assign(node, node.target, element_type, context)
+        self._check_list(node.body, context)
+        self._check_list(node.else_body, context)
     
     
     def _infer_for_loop_element_type(self, node, context):
@@ -316,15 +220,15 @@ class StatementTypeChecker(object):
     
     
     def _check_try(self, node, context):
-        def before_handler(handler, branch_context):
+        self._check_list(node.body, context)
+        
+        for handler in node.handlers:
             exception_type = self._infer_handler_exception_type(handler, context)
             if handler.target is not None:
                 self._assign(handler, handler.target, exception_type, context)
-            
-        self._check_branches(
-            branches.try_statement(node, before_handler=before_handler),
-            context,
-        )
+            self._check_list(handler.body, context)
+        
+        self._check_list(node.finally_body, context)
 
         
     def _infer_handler_exception_type(self, handler, context):
@@ -375,14 +279,9 @@ class StatementTypeChecker(object):
             context,
         )
         
-        def before_body(branch_context):
-            if node.target is not None:
-                self._assign(node.target, node.target, enter_return_type, branch_context)
-        
-        self._check_branches(
-            branches.with_statement(node, before_body, exit_type),
-            context
-        )
+        if node.target is not None:
+            self._assign(node.target, node.target, enter_return_type, context)
+        self._check_list(node.body, context)
 
     def _check_import(self, node, context):
         for alias in node.names:
