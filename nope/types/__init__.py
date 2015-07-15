@@ -163,15 +163,6 @@ def is_overloaded_func_type(type_):
     return isinstance(type_, _OverloadedFunctionType)
 
 
-class _UnknownType(object):
-    pass
-
-unknown_type = _UnknownType()
-
-def is_unknown(type_):
-    return type_ is unknown_type
-
-
 def is_equivalent_type(first_type, second_type):
     return is_sub_type(first_type, second_type) and is_sub_type(second_type, first_type)
 
