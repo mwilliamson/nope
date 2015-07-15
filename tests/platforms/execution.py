@@ -691,6 +691,7 @@ def inc(value):
 class A:
     #:: Self, T -> none
     def __init__(self, x):
+        #:: T
         self.x = x
 
 print(inc(A(42).x))
@@ -713,6 +714,7 @@ Message = None
 class Hello:
     #:: Self -> none
     def __init__(self):
+        #:: str
         self.description = "Hello"
 
 #:: Message -> none

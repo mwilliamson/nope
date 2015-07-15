@@ -98,8 +98,6 @@ class ClassDefinitionTypeChecker(object):
         if init is not None:
             init_node, init_func_type = init
             self._check_init_statements(init_node, body_context, inner_class_type)
-            
-            self._update_context(init_node, body_context, immediate=True)
     
     def _unbound_attribute_types(self, node, body_context):
         attrs = self._unbound_assigned_attribute_types(node, body_context)
@@ -176,10 +174,11 @@ class ClassDefinitionTypeChecker(object):
         for statement in node.body:
             self._check_init_statement(
                 statement=statement,
+                context=context,
                 class_type=class_type,
                 is_self=is_self)
     
-    def _check_init_statement(self, statement, class_type, is_self):
+    def _check_init_statement(self, statement, context, class_type, is_self):
         self_targets = []
         
         if isinstance(statement, nodes.Assignment):
@@ -188,8 +187,11 @@ class ClassDefinitionTypeChecker(object):
                     isinstance(target, nodes.AttributeAccess) and
                     is_self(target.value)
                 )
+                
                 if is_self_attr_assignment:
-                    class_type.attrs.add(target.attr, types.unknown_type, read_only=False)
+                    # TODO: raise exception if cannot infer type
+                    if statement.type is not None:
+                        class_type.attrs.add(target.attr, self._infer_type_value(statement.type, context), read_only=False)
                     self_targets.append(target.value)
         
         for descendant in structure.descendants(statement):

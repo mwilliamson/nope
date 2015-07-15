@@ -80,8 +80,12 @@ class ClassBuilderTransform(zuice.Base):
                     [nodes.argument(name) for name, _ in attributes]
             ),
             body=[
-                nodes.assign([nodes.attr(nodes.ref("self"), name)], nodes.ref(name))
-                for name, _ in attributes
+                nodes.assign(
+                    [nodes.attr(nodes.ref("self"), name)],
+                    nodes.ref(name),
+                    type=attr_type,
+                )
+                for name, attr_type in attributes
             ],
             type=nodes.signature(
                 args=[nodes.signature_arg(nodes.ref("Self"))] +

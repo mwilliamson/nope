@@ -17,6 +17,7 @@ class _BindingChecker(object):
         nodes.ImportAlias,
         nodes.TypeDefinition,
         nodes.StructuralTypeDefinition,
+        nodes.FormalTypeParameter,
     ])
     
     def __init__(self, type_lookup):
@@ -93,6 +94,7 @@ class _BindingChecker(object):
     
     def _update_function_definition_body(self, node, context):
         body_context = context.enter_new_namespace()
+        self.process_bindings(node.type, body_context)
         self.process_bindings(node.args, body_context)
         self._update_statements(node.body, body_context)
 
