@@ -190,6 +190,7 @@ class ClassDefinitionTypeChecker(object):
                 
                 if is_self_attr_assignment:
                     # TODO: raise exception if cannot infer type
+                    # TODO: infer type if it's a literal, or a reference to an explicitly-typed argument
                     if statement.type is not None:
                         class_type.attrs.add(target.attr, self._infer_type_value(statement.type, context), read_only=False)
                     self_targets.append(target.value)
