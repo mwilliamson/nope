@@ -436,14 +436,6 @@ class StatementTypeChecker(object):
             return module_type
         else:
             return module_type.attrs.type_of(resolved_import.attr_name)
-
-    def _possible_module_paths(self, names):
-        import_path = os.path.normpath(os.path.join(os.path.dirname(self._module.path), *names))
-        
-        return (
-            os.path.join(import_path, "__init__.py"),
-            import_path + ".py"
-        )
         
     def _infer(self, node, context, hint=None, required_type=None):
         return self._expression_type_inferer.infer(node, context, hint=hint, required_type=required_type)
