@@ -110,7 +110,9 @@ SignatureArgument = _create_node("SignatureArgument", ["name", "type", "optional
 Arguments = _create_node("Arguments", ["args"])
 Argument = _create_node("Argument", ["name", "optional"])
 
-ClassDefinition = _create_node("ClassDefinition", ["name", "body", "base_classes", "type_params"])
+ClassDefinition = _create_node("ClassDefinition", ["name", "self_type", "body", "base_classes", "type_params"])
+SelfTypeDefinition = _create_node("SelfTypeDefinition", ["name"])
+
 FormalTypeParameter = _create_node("FormalTypeParameter", ["name"])
 TypeDefinition = _create_node("TypeDefinition", ["name", "value"])
 structural_type = StructuralTypeDefinition = _create_node("StructuralTypeDefinition", ["name", "attrs"])
@@ -218,7 +220,12 @@ def class_(name, body, *, base_classes=None, type_params=None):
     if type_params is None:
         type_params = []
     
-    return ClassDefinition(name, body, base_classes=base_classes, type_params=type_params)
+    return ClassDefinition(
+        name,
+        self_type=SelfTypeDefinition("Self"),
+        body=body,
+        base_classes=base_classes,
+        type_params=type_params)
 
 
 formal_type_parameter = FormalTypeParameter

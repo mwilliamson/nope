@@ -14,11 +14,7 @@ class Context(object):
     
     def update_type(self, node, type_):
         declaration = self._references.referenced_declaration(node)
-        self.update_declaration_type(declaration, type_)
-    
-    def update_declaration_type(self, declaration, type_):
         self._declaration_types[declaration] = type_
-        
     
     def lookup(self, node, allow_unbound=False):
         declaration = self._references.referenced_declaration(node)

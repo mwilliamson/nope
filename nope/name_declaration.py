@@ -124,9 +124,6 @@ class DeclarationFinder(object):
     def _generate_declarations(self, node):
         declarations = DeclarationsBuilder()
         
-        if isinstance(node, nodes.ClassDefinition):
-            declarations.declare("Self", node, target_type=SelfTypeDeclarationNode)
-        
         for child in structure.children(node):
             _declare(child, declarations)
             
@@ -142,6 +139,7 @@ def find_declarations(node):
 _declaration_nodes = {
     nodes.FunctionDef: FunctionDeclarationNode,
     nodes.ClassDefinition: ClassDeclarationNode,
+    nodes.SelfTypeDefinition: SelfTypeDeclarationNode,
     nodes.TypeDefinition: TypeDeclarationNode,
     nodes.StructuralTypeDefinition: TypeDeclarationNode,
     nodes.FormalTypeParameter: TypeDeclarationNode,

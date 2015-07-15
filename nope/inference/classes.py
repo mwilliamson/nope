@@ -160,11 +160,7 @@ class ClassDefinitionTypeChecker(object):
     
     def _enter_class_body_context(self, node, context, meta_type):
         body_context = context.enter_class()
-        class_declarations = self._declaration_finder.declarations_in(node)
-        body_context.update_declaration_type(
-            class_declarations.declaration("Self"),
-            meta_type
-        )
+        body_context.update_type(node.self_type, meta_type)
         return body_context
         
     
