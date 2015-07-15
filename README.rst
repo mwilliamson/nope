@@ -88,10 +88,6 @@ TODO
   * Generate type identifiers, as distinct from type info generated later to
     remove circularity
 
-* Change ``collections.namedtuple()` transformer to require a distinct type
-  annotation e.g. ``:field str`` so that ``::str`` is unambiguously typing
-  the following expression.
-
 Status
 ------
 
