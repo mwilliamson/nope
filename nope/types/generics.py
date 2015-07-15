@@ -13,11 +13,9 @@ class _GenericTypeAttributes(object):
 
 
 class _GenericType(object):
-    def __init__(self, name, params, create_type, complete_type):
-        self._name = name
+    def __init__(self, params, inner_type):
         self.params = params
-        self._create_type = create_type
-        self._complete_type = complete_type
+        self._inner_type = inner_type
         # TODO: the cache lives too long -- for instance,
         # builtin types such as int will never evict anything from the cache,
         # and will never be deleted, meaning it will grow on each compilation
@@ -33,71 +31,20 @@ class _GenericType(object):
         params = tuple(params)
         
         if params not in self._generic_cache:
-            new_type = self._create_type(_instantiated_type_name(self._name, params), *params)
-            self._generic_cache[params] = _InstantiatedType(
-                self,
-                params,
-                new_type,
-                lambda: self._complete_type(new_type, *params),
-            )
+            new_type = self._inner_type.replace_types()
+            new_type.name = _instantiated_type_name(self._name, params)
+            self._generic_cache[params] = self._inner_type.replace_types()
         
         return self._generic_cache[params]
-    
-    def is_instantiated_type(self, other):
-        return (
-            isinstance(other, _InstantiatedType) and
-            other.generic_type == self
-        )
 
 
 def is_generic_type(type_):
     return isinstance(type_, _GenericType)
 
 
-class _InstantiatedType(object):
-    def __init__(self, generic_type, type_params, underlying_type, complete_type):
-        self.generic_type = generic_type
-        self.type_params = type_params
-        self._underlying_type = underlying_type
-        self._is_complete = False
-        self._complete_type = complete_type
-    
-    def _ensure_complete(self):
-        if not self._is_complete:
-            self._complete_type()
-    
-    @property
-    def name(self):
-        return self._underlying_type.name
-    
-    @property
-    def attrs(self):
-        self._ensure_complete()
-        return self._underlying_type.attrs
-    
-    def reify(self):
-        self._ensure_complete()
-        return self._underlying_type
-        
-    def __str__(self):
-        return str(self._underlying_type)
-    
-    def replace_types(self, type_map):
-        return self.reify().replace_types(type_map)
-
-
-def is_instantiated_type(type_):
-    return isinstance(type_, _InstantiatedType)
-
-
-def generic(name, params, create_type, attrs=None, complete_type=None):
-    if complete_type is None:
-        def complete_type(new_type, *params):
-            if attrs is not None:
-                new_type.attrs = attrs_from_iterable(attrs(*params))
-    
+def generic(params, inner_type):
     formal_params = [_formal_param(param) for param in params]
-    return _GenericType(name, formal_params, create_type, complete_type)
+    return _GenericType(formal_params, inner_type)
 
 
 def unnamed_generic(params, create_type, attrs=None, complete_type=None):

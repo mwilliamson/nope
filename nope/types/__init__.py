@@ -11,7 +11,7 @@ from .structural import structural_type, is_structural_type
 from .generics import (
     generic, unnamed_generic, generic_class, generic_structural_type, generic_func, generic_func_builder,
     invariant, covariant, contravariant, Variance as _Variance,
-    is_formal_parameter, is_generic_type, is_instantiated_type, is_generic_func,
+    is_formal_parameter, is_generic_type, is_generic_func,
 )
 
 
