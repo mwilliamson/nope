@@ -18,6 +18,7 @@ class _BindingChecker(object):
         nodes.TypeDefinition,
         nodes.StructuralTypeDefinition,
         nodes.FormalTypeParameter,
+        nodes.SelfTypeDefinition,
     ])
     
     def __init__(self, type_lookup):
@@ -94,13 +95,16 @@ class _BindingChecker(object):
     
     def _update_function_definition_body(self, node, context):
         body_context = context.enter_new_namespace()
-        self.process_bindings(node.type, body_context)
+        if node.type is not None:
+            self.process_bindings(node.type, body_context)
         self.process_bindings(node.args, body_context)
         self._update_statements(node.body, body_context)
 
 
     def _update_class_definition(self, node, context):
         body_context = context.enter_new_namespace()
+        self.process_bindings(node.self_type, body_context)
+        self.process_bindings(node.type_params, body_context)
         self._update_statements(node.body, body_context)
         context.add_deferred(node, lambda: self._update_class_on_reference(node, context))
     
