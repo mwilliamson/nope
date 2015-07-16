@@ -1,11 +1,18 @@
 from .. import errors, types
+from ..identity_dict import NodeDict
 
 
 class Context(object):
-    def __init__(self, references, declaration_types, deferred, return_type=None, is_module_scope=False):
-        if isinstance(declaration_types, dict):
-            declaration_types = DiffDict(declaration_types)
-        
+    @staticmethod
+    def create(references, declaration_types):
+        return Context(
+            references=references,
+            declaration_types=declaration_types.copy(),
+            deferred=NodeDict(),
+            return_type=None,
+            is_module_scope=False)
+    
+    def __init__(self, references, declaration_types, deferred, return_type, is_module_scope):
         self._references = references
         self._declaration_types = declaration_types
         self.return_type = return_type
@@ -92,29 +99,6 @@ class Context(object):
         elif node in self._deferred:
             for update in self._deferred.pop(node):
                 update()
-
-
-class DiffDict(object):
-    def __init__(self, original):
-        self._original = original
-        self._updates = {}
-    
-    def __contains__(self, key):
-        return key in self._original or key in self._updates
-    
-    def get(self, key):
-        return self._updates.get(key, self._original.get(key))
-    
-    def __getitem__(self, key):
-        if key in self._updates:
-            return self._updates[key]
-        return self._original[key]
-    
-    def __setitem__(self, key, value):
-        self._updates[key] = value
-    
-    def updated_keys(self):
-        return self._updates.keys()
 
 
 class _OverrideDict(object):

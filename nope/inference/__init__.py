@@ -81,4 +81,4 @@ class _TypeCheckerForModule(zuice.Base):
         
 
 def module_context(references):
-    return Context(references, builtins.builtin_declaration_types, NodeDict()).enter_module()
+    return Context.create(references, builtins.builtin_declaration_types).enter_module()
