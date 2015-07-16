@@ -360,7 +360,7 @@ def attributes_assigned_in_init_can_be_used_in_methods_when_init_method_is_defin
 
 
 @istest
-def attributes_must_have_explicit_type_if_theyre_not_literals_nor_argument_value():
+def error_is_raised_if_attribute_assignment_has_no_explicit_and_not_literal_nor_argument_value():
     init_func = nodes.func(
         name="__init__",
         args=nodes.args([nodes.arg("self")]),
@@ -370,10 +370,7 @@ def attributes_must_have_explicit_type_if_theyre_not_literals_nor_argument_value
                 nodes.ref("message"),
             )
         ],
-        type=nodes.signature(
-            args=[nodes.signature_arg(nodes.ref("Self"))],
-            returns=nodes.ref("none")
-        ),
+        type=_no_arg_init_signature,
     )
     node = nodes.class_("User", [
         init_func
@@ -385,6 +382,31 @@ def attributes_must_have_explicit_type_if_theyre_not_literals_nor_argument_value
             [(init_func, ["self"])],
             type_bindings={"message": types.str_type}))
     assert_equal("Could not infer type of attribute. Attribute assignments must be explicitly typed, or a literal, or an argument", str(error))
+
+
+@istest
+def can_assign_any_value_to_attribute_if_assignment_is_explicitly_typed():
+    init_func = nodes.func(
+        name="__init__",
+        args=nodes.args([nodes.arg("self")]),
+        body=[
+            nodes.assign(
+                [nodes.attr(nodes.ref("self"), "message")],
+                nodes.ref("message"),
+                type=nodes.ref("str"),
+            )
+        ],
+        type=_no_arg_init_signature,
+    )
+    node = nodes.class_("User", [
+        init_func
+    ])
+    class_type = _infer_class_type(
+            node,
+            ["__init__"],
+            [(init_func, ["self"])],
+            type_bindings={"message": types.str_type})
+    assert_equal(types.str_type, class_type.attrs.type_of("message"))
 
 @istest
 def name_of_instantiation_of_generic_class_includes_type_parameters():
@@ -431,3 +453,7 @@ def _infer_meta_type(class_node, names, names_in_nodes=None, type_bindings=None)
 def _infer_class_type(class_node, names, names_in_nodes=None, type_bindings=None):
     return _infer_meta_type(class_node, names, names_in_nodes, type_bindings=type_bindings).type
     
+_no_arg_init_signature = nodes.signature(
+    args=[nodes.signature_arg(nodes.ref("Self"))],
+    returns=nodes.ref("none")
+)
