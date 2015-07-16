@@ -64,15 +64,6 @@ class Context(object):
             is_module_scope=True,
         )
     
-    def enter_statement(self):
-        return Context(
-            self._references,
-            DiffDict(self._declaration_types),
-            self._deferred,
-            return_type=self.return_type,
-            is_module_scope=self.is_module_scope,
-        )
-    
     def instantiate_types(self, types):
         override_declaration_types = dict(
             (self.referenced_declaration(node), type_)
@@ -142,9 +133,3 @@ class _OverrideDict(object):
             return self._overrides[key]
         return self._values[key]
     
-    def __setitem__(self, key, value):
-        # TODO: this class is only used for particular instantiations of generic
-        # functions/classes, so this method should ideally never be called.
-        # (The current approach to instantiation is probably flawed: it'd be
-        # be better to perform type replacement directly on the types)
-        self._overrides[key] = value

@@ -180,16 +180,6 @@ class StatementTypeChecker(object):
                 raise errors.ImportedValueRedeclaration(target, target.name)
     
     
-    def _check_branch(self, branch, context):
-        branch_context = context.enter_statement()
-        if branch.before is not None:
-            branch.before(branch_context)
-        self._check_list(branch.statements, branch_context)
-        if branch.after is not None:
-            branch.after(branch_context)
-        return branch_context
-    
-    
     def _check_if_else(self, node, context):
         self._infer(node.condition, context)
         self._check_list(node.true_body, context)
