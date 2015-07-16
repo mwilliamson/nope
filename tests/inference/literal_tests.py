@@ -15,6 +15,10 @@ class IsLiteralTests(object):
         assert is_literal(nodes.none())
         
     @istest
+    def boolean_is_literal(self):
+        assert is_literal(nodes.bool_literal(True))
+        
+    @istest
     def str_is_literal(self):
         assert is_literal(nodes.str_literal(""))
         
