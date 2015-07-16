@@ -292,7 +292,6 @@ class StatementTypeChecker(object):
                     else:
                         this_module = binding
                 else:
-                    # TODO: set readonly
                     last_module.attrs.add(part, this_module)
                     
                 last_module = this_module
