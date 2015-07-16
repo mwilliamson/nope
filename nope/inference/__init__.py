@@ -69,7 +69,6 @@ class _TypeCheckerForModule(zuice.Base):
         )
         
         module_type = types.module(module.path, [
-            # TODO: set read_only as appropriate
             types.attr(declaration.name, context.lookup_declaration(declaration))
             for declaration in exported_declarations
             if bindings.is_declaration_definitely_bound(declaration)
