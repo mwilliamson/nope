@@ -200,13 +200,14 @@ class ClassDefinitionTypeChecker(object):
                 )
                 
                 if is_self_attr_assignment:
-                    # TODO: raise exception if cannot infer type
                     # TODO: infer type if it's a literal
                     # TODO: test reference to an explicitly-typed argument (and remove the duplication and general horridness)
                     if statement.type is not None:
                         class_type.attrs.add(target.attr, self._infer_type_value(statement.type, context), read_only=False)
                     elif isinstance(statement.value, nodes.VariableReference) and context.referenced_declaration(statement.value) in body_arg_types:
                         class_type.attrs.add(target.attr, body_arg_types[context.referenced_declaration(statement.value)], read_only=False)
+                    else:
+                        raise errors.ClassAttributeTypeError(statement, "Could not infer type of attribute. Attribute assignments must be explicitly typed, or a literal, or an argument")
                     self_targets.append(target.value)
         
         for descendant in structure.descendants(statement):

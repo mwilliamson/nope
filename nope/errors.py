@@ -56,6 +56,15 @@ class UnexpectedReceiverTypeError(TypeCheckError):
             _quote_type(self.receiver_type))
 
 
+class ClassAttributeTypeError(TypeCheckError):
+    def __init__(self, node, message):
+        self.node = node
+        self._message = message
+    
+    def __str__(self):
+        return self._message
+
+
 class UnexpectedValueTypeError(TypeCheckError):
     def __init__(self, node, expected, actual):
         self.expected = expected

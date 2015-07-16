@@ -4,6 +4,7 @@ from nope import types, nodes, errors
 from nope.identity_dict import NodeDict
 
 from .util import update_context
+from ..asserts import assert_raises
 from ..testing import wip
 
 
@@ -356,6 +357,34 @@ def attributes_assigned_in_init_can_be_used_in_methods_when_init_method_is_defin
         init_func,
     ])
     _infer_class_type(node, ["__init__", "g"], [(init_func, ["self_init"])])
+
+
+@istest
+def attributes_must_have_explicit_type_if_theyre_not_literals_nor_argument_value():
+    init_func = nodes.func(
+        name="__init__",
+        args=nodes.args([nodes.arg("self")]),
+        body=[
+            nodes.assign(
+                [nodes.attr(nodes.ref("self"), "message")],
+                nodes.ref("message"),
+            )
+        ],
+        type=nodes.signature(
+            args=[nodes.signature_arg(nodes.ref("Self"))],
+            returns=nodes.ref("none")
+        ),
+    )
+    node = nodes.class_("User", [
+        init_func
+    ])
+    error = assert_raises(errors.ClassAttributeTypeError,
+        lambda: _infer_class_type(
+            node,
+            ["__init__"],
+            [(init_func, ["self"])],
+            type_bindings={"message": types.str_type}))
+    assert_equal("Could not infer type of attribute. Attribute assignments must be explicitly typed, or a literal, or an argument", str(error))
 
 @istest
 def name_of_instantiation_of_generic_class_includes_type_parameters():
