@@ -4,7 +4,7 @@ from .modules import BuiltinModule
 
 _builtin_types = {
     "object": types.meta_type(types.object_type),
-    "int": types.meta_type(types.int_type),
+    "int": types.int_meta_type,
     "str": types.str_meta_type,
     "none": types.meta_type(types.none_type),
     "list": types.list_meta_type,

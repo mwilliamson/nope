@@ -39,6 +39,8 @@ int_type.attrs.add("__le__", func([int_type], bool_type))
 int_type.attrs.add("__gt__", func([int_type], bool_type))
 int_type.attrs.add("__ge__", func([int_type], bool_type))
 
+int_meta_type = meta_type(int_type)
+
 _int_or_none = union(int_type, none_type)
 
 str_type = class_type("str")

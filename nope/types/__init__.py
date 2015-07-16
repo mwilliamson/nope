@@ -424,7 +424,7 @@ TypeLookupFactory = zuice.key("TypeLookupFactory")
 
 from ..builtin_types import (
     none_type,
-    int_type,
+    int_type, int_meta_type,
     bool_type, bool_meta_type,
     str_type, str_meta_type,
     list_type, list_meta_type,

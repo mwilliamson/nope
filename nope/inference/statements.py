@@ -225,11 +225,9 @@ class StatementTypeChecker(object):
         if handler.type:
             handled_type = self._infer_type_value(handler.type, context)
             if not types.is_sub_type(types.exception_type, handled_type):
-                # TODO: strictly speaking, this error should have the
-                # meta-types rather than the actual types
                 raise errors.UnexpectedValueTypeError(handler.type,
-                    expected="exception",
-                    actual=handled_type,
+                    expected="exception type",
+                    actual=self._infer(handler.type, context),
                 )
             return handled_type
     

@@ -35,11 +35,10 @@ def except_handler_type_must_be_exception_type():
     node = nodes.try_([], handlers=[
         nodes.except_(type_node, None, []),
     ])
-    meta_type = types.meta_type(types.int_type)
     assert_type_mismatch(
-        lambda: update_context(node, type_bindings={"int": meta_type}),
-        expected="exception",
-        actual=types.int_type,
+        lambda: update_context(node, type_bindings={"int": types.int_meta_type}),
+        expected="exception type",
+        actual=types.int_meta_type,
         node=type_node,
     )
 
