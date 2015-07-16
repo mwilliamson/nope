@@ -47,9 +47,9 @@ class ClassDefinitionTypeChecker(object):
                 inner_meta_type = types.meta_type(inner_class_type)
                 
                 extra_types = list(zip(
-                    map(context.referenced_declaration, node.type_params),
+                    node.type_params,
                     map(types.meta_type, actual_type_params)))
-                extra_types.append((self._self_declaration(node), inner_meta_type))
+                extra_types.append((node.self_type, inner_meta_type))
                 body_context = context.enter_class().instantiate_types(extra_types)
                 self._add_attrs_to_inner_type(node, body_context, inner_meta_type)
             
@@ -158,10 +158,6 @@ class ClassDefinitionTypeChecker(object):
         body_context = context.enter_class()
         body_context.update_type(node.self_type, meta_type)
         return body_context
-    
-    def _self_declaration(self, node):
-        class_declarations = self._declaration_finder.declarations_in(node)
-        return class_declarations.declaration("Self")
     
     def _check_init_statements(self, node, func_type, context, class_type):
         declarations_in_function = self._declaration_finder.declarations_in(node)

@@ -74,9 +74,13 @@ class Context(object):
         )
     
     def instantiate_types(self, types):
+        override_declaration_types = dict(
+            (self.referenced_declaration(node), type_)
+            for node, type_ in types
+        )
         return Context(
             self._references,
-            _OverrideDict(self._declaration_types, dict(types)),
+            _OverrideDict(self._declaration_types, dict(override_declaration_types)),
             self._deferred,
             return_type=self.return_type,
             is_module_scope=self.is_module_scope,
