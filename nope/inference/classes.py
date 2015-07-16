@@ -1,5 +1,6 @@
 from .. import nodes, types, errors, structure
 from ..lists import filter_by_type
+from . import literals
 
 
 class ClassDefinitionTypeChecker(object):
@@ -200,10 +201,11 @@ class ClassDefinitionTypeChecker(object):
                 )
                 
                 if is_self_attr_assignment:
-                    # TODO: infer type if it's a literal
                     # TODO: test reference to an explicitly-typed argument (and remove the duplication and general horridness)
                     if statement.type is not None:
                         attr_type = self._infer_type_value(statement.type, context)
+                    elif literals.is_literal(statement.value):
+                        attr_type = self._infer(statement.value, None)
                     elif isinstance(statement.value, nodes.VariableReference) and context.referenced_declaration(statement.value) in body_arg_types:
                         attr_type = body_arg_types[context.referenced_declaration(statement.value)]
                     else:
@@ -232,3 +234,6 @@ class ClassDefinitionTypeChecker(object):
     
     def _infer_type_value(self, *args, **kwargs):
         return self._expression_type_inferer.infer_type_value(*args, **kwargs)
+    
+    def _infer(self, *args, **kwargs):
+        return self._expression_type_inferer.infer(*args, **kwargs)

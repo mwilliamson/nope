@@ -408,6 +408,29 @@ def can_assign_any_value_to_attribute_if_assignment_is_explicitly_typed():
             type_bindings={"message": types.str_type})
     assert_equal(types.str_type, class_type.attrs.type_of("message"))
 
+
+@istest
+def can_assign_literal_to_attribute():
+    init_func = nodes.func(
+        name="__init__",
+        args=nodes.args([nodes.arg("self")]),
+        body=[
+            nodes.assign(
+                [nodes.attr(nodes.ref("self"), "value")],
+                nodes.none(),
+            )
+        ],
+        type=_no_arg_init_signature,
+    )
+    node = nodes.class_("Box", [
+        init_func
+    ])
+    class_type = _infer_class_type(
+            node,
+            ["__init__"],
+            [(init_func, ["self"])])
+    assert_equal(types.none_type, class_type.attrs.type_of("value"))
+
 @istest
 def name_of_instantiation_of_generic_class_includes_type_parameters():
     node = nodes.class_("Option", [], type_params=[nodes.formal_type_parameter("T")])
