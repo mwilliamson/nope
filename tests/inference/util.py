@@ -110,8 +110,10 @@ def update_blank_context(node, *args, **kwargs):
     return update_context(node, *args, **kwargs)
 
 
-def module(attrs):
-    return types.module("generic_module_name", attrs)
+def module(name, attrs=None):
+    if attrs is None:
+        attrs = []
+    return types.module(name, attrs)
 
 
 class FakeModuleTypes(object):

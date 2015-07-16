@@ -288,9 +288,11 @@ class StatementTypeChecker(object):
                     binding = context.lookup(alias, allow_unbound=True)
                     if binding is None:
                         context.update_type(alias, this_module)
+                    elif not types.is_module(binding) or binding.name != this_module.name:
+                        raise errors.UnexpectedTargetTypeError(node,
+                            target_type=binding, value_type=this_module)
                     else:
                         this_module = binding
-                    # TODO: raise error if binding isn't already set to the right module
                 else:
                     # TODO: set readonly
                     last_module.attrs.add(part, this_module)

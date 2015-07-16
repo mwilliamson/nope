@@ -405,6 +405,10 @@ def module(name, attrs):
     return _Module(name, attrs_from_iterable(attrs))
 
 
+def is_module(value):
+    return isinstance(value, _Module)
+
+
 class TypeLookup(object):
     def __init__(self, types):
         assert isinstance(types, NodeDict)

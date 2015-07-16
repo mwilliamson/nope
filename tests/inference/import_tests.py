@@ -10,7 +10,7 @@ def can_import_module_using_plain_import_syntax():
     node = nodes.Import([nodes.import_alias("message", None)])
     
     context = _update_blank_context(node, {
-        ("message", ): module_type([types.attr("value", types.str_type)])
+        ("message", ): module_type("message", [types.attr("value", types.str_type)])
     })
     
     assert_equal(types.str_type, context.lookup_name("message").attrs.type_of("value"))
@@ -19,8 +19,8 @@ def can_import_module_using_plain_import_syntax():
 @istest
 def importing_module_in_package_mutates_that_package_in_importing_module_only():
     node = nodes.Import([nodes.import_alias("messages.hello", None)])
-    messages_module = module_type([])
-    hello_module = module_type([types.attr("value", types.str_type)])
+    messages_module = module_type("messages")
+    hello_module = module_type("messages.hello", [types.attr("value", types.str_type)])
     
     context = _update_blank_context(node, {
         ("messages", ): messages_module,
@@ -33,8 +33,8 @@ def importing_module_in_package_mutates_that_package_in_importing_module_only():
 
 @istest
 def can_import_module_after_importing_parent_package():
-    messages_module = module_type([])
-    hello_module = module_type([types.attr("value", types.str_type)])
+    messages_module = module_type("messages")
+    hello_module = module_type("messages.hello", [types.attr("value", types.str_type)])
     modules = {
         ("messages", ): messages_module,
         ("messages", "hello"): hello_module,
@@ -50,11 +50,40 @@ def can_import_module_after_importing_parent_package():
 
 
 @istest
+def error_if_imported_name_is_already_bound_to_non_module_value():
+    modules = {
+        ("messages", ): module_type("messages"),
+    }
+    
+    statements = [
+        nodes.assign([nodes.ref("messages")], nodes.none()),
+        nodes.Import([nodes.import_alias("messages", None)])
+    ]
+    
+    assert_raises(errors.UnexpectedTargetTypeError, lambda: _update_blank_context(statements, modules))
+
+
+@istest
+def error_if_imported_name_is_already_bound_to_different_module():
+    modules = {
+        ("notes", ): module_type("notes"),
+        ("messages", ): module_type("messages"),
+    }
+    
+    statements = [
+        nodes.Import([nodes.import_alias("notes", "messages")]),
+        nodes.Import([nodes.import_alias("messages", None)])
+    ]
+    
+    assert_raises(errors.UnexpectedTargetTypeError, lambda: _update_blank_context(statements, modules))
+
+
+@istest
 def can_use_aliases_with_plain_import_syntax():
     node = nodes.Import([nodes.import_alias("message", "m")])
     
     context = _update_blank_context(node, {
-        ("message", ): module_type([types.attr("value", types.str_type)])
+        ("message", ): module_type("message", [types.attr("value", types.str_type)])
     })
     
     assert_equal(types.str_type, context.lookup_name("m").attrs.type_of("value"))
@@ -77,7 +106,7 @@ def can_import_value_from_relative_module_using_import_from_syntax():
     node = nodes.import_from([".", "message"], [nodes.import_alias("value", None)])
     
     context = _update_blank_context(node, {
-        (".", "message"): module_type([types.attr("value", types.str_type)])
+        (".", "message"): module_type("message", [types.attr("value", types.str_type)])
     })
     
     assert_equal(types.str_type, context.lookup_name("value"))
@@ -87,7 +116,7 @@ def can_import_value_from_relative_module_using_import_from_syntax():
 @istest
 def can_import_module_using_import_from_syntax():
     node = nodes.import_from(["."], [nodes.import_alias("message", None)])
-    message_module = module_type([types.attr("value", types.str_type)])
+    message_module = module_type("message", [types.attr("value", types.str_type)])
     
     context = _update_blank_context(node, {
         (".", "message"): message_module,
@@ -101,7 +130,7 @@ def can_import_module_using_import_from_syntax_with_alias():
     node = nodes.import_from([".", "message"], [nodes.import_alias("value", "v")])
     
     context = _update_blank_context(node, {
-        (".", "message"): module_type([types.attr("value", types.str_type)]),
+        (".", "message"): module_type("message", [types.attr("value", types.str_type)]),
     })
     
     assert_equal(types.str_type, context.lookup_name("v"))
