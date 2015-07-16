@@ -18,6 +18,9 @@ class _Attributes(object):
         self._attrs = attrs
     
     def add(self, name, type_, read_only=True):
+        if name in self._attrs:
+            raise Exception("attribute '{0}' is already set: {1}".format(name, self._attrs[name]))
+            
         self._attrs[name] = Attribute(name, type_, read_only=read_only)
     
     def get(self, name):

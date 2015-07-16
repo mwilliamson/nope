@@ -65,6 +65,7 @@ class _InstantiatedType(object):
     def _ensure_complete(self):
         if not self._is_complete:
             self._complete_type()
+            self._is_complete = True
     
     @property
     def name(self):
