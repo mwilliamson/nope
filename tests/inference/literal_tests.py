@@ -49,3 +49,19 @@ class IsLiteralTests(object):
     @istest
     def tuple_containing_literal_is_literal(self):
         assert is_literal(nodes.tuple_literal([nodes.none()]))
+        
+    @istest
+    def empty_dict_is_literal(self):
+        assert is_literal(nodes.dict_literal([]))
+        
+    @istest
+    def dict_containing_reference_key_is_not_literal(self):
+        assert not is_literal(nodes.dict_literal([(nodes.ref("x"), nodes.none())]))
+        
+    @istest
+    def dict_containing_reference_value_is_not_literal(self):
+        assert not is_literal(nodes.dict_literal([(nodes.none(), nodes.ref("x"))]))
+        
+    @istest
+    def dict_containing_literal_key_and_literal_value_is_literal(self):
+        assert is_literal(nodes.dict_literal([(nodes.none(), nodes.none())]))

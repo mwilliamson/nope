@@ -5,4 +5,9 @@ def is_literal(node):
         return True
     if isinstance(node, (nodes.ListLiteral, nodes.TupleLiteral)):
         return all(map(is_literal, node.elements))
+    if isinstance(node, (nodes.DictLiteral)):
+        return all(
+            is_literal(key) and is_literal(value)
+            for key, value in node.items
+        )
     return False
