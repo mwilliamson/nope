@@ -201,7 +201,6 @@ class ClassDefinitionTypeChecker(object):
                 )
                 
                 if is_self_attr_assignment:
-                    # TODO: test reference to an explicitly-typed argument (and remove the duplication and general horridness)
                     if statement.type is not None:
                         attr_type = self._infer_type_value(statement.type, context)
                     elif literals.is_literal(statement.value):
