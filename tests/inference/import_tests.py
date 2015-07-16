@@ -32,6 +32,24 @@ def importing_module_in_package_mutates_that_package_in_importing_module_only():
 
 
 @istest
+def can_import_module_after_importing_parent_package():
+    messages_module = module_type([])
+    hello_module = module_type([types.attr("value", types.str_type)])
+    modules = {
+        ("messages", ): messages_module,
+        ("messages", "hello"): hello_module,
+    }
+    
+    context = _update_blank_context([
+        nodes.Import([nodes.import_alias("messages", None)]),
+        nodes.Import([nodes.import_alias("messages.hello", None)])
+    ], modules)
+    
+    assert_equal(types.str_type, context.lookup_name("messages").attrs.type_of("hello").attrs.type_of("value"))
+    assert "hello" not in messages_module.attrs
+
+
+@istest
 def can_use_aliases_with_plain_import_syntax():
     node = nodes.Import([nodes.import_alias("message", "m")])
     
