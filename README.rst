@@ -205,6 +205,91 @@ We can allow such examples to type-check by inspecting the type of ``__exit__``.
 If its return type is ``none``, then it is guaranteed to return a false value,
 meaning it will never suppress exceptions.
 
+Default arguments
+~~~~~~~~~~~~~~~~~
+
+A common pattern in Python is to have all default arguments take the value of ``None``,
+which is then reassigned at the start of the function.
+For instance:
+
+.. code-block:: python
+
+    #:: ?str -> str
+    def greet(name=None):
+        if name is None:
+            name = "stranger"
+        
+        return "Hello " + name
+
+The problem here is that ``name`` initially has the type ``str | None``,
+but has the type ``str`` after the ``if`` statement.
+Rather than trying to support variables that can change types within a scope,
+a better alternative is to probably define a transformer that looks for functions
+that start with ``is None`` checks, and to transform them appropriately.
+For instance, the above might become:
+
+.. code-block:: python
+
+    #:: ?str -> str
+    def greet(name=None):
+        if name is None:
+            name_1 = "stranger"
+        else:
+            name_1 = name
+        
+        return "Hello " + name_1
+
+However, this only moves the problem around, rather than solving it,
+since the assignment ``name_1 = name`` uses ``name``, which is still of type ``str | None``,
+to assign to ``name_1``, which we want to be of type ``str``.
+We could use casts as an escape hatch.
+Nope doesn't currently support casts, but we could imagine some syntax:
+
+.. code-block:: python
+
+    #:: ?str -> str
+    def greet(name=None):
+        if name is None:
+            name_1 = "stranger"
+        else:
+            #:cast str
+            name_1 = name
+        
+        return "Hello " + name_1
+
+Since we're generating code, we could only have cast as an explicit function:
+
+.. code-block:: python
+
+    #:: ?str -> str
+    def greet(name=None):
+        if name is None:
+            name_1 = "stranger"
+        else:
+            name_1 = cast(str, name)
+        
+        return "Hello " + name_1
+
+which might keep things simpler by avoiding extra syntax.
+
+In both cases, we need to know what type to cast to.
+This might potentially cause a problem since we can't type-check yet
+(if we could, this entire discussion would be redundant).
+However, we can pluck the type (sans none) from the type signature of the function,
+which might be sufficient.
+
+Alternatively, the transformer could introduce references to a function ``_if_none`` of type ``T => (T | none), (-> T) -> T``:
+
+.. code-block:: python
+
+    #:: ?str -> str
+    def greet(name=None):
+        name_1 = _if_none(name, lambda: "stranger")
+        
+        return "Hello " + name_1
+
+We'd then need to do a bit of cleverness to correctly infer the type of ``T``.
+By no means impossible, but potentially a little fiddly.
 
 Python
 ~~~~~~
