@@ -75,8 +75,6 @@ TODO
   
 * Find a way to speed up the C# tests. Record/replay?
 
-* Explicitly unique ID to each node rather than relying on builtin id.
-
 * Split out stages:
 
   * Generate module DAG (based on imports)
