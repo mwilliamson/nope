@@ -271,6 +271,8 @@ Since we're generating code, we could only have cast as an explicit function:
         return "Hello " + name_1
 
 which might keep things simpler by avoiding extra syntax.
+The downside here is that Nope intentionally keeps the two namespaces separate,
+meaning not all types are expressible as run-time expressions.
 
 In both cases, we need to know what type to cast to.
 This might potentially cause a problem since we can't type-check yet
